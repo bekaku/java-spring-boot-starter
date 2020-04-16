@@ -47,11 +47,13 @@ public class PermissionsController {
     @GetMapping
     public ResponseEntity getPermissions(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                   @RequestParam(value = "limit", defaultValue = "20") int limit) {
+        System.out.println("getPErmission Method");
         return ResponseEntity.ok(new HashMap<String, Object>() {{
 //            put("permissionsByMapper", permissionsMapper.allPaging(new Page(offset, limit)));
-//            put("hibernateFindAll", permissionRepository.findAll());
+            put("hibernateFindAll", permissionRepository.findAll());
+
 //            put("hibernateFindAllSort", permissionRepository.findAll(Sort.by(Sort.Direction.DESC, "id")));
-            put("hibernateFindAllPaging", permissionRepository.findAll(PageRequest.of(1, 1, Sort.by(Sort.Direction.ASC, "id"))));
+//            put("hibernateFindAllPaging", permissionRepository.findAll(PageRequest.of(1, 1, Sort.by(Sort.Direction.ASC, "id"))));
 //            put("findByName", permissionRepository.findByName("permission_code"));
 //            put("findAllByCrudTable", permissionRepository.findAllByCrudTable("app_user"));
 //            put("findAllNativeQuesruByLikeCrudTable", permissionRepository.findAllNativeQuesruByLikeCrudTable("app_user"));

@@ -11,7 +11,7 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 import java.util.Locale;
 
 @SpringBootApplication
-@MapperScan("io.spring.dao") // mybatis scan path for interface Mapper class
+@MapperScan("io.beka.dao") // mybatis scan path for interface Mapper class
 public class BekaApplication {
 
     public static void main(String[] args) {

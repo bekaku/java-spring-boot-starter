@@ -34,4 +34,11 @@ public class DashboardController {
             put("dashboard",messageSource.getMessage("message", null, locale));
         }});
     }
+
+    @RequestMapping(value = "/welcome")
+    public ResponseEntity welCome(@RequestHeader(value = "Accept-Language", required = false) Locale locale){
+        return ResponseEntity.ok(new HashMap<String, Object>() {{
+            put("welcome",messageSource.getMessage("message", null, locale));
+        }});
+    }
 }
