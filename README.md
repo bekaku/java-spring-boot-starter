@@ -42,3 +42,10 @@ Open Terminal and run following command
 ```
 gradle bootRun
 ```
+
+To test that it works, open a browser tab at http://localhost:8080/welcome
+Or You can test from Postman
+```
+Content-Type : application/json
+Accept-Language : th
+```
