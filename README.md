@@ -34,3 +34,11 @@ Username : admin
 Password : P@ssw0rd
 ```
 Config your database connection at `my-app`/src/main/resources/`application.properties`
+
+## Getting started
+
+Open Terminal and run following command 
+
+```
+gradle bootRun
+```
