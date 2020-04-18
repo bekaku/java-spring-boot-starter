@@ -1,13 +1,11 @@
-package io.beka.controller;
+package io.beka.controller.api;
 
 
-import io.beka.dao.PermissionsMapper;
-import io.beka.model.entity.Permissions;
-import io.beka.repository.PermissionRepository;
 import io.beka.exception.InvalidRequestException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import io.beka.model.Page;
+import io.beka.model.entity.Permissions;
+import io.beka.service.PermissonService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -16,17 +14,10 @@ import javax.validation.Valid;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping(path = "permissions")
+@RequestMapping(path = "/api/permissions")
+@RequiredArgsConstructor
 public class PermissionsController {
-    private PermissionRepository permissionRepository;
-    private PermissionsMapper permissionsMapper;
-
-    @Autowired
-    public PermissionsController(PermissionRepository permissionRepository, PermissionsMapper permissionsMapper) {
-        this.permissionRepository = permissionRepository;
-        this.permissionsMapper = permissionsMapper;
-
-    }
+    private final PermissonService permissonService;
 
     @PostMapping
     public ResponseEntity create(@Valid @RequestBody Permissions permissions, BindingResult bindingResult) {
@@ -38,7 +29,7 @@ public class PermissionsController {
             throw new InvalidRequestException(bindingResult);
         }
 
-        permissionRepository.save(permissions);
+        permissonService.save(permissions);
 
         return ResponseEntity.ok(new HashMap<String, Object>() {{
             put("postData", permissions);
@@ -47,10 +38,12 @@ public class PermissionsController {
     @GetMapping
     public ResponseEntity getPermissions(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                   @RequestParam(value = "limit", defaultValue = "20") int limit) {
-        System.out.println("getPErmission Method");
         return ResponseEntity.ok(new HashMap<String, Object>() {{
+            put("permissionsByMapper", permissonService.findAllViaMapper(new Page(offset, limit)));
+
+
 //            put("permissionsByMapper", permissionsMapper.allPaging(new Page(offset, limit)));
-            put("hibernateFindAll", permissionRepository.findAll());
+//            put("hibernateFindAll", permissionRepository.findAll());
 
 //            put("hibernateFindAllSort", permissionRepository.findAll(Sort.by(Sort.Direction.DESC, "id")));
 //            put("hibernateFindAllPaging", permissionRepository.findAll(PageRequest.of(1, 1, Sort.by(Sort.Direction.ASC, "id"))));

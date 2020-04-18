@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PermissionRepository extends JpaRepository<Permissions, Long>, PermissionRepositoryCustom {
+public interface PermissionRepository extends JpaRepository<Permissions, Long> {
 
     Optional<Permissions> findByName(String name);
 
