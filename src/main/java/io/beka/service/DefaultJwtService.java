@@ -1,6 +1,6 @@
 package io.beka.service;
 
-import io.beka.model.entity.Users;
+import io.beka.model.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -26,7 +26,7 @@ public class DefaultJwtService implements JwtService {
     }
 
     @Override
-    public String toToken(Users user) {
+    public String toToken(User user) {
         return Jwts.builder()
                 .setSubject(""+user.getId())
                 .setExpiration(expireTimeFromNow())

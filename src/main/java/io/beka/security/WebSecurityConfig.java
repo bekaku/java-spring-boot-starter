@@ -49,7 +49,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.OPTIONS).permitAll()
                 .antMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
                 .antMatchers(HttpMethod.GET,  "/welcome", "/theymeleaf").permitAll()
-                .antMatchers(HttpMethod.POST, "/api/users", "/api/users/login", "/api/test").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/user", "/api/user/login", "/api/test").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin();

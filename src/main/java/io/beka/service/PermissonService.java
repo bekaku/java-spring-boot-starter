@@ -1,7 +1,7 @@
 package io.beka.service;
-import io.beka.mapper.PermissionsMapper;
+import io.beka.mapper.PermissionMapper;
 import io.beka.model.Page;
-import io.beka.model.entity.Permissions;
+import io.beka.model.entity.Permission;
 import io.beka.repository.PermissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,38 +21,38 @@ public class PermissonService {
     private EntityManager entityManager;
 
     private final PermissionRepository permissionRepository;
-    private final PermissionsMapper permissionsMapper;
+    private final PermissionMapper permissionMapper;
 
-    public List<Permissions> findAll() {
+    public List<Permission> findAll() {
         return permissionRepository.findAll();
     }
 
-    public Optional<Permissions> findById(Long id) {
+    public Optional<Permission> findById(Long id) {
         return permissionRepository.findById(id);
     }
 
-    public Permissions save(Permissions permissions) {
-        return permissionRepository.save(permissions);
+    public Permission save(Permission permission) {
+        return permissionRepository.save(permission);
     }
 
     public void deleteById(Long id) {
         permissionRepository.deleteById(id);
     }
     //My Batis
-    public List<Permissions> findAllViaMapper(Page page){
-        return permissionsMapper.findAllWithPaging(page);
+    public List<Permission> findAllViaMapper(Page page){
+        return permissionMapper.findAllWithPaging(page);
     }
 
 
     //custom JPA query
-    public List<Permissions> findAllNativeByCrudTableAndActive(String curdTable, Boolean status) {
-        Query query = this.entityManager.createNativeQuery("select * from permissions p where p.crud_table = :tableName AND p.status=:status ", Permissions.class);
+    public List<Permission> findAllNativeByCrudTableAndActive(String curdTable, Boolean status) {
+        Query query = this.entityManager.createNativeQuery("select * from permission p where p.crud_table = :tableName AND p.status=:status ", Permission.class);
         query.setParameter("tableName", curdTable);
         query.setParameter("status", status);
         return query.getResultList();
     }
-    public List<Permissions> findAllNativePaging(Page page) {
-        Query query = this.entityManager.createNativeQuery("select * from permissions p limit :offset, :limit ", Permissions.class);
+    public List<Permission> findAllNativePaging(Page page) {
+        Query query = this.entityManager.createNativeQuery("select * from permission p limit :offset, :limit ", Permission.class);
         query.setParameter("offset", page.getOffset());
         query.setParameter("limit", page.getLimit());
         System.out.println("getResultList : "+query.getResultList().size());
@@ -60,7 +60,7 @@ public class PermissonService {
     }
 
     public List<Object[]> findAllNativeByCustomObject() {
-        List<Object[]> list = this.entityManager.createNativeQuery("SELECT * FROM permissions p WHERE p.status=:status ")
+        List<Object[]> list = this.entityManager.createNativeQuery("SELECT * FROM permission p WHERE p.status=:status ")
                 .setParameter("status", true) //positional parameter binding
                 .getResultList();
         /*

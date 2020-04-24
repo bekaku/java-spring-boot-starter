@@ -1,8 +1,8 @@
 package io.beka.service;
 
-import io.beka.mapper.UsersMapper;
+import io.beka.mapper.UserMapper;
 import io.beka.model.data.UserData;
-import io.beka.model.entity.Users;
+import io.beka.model.entity.User;
 import io.beka.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,31 +11,31 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
-public class UsersService {
+public class UserService {
 
     private final UsersRepository usersRepository;
-    private final UsersMapper usersMapper;
+    private final UserMapper userMapper;
 
     //Repository
-    public Users save(Users users){
-        return usersRepository.save(users);
+    public User save(User user){
+        return usersRepository.save(user);
     }
-    public Optional<Users> findById(Long id){
+    public Optional<User> findById(Long id){
         return usersRepository.findById(id);
     }
-    public void delete(Users users){
-        usersRepository.delete(users);
+    public void delete(User user){
+        usersRepository.delete(user);
     }
 
     //Mapper
     public Optional<UserData> findUserDataById(Long id){
-        return usersMapper.findById(id);
+        return userMapper.findById(id);
     }
     public Optional<UserData> findUserDataByUsername(String username){
-        return usersMapper.findByUsername(username);
+        return userMapper.findByUsername(username);
     }
 
     public Optional<UserData> findUserDataByEmail(String email){
-        return usersMapper.findByEmail(email);
+        return userMapper.findByEmail(email);
     }
 }

@@ -3,7 +3,7 @@ package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
 import io.beka.model.Page;
-import io.beka.model.entity.Permissions;
+import io.beka.model.entity.Permission;
 import io.beka.service.PermissonService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,35 +14,35 @@ import javax.validation.Valid;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping(path = "/api/permissions")
+@RequestMapping(path = "/api/permission")
 @RequiredArgsConstructor
-public class PermissionsController {
+public class PermissionController {
     private final PermissonService permissonService;
 
     @PostMapping
-    public ResponseEntity create(@Valid @RequestBody Permissions permissions, BindingResult bindingResult) {
+    public ResponseEntity create(@Valid @RequestBody Permission permission, BindingResult bindingResult) {
 
-        if (permissions.getName()==null || permissions.getName().length()==0) {
+        if (permission.getName()==null || permission.getName().length()==0) {
             bindingResult.rejectValue("name", "Blank", "can't be empty");
         }
         if (bindingResult.hasErrors()) {
             throw new InvalidRequestException(bindingResult);
         }
 
-        permissonService.save(permissions);
+        permissonService.save(permission);
 
         return ResponseEntity.ok(new HashMap<String, Object>() {{
-            put("postData", permissions);
+            put("postData", permission);
         }});
     }
     @GetMapping
-    public ResponseEntity getPermissions(@RequestParam(value = "offset", defaultValue = "0") int offset,
+    public ResponseEntity getPermission(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                   @RequestParam(value = "limit", defaultValue = "20") int limit) {
         return ResponseEntity.ok(new HashMap<String, Object>() {{
-            put("permissionsByMapper", permissonService.findAllViaMapper(new Page(offset, limit)));
+            put("permissionByMapper", permissonService.findAllViaMapper(new Page(offset, limit)));
 
 
-//            put("permissionsByMapper", permissionsMapper.allPaging(new Page(offset, limit)));
+//            put("permissionsByMapper", permissionMapper.allPaging(new Page(offset, limit)));
 //            put("hibernateFindAll", permissionRepository.findAll());
 
 //            put("hibernateFindAllSort", permissionRepository.findAll(Sort.by(Sort.Direction.DESC, "id")));
@@ -58,7 +58,7 @@ public class PermissionsController {
     }
 }
 //@Getter
-//@JsonRootName("permisions")
+//@JsonRootName("permision")
 //@NoArgsConstructor
 //class PermssionsParam {
 //    @NotBlank(message = "can't be empty")

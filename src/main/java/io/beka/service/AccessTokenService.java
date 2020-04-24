@@ -1,7 +1,6 @@
 package io.beka.service;
 
 import io.beka.model.entity.AccessToken;
-import io.beka.model.entity.Users;
 import io.beka.repository.AccessTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

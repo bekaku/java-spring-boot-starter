@@ -2,12 +2,11 @@ package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
 import io.beka.model.data.UserData;
-import io.beka.model.data.UsersWithToken;
-import io.beka.model.entity.Permissions;
-import io.beka.model.entity.Users;
+import io.beka.model.data.UserWithToken;
+import io.beka.model.entity.User;
 import io.beka.service.EncryptService;
 import io.beka.service.JwtService;
-import io.beka.service.UsersService;
+import io.beka.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +20,11 @@ import javax.validation.Valid;
 import java.util.HashMap;
 
 @RequiredArgsConstructor
-@RequestMapping(path = "/api/users")
+@RequestMapping(path = "/api/user")
 @RestController
-public class UsersController {
+public class UserController {
 
-    private final UsersService usersService;
+    private final UserService userService;
     private final EncryptService encryptService;
     private final JwtService jwtService;
 
@@ -33,31 +32,33 @@ public class UsersController {
     String defaultImage;
 
     @PostMapping
-    public ResponseEntity register(@Valid @RequestBody Users users, BindingResult bindingResult) {
-        checkInput(users, bindingResult);
+    public ResponseEntity register(@Valid @RequestBody User user, BindingResult bindingResult) {
+        checkInput(user, bindingResult);
 
-        users.setImage(defaultImage);
-        users.setPassword(encryptService.encrypt(users.getPassword()));
+        user.setImage(defaultImage);
+        System.out.println("original PWD : "+user.getPassword());
+        user.setPassword(encryptService.encrypt(user.getPassword()));
 
-        usersService.save(users);
-
-        UserData userData = usersService.findUserDataById(users.getId()).get();
-
-        UsersWithToken usersWithToken =new UsersWithToken(userData, jwtService.toToken(users));
+//        userService.save(user);
+//
+//        UserData userData = userService.findUserDataById(user.getId()).get();
+//
+//        UserWithToken userWithToken =new UserWithToken(userData, jwtService.toToken(user));
         return ResponseEntity.ok(new HashMap<String, Object>() {{
-            put("users", usersWithToken);
+//            put("user", userWithToken);
+            put("userParam", user);
         }});
 
     }
-    private void checkInput(@Valid @RequestBody Users users, BindingResult bindingResult) {
+    private void checkInput(@Valid @RequestBody User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new InvalidRequestException(bindingResult);
         }
-        if (usersService.findUserDataByUsername(users.getUsername()).isPresent()) {
+        if (userService.findUserDataByUsername(user.getUsername()).isPresent()) {
             bindingResult.rejectValue("username", "DUPLICATED", "duplicated username");
         }
 
-        if (usersService.findUserDataByEmail(users.getEmail()).isPresent()) {
+        if (userService.findUserDataByEmail(user.getEmail()).isPresent()) {
             bindingResult.rejectValue("email", "DUPLICATED", "duplicated email");
         }
 

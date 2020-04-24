@@ -1,6 +1,6 @@
 package io.beka.repository;
 
-import io.beka.model.entity.Permissions;
+import io.beka.model.entity.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -9,15 +9,15 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PermissionRepository extends JpaRepository<Permissions, Long> {
+public interface PermissionRepository extends JpaRepository<Permission, Long> {
 
-    Optional<Permissions> findByName(String name);
+    Optional<Permission> findByName(String name);
 
-    List<Permissions> findAllByCrudTable(String crudTable);
+    List<Permission> findAllByCrudTable(String crudTable);
 
-    @Query(value = "SELECT * FROM permissions p WHERE p.crud_table like ?1%", nativeQuery = true)
-    List<Permissions> findAllNativeQuesruByLikeCrudTable(String crudTable);
+    @Query(value = "SELECT * FROM permission p WHERE p.crud_table like ?1%", nativeQuery = true)
+    List<Permission> findAllNativeQuesruByLikeCrudTable(String crudTable);
 
-    @Query("SELECT p FROM Permissions p WHERE p.name = ?1")
-    Permissions findByQueryName(String name);
+    @Query("SELECT p FROM Permission p WHERE p.name = ?1")
+    Permission findByQueryName(String name);
 }

@@ -1,15 +1,11 @@
 package io.beka.controller.web;
 
-import io.beka.model.entity.Permissions;
+import io.beka.model.entity.Permission;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import java.util.Locale;
 
 @Controller
 public class DashboardController {
@@ -27,11 +23,11 @@ public class DashboardController {
 
     @RequestMapping("/theymeleaf")
     public String theymeleaf(ModelMap model){
-        Permissions permissions = new Permissions();
-        permissions.setName("test");
+        Permission permission = new Permission();
+        permission.setName("test");
 
         model.addAttribute("testHello",messageSource.getMessage("message", null, LocaleContextHolder.getLocale()));
-        model.addAttribute("permissions", permissions);
+        model.addAttribute("permission", permission);
         return "theymeleaf";
     }
 //

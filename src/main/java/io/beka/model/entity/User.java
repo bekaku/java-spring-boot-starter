@@ -15,7 +15,7 @@ import java.util.Set;
 @Setter
 @JsonRootName("users")
 @Entity
-public class Users {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -34,8 +34,14 @@ public class Users {
 
     private String image;
 
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    @Column(columnDefinition = "tinyint(1) default 1")
+    private Boolean status;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<AccessToken> accessTokens;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<UserRole> userRoles;
 
     @CreationTimestamp
     private Date createdAt;

@@ -1,14 +1,10 @@
 package io.beka.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -20,9 +16,9 @@ import java.util.UUID;
 @Entity
 public class AccessToken {
 
-    public AccessToken(Users users, String name , Date expiresAt, boolean revoked) {
+    public AccessToken(User user, String name , Date expiresAt, boolean revoked) {
         this.id = UUID.randomUUID().toString();
-        this.users = users;
+        this.user = user;
         this.name = name;
         this.expiresAt = expiresAt;
         this.revoked = revoked;
@@ -31,9 +27,14 @@ public class AccessToken {
     @Id
     private String id;
 
+
     @ManyToOne
-    @JoinColumn(name = "users")
-    private Users users;
+    @JoinColumn(name = "user")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "apiClient")
+    private ApiClient apiClient;
 
     private String name;
 
