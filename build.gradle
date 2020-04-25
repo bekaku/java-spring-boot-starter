@@ -31,7 +31,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 //	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.2'
 //	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.2'
 
@@ -48,12 +47,12 @@ dependencies {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:2.1.2'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.projectlombok:lombok:1.18.12'
 	testImplementation 'com.h2database:h2:1.4.200'
+	implementation 'junit:junit:4.12'
 
 }
 

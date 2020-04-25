@@ -38,4 +38,10 @@ public class UserService {
     public Optional<UserData> findUserDataByEmail(String email){
         return userMapper.findByEmail(email);
     }
+
+
+    //test
+    public String greet() {
+        return "Hello, World";
+    }
 }

@@ -15,10 +15,8 @@ import java.util.Locale;
 public class BekaApplication {
 
     public static void main(String[] args) {
-
 		SpringApplication.run(BekaApplication.class, args);
     }
-
     @Bean
     public LocaleResolver localeResolver() {
         SessionLocaleResolver sessionLocaleResolver = new SessionLocaleResolver();

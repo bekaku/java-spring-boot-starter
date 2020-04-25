@@ -13,7 +13,6 @@ import java.util.Set;
 
 @Getter
 @Setter
-@JsonRootName("users")
 @Entity
 public class User {
 
