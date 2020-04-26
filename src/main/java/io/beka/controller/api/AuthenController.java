@@ -1,33 +1,40 @@
 package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
-import io.beka.model.Page;
 import io.beka.model.data.UserData;
 import io.beka.model.data.UserWithToken;
+import io.beka.model.dto.AuthenticationResponse;
+import io.beka.model.dto.LoginDto;
+import io.beka.model.dto.RefreshTokenRequest;
+import io.beka.model.dto.UserRegisterDto;
 import io.beka.model.entity.Role;
 import io.beka.model.entity.User;
-import io.beka.model.dto.UserRegisterDto;
 import io.beka.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.*;
 
+
 @RequiredArgsConstructor
-@RequestMapping(path = "/api/user")
+@RequestMapping(path = "/api/auth")
 @RestController
-public class UserController {
+public class AuthenController {
 
     private final UserService userService;
+    private final AuthService authService;
+    private final AccessTokenService accessTokenService;
+
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -38,25 +45,8 @@ public class UserController {
     @Value("${default.user.role}")
     Long defaultRole;
 
-    @GetMapping("/current-user")
-    public HashMap<String, Object> currentUser(@AuthenticationPrincipal User currentUser,
-                                               @RequestHeader(value = "Authorization") String authorization) {
-//        org.springframework.security.core.userdetails.User principal = (org.springframework.security.core.userdetails.User) SecurityContextHolder.
-//                getContext().getAuthentication().getPrincipal();
-
-        return new HashMap<String, Object>() {{
-            put("user", currentUser);
-            put("authorization", authorization);
-        }};
-    }
-    @GetMapping
-    public ResponseEntity<List<UserData>> getAllUser(@RequestParam(value = "offset", defaultValue = "0") int offset,
-                                                     @RequestParam(value = "limit", defaultValue = "20") int limit) {
-        return new ResponseEntity<>(userService.findAllUserData(new Page(offset, limit)), HttpStatus.OK);
-    }
-
-    @PostMapping
-    public ResponseEntity create(@Valid @RequestBody UserRegisterDto registerDto, BindingResult bindingResult) {
+    @PostMapping("/signup")
+    public ResponseEntity signup(@Valid @RequestBody UserRegisterDto registerDto, BindingResult bindingResult) {
         checkInput(registerDto, bindingResult);
 
         //user can have manu role
@@ -96,7 +86,6 @@ public class UserController {
                     .body("Error Message");
         }
     }
-
     private void checkInput(@Valid @RequestBody UserRegisterDto registerParam, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new InvalidRequestException(bindingResult);
@@ -119,49 +108,41 @@ public class UserController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserData> getUserById(@PathVariable("id") long id) {
-        Optional<UserData> userData = userService.findUserDataById(id);
-        return userData.map(data -> new ResponseEntity<>(data, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+    @PostMapping("/login")
+    public AuthenticationResponse login(@RequestBody LoginDto loginRequest, BindingResult bindingResult) {
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserWithToken> updateUser(@PathVariable("id") long id, @RequestBody UserRegisterDto param) {
-        Optional<User> user = userService.findById(id);
-
-        if (user.isPresent()) {
-            User userUpdate = user.get();
-            userUpdate.update(
-                    param.getUsername(),
-                    passwordEncoder.encode(param.getPassword()),
-                    param.getEmail(),
-                    false,
-                    defaultImage
-            );
-
-            Optional<UserData> userData = userService.findUserDataById(userUpdate.getId());
-            if (userData.isPresent()) {
-                UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken(userUpdate));
-                return new ResponseEntity<>(userWithToken, HttpStatus.OK);
-            }
+        Optional<User> user = userService.findByEmail(loginRequest.getEmail());
+        if (user.isEmpty()){
+            bindingResult.rejectValue("password", "INVALID", "invalid email or password");
+            throw new InvalidRequestException(bindingResult);
         }
 
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-
+        return authService.login(user.get(), loginRequest);
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteUser(@PathVariable("id") long id) {
-        Optional<User> user = userService.findById(id);
-        if (user.isPresent()) {
-            try {
-                userService.delete(user.get());
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            } catch (Exception e) {
-                return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
-            }
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    @PostMapping("/refresh/token")
+    public AuthenticationResponse refreshTokens(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        return authService.refreshToken(refreshTokenRequest);
     }
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        accessTokenService.deleteRefreshToken(refreshTokenRequest.getRefreshToken());
+        return ResponseEntity.status(HttpStatus.OK).body("Refresh Token Deleted Successfully!!");
+    }
+//    @PostMapping
+//    public ResponseEntity userLogin(@Valid @RequestBody LoginDto loginDto, BindingResult bindingResult) {
+//        Optional<User> optional = userService.findByEmail(loginDto.getEmail());
+//        if (optional.isPresent() && encryptService.check(encryptService.encrypt(loginParam.getPassword()), optional.get().getPassword())) {
+//            UserData userData = userService.findUserDataById(optional.get().getId()).get();
+//            return ResponseEntity.ok(userResponse(new UserWithToken(userData, jwtService.toToken(optional.get()))));
+//        } else {
+//            bindingResult.rejectValue("password", "INVALID", "invalid email or password");
+//            throw new InvalidRequestException(bindingResult);
+//        }
+//    }
 
+//    private Map<String, Object> userResponse(UserWithToken userWithToken) {
+//        return new HashMap<String, Object>() {{
+//            put("user", userWithToken);
+//        }};
+//    }
 }

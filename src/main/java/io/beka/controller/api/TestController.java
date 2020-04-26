@@ -18,6 +18,7 @@ import java.util.HashMap;
 public class TestController {
     private final AccessTokenService accessTokenService;
     private final UserService userService;
+
     @Value("${jwt.sessionTime}")
     int sessionTime;
 

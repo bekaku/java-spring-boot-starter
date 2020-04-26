@@ -1,16 +1,20 @@
 package io.beka.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Getter;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.Set;
 
+@JsonRootName("role")
 @Getter
 @Entity
 public class Role {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
+    @GenericGenerator(name = "native", strategy = "native")
     private Long id;
 
     private String name;
@@ -21,6 +25,13 @@ public class Role {
     @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean status;
 
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
-    private Set<PermissionRole> permissionRoles;
+    @ManyToMany(mappedBy = "roles")
+    Set<User> users;
+
+    @ManyToMany
+    @JoinTable(
+            name = "role_permission",
+            joinColumns = @JoinColumn(name = "permission"),
+            inverseJoinColumns = @JoinColumn(name = "role"))
+    private Set<Permission> permissions;
 }

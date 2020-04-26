@@ -1,13 +1,46 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="io.beka.mapper.UserMapper">
+<!--    Query-->
+    <sql id="selectUserData">
+        select
+        U.id,
+        U.email,
+        U.username,
+        U.image,
+        U.status,
+        UR.role roleId
+        from
+        user U
+        left join user_role UR on UR.user = U.id
+    </sql>
+
+    <select id="findAll" resultMap="userDataResult">
+        <include refid="selectUserData"/>
+        limit #{page.offset}, #{page.limit}
+    </select>
     <select id="findByUsername" resultType="io.beka.model.data.UserData">
         select * from user where username = #{username}
     </select>
     <select id="findByEmail" resultType="io.beka.model.data.UserData">
         select * from user where username = #{email}
     </select>
-    <select id="findById" resultType="io.beka.model.data.UserData">
-        select * from user where id = #{id}
+    <select id="findById" resultMap="userDataResult">
+        <include refid="selectUserData"/>
+        where U.id = #{id}
     </select>
+
+
+
+<!--Result Map-->
+    <resultMap id="userDataResult" type="io.beka.model.data.UserData">
+        <id column="id" property="id"/>
+        <result column="email" property="email"/>
+        <result column="username" property="username"/>
+        <result column="image" property="image"/>
+        <result column="status" property="status"/>
+        <collection property="userRoles" javaType="list" ofType="string">
+            <result column="roleId"/>
+        </collection>
+    </resultMap>
 </mapper>

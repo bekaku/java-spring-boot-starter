@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 
 @Data
 @NoArgsConstructor
@@ -12,6 +14,7 @@ public class UserData {
     private String id;
     private String email;
     private String username;
-    private String bio;
     private String image;
+    private Boolean status;
+    private List<String> userRoles;
 }

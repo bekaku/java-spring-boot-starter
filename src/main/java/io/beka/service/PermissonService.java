@@ -45,24 +45,24 @@ public class PermissonService {
 
 
     //custom JPA query
-    public List<Permission> findAllNativeByCrudTableAndActive(String curdTable, Boolean status) {
-        Query query = this.entityManager.createNativeQuery("select * from permission p where p.crud_table = :tableName AND p.status=:status ", Permission.class);
-        query.setParameter("tableName", curdTable);
-        query.setParameter("status", status);
-        return query.getResultList();
-    }
-    public List<Permission> findAllNativePaging(Page page) {
-        Query query = this.entityManager.createNativeQuery("select * from permission p limit :offset, :limit ", Permission.class);
-        query.setParameter("offset", page.getOffset());
-        query.setParameter("limit", page.getLimit());
-        System.out.println("getResultList : "+query.getResultList().size());
-        return query.getResultList();
-    }
+//    public List<Permission> findAllNativeByCrudTableAndActive(String curdTable, Boolean status) {
+//        Query query = this.entityManager.createNativeQuery("select * from permission p where p.crud_table = :tableName AND p.status=:status ", Permission.class);
+//        query.setParameter("tableName", curdTable);
+//        query.setParameter("status", status);
+//        return query.getResultList();
+//    }
+//    public List<Permission> findAllNativePaging(Page page) {
+//        Query query = this.entityManager.createNativeQuery("select * from permission p limit :offset, :limit ", Permission.class);
+//        query.setParameter("offset", page.getOffset());
+//        query.setParameter("limit", page.getLimit());
+//        System.out.println("getResultList : "+query.getResultList().size());
+//        return query.getResultList();
+//    }
 
-    public List<Object[]> findAllNativeByCustomObject() {
-        List<Object[]> list = this.entityManager.createNativeQuery("SELECT * FROM permission p WHERE p.status=:status ")
-                .setParameter("status", true) //positional parameter binding
-                .getResultList();
+//    public List<Object[]> findAllNativeByCustomObject() {
+//        List<Object[]> list = this.entityManager.createNativeQuery("SELECT * FROM permission p WHERE p.status=:status ")
+//                .setParameter("status", true) //positional parameter binding
+//                .getResultList();
         /*
          for (Object[] objects : list) {
             Integer id=(Integer)objects[0];
@@ -71,6 +71,6 @@ public class PermissonService {
             System.out.println("Employee["+id+","+name+","+designation+"]");
          }
          */
-        return list;
-    }
+//        return list;
+//    }
 }

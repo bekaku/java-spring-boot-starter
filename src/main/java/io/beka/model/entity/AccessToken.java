@@ -4,20 +4,23 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.util.Date;
 import java.util.UUID;
 
+import static javax.persistence.FetchType.LAZY;
+
 @Getter
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = {"token"})
 @Entity
 public class AccessToken {
 
     public AccessToken(User user, String name , Date expiresAt, boolean revoked) {
-        this.id = UUID.randomUUID().toString();
+        this.token = UUID.randomUUID().toString();
         this.user = user;
         this.name = name;
         this.expiresAt = expiresAt;
@@ -25,14 +28,17 @@ public class AccessToken {
     }
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
+    @GenericGenerator(name = "native", strategy = "native")
+    private Long id;
 
+    private String token;
 
     @ManyToOne
     @JoinColumn(name = "user")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "apiClient")
     private ApiClient apiClient;
 

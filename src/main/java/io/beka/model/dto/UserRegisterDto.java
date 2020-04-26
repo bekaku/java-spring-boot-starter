@@ -1,4 +1,4 @@
-package io.beka.model.json.param;
+package io.beka.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Getter;
@@ -7,11 +7,13 @@ import lombok.NoArgsConstructor;
 @Getter
 @JsonRootName("userRegister")
 @NoArgsConstructor
-public class UserRegisterParam {
+public class UserRegisterDto {
 
     private String username;
 
     private String password;
 
     private String email;
+
+    private String[] userRoles;
 }

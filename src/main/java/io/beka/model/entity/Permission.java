@@ -5,8 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Data
 @Getter
@@ -16,7 +18,8 @@ import javax.persistence.*;
 @Entity
 public class Permission {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
+    @GenericGenerator(name = "native", strategy = "native")
     private Long id;
 
     @Basic(optional = false)
@@ -31,5 +34,8 @@ public class Permission {
 
     @Basic(optional = false)
     private String crudTable;
+
+    @ManyToMany(mappedBy = "permissions")
+    Set<Role> roles;
 
 }
