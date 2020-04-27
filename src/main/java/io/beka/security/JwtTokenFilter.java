@@ -1,6 +1,13 @@
 package io.beka.security;
 
 
+import io.beka.model.data.UserData;
+import io.beka.model.data.UserWithToken;
+import io.beka.model.dto.AuthenticationResponse;
+import io.beka.model.entity.Role;
+import io.beka.model.entity.User;
+import io.beka.repository.AccessTokenRepository;
+import io.beka.repository.UserRepository;
 import io.beka.service.JwtService;
 import io.beka.service.UserService;
 import lombok.AllArgsConstructor;
@@ -23,29 +30,39 @@ import java.util.Optional;
 public class JwtTokenFilter extends OncePerRequestFilter {
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
+
+    @Autowired
+    private AccessTokenRepository accessTokenRepository;
 
     @Autowired
     private JwtService jwtService;
 
-    private String header = "Authorization";
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        getTokenString(request.getHeader(header)).ifPresent(token -> {
-            jwtService.getSubFromToken(token).ifPresent(email -> {
-                if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    userService.findByEmail(email).ifPresent(user -> {
+        String header = "Authorization";
+        getTokenString(request.getHeader(header)).flatMap(token -> jwtService.getSubFromToken(token)).ifPresent(refreshToken -> {
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                accessTokenRepository.findByToken(refreshToken).ifPresent(accessToken -> {
+//                    userRepository.findByEmail(email).ifPresent(user -> {
+                    User user = accessToken.getUser();
+                    if (user.getStatus()) {
+                        UserData userData = new UserData();
+                        userData.setId(user.getId());
+                        userData.setUsername(user.getUsername());
+                        userData.setEmail(user.getEmail());
+                        userData.setImage(user.getImage());
+                        userData.setStatus(user.getStatus());
                         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                                user,
+                                userData,
                                 null,
                                 Collections.emptyList()
                         );
                         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                    });
-                }
-            });
+                    }
+                });
+            }
         });
 
         filterChain.doFilter(request, response);

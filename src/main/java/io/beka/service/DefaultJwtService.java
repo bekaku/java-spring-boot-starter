@@ -5,6 +5,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -26,9 +28,10 @@ public class DefaultJwtService implements JwtService {
     }
 
     @Override
-    public String toToken(User user) {
+    public String toToken(String token) {
         return Jwts.builder()
-                .setSubject(user.getEmail())
+                .setSubject(token)
+                .setIssuedAt(new Date())
                 .setExpiration(expireTimeFromNow())
                 .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
@@ -38,13 +41,25 @@ public class DefaultJwtService implements JwtService {
     public Optional<String> getSubFromToken(String token) {
         try {
             Jws<Claims> claimsJws = Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+
+            long expiredTime = claimsJws.getBody().getExpiration().getTime();
+            long nowTime = System.currentTimeMillis();
+            if(nowTime>expiredTime){
+                return Optional.empty();
+            }
             return Optional.ofNullable(claimsJws.getBody().getSubject());
         } catch (Exception e) {
             return Optional.empty();
         }
     }
 
-    private Date expireTimeFromNow() {
+    @Override
+    public Date expireTimeFromNow() {
         return new Date(System.currentTimeMillis() + sessionTime * 1000);
+    }
+
+    @Override
+    public int expireMillisec() {
+        return sessionTime * 1000;
     }
 }

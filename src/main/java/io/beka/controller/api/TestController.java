@@ -37,7 +37,7 @@ public class TestController {
 //        accessTokenService.save(accessToken);
 
         return ResponseEntity.ok(new HashMap<String, Object>() {{
-            put("accessToken", user.getAccessTokens());
+//            put("accessToken", user.getAccessTokens());
         }});
     }
 }

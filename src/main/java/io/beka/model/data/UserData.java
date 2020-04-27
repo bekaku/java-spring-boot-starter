@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserData {
-    private String id;
+    private Long id;
     private String email;
     private String username;
     private String image;

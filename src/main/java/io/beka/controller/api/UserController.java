@@ -4,6 +4,7 @@ import io.beka.exception.InvalidRequestException;
 import io.beka.model.Page;
 import io.beka.model.data.UserData;
 import io.beka.model.data.UserWithToken;
+import io.beka.model.dto.AuthenticationResponse;
 import io.beka.model.entity.Role;
 import io.beka.model.entity.User;
 import io.beka.model.dto.UserRegisterDto;
@@ -13,8 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +28,6 @@ public class UserController {
 
     private final UserService userService;
     private final RoleService roleService;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     @Value("${image.default}")
@@ -39,16 +37,13 @@ public class UserController {
     Long defaultRole;
 
     @GetMapping("/current-user")
-    public HashMap<String, Object> currentUser(@AuthenticationPrincipal User currentUser,
-                                               @RequestHeader(value = "Authorization") String authorization) {
-//        org.springframework.security.core.userdetails.User principal = (org.springframework.security.core.userdetails.User) SecurityContextHolder.
-//                getContext().getAuthentication().getPrincipal();
-
-        return new HashMap<String, Object>() {{
-            put("user", currentUser);
-            put("authorization", authorization);
-        }};
+    public ResponseEntity<UserData> currentUser(@AuthenticationPrincipal UserData user) {
+//        return ResponseEntity.ok(new HashMap<String, Object>() {{
+//            put("user", user);
+//        }});
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
+
     @GetMapping
     public ResponseEntity<List<UserData>> getAllUser(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                                      @RequestParam(value = "limit", defaultValue = "20") int limit) {
@@ -75,7 +70,8 @@ public class UserController {
 
         User user = new User(
                 registerDto.getUsername(),
-                passwordEncoder.encode(registerDto.getPassword()),
+//                passwordEncoder.encode(registerDto.getPassword()),
+                registerDto.getPassword(),
                 registerDto.getEmail(),
                 false,
                 defaultImage,
@@ -85,7 +81,7 @@ public class UserController {
         userService.save(user);
         Optional<UserData> userData = userService.findUserDataById(user.getId());
         if (userData.isPresent()) {
-            UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken(user));
+            UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken("token"));
             return ResponseEntity.ok(new HashMap<String, Object>() {{
                 put("user", userWithToken);
             }});
@@ -133,7 +129,7 @@ public class UserController {
             User userUpdate = user.get();
             userUpdate.update(
                     param.getUsername(),
-                    passwordEncoder.encode(param.getPassword()),
+                    param.getPassword(),
                     param.getEmail(),
                     false,
                     defaultImage
@@ -141,7 +137,7 @@ public class UserController {
 
             Optional<UserData> userData = userService.findUserDataById(userUpdate.getId());
             if (userData.isPresent()) {
-                UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken(userUpdate));
+                UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken("token"));
                 return new ResponseEntity<>(userWithToken, HttpStatus.OK);
             }
         }

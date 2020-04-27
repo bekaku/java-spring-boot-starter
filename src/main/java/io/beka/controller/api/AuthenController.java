@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,9 +33,9 @@ public class AuthenController {
     private final UserService userService;
     private final AuthService authService;
     private final AccessTokenService accessTokenService;
+    private final EncryptService encryptService;
 
     private final RoleService roleService;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     @Value("${image.default}")
@@ -65,9 +64,9 @@ public class AuthenController {
 
         User user = new User(
                 registerDto.getUsername(),
-                passwordEncoder.encode(registerDto.getPassword()),
+                encryptService.encrypt(registerDto.getPassword()),
                 registerDto.getEmail(),
-                false,
+                true,
                 defaultImage,
                 roles
         );
@@ -75,7 +74,7 @@ public class AuthenController {
         userService.save(user);
         Optional<UserData> userData = userService.findUserDataById(user.getId());
         if (userData.isPresent()) {
-            UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken(user));
+            UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken("token"));
             return ResponseEntity.ok(new HashMap<String, Object>() {{
                 put("user", userWithToken);
             }});
@@ -86,6 +85,7 @@ public class AuthenController {
                     .body("Error Message");
         }
     }
+
     private void checkInput(@Valid @RequestBody UserRegisterDto registerParam, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new InvalidRequestException(bindingResult);
@@ -110,19 +110,25 @@ public class AuthenController {
 
     @PostMapping("/login")
     public AuthenticationResponse login(@RequestBody LoginDto loginRequest, BindingResult bindingResult) {
-
         Optional<User> user = userService.findByEmail(loginRequest.getEmail());
-        if (user.isEmpty()){
+        if (user.isEmpty()) {
+            bindingResult.rejectValue("email", "INVALID", "invalid email or password");
+            throw new InvalidRequestException(bindingResult);
+        }
+
+        if (!encryptService.check(loginRequest.getPassword(), user.get().getPassword()) && user.get().getStatus()) {
             bindingResult.rejectValue("password", "INVALID", "invalid email or password");
             throw new InvalidRequestException(bindingResult);
         }
 
         return authService.login(user.get(), loginRequest);
     }
+
     @PostMapping("/refresh/token")
     public AuthenticationResponse refreshTokens(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
         return authService.refreshToken(refreshTokenRequest);
     }
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
         accessTokenService.deleteRefreshToken(refreshTokenRequest.getRefreshToken());

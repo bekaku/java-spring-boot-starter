@@ -62,8 +62,8 @@ public class User {
     @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean status;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<AccessToken> accessTokens;
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+//    private List<AccessToken> accessTokens;
 
     @ManyToMany
     @JoinTable(
