@@ -8,6 +8,7 @@ import io.beka.util.DateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.Optional;
@@ -28,10 +29,12 @@ public class AccessTokenService {
         return accessTokenRepository.save(accessToken);
     }
 
+    @Transactional(readOnly = true)
     public Optional<AccessToken> findById(Long id) {
         return accessTokenRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
     public Optional<AccessToken> findByToken(String token) {
         return accessTokenRepository.findByToken(token);
     }
@@ -51,6 +54,7 @@ public class AccessTokenService {
         return save(accessToken);
     }
 
+    @Transactional(readOnly = true)
     void validateRefreshToken(String token) {
         accessTokenRepository.findByToken(token)
                 .orElseThrow(() -> new AppException("Invalid refresh Token"));

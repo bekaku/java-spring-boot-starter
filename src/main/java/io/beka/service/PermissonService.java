@@ -5,6 +5,7 @@ import io.beka.model.entity.Permission;
 import io.beka.repository.PermissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -23,10 +24,12 @@ public class PermissonService {
     private final PermissionRepository permissionRepository;
     private final PermissionMapper permissionMapper;
 
+    @Transactional(readOnly = true)
     public List<Permission> findAll() {
         return permissionRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Optional<Permission> findById(Long id) {
         return permissionRepository.findById(id);
     }

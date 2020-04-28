@@ -3,6 +3,7 @@ package io.beka.model.entity;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,18 +13,32 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-@Data
-@JsonRootName("apiClient")
 @Getter
 @Entity
+@NoArgsConstructor
 public class ApiClient {
-//    @GeneratedValue(strategy = GenerationType.AUTO)
+
+    public ApiClient(String apiName, Boolean byPass, Boolean status) {
+        this.apiName = apiName;
+        this.byPass = byPass;
+        this.status = status;
+    }
+
+    public void update(String apiName, Boolean byPass, Boolean status) {
+        if (!"".equals(apiName)) {
+            this.apiName = apiName;
+        }
+        this.byPass = byPass;
+        this.status = status;
+    }
+
+    //    @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
     private Long id;
 
-    @Column(name = "api_name", nullable = false, length=100)
+    @Column(name = "api_name", nullable = false, length = 100)
     private String apiName;
 
     @Column(columnDefinition = "tinyint(1) default 0")

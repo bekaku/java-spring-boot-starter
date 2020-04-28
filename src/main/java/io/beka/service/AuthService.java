@@ -53,13 +53,11 @@ public class AuthService {
     }
 
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
-//        accessTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
-
         AccessToken accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken()).orElseThrow(() -> new AppException("Token not found with name - " + refreshTokenRequest.getRefreshToken()));
-
         //revoke old token
-        accessToken.setRevoked(true);
-        accessTokenService.save(accessToken);
+        accessTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
+//        accessToken.setRevoked(true);
+//        accessTokenService.save(accessToken);
 
         User user = userRepository.findByEmail(refreshTokenRequest.getEmail()).orElseThrow(() -> new AppException("User not found with name - " + refreshTokenRequest.getEmail()));
         return AuthenticationResponse.builder()
