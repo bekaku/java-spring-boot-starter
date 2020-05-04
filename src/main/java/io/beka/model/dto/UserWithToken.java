@@ -1,5 +1,6 @@
-package io.beka.model.data;
+package io.beka.model.dto;
 
+import io.beka.model.dto.UserData;
 import lombok.Getter;
 
 @Getter

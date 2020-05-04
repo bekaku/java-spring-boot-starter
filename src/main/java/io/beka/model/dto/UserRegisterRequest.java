@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @JsonRootName("userRegister")
 @NoArgsConstructor
-public class UserRegisterDto {
+public class UserRegisterRequest {
 
     private String username;
 

@@ -1,27 +1,15 @@
 package io.beka.controller.api;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
 import io.beka.exception.InvalidRequestException;
-import io.beka.model.Page;
-import io.beka.model.data.UserData;
 import io.beka.model.dto.ApiClientDto;
-import io.beka.model.dto.UserRegisterDto;
-import io.beka.model.entity.ApiClient;
 import io.beka.service.ApiClientService;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import java.util.List;
-import java.util.Locale;
 
 @RequestMapping(path = "/api/apiClient")
 @AllArgsConstructor

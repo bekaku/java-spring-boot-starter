@@ -1,4 +1,4 @@
-package io.beka.model.data;
+package io.beka.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

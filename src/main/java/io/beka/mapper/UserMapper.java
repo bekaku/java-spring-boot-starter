@@ -1,8 +1,7 @@
 package io.beka.mapper;
 
 import io.beka.model.Page;
-import io.beka.model.data.UserData;
-import io.beka.model.entity.Permission;
+import io.beka.model.dto.UserData;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

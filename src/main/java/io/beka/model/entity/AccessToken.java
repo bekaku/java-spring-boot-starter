@@ -21,12 +21,13 @@ import static javax.persistence.FetchType.LAZY;
 @Entity
 public class AccessToken {
 
-    public AccessToken(User user, String name , Date expiresAt, boolean revoked) {
+    public AccessToken(User user, String name , Date expiresAt, boolean revoked, ApiClient apiClient) {
         this.token = UUID.randomUUID().toString();
         this.user = user;
         this.name = name;
         this.expiresAt = expiresAt;
         this.revoked = revoked;
+        this.apiClient = apiClient;
     }
 
     @Id

@@ -2,12 +2,11 @@ package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
 import io.beka.model.Page;
-import io.beka.model.data.UserData;
-import io.beka.model.data.UserWithToken;
-import io.beka.model.dto.AuthenticationResponse;
+import io.beka.model.dto.UserData;
+import io.beka.model.dto.UserWithToken;
 import io.beka.model.entity.Role;
 import io.beka.model.entity.User;
-import io.beka.model.dto.UserRegisterDto;
+import io.beka.model.dto.UserRegisterRequest;
 import io.beka.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,50 +49,7 @@ public class UserController {
         return new ResponseEntity<>(userService.findAllUserData(new Page(offset, limit)), HttpStatus.OK);
     }
 
-    @PostMapping
-    public ResponseEntity create(@Valid @RequestBody UserRegisterDto registerDto, BindingResult bindingResult) {
-        checkInput(registerDto, bindingResult);
-
-        //user can have manu role
-        Set<Role> roles = new HashSet<>();
-        if (registerDto.getUserRoles().length > 0) {
-            Optional<Role> role = Optional.empty();
-            for (String roleId : registerDto.getUserRoles()) {
-                role = roleService.findById(Long.valueOf(roleId));
-                role.ifPresent(roles::add);
-            }
-        } else {
-            //save defult role for new user
-            Optional<Role> role = roleService.findById(defaultRole);
-            role.ifPresent(roles::add);
-        }
-
-        User user = new User(
-                registerDto.getUsername(),
-//                passwordEncoder.encode(registerDto.getPassword()),
-                registerDto.getPassword(),
-                registerDto.getEmail(),
-                false,
-                defaultImage,
-                roles
-        );
-
-        userService.save(user);
-        Optional<UserData> userData = userService.findUserDataById(user.getId());
-        if (userData.isPresent()) {
-            UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken("token"));
-            return ResponseEntity.ok(new HashMap<String, Object>() {{
-                put("user", userWithToken);
-            }});
-
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.EXPECTATION_FAILED)
-                    .body("Error Message");
-        }
-    }
-
-    private void checkInput(@Valid @RequestBody UserRegisterDto registerParam, BindingResult bindingResult) {
+    private void checkInput(@Valid @RequestBody UserRegisterRequest registerParam, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new InvalidRequestException(bindingResult);
         }
@@ -122,7 +78,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserWithToken> updateUser(@PathVariable("id") long id, @RequestBody UserRegisterDto param) {
+    public ResponseEntity<UserData> updateUser(@PathVariable("id") long id, @RequestBody UserRegisterRequest param) {
         Optional<User> user = userService.findById(id);
 
         if (user.isPresent()) {
@@ -137,8 +93,7 @@ public class UserController {
 
             Optional<UserData> userData = userService.findUserDataById(userUpdate.getId());
             if (userData.isPresent()) {
-                UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken("token"));
-                return new ResponseEntity<>(userWithToken, HttpStatus.OK);
+                return new ResponseEntity<>(userData.get(), HttpStatus.OK);
             }
         }
 

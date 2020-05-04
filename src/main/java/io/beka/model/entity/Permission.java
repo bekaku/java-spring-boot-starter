@@ -29,7 +29,7 @@ public class Permission {
     @Basic(optional = false)
     private String description;
 
-    @Basic(optional = false)
+    @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean status=true;
 
     @Basic(optional = false)

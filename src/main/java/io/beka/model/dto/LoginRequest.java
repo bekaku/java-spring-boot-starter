@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 @Getter
 @JsonRootName("user")
 @NoArgsConstructor
-public class LoginDto {
+public class LoginRequest {
 
         @NotBlank(message = "can't be empty")
         @Email(message = "should be an email")

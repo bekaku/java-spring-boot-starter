@@ -2,6 +2,7 @@ package io.beka.service;
 
 import io.beka.exception.AppException;
 import io.beka.model.entity.AccessToken;
+import io.beka.model.entity.ApiClient;
 import io.beka.model.entity.User;
 import io.beka.repository.AccessTokenRepository;
 import io.beka.util.DateUtil;
@@ -43,13 +44,14 @@ public class AccessTokenService {
         accessTokenRepository.delete(accessToken);
     }
 
-    public AccessToken generateRefreshToken(User user) {
+    public AccessToken generateRefreshToken(User user, ApiClient apiClient, String userAgent) {
         Date expires = new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000 : DateUtil.MILLS_IN_YEAR));
         AccessToken accessToken = new AccessToken(
                 user,
-                jwtSecret,
+                userAgent,
                 expires,
-                false
+                false,
+                apiClient
         );
         return save(accessToken);
     }

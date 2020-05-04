@@ -1,21 +1,20 @@
 package io.beka.security;
 
 
-import io.beka.model.data.UserData;
-import io.beka.model.data.UserWithToken;
-import io.beka.model.dto.AuthenticationResponse;
-import io.beka.model.entity.Role;
+import io.beka.model.dto.UserData;
+import io.beka.model.entity.ApiClient;
 import io.beka.model.entity.User;
 import io.beka.repository.AccessTokenRepository;
+import io.beka.repository.ApiClientRepository;
 import io.beka.repository.UserRepository;
+import io.beka.service.DefaultJwtService;
 import io.beka.service.JwtService;
-import io.beka.service.UserService;
-import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -29,8 +28,13 @@ import java.util.Optional;
 @SuppressWarnings("SpringJavaAutowiringInspection")
 public class JwtTokenFilter extends OncePerRequestFilter {
 
+    Logger logger = LoggerFactory.getLogger(JwtTokenFilter.class);
+
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ApiClientRepository apiClientRepository;
 
     @Autowired
     private AccessTokenRepository accessTokenRepository;
@@ -41,10 +45,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = "Authorization";
-        getTokenString(request.getHeader(header)).flatMap(token -> jwtService.getSubFromToken(token)).ifPresent(refreshToken -> {
+        String headerApiName = "Accept-ApiClient";
+        verifyApiClient(request.getHeader(headerApiName)).flatMap(apiClient ->
+                getTokenString(request.getHeader(header)).flatMap(token ->
+                        jwtService.getSubFromToken(token, apiClient))).ifPresent(refreshToken -> {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 accessTokenRepository.findByToken(refreshToken).ifPresent(accessToken -> {
-//                    userRepository.findByEmail(email).ifPresent(user -> {
                     User user = accessToken.getUser();
                     if (user.getStatus()) {
                         UserData userData = new UserData();
@@ -64,7 +70,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 });
             }
         });
-
         filterChain.doFilter(request, response);
     }
 
@@ -78,6 +83,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             } else {
                 return Optional.ofNullable(split[1]);
             }
+        }
+    }
+
+    private Optional<ApiClient> verifyApiClient(String apiName) {
+        if (apiName == null) {
+            return Optional.empty();
+        } else {
+            Optional<ApiClient> apiClient = apiClientRepository.findByApiName(apiName);
+            if (apiClient.isPresent()) {
+                return apiClient.get().getStatus() || apiClient.get().getByPass() ? apiClient : Optional.empty();
+            }
+            return Optional.empty();
         }
     }
 }

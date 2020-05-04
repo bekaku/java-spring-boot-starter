@@ -1,12 +1,14 @@
 package io.beka.service;
 
-import io.beka.model.entity.User;
+import io.beka.model.entity.ApiClient;
+import io.beka.security.JwtTokenFilter;
+import io.beka.util.DateUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,8 @@ public class DefaultJwtService implements JwtService {
     private String secret;
     private int sessionTime;
 
+    Logger logger = LoggerFactory.getLogger(DefaultJwtService.class);
+
     @Autowired
     public DefaultJwtService(@Value("${jwt.secret}") String secret,
                              @Value("${jwt.sessionTime}") int sessionTime) {
@@ -28,19 +32,19 @@ public class DefaultJwtService implements JwtService {
     }
 
     @Override
-    public String toToken(String token) {
+    public String toToken(String token, ApiClient apiClient) {
         return Jwts.builder()
                 .setSubject(token)
                 .setIssuedAt(new Date())
                 .setExpiration(expireTimeFromNow())
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(SignatureAlgorithm.HS512, apiClient.getApiToken())
                 .compact();
     }
 
     @Override
-    public Optional<String> getSubFromToken(String token) {
+    public Optional<String> getSubFromToken(String token, ApiClient apiClient) {
         try {
-            Jws<Claims> claimsJws = Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            Jws<Claims> claimsJws = Jwts.parser().setSigningKey(apiClient.getApiToken()).parseClaimsJws(token);
 
             long expiredTime = claimsJws.getBody().getExpiration().getTime();
             long nowTime = System.currentTimeMillis();
@@ -55,7 +59,8 @@ public class DefaultJwtService implements JwtService {
 
     @Override
     public Date expireTimeFromNow() {
-        return new Date(System.currentTimeMillis() + sessionTime * 1000);
+        //        return new Date(System.currentTimeMillis() + sessionTime * 1000);
+        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000 : DateUtil.MILLS_IN_YEAR));
     }
 
     @Override

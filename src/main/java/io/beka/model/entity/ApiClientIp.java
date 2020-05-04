@@ -27,6 +27,8 @@ public class ApiClientIp {
     @JoinColumn(name = "apiClient")
     private ApiClient apiClient;
 
+    private String ipAddress;
+
     @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean status;
 

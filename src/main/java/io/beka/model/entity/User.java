@@ -1,6 +1,6 @@
 package io.beka.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,15 +10,17 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode(of = {"salt"})
 @Entity
 public class User {
     public User(String username, String password, String email, Boolean status, String image, Set<Role> roles) {
+        this.salt = UUID.randomUUID().toString();
         this.username = username;
         this.password = password;
         this.email = email;
@@ -26,7 +28,8 @@ public class User {
         this.status = status;
         this.roles = roles;
     }
-    public void update(String username, String password,String email, Boolean status, String image) {
+
+    public void update(String username, String password, String email, Boolean status, String image) {
         if (!"".equals(email)) {
             this.email = email;
         }
@@ -41,6 +44,7 @@ public class User {
             this.image = image;
         }
     }
+
     //    @Id
     //    @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
@@ -59,6 +63,8 @@ public class User {
 
     private String image;
 
+    private String salt;
+
     @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean status;
 
@@ -68,8 +74,8 @@ public class User {
     @ManyToMany
     @JoinTable(
             name = "user_role",
-            joinColumns = @JoinColumn(name = "role"),
-            inverseJoinColumns = @JoinColumn(name = "user"))
+            joinColumns = @JoinColumn(name = "user"),
+            inverseJoinColumns = @JoinColumn(name = "role"))
     private Set<Role> roles;
 
     @CreationTimestamp

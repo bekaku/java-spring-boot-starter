@@ -1,25 +1,25 @@
 package io.beka.controller.api;
 
+import io.beka.exception.AppException;
 import io.beka.exception.InvalidRequestException;
-import io.beka.model.data.UserData;
-import io.beka.model.data.UserWithToken;
+import io.beka.model.dto.UserData;
+import io.beka.model.dto.UserWithToken;
 import io.beka.model.dto.AuthenticationResponse;
-import io.beka.model.dto.LoginDto;
+import io.beka.model.dto.LoginRequest;
 import io.beka.model.dto.RefreshTokenRequest;
-import io.beka.model.dto.UserRegisterDto;
+import io.beka.model.dto.UserRegisterRequest;
+import io.beka.model.entity.ApiClient;
 import io.beka.model.entity.Role;
 import io.beka.model.entity.User;
 import io.beka.service.*;
+import io.beka.util.AppUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.*;
@@ -34,9 +34,9 @@ public class AuthenController {
     private final AuthService authService;
     private final AccessTokenService accessTokenService;
     private final EncryptService encryptService;
-
     private final RoleService roleService;
-    private final JwtService jwtService;
+    private final ApiClientService apiClientService;
+
 
     @Value("${image.default}")
     String defaultImage;
@@ -45,7 +45,7 @@ public class AuthenController {
     Long defaultRole;
 
     @PostMapping("/signup")
-    public ResponseEntity signup(@Valid @RequestBody UserRegisterDto registerDto, BindingResult bindingResult) {
+    public ResponseEntity signup(@Valid @RequestBody UserRegisterRequest registerDto, BindingResult bindingResult) {
         checkInput(registerDto, bindingResult);
 
         //user can have manu role
@@ -64,21 +64,22 @@ public class AuthenController {
 
         User user = new User(
                 registerDto.getUsername(),
-                encryptService.encrypt(registerDto.getPassword()),
+                registerDto.getPassword(),
                 registerDto.getEmail(),
                 true,
                 defaultImage,
                 roles
         );
 
+        //encrypt pwd
+        user.setPassword(encryptService.encrypt(user.getPassword(), user.getSalt()));
         userService.save(user);
+
         Optional<UserData> userData = userService.findUserDataById(user.getId());
         if (userData.isPresent()) {
-            UserWithToken userWithToken = new UserWithToken(userData.get(), jwtService.toToken("token"));
             return ResponseEntity.ok(new HashMap<String, Object>() {{
-                put("user", userWithToken);
+                put("user", userData);
             }});
-
         } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
@@ -86,7 +87,7 @@ public class AuthenController {
         }
     }
 
-    private void checkInput(@Valid @RequestBody UserRegisterDto registerParam, BindingResult bindingResult) {
+    private void checkInput(@Valid @RequestBody UserRegisterRequest registerParam, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new InvalidRequestException(bindingResult);
         }
@@ -109,24 +110,39 @@ public class AuthenController {
     }
 
     @PostMapping("/login")
-    public AuthenticationResponse login(@RequestBody LoginDto loginRequest, BindingResult bindingResult) {
+    public AuthenticationResponse login(@RequestBody LoginRequest loginRequest, BindingResult bindingResult,
+                                        @RequestHeader(value = "Accept-ApiClient") String apiClientName,
+                                        @RequestHeader(value = "User-Agent") String userAgent) {
+
+        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
+
+        if (apiClient.isEmpty()) {
+            throw new AppException("Api Client Not found");
+        }
         Optional<User> user = userService.findByEmail(loginRequest.getEmail());
         if (user.isEmpty()) {
-            bindingResult.rejectValue("email", "INVALID", "invalid email or password");
+            bindingResult.rejectValue("email", "INVALID", "user not found with email " + loginRequest.getEmail());
             throw new InvalidRequestException(bindingResult);
         }
 
-        if (!encryptService.check(loginRequest.getPassword(), user.get().getPassword()) && user.get().getStatus()) {
-            bindingResult.rejectValue("password", "INVALID", "invalid email or password");
-            throw new InvalidRequestException(bindingResult);
+        if (!encryptService.check(
+                encryptService.encrypt(loginRequest.getPassword(), user.get().getSalt()), user.get().getPassword())
+                || !user.get().getStatus()) {
+            throw new AppException("invalid email or password");
         }
 
-        return authService.login(user.get(), loginRequest);
+        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent);
     }
 
     @PostMapping("/refresh/token")
-    public AuthenticationResponse refreshTokens(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
-        return authService.refreshToken(refreshTokenRequest);
+    public AuthenticationResponse refreshTokens(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
+                                                @RequestHeader(value = "Accept-ApiClient") String apiClientName,
+                                                @RequestHeader(value = "User-Agent") String userAgent) {
+        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
+        if (apiClient.isEmpty()) {
+            throw new AppException("Api Client Not found");
+        }
+        return authService.refreshToken(refreshTokenRequest, apiClient.get(), AppUtil.getUserAgent(userAgent));
     }
 
     @PostMapping("/logout")
@@ -134,21 +150,4 @@ public class AuthenController {
         accessTokenService.deleteRefreshToken(refreshTokenRequest.getRefreshToken());
         return ResponseEntity.status(HttpStatus.OK).body("Refresh Token Deleted Successfully!!");
     }
-//    @PostMapping
-//    public ResponseEntity userLogin(@Valid @RequestBody LoginDto loginDto, BindingResult bindingResult) {
-//        Optional<User> optional = userService.findByEmail(loginDto.getEmail());
-//        if (optional.isPresent() && encryptService.check(encryptService.encrypt(loginParam.getPassword()), optional.get().getPassword())) {
-//            UserData userData = userService.findUserDataById(optional.get().getId()).get();
-//            return ResponseEntity.ok(userResponse(new UserWithToken(userData, jwtService.toToken(optional.get()))));
-//        } else {
-//            bindingResult.rejectValue("password", "INVALID", "invalid email or password");
-//            throw new InvalidRequestException(bindingResult);
-//        }
-//    }
-
-//    private Map<String, Object> userResponse(UserWithToken userWithToken) {
-//        return new HashMap<String, Object>() {{
-//            put("user", userWithToken);
-//        }};
-//    }
 }
