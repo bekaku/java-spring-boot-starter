@@ -8,6 +8,7 @@ import io.beka.model.dto.AuthenticationResponse;
 import io.beka.model.dto.LoginRequest;
 import io.beka.model.dto.RefreshTokenRequest;
 import io.beka.model.dto.UserRegisterRequest;
+import io.beka.model.entity.AccessToken;
 import io.beka.model.entity.ApiClient;
 import io.beka.model.entity.Role;
 import io.beka.model.entity.User;
@@ -147,7 +148,10 @@ public class AuthenController {
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
-        accessTokenService.deleteRefreshToken(refreshTokenRequest.getRefreshToken());
+        Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken());
+        //            accessTokenService.deleteRefreshToken(refreshTokenRequest.getRefreshToken());
+        accessToken.ifPresent(accessTokenService::delete);
+
         return ResponseEntity.status(HttpStatus.OK).body("Refresh Token Deleted Successfully!!");
     }
 }

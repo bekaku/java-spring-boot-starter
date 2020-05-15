@@ -15,5 +15,13 @@ public interface JwtService {
 
     Date expireTimeFromNow();
 
+    Date expireTimeOneDay();
+
+    Date expireTimeOneWeek();
+
+    Date expireTimeOneMonth();
+
+    Date ExpireTimeOneYear();
+
     int expireMillisec();
 }

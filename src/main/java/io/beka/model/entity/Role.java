@@ -1,22 +1,30 @@
 package io.beka.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Getter;
-import org.hibernate.annotations.GenericGenerator;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Set;
 
-@JsonRootName("role")
 @Getter
+@Setter
 @Entity
-public class Role {
+public class Role extends BaseEntity {
+    public Role(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+    public void update(String name, String description, boolean status) {
+        this.status = status;
+        if (!"".equals(name)) {
+            this.name = name;
+        }
+        if (!"".equals(description)) {
+            this.description = description;
+        }
+    }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-    @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
-
+    @Column(length = 100)
     private String name;
 
     @Column(columnDefinition = "text default null")

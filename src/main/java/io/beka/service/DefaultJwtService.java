@@ -60,7 +60,27 @@ public class DefaultJwtService implements JwtService {
     @Override
     public Date expireTimeFromNow() {
         //        return new Date(System.currentTimeMillis() + sessionTime * 1000);
-        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000 : DateUtil.MILLS_IN_YEAR));
+        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000 : DateUtil.MILLS_IN_DAY));
+    }
+
+    @Override
+    public Date expireTimeOneDay() {
+        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_DAY);
+    }
+
+    @Override
+    public Date expireTimeOneWeek() {
+        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_WEEK);
+    }
+
+    @Override
+    public Date expireTimeOneMonth() {
+        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_MONTH);
+    }
+
+    @Override
+    public Date ExpireTimeOneYear() {
+        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_YEAR);
     }
 
     @Override

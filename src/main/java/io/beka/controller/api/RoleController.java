@@ -1,6 +1,7 @@
 package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
+import io.beka.model.dto.RoleDto;
 import io.beka.model.entity.Role;
 import io.beka.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +23,12 @@ public class RoleController {
     private RoleService roleService;
 
     @PostMapping
-    public ResponseEntity create(@Valid @RequestBody Role role, BindingResult bindingResult) {
+    public ResponseEntity create(@Valid @RequestBody RoleDto dto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new InvalidRequestException(bindingResult);
         }
+
+        Role role = new Role(dto.getName(), dto.getDescription());
 
         roleService.save(role);
 

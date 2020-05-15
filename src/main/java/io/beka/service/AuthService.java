@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Transactional
 @Service
@@ -55,13 +56,21 @@ public class AuthService {
 
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest, ApiClient apiClient, String userAgent) {
         AccessToken accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken()).orElseThrow(() -> new AppException("Token not found with name - " + refreshTokenRequest.getRefreshToken()));
+
         //revoke old token
-        accessTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
+//        accessTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
 //        accessToken.setRevoked(true);
 //        accessTokenService.save(accessToken);
 
         User user = userRepository.findByEmail(refreshTokenRequest.getEmail()).orElseThrow(() -> new AppException("User not found with name - " + refreshTokenRequest.getEmail()));
-        String token = accessTokenService.generateRefreshToken(user, apiClient, userAgent).getToken();
+//        String token = accessTokenService.generateRefreshToken(user, apiClient, userAgent).getToken();
+
+        //update refresh token
+        String token = UUID.randomUUID().toString();
+        accessToken.setToken(token);
+        accessToken.setExpiresAt(jwtService.expireTimeFromNow());
+        accessTokenService.save(accessToken);
+
         return AuthenticationResponse.builder()
                 .authenticationToken(jwtService.toToken(token, apiClient))
                 .refreshToken(token)
