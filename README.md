@@ -9,7 +9,7 @@ Only supported on Java 1.8 and up.
 
 ### 1. Download this repository
 ```
-git clone https://github.com/bekaku/beka-spring-boot-rest-api-starter my-app
+git clone https://github.com/bekaku/java-spring-boot-rest-api my-app
 ```
 
 Repository will be downloaded into `my-app/` folder
