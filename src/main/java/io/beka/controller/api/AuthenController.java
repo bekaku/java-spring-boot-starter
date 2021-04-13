@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -93,7 +94,7 @@ public class AuthenController {
             throw new InvalidRequestException(bindingResult);
         }
 
-        if (StringUtils.isEmpty(registerParam.getUsername())) {
+        if (ObjectUtils.isEmpty(registerParam.getUsername())) {
             bindingResult.rejectValue("username", "REQUIRED", "can't be empty");
         }
 

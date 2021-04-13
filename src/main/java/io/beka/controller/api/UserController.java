@@ -3,22 +3,23 @@ package io.beka.controller.api;
 import io.beka.exception.InvalidRequestException;
 import io.beka.model.Page;
 import io.beka.model.dto.UserData;
-import io.beka.model.dto.UserWithToken;
-import io.beka.model.entity.Role;
-import io.beka.model.entity.User;
 import io.beka.model.dto.UserRegisterRequest;
-import io.beka.service.*;
+import io.beka.model.entity.User;
+import io.beka.service.JwtService;
+import io.beka.service.RoleService;
+import io.beka.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/user")
@@ -55,7 +56,7 @@ public class UserController {
             throw new InvalidRequestException(bindingResult);
         }
 
-        if (StringUtils.isEmpty(registerParam.getUsername())) {
+        if (ObjectUtils.isEmpty(registerParam.getUsername())) {
             bindingResult.rejectValue("username", "REQUIRED", "can't be empty");
         }
 
