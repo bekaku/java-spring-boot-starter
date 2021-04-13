@@ -1,6 +1,6 @@
 plugins {
-	id 'org.springframework.boot' version '2.3.0.M4'
-	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'org.springframework.boot' version '2.4.4'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
 	id 'idea'
 }
@@ -32,17 +32,15 @@ dependencies {
 //	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 //	implementation 'org.flywaydb:flyway-core'
-	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.2'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.4'
 
 	implementation 'log4j:log4j:1.2.17'
 	implementation 'io.jsonwebtoken:jjwt:0.9.1'
-	implementation 'joda-time:joda-time:2.10.5'
-	// https://mvnrepository.com/artifact/javax.validation/validation-api
-//	compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+	implementation 'joda-time:joda-time:2.10.10'
 	implementation 'javax.validation:validation-api:2.0.1.Final'
-	compileOnly 'org.projectlombok:lombok:1.18.12'
+	compileOnly 'org.projectlombok:lombok:1.18.20'
 	runtimeOnly 'mysql:mysql-connector-java'
-	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok:1.18.20'
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
@@ -50,7 +48,7 @@ dependencies {
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:2.1.2'
 	testImplementation 'org.springframework.security:spring-security-test'
-	testImplementation 'org.projectlombok:lombok:1.18.12'
+	testImplementation 'org.projectlombok:lombok:1.18.20'
 	testImplementation 'com.h2database:h2:1.4.200'
 	implementation 'junit:junit:4.12'
 

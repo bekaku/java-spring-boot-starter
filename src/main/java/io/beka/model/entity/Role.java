@@ -2,6 +2,7 @@ package io.beka.model.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -9,7 +10,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-public class Role extends BaseEntity {
+public class Role {
     public Role(String name, String description) {
         this.name = name;
         this.description = description;
@@ -23,6 +24,10 @@ public class Role extends BaseEntity {
             this.description = description;
         }
     }
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
+    @GenericGenerator(name = "native", strategy = "native")
+    private Long id;
 
     @Column(length = 100)
     private String name;

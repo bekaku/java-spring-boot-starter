@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class DashboardController {
 
-    private MessageSource messageSource;
+    private final MessageSource messageSource;
 
     public DashboardController(MessageSource messageSource) {
         this.messageSource = messageSource;
@@ -23,6 +23,7 @@ public class DashboardController {
 
     @RequestMapping("/theymeleaf")
     public String theymeleaf(ModelMap model){
+        System.out.println("DashboardController > theymeleaf 555");
         Permission permission = new Permission();
         permission.setName("test");
 

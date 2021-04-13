@@ -40,6 +40,7 @@ public class UserController {
 //        return ResponseEntity.ok(new HashMap<String, Object>() {{
 //            put("user", user);
 //        }});
+        System.out.println("UserController > currentUser");
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
