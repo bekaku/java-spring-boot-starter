@@ -53,7 +53,7 @@ public class AuthenController {
         //user can have manu role
         Set<Role> roles = new HashSet<>();
         if (registerDto.getUserRoles().length > 0) {
-            Optional<Role> role = Optional.empty();
+            Optional<Role> role;
             for (String roleId : registerDto.getUserRoles()) {
                 role = roleService.findById(Long.valueOf(roleId));
                 role.ifPresent(roles::add);

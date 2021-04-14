@@ -22,9 +22,12 @@ public class PermissionController {
     @PostMapping
     public ResponseEntity create(@Valid @RequestBody Permission permission, BindingResult bindingResult) {
 
-        if (permission.getName()==null || permission.getName().length()==0) {
-            bindingResult.rejectValue("name", "Blank", "can't be empty");
-        }
+//        if (permission.getName()==null || permission.getName().length()==0) {
+//            bindingResult.rejectValue("name", "Blank", "can't be empty");
+//        }
+//        if (bindingResult.hasErrors()) {
+//            throw new InvalidRequestException(bindingResult);
+//        }
         if (bindingResult.hasErrors()) {
             throw new InvalidRequestException(bindingResult);
         }

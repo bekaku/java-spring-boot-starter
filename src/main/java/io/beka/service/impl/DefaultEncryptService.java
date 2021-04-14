@@ -1,5 +1,6 @@
-package io.beka.service;
+package io.beka.service.impl;
 
+import io.beka.service.EncryptService;
 import io.beka.util.AppUtil;
 import org.springframework.stereotype.Service;
 

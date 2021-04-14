@@ -1,5 +1,6 @@
 package io.beka.middleware;
 
+import io.beka.exception.NoAuthorizationException;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -13,7 +14,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String locale = request.getHeader("Accept-Language");
-        System.out.println("Middleware Authorization : preHandle "+ LocaleContextHolder.getLocale());
+        System.out.println("Middleware Authorization : preHandle "+ LocaleContextHolder.getLocale()+", locale : "+locale);
 //        if(true){
 //            throw new NoAuthorizationException();
 //        }

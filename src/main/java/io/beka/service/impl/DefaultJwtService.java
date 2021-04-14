@@ -1,7 +1,7 @@
-package io.beka.service;
+package io.beka.service.impl;
 
 import io.beka.model.entity.ApiClient;
-import io.beka.security.JwtTokenFilter;
+import io.beka.service.JwtService;
 import io.beka.util.DateUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -60,7 +60,7 @@ public class DefaultJwtService implements JwtService {
     @Override
     public Date expireTimeFromNow() {
         //        return new Date(System.currentTimeMillis() + sessionTime * 1000);
-        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000 : DateUtil.MILLS_IN_DAY));
+        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_DAY));
     }
 
     @Override

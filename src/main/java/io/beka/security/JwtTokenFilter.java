@@ -7,7 +7,6 @@ import io.beka.model.entity.User;
 import io.beka.repository.AccessTokenRepository;
 import io.beka.repository.ApiClientRepository;
 import io.beka.repository.UserRepository;
-import io.beka.service.DefaultJwtService;
 import io.beka.service.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +45,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = "Authorization";
         String headerApiName = "Accept-ApiClient";
+
+        logger.info("JwtTokenFilter > doFilterInternal");
+
         verifyApiClient(request.getHeader(headerApiName)).flatMap(apiClient ->
                 getTokenString(request.getHeader(header)).flatMap(token ->
                         jwtService.getSubFromToken(token, apiClient))).ifPresent(refreshToken -> {
@@ -87,15 +89,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     }
 
     private Optional<ApiClient> verifyApiClient(String apiName) {
-        if (apiName == null) {
-            return Optional.empty();
-        } else {
+        if (apiName != null) {
             Optional<ApiClient> apiClient = apiClientRepository.findByApiName(apiName);
             if (apiClient.isPresent()) {
                 return apiClient.get().getStatus() || apiClient.get().getByPass() ? apiClient : Optional.empty();
             }
-            return Optional.empty();
         }
+        return Optional.empty();
     }
 }
 

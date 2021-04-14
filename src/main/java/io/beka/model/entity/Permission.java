@@ -1,10 +1,7 @@
 package io.beka.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -12,6 +9,7 @@ import java.util.Set;
 
 @Data
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonRootName("permision")
@@ -30,7 +28,7 @@ public class Permission {
     private String description;
 
     @Column(columnDefinition = "tinyint(1) default 1")
-    private Boolean status=true;
+    private Boolean status = true;
 
     @Basic(optional = false)
     private String crudTable;

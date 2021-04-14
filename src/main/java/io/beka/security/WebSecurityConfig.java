@@ -32,25 +32,35 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-        if (h2ConsoleEnabled)
+        if (h2ConsoleEnabled) {
             http.authorizeRequests()
                     .antMatchers("/h2-console", "/h2-console/**").permitAll()
                     .and()
                     .headers().frameOptions().sameOrigin();
+        }
 
-        http.csrf().disable()
+        http.csrf()
+                .disable()
                 .cors()
                 .and()
-                .exceptionHandling().authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .exceptionHandling()
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
                 .authorizeRequests()
-                .antMatchers(HttpMethod.OPTIONS).permitAll()
-                .antMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
-                .antMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+                .antMatchers(HttpMethod.OPTIONS)
+                .permitAll()
+                .antMatchers(HttpMethod.GET, "/css/**", "/js/**")
+                .permitAll()
+                .antMatchers(HttpMethod.POST, "/api/auth/**")
+                .permitAll()
                 //test
-                .antMatchers(HttpMethod.GET, "/welcome", "/theymeleaf").permitAll()
-                .anyRequest().authenticated();
+                .antMatchers(HttpMethod.GET, "/welcome", "/theymeleaf")
+                .permitAll()
+                .anyRequest()
+                .authenticated();
 
         http.addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     }
