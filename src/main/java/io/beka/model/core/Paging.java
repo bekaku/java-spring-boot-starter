@@ -1,4 +1,4 @@
-package io.beka.model;
+package io.beka.model.core;
 
 import lombok.Data;
 import lombok.Getter;
@@ -7,12 +7,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Getter
-public class Page {
+public class Paging {
     private static final int MAX_LIMIT = 100;
     private int offset = 0;
     private int limit = 20;
 
-    public Page(int offset, int limit) {
+    public Paging(int offset, int limit) {
         setOffset(offset);
         setLimit(limit);
     }

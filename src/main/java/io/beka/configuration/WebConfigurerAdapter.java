@@ -1,6 +1,5 @@
 package io.beka.configuration;
 
-import io.beka.BekaApplication;
 import io.beka.middleware.AuthorizationInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="th">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -7,11 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
+
 <p>Get attribute from controller</p>
 <h1 th:text="${testHello}"></h1>
+<p>Get from I18n Util</p>
+<h1 th:text="${testMessageI18nUtil}"></h1>
 ---------
 <p>Get Message From i18n prop</p>
-<p th:text="#{title}">Title ...</p>
+
+<p th:text="#{welcome}">Title ...</p>
 -----
 <p>Object Access</p>
 <p th:text="${permission.name}"></p>

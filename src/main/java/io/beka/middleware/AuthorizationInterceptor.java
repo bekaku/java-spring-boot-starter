@@ -14,7 +14,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String locale = request.getHeader("Accept-Language");
-        System.out.println("Middleware Authorization : preHandle "+ LocaleContextHolder.getLocale()+", locale : "+locale);
+        System.out.println("Middleware Authorization : preHandle,  LocaleContextHolder.getLocale() : "+ LocaleContextHolder.getLocale()+", Accept-Language : "+locale);
 //        if(true){
 //            throw new NoAuthorizationException();
 //        }

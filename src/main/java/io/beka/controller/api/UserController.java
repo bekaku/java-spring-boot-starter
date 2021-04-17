@@ -1,7 +1,7 @@
 package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
-import io.beka.model.Page;
+import io.beka.model.core.Paging;
 import io.beka.model.dto.UserData;
 import io.beka.model.dto.UserRegisterRequest;
 import io.beka.model.entity.User;
@@ -48,7 +48,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserData>> getAllUser(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                                      @RequestParam(value = "limit", defaultValue = "20") int limit) {
-        return new ResponseEntity<>(userService.findAllUserData(new Page(offset, limit)), HttpStatus.OK);
+        return new ResponseEntity<>(userService.findAllUserData(new Paging(offset, limit)), HttpStatus.OK);
     }
 
     private void checkInput(@Valid @RequestBody UserRegisterRequest registerParam, BindingResult bindingResult) {

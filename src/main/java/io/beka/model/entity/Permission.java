@@ -1,24 +1,23 @@
 package io.beka.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
-import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.domain.Sort;
 
-import javax.persistence.*;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
 import java.util.Set;
 
-@Data
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonRootName("permision")
 @Entity
-public class Permission {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-    @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
+public class Permission extends BaseEntityWithAudit {
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
+//    @GenericGenerator(name = "native", strategy = "native")
+//    private Long id;
 
     @Basic(optional = false)
     @Column(nullable = false)
@@ -35,5 +34,9 @@ public class Permission {
 
     @ManyToMany(mappedBy = "permissions")
     Set<Role> roles;
+
+    public static Sort getSort(){
+        return Sort.by(Sort.Direction.DESC, "name");
+    }
 
 }

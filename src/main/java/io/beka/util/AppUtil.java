@@ -1,5 +1,8 @@
 package io.beka.util;
 
+import io.beka.model.dto.PermissionDto;
+import io.beka.model.entity.Permission;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

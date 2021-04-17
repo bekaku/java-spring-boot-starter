@@ -1,22 +1,35 @@
 package io.beka.service;
+
 import io.beka.mapper.PermissionMapper;
-import io.beka.model.Page;
+import io.beka.model.core.Paging;
+import io.beka.model.core.ResponseListDto;
+import io.beka.model.dto.PermissionDto;
 import io.beka.model.entity.Permission;
 import io.beka.repository.PermissionRepository;
+import io.beka.service.core.CoreService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
 @RequiredArgsConstructor
 public class PermissonService {
+
+    @Autowired
+    private CoreService<Permission, PermissionDto> coreService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -24,9 +37,27 @@ public class PermissonService {
     private final PermissionRepository permissionRepository;
     private final PermissionMapper permissionMapper;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     @Transactional(readOnly = true)
     public List<Permission> findAll() {
         return permissionRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseListDto<PermissionDto> findAllWithPaging(int page, int size, Sort sort) {
+        Page<Permission> resault = permissionRepository.findAll(PageRequest.of(page, size, sort));
+//        return new ResponseListDto<>(resault.getContent()
+//                .stream()
+//                .map(permission -> coreService.convertEntityToDto(permission, PermissionDto.class))
+//                .collect(Collectors.toList())
+//                , resault.getTotalPages(), resault.getNumberOfElements(), resault.isLast());
+        return new ResponseListDto<>(resault.getContent()
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList())
+                , resault.getTotalPages(), resault.getNumberOfElements(), resault.isLast());
     }
 
     @Transactional(readOnly = true)
@@ -34,6 +65,7 @@ public class PermissonService {
         return permissionRepository.findById(id);
     }
 
+    @Transactional
     public Permission save(Permission permission) {
         return permissionRepository.save(permission);
     }
@@ -41,11 +73,21 @@ public class PermissonService {
     public void deleteById(Long id) {
         permissionRepository.deleteById(id);
     }
+
     //My Batis
-    public List<Permission> findAllViaMapper(Page page){
+    public List<Permission> findAllViaMapper(Paging page) {
         return permissionMapper.findAllWithPaging(page);
     }
 
+    public PermissionDto convertToDto(Permission permission) {
+        return coreService.convertEntityToDto(permission, new PermissionDto());
+//        return modelMapper.map(permission, PermissionDto.class);
+    }
+
+    public Permission convertToEntity(PermissionDto permissionDto) {
+//        return modelMapper.map(permissionDto, Permission.class);
+        return coreService.convertDtoToEntity(new Permission(), permissionDto);
+    }
 
     //custom JPA query
 //    public List<Permission> findAllNativeByCrudTableAndActive(String curdTable, Boolean status) {

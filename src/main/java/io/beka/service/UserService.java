@@ -1,7 +1,7 @@
 package io.beka.service;
 
 import io.beka.mapper.UserMapper;
-import io.beka.model.Page;
+import io.beka.model.core.Paging;
 import io.beka.model.dto.UserData;
 import io.beka.model.entity.User;
 import io.beka.repository.UserRepository;
@@ -36,7 +36,7 @@ public class UserService {
     }
 
     //Mapper
-    public List<UserData> findAllUserData(Page page){
+    public List<UserData> findAllUserData(Paging page){
        return userMapper.findAll(page);
     }
 
