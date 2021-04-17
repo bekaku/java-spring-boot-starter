@@ -1,9 +1,9 @@
 package io.beka.security;
 
 
-import io.beka.model.dto.UserData;
-import io.beka.model.entity.ApiClient;
-import io.beka.model.entity.User;
+import io.beka.dto.UserData;
+import io.beka.model.ApiClient;
+import io.beka.model.User;
 import io.beka.repository.AccessTokenRepository;
 import io.beka.repository.ApiClientRepository;
 import io.beka.repository.UserRepository;

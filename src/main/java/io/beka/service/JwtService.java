@@ -1,7 +1,6 @@
 package io.beka.service;
 
-import io.beka.model.entity.ApiClient;
-import io.beka.model.entity.User;
+import io.beka.model.ApiClient;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;

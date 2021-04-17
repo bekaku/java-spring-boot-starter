@@ -1,6 +1,6 @@
 package io.beka.repository;
 
-import io.beka.model.entity.Permission;
+import io.beka.model.Permission;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

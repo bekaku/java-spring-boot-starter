@@ -1,7 +1,7 @@
 package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
-import io.beka.model.dto.ApiClientDto;
+import io.beka.dto.ApiClientDto;
 import io.beka.service.ApiClientService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

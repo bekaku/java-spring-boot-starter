@@ -1,7 +1,7 @@
 package io.beka.mapper;
 
-import io.beka.model.core.Paging;
-import io.beka.model.entity.Permission;
+import io.beka.dto.Paging;
+import io.beka.model.Permission;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

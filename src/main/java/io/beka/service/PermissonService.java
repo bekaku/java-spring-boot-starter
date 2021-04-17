@@ -1,18 +1,16 @@
 package io.beka.service;
 
 import io.beka.mapper.PermissionMapper;
-import io.beka.model.core.Paging;
-import io.beka.model.core.ResponseListDto;
-import io.beka.model.dto.PermissionDto;
-import io.beka.model.entity.Permission;
+import io.beka.dto.Paging;
+import io.beka.dto.ResponseListDto;
+import io.beka.dto.PermissionDto;
+import io.beka.model.Permission;
 import io.beka.repository.PermissionRepository;
-import io.beka.service.core.CoreService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,6 +73,7 @@ public class PermissonService {
     }
 
     //My Batis
+    @Transactional(readOnly = true)
     public List<Permission> findAllViaMapper(Paging page) {
         return permissionMapper.findAllWithPaging(page);
     }

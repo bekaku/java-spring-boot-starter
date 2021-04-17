@@ -5,7 +5,7 @@
         select * from permission
         limit #{page.offset}, #{page.limit}
     </select>
-    <resultMap id="resultPermission" type="io.beka.model.entity.Permission">
+    <resultMap id="resultPermission" type="io.beka.model.Permission">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="description" property="description"/>

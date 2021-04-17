@@ -1,9 +1,9 @@
 package io.beka.service;
 
 import io.beka.mapper.UserMapper;
-import io.beka.model.core.Paging;
-import io.beka.model.dto.UserData;
-import io.beka.model.entity.User;
+import io.beka.dto.Paging;
+import io.beka.dto.UserData;
+import io.beka.model.User;
 import io.beka.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

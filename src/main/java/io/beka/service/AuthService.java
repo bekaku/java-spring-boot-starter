@@ -1,12 +1,12 @@
 package io.beka.service;
 
 import io.beka.exception.AppException;
-import io.beka.model.dto.AuthenticationResponse;
-import io.beka.model.dto.LoginRequest;
-import io.beka.model.dto.RefreshTokenRequest;
-import io.beka.model.entity.AccessToken;
-import io.beka.model.entity.ApiClient;
-import io.beka.model.entity.User;
+import io.beka.dto.AuthenticationResponse;
+import io.beka.dto.LoginRequest;
+import io.beka.dto.RefreshTokenRequest;
+import io.beka.model.AccessToken;
+import io.beka.model.ApiClient;
+import io.beka.model.User;
 import io.beka.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;

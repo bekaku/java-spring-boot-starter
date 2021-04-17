@@ -1,7 +1,7 @@
 package io.beka.controller.web;
 
 import io.beka.configuration.I18n;
-import io.beka.model.entity.Permission;
+import io.beka.model.Permission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;

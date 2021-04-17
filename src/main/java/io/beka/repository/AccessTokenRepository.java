@@ -1,7 +1,7 @@
 package io.beka.repository;
 
-import io.beka.model.entity.AccessToken;
-import io.beka.model.entity.ApiClient;
+import io.beka.model.AccessToken;
+import io.beka.model.ApiClient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

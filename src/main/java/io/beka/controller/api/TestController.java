@@ -1,6 +1,6 @@
 package io.beka.controller.api;
 
-import io.beka.model.entity.User;
+import io.beka.model.User;
 import io.beka.service.AccessTokenService;
 import io.beka.service.UserService;
 import lombok.RequiredArgsConstructor;

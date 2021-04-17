@@ -1,10 +1,10 @@
 package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
-import io.beka.model.core.Paging;
-import io.beka.model.dto.UserData;
-import io.beka.model.dto.UserRegisterRequest;
-import io.beka.model.entity.User;
+import io.beka.dto.Paging;
+import io.beka.dto.UserData;
+import io.beka.dto.UserRegisterRequest;
+import io.beka.model.User;
 import io.beka.service.JwtService;
 import io.beka.service.RoleService;
 import io.beka.service.UserService;

@@ -1,7 +1,7 @@
 package io.beka.service;
 
-import io.beka.model.dto.ApiClientDto;
-import io.beka.model.entity.ApiClient;
+import io.beka.dto.ApiClientDto;
+import io.beka.model.ApiClient;
 import io.beka.repository.AccessTokenRepository;
 import io.beka.repository.ApiClientRepository;
 import lombok.AllArgsConstructor;

@@ -1,9 +1,9 @@
 package io.beka.service;
 
 import io.beka.exception.AppException;
-import io.beka.model.entity.AccessToken;
-import io.beka.model.entity.ApiClient;
-import io.beka.model.entity.User;
+import io.beka.model.AccessToken;
+import io.beka.model.ApiClient;
+import io.beka.model.User;
 import io.beka.repository.AccessTokenRepository;
 import io.beka.util.DateUtil;
 import lombok.RequiredArgsConstructor;

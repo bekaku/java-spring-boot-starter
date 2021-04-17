@@ -2,27 +2,21 @@ package io.beka.controller.api;
 
 
 import io.beka.configuration.I18n;
-import io.beka.dao.PermissionDao;
 import io.beka.exception.InvalidRequestException;
 import io.beka.mapper.PermissionMapper;
-import io.beka.model.dto.PermissionDto;
-import io.beka.model.entity.Permission;
+import io.beka.dto.PermissionDto;
+import io.beka.model.Permission;
 import io.beka.repository.PermissionRepository;
 import io.beka.service.PermissonService;
-import io.beka.service.core.DaoService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -45,10 +39,6 @@ public class PermissionController {
 
     @Autowired
     private ModelMapper modelMapper;
-
-    @Autowired
-    @Qualifier("permissionDao")
-    private final PermissionDao permissionDao;
 
     @PostMapping
     public ResponseEntity create(@Valid @RequestBody PermissionDto dto, BindingResult bindingResult) {
@@ -93,7 +83,6 @@ public class PermissionController {
                                   @RequestParam(value = "limit", defaultValue = "20") int limit,
                                   @RequestHeader(value = "Accept-Language", required = false) Locale locale) {
 
-        permissionDao.findAll();
 //        List<Permission> permissionList = permissonService.findAll();
 //        List<PermissionDto> dataList = permissionList.stream()
 //                .map(this::convertToDto)
