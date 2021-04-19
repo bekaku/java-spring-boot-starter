@@ -27,6 +27,7 @@ public class ApiClientService {
         return apiClientRepository.save(new ApiClient(apiClientDto.getApiName(), apiClientDto.getByPass(), apiClientDto.getStatus()));
     }
 
+    @Transactional(readOnly = true)
     public Optional<ApiClient> findByApiName(String apiName){
         return apiClientRepository.findByApiName(apiName);
     }

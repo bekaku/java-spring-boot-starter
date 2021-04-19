@@ -1,5 +1,8 @@
 package io.beka.controller.api;
 
+import io.beka.configuration.I18n;
+import io.beka.exception.ApiError;
+import io.beka.exception.ApiException;
 import io.beka.exception.AppException;
 import io.beka.exception.InvalidRequestException;
 import io.beka.dto.UserData;
@@ -15,8 +18,10 @@ import io.beka.service.*;
 import io.beka.util.AppUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.ObjectUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +33,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/auth")
 @RestController
-public class AuthenController {
+public class AuthenController extends BaseApiController {
 
     private final UserService userService;
     private final AuthService authService;
@@ -36,6 +41,7 @@ public class AuthenController {
     private final EncryptService encryptService;
     private final RoleService roleService;
     private final ApiClientService apiClientService;
+    private final I18n i18n;
 
 
     @Value("${image.default}")
@@ -44,8 +50,29 @@ public class AuthenController {
     @Value("${default.user.role}")
     Long defaultRole;
 
+    @GetMapping("/test/{id}")
+    public ResponseEntity<UserData> getUserById(@PathVariable("id") long id, @RequestParam String test) {
+        Optional<UserData> userData = userService.findUserDataById(id);
+        return userData.map(data -> new ResponseEntity<>(data, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @PostMapping("/test")
+    public ResponseEntity<Object> test(@Valid @RequestBody UserRegisterRequest registerDto) {
+
+        final List<String> errors = new ArrayList<String>();
+        errors.add("Error Test : " + i18n.getMessage("error.loginWrong"));
+
+
+        final ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "SpringBoot Template", errors);
+        if (apiError.isHasError()) {
+//            return new ResponseEntity<Object>(apiError, new HttpHeaders(), apiError.getStatus());
+            throw new ApiException(apiError);
+        }
+        return new ResponseEntity<>(registerDto, HttpStatus.OK);
+    }
+
     @PostMapping("/signup")
-    public ResponseEntity signup(@Valid @RequestBody UserRegisterRequest registerDto, BindingResult bindingResult) {
+    public ResponseEntity<Object> signup(@Valid @RequestBody UserRegisterRequest registerDto, BindingResult bindingResult) {
         checkInput(registerDto, bindingResult);
 
         //user can have manu role
@@ -128,7 +155,7 @@ public class AuthenController {
         if (!encryptService.check(
                 encryptService.encrypt(loginRequest.getPassword(), user.get().getSalt()), user.get().getPassword())
                 || !user.get().getStatus()) {
-            throw new AppException("invalid email or password");
+            throw new UsernameNotFoundException("invalid email or password");
         }
 
         return authService.login(user.get(), loginRequest, apiClient.get(), userAgent);
