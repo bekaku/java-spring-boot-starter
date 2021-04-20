@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
 @Data
@@ -12,7 +13,11 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 @JsonRootName("refreshToken")
 public class RefreshTokenRequest {
-    @NotBlank
+
+    @NotBlank(message = "{error.validateRequire}")
     private String refreshToken;
+
+    @NotBlank(message = "{error.validateRequire}")
+    @Email(message = "{error.emailFormat}")
     private String email;
 }

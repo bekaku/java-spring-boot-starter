@@ -1,17 +1,20 @@
 package io.beka.serviceImpl;
 
+import io.beka.configuration.I18n;
 import io.beka.dto.AuthenticationResponse;
 import io.beka.dto.LoginRequest;
 import io.beka.dto.RefreshTokenRequest;
+import io.beka.exception.ApiError;
+import io.beka.exception.ApiException;
 import io.beka.exception.AppException;
 import io.beka.model.AccessToken;
 import io.beka.model.ApiClient;
 import io.beka.model.User;
+import io.beka.model.UserAgent;
 import io.beka.repository.UserRepository;
-import io.beka.service.AccessTokenService;
-import io.beka.service.AuthService;
-import io.beka.service.JwtService;
+import io.beka.service.*;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -26,25 +29,26 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final JwtService jwtService;
     private final AccessTokenService accessTokenService;
+    private final I18n i18n;
 
     @Override
     @Transactional(readOnly = true)
     public User getCurrentUser() {
         org.springframework.security.core.userdetails.User principal = (org.springframework.security.core.userdetails.User) SecurityContextHolder.
                 getContext().getAuthentication().getPrincipal();
-        return userRepository.findByUsername(principal.getUsername())
+        return userService.findByUsername(principal.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User name not found - " + principal.getUsername()));
     }
 
     @Override
     public void fetchUserAndEnable(AccessToken verificationToken) {
         String username = verificationToken.getUser().getUsername();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new AppException("User not found with name - " + username));
+        User user = userService.findByUsername(username).orElseThrow(() -> new AppException("User not found with name - " + username));
         user.setStatus(true);
-        userRepository.save(user);
+        userService.save(user);
     }
 
     @Override
@@ -62,15 +66,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest, ApiClient apiClient, String userAgent) {
-        AccessToken accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken()).orElseThrow(() -> new AppException("Token not found with name - " + refreshTokenRequest.getRefreshToken()));
-
-        //revoke old token
-//        accessTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
-//        accessToken.setRevoked(true);
-//        accessTokenService.save(accessToken);
-
-        User user = userRepository.findByEmail(refreshTokenRequest.getEmail()).orElseThrow(() -> new AppException("User not found with name - " + refreshTokenRequest.getEmail()));
-//        String token = accessTokenService.generateRefreshToken(user, apiClient, userAgent).getToken();
+        AccessToken accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken()).orElseThrow(
+                () -> new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
+                        i18n.getMessage("error.tokenNOtFound", refreshTokenRequest.getRefreshToken()))));
+        User user = userService.findByEmail(refreshTokenRequest.getEmail()).orElseThrow(
+                () -> new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
+                        i18n.getMessage("error.userNotFoundWithEmail", refreshTokenRequest.getEmail()))));
 
         //update refresh token
         String token = UUID.randomUUID().toString();

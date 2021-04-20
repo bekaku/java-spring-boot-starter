@@ -6,6 +6,7 @@ import io.beka.model.Permission;
 import io.beka.model.Role;
 import io.beka.repository.RoleRepository;
 import io.beka.service.RoleService;
+import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,14 +20,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Transactional
+@AllArgsConstructor
 @Service
 public class RoleServiceImpl implements RoleService {
-    @Autowired
-    private RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
+    private final ModelMapper modelMapper;
 
-    @Autowired
-    private ModelMapper modelMapper;
-
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<RoleDto> findAllWithPaging(int page, int size, Sort sort) {
         Page<Role> resault = roleRepository.findAll(PageRequest.of(page, size, sort));
@@ -38,6 +39,7 @@ public class RoleServiceImpl implements RoleService {
                 , resault.getTotalPages(), resault.getNumberOfElements(), resault.isLast());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Role> findAll() {
         return roleRepository.findAll();

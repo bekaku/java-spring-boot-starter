@@ -43,7 +43,7 @@ public class PermissionController {
     @PostMapping
     public ResponseEntity create(@Valid @RequestBody PermissionDto dto, BindingResult bindingResult) {
 
-        Permission permission = permissonService.convertToEntity(dto);
+        Permission permission = permissonService.convertDtoToEntity(dto);
 
         if (permission.getName() == null || permission.getName().length() == 0) {
             bindingResult.rejectValue("name", "Blank", "can't be empty");
@@ -66,7 +66,7 @@ public class PermissionController {
 
         Optional<Permission> optional = permissonService.findById(dto.getId());
         if (optional.isPresent()) {
-            Permission permission = permissonService.convertToEntity(dto);
+            Permission permission = permissonService.convertDtoToEntity(dto);
             permissonService.save(permission);
 //            return ResponseEntity.ok(new HashMap<String, Object>() {{
 //                put("updateData", permission);

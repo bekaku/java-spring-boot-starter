@@ -10,7 +10,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-public class Role {
+public class Role extends BaseEntity {
     public Role(String name, String description) {
         this.name = name;
         this.description = description;
@@ -24,10 +24,6 @@ public class Role {
             this.description = description;
         }
     }
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-    @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
 
     @Column(length = 100)
     private String name;

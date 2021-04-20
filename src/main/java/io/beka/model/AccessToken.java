@@ -4,11 +4,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import java.util.Date;
 import java.util.UUID;
 
@@ -17,25 +17,24 @@ import static javax.persistence.FetchType.LAZY;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"token"})
+@EqualsAndHashCode(of = {"token"}, callSuper = false)
 @Entity
-public class AccessToken {
+public class AccessToken extends BaseEntity {
 
-    public AccessToken(User user, String name , Date expiresAt, boolean revoked, ApiClient apiClient) {
+    public AccessToken(User user, UserAgent userAgent, Date expiresAt, boolean revoked, ApiClient apiClient) {
         this.token = UUID.randomUUID().toString();
         this.user = user;
-        this.name = name;
+        this.userAgent = userAgent;
         this.expiresAt = expiresAt;
         this.revoked = revoked;
         this.apiClient = apiClient;
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-    @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
 
     private String token;
+
+    @Column(columnDefinition = "int(1) default 1")
+    private int service;
 
     @ManyToOne
     @JoinColumn(name = "user")
@@ -45,16 +44,12 @@ public class AccessToken {
     @JoinColumn(name = "apiClient")
     private ApiClient apiClient;
 
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "userAgent")
+    private UserAgent userAgent;
 
     @Column(columnDefinition = "tinyint(1) default 0")
     private Boolean revoked;
-
-    @CreationTimestamp
-    private Date createdAt;
-
-    @UpdateTimestamp
-    private Date updatedAt;
 
     private Date expiresAt;
 

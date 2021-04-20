@@ -14,19 +14,26 @@ import io.beka.model.AccessToken;
 import io.beka.model.ApiClient;
 import io.beka.model.Role;
 import io.beka.model.User;
+import io.beka.security.JwtTokenFilter;
 import io.beka.service.*;
 import io.beka.util.AppUtil;
+import io.beka.util.ConstantData;
+import io.beka.vo.IpAddress;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.ObjectUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.net.UnknownHostException;
 import java.util.*;
 
 
@@ -50,6 +57,8 @@ public class AuthenController extends BaseApiController {
     @Value("${default.user.role}")
     Long defaultRole;
 
+    Logger logger = LoggerFactory.getLogger(AuthenController.class);
+
     @GetMapping("/test/{id}")
     public ResponseEntity<UserData> getUserById(@PathVariable("id") long id, @RequestParam String test) {
         Optional<UserData> userData = userService.findUserDataById(id);
@@ -60,12 +69,9 @@ public class AuthenController extends BaseApiController {
     public ResponseEntity<Object> test(@Valid @RequestBody UserRegisterRequest registerDto) {
 
         final List<String> errors = new ArrayList<String>();
-        errors.add("Error Test : " + i18n.getMessage("error.loginWrong"));
-
-
-        final ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "SpringBoot Template", errors);
+        errors.add("Error : " + i18n.getMessage("error.loginWrong"));
+        final ApiError apiError = new ApiError(HttpStatus.NOT_FOUND, i18n.getMessage("error.error"), errors);
         if (apiError.isHasError()) {
-//            return new ResponseEntity<Object>(apiError, new HttpHeaders(), apiError.getStatus());
             throw new ApiException(apiError);
         }
         return new ResponseEntity<>(registerDto, HttpStatus.OK);
@@ -137,25 +143,27 @@ public class AuthenController extends BaseApiController {
     }
 
     @PostMapping("/login")
-    public AuthenticationResponse login(@RequestBody LoginRequest loginRequest, BindingResult bindingResult,
-                                        @RequestHeader(value = "Accept-ApiClient") String apiClientName,
-                                        @RequestHeader(value = "User-Agent") String userAgent) {
+    public AuthenticationResponse login(@Valid @RequestBody LoginRequest loginRequest,
+                                        @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+                                        @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
 
         if (apiClient.isEmpty()) {
-            throw new AppException("Api Client Not found");
+            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
+                    "Api Client Not found"));
         }
         Optional<User> user = userService.findByEmail(loginRequest.getEmail());
         if (user.isEmpty()) {
-            bindingResult.rejectValue("email", "INVALID", "user not found with email " + loginRequest.getEmail());
-            throw new InvalidRequestException(bindingResult);
+            throw new ApiException(new ApiError(HttpStatus.NOT_FOUND, i18n.getMessage("error.error"),
+                    i18n.getMessage("error.userNotFoundWithEmail", loginRequest.getEmail())));
         }
 
         if (!encryptService.check(
                 encryptService.encrypt(loginRequest.getPassword(), user.get().getSalt()), user.get().getPassword())
                 || !user.get().getStatus()) {
-            throw new UsernameNotFoundException("invalid email or password");
+            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
+                    i18n.getMessage("error.loginWrong")));
         }
 
         return authService.login(user.get(), loginRequest, apiClient.get(), userAgent);
@@ -163,21 +171,31 @@ public class AuthenController extends BaseApiController {
 
     @PostMapping("/refresh/token")
     public AuthenticationResponse refreshTokens(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
-                                                @RequestHeader(value = "Accept-ApiClient") String apiClientName,
-                                                @RequestHeader(value = "User-Agent") String userAgent) {
+                                                @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+                                                @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
-            throw new AppException("Api Client Not found");
+            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
+                    "Api Client Not found"));
         }
         return authService.refreshToken(refreshTokenRequest, apiClient.get(), AppUtil.getUserAgent(userAgent));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+    public ResponseEntity<String> logout(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
+                                         @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
+        if (apiClient.isEmpty()) {
+            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
+                    "Api Client Not found"));
+        }
         Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken());
-        //            accessTokenService.deleteRefreshToken(refreshTokenRequest.getRefreshToken());
-        accessToken.ifPresent(accessTokenService::delete);
-
-        return ResponseEntity.status(HttpStatus.OK).body("Refresh Token Deleted Successfully!!");
+        if (accessToken.isPresent()) {
+            AccessToken token = accessToken.get();
+            token.setRevoked(true);
+            accessTokenService.update(token);
+        }
+//        accessToken.ifPresent(accessTokenService::delete);
+        return ResponseEntity.status(HttpStatus.OK).body(i18n.getMessage("success.logoutSuccess"));
     }
 }

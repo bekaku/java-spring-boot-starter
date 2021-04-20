@@ -1,5 +1,12 @@
 package io.beka.util;
 
+import io.beka.exception.ApiError;
+import io.beka.exception.ApiException;
+import io.beka.vo.IpAddress;
+import org.springframework.http.HttpStatus;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -64,6 +71,19 @@ public class AppUtil {
             browser = "UnKnown, More-Info: " + userAgent;
         }
 
-        return os+" "+browser;
+        return os + " " + browser;
+    }
+
+    public static IpAddress getIpaddress() {
+        InetAddress inetAddress;
+        try {
+            inetAddress = InetAddress.getLocalHost();
+        } catch (Exception e) {
+            throw new ApiException(new ApiError(HttpStatus.NOT_FOUND, e.getMessage(), ""));
+        }
+        if (inetAddress != null) {
+            return new IpAddress(inetAddress.getHostAddress(), inetAddress.getHostName());
+        }
+        return null;
     }
 }

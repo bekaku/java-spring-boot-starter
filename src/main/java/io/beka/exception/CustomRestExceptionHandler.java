@@ -29,7 +29,7 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiError> apiException(ApiException ex) {
-        return new ResponseEntity<ApiError>(ex.getApiError(), ex.getApiError().getStatus());
+        return new ResponseEntity<>(ex.getApiError(), ex.getApiError().getStatus());
     }
 
     // 400

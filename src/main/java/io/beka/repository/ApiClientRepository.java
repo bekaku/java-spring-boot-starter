@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ApiClientRepository extends JpaRepository<ApiClient, Long> {
+public interface ApiClientRepository extends BaseRepository<ApiClient, Long> {
 
     Optional<ApiClient> findByApiName(String apiName);
 }

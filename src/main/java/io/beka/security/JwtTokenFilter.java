@@ -8,6 +8,7 @@ import io.beka.repository.AccessTokenRepository;
 import io.beka.repository.ApiClientRepository;
 import io.beka.repository.UserRepository;
 import io.beka.service.JwtService;
+import io.beka.util.ConstantData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +44,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String header = "Authorization";
-        String headerApiName = "Accept-ApiClient";
-
         logger.info("JwtTokenFilter > doFilterInternal");
-
-        verifyApiClient(request.getHeader(headerApiName)).flatMap(apiClient ->
-                getTokenString(request.getHeader(header)).flatMap(token ->
+        verifyApiClient(request.getHeader(ConstantData.ACCEPT_APIC_LIENT)).flatMap(apiClient ->
+                getTokenString(request.getHeader(ConstantData.AUTHORIZATION)).flatMap(token ->
                         jwtService.getSubFromToken(token, apiClient))).ifPresent(refreshToken -> {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 accessTokenRepository.findByToken(refreshToken).ifPresent(accessToken -> {
@@ -57,6 +54,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                     if (user.getStatus()) {
                         UserData userData = new UserData();
                         userData.setId(user.getId());
+                        userData.setToken(refreshToken);
                         userData.setUsername(user.getUsername());
                         userData.setEmail(user.getEmail());
                         userData.setImage(user.getImage());

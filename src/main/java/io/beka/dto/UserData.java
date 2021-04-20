@@ -14,6 +14,7 @@ public class UserData {
     private Long id;
     private String email;
     private String username;
+    private String token;
     private String image;
     private Boolean status;
     private List<String> userRoles;

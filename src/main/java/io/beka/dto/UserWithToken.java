@@ -1,7 +1,9 @@
 package io.beka.dto;
 
+import lombok.Data;
 import lombok.Getter;
 
+@Data
 @Getter
 public class UserWithToken {
     private String email;

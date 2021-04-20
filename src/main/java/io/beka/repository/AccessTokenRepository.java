@@ -8,13 +8,12 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface AccessTokenRepository extends JpaRepository<AccessToken, Long> {
+public interface AccessTokenRepository extends BaseRepository<AccessToken, Long> {
 
     Optional<AccessToken> findByToken(String token);
     
     void deleteByToken(String token);
 
     void deleteByApiClient(ApiClient apiClient);
-
 
 }
