@@ -32,8 +32,8 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<UserData> findAllWithPaging(int page, int size, Sort sort) {
-        Page<User> resault = userRepository.findAll(PageRequest.of(page, size, sort));
+    public ResponseListDto<UserData> findAllWithPaging(Paging paging, Sort sort) {
+        Page<User> resault = userRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
 
         return new ResponseListDto<>(resault.getContent()
                 .stream()

@@ -2,6 +2,7 @@ package io.beka.controller.api;
 
 
 import io.beka.configuration.I18n;
+import io.beka.dto.Paging;
 import io.beka.exception.InvalidRequestException;
 import io.beka.mapper.PermissionMapper;
 import io.beka.dto.PermissionDto;
@@ -41,7 +42,7 @@ public class PermissionController {
     private ModelMapper modelMapper;
 
     @PostMapping
-    public ResponseEntity create(@Valid @RequestBody PermissionDto dto, BindingResult bindingResult) {
+    public ResponseEntity<Object> create(@Valid @RequestBody PermissionDto dto, BindingResult bindingResult) {
 
         Permission permission = permissonService.convertDtoToEntity(dto);
 
@@ -62,7 +63,7 @@ public class PermissionController {
     }
 
     @PutMapping
-    public ResponseEntity update(@Valid @RequestBody PermissionDto dto, BindingResult bindingResult) {
+    public ResponseEntity<Object> update(@Valid @RequestBody PermissionDto dto, BindingResult bindingResult) {
 
         Optional<Permission> optional = permissonService.findById(dto.getId());
         if (optional.isPresent()) {
@@ -79,7 +80,7 @@ public class PermissionController {
     }
 
     @GetMapping
-    public ResponseEntity findAll(@RequestParam(value = "page", defaultValue = "0") int page,
+    public ResponseEntity<Object> findAll(@RequestParam(value = "page", defaultValue = "0") int page,
                                   @RequestParam(value = "limit", defaultValue = "20") int limit,
                                   @RequestHeader(value = "Accept-Language", required = false) Locale locale) {
 
@@ -109,7 +110,7 @@ public class PermissionController {
         }});
         */
 
-        return new ResponseEntity<>(permissonService.findAllWithPaging(page, limit, Permission.getSort()), HttpStatus.OK);
+        return new ResponseEntity<>(permissonService.findAllWithPaging(new Paging(page, limit), Permission.getSort()), HttpStatus.OK);
     }
 }
 //@Getter

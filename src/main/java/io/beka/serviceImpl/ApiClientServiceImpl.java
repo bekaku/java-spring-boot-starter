@@ -1,6 +1,7 @@
 package io.beka.serviceImpl;
 
 import io.beka.dto.ApiClientDto;
+import io.beka.dto.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.dto.RoleDto;
 import io.beka.model.ApiClient;
@@ -37,8 +38,8 @@ public class ApiClientServiceImpl implements ApiClientService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<ApiClientDto> findAllWithPaging(int page, int size, Sort sort) {
-        Page<ApiClient> resault = apiClientRepository.findAll(PageRequest.of(page, size, sort));
+    public ResponseListDto<ApiClientDto> findAllWithPaging(Paging paging, Sort sort) {
+        Page<ApiClient> resault = apiClientRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
 
         return new ResponseListDto<>(resault.getContent()
                 .stream()

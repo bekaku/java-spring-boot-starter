@@ -3,20 +3,20 @@ package io.beka.model;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
+@Setter
 @Entity
-@EqualsAndHashCode(of = {"apiToken"})
+@EqualsAndHashCode(of = {"apiToken"}, callSuper = false)
 @NoArgsConstructor
-public class ApiClient {
+public class ApiClient extends BaseEntity {
 
     public ApiClient(String apiName, Boolean byPass, Boolean status) {
         this.apiToken = UUID.randomUUID().toString();
@@ -33,15 +33,10 @@ public class ApiClient {
         this.status = status;
     }
 
-    //    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-    @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
-
     @Column(name = "api_name", nullable = false, length = 100)
     private String apiName;
 
+    @Column(unique = true)
     private String apiToken;
 
     @Column(columnDefinition = "tinyint(1) default 0")
@@ -50,12 +45,7 @@ public class ApiClient {
     @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean status;
 
-    @OneToMany(mappedBy = "apiClient", cascade = CascadeType.ALL)
-    private List<ApiClientIp> apiClientIps;
+    @OneToMany(mappedBy = "apiClient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<ApiClientIp> apiClientIps= new HashSet<>();
 
-    @CreationTimestamp
-    private Date createdAt;
-
-    @UpdateTimestamp
-    private Date updatedAt;
 }

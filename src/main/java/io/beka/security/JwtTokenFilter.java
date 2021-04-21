@@ -49,7 +49,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 getTokenString(request.getHeader(ConstantData.AUTHORIZATION)).flatMap(token ->
                         jwtService.getSubFromToken(token, apiClient))).ifPresent(refreshToken -> {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                accessTokenRepository.findByToken(refreshToken).ifPresent(accessToken -> {
+                accessTokenRepository.findByToken(refreshToken, false).ifPresent(accessToken -> {
                     User user = accessToken.getUser();
                     if (user.getStatus()) {
                         UserData userData = new UserData();

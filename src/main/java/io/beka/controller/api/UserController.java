@@ -4,10 +4,11 @@ import io.beka.exception.InvalidRequestException;
 import io.beka.dto.Paging;
 import io.beka.dto.UserData;
 import io.beka.dto.UserRegisterRequest;
+import io.beka.model.AccessToken;
+import io.beka.model.ApiClient;
+import io.beka.model.ApiClientIp;
 import io.beka.model.User;
-import io.beka.service.JwtService;
-import io.beka.service.RoleService;
-import io.beka.service.UserService;
+import io.beka.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -18,8 +19,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/user")
@@ -29,6 +29,8 @@ public class UserController {
     private final UserService userService;
     private final RoleService roleService;
     private final JwtService jwtService;
+    private final AccessTokenService accessTokenService;
+    private final ApiClientIpService apiClientIpService;
 
     @Value("${image.default}")
     String defaultImage;
@@ -37,11 +39,10 @@ public class UserController {
     Long defaultRole;
 
     @GetMapping("/current-user")
-    public ResponseEntity<UserData> currentUser(@AuthenticationPrincipal UserData user) {
+    public ResponseEntity<Object> currentUser(@AuthenticationPrincipal UserData user) {
 //        return ResponseEntity.ok(new HashMap<String, Object>() {{
 //            put("user", user);
 //        }});
-        System.out.println("UserController > currentUser");
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 

@@ -193,6 +193,7 @@ public class AuthenController extends BaseApiController {
         if (accessToken.isPresent()) {
             AccessToken token = accessToken.get();
             token.setRevoked(true);
+            token.setToken(null);
             accessTokenService.update(token);
         }
 //        accessToken.ifPresent(accessTokenService::delete);

@@ -36,8 +36,8 @@ public class PermissonServiceImpl implements PermissonService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<PermissionDto> findAllWithPaging(int page, int size, Sort sort) {
-        Page<Permission> resault = permissionRepository.findAll(PageRequest.of(page, size, sort));
+    public ResponseListDto<PermissionDto> findAllWithPaging(Paging paging, Sort sort) {
+        Page<Permission> resault = permissionRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
 
         return new ResponseListDto<>(resault.getContent()
                 .stream()

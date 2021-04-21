@@ -2,36 +2,29 @@ package io.beka.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.ibatis.annotations.Property;
 import org.springframework.data.domain.Sort;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
+import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
-public class Permission extends BaseEntityWithAudit {
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-//    @GenericGenerator(name = "native", strategy = "native")
-//    private Long id;
-
-
+public class Permission extends BaseEntity {
     @NotEmpty
-    @Column(nullable = false)
+    @Column(nullable = false, length = 125)
     private String name;
 
     @Basic(optional = false)
     private String description;
 
-    @Column(columnDefinition = "tinyint(1) default 1")
+    @Column(columnDefinition = "tinyint(1) default 1", nullable = false)
     private Boolean status = true;
 
     @Basic(optional = false)
+    @Column(length = 100)
     private String crudTable;
 
     @ManyToMany(mappedBy = "permissions")
@@ -41,4 +34,14 @@ public class Permission extends BaseEntityWithAudit {
         return Sort.by(Sort.Direction.DESC, "name");
     }
 
+    //JPA entity have a field not mapped to a DB column
+//    @Transient
+//    private String fieldNotEntity;
+
+    /*
+    static int transient1; // not persistent because of static
+    final int transient2 = 0; // not persistent because of final
+    transient int transient3; // not persistent because of transient
+    @Transient int transient4; // not persistent because of @Transient
+     */
 }

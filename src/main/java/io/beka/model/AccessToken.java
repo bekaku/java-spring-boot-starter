@@ -12,6 +12,7 @@ import javax.persistence.ManyToOne;
 import java.util.Date;
 import java.util.UUID;
 
+import static javax.persistence.FetchType.EAGER;
 import static javax.persistence.FetchType.LAZY;
 
 @Getter
@@ -33,8 +34,8 @@ public class AccessToken extends BaseEntity {
 
     private String token;
 
-    @Column(columnDefinition = "int(1) default 1")
-    private int service;
+    @Column(columnDefinition = "int(1) default 1", length = 1)
+    private int service = 1;
 
     @ManyToOne
     @JoinColumn(name = "user")
@@ -44,7 +45,7 @@ public class AccessToken extends BaseEntity {
     @JoinColumn(name = "apiClient")
     private ApiClient apiClient;
 
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "userAgent")
     private UserAgent userAgent;
 

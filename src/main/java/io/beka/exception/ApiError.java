@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -20,6 +21,12 @@ public class ApiError {
         this.status = status;
         this.message = message;
         this.errors = errors;
+    }
+    public ApiError(HttpStatus status, String message, String ...errStrings) {
+        super();
+        this.status = status;
+        this.message = message;
+        this.errors = Arrays.asList(errStrings);
     }
 
     public ApiError(HttpStatus status, String message, String error) {

@@ -2,39 +2,28 @@ package io.beka.model;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
-import java.util.Date;
 
 import static javax.persistence.FetchType.LAZY;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @JsonRootName("apiClientIp")
 @Getter
 @Entity
-public class ApiClientIp {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-    @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
+public class ApiClientIp extends BaseEntity {
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "apiClient")
+    @JoinColumn(name = "apiClient", nullable = false)
     private ApiClient apiClient;
 
+    @Column(length = 50)
     private String ipAddress;
 
     @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean status;
 
-    @CreationTimestamp
-    private Date createdAt;
-
-    @UpdateTimestamp
-    private Date updatedAt;
 }

@@ -9,17 +9,21 @@ import lombok.NoArgsConstructor;
 @Getter
 public class Paging {
     private static final int MAX_LIMIT = 100;
+
+    private int page = 0;
     private int offset = 0;
     private int limit = 20;
 
-    public Paging(int offset, int limit) {
-        setOffset(offset);
+    public Paging(int page, int limit) {
         setLimit(limit);
+        setOffset(page);
+
     }
 
-    private void setOffset(int offset) {
-        if (offset > 0) {
-            this.offset = offset;
+    private void setOffset(int page) {
+        if (page > 0) {
+            this.page = (page - 1);
+            this.offset = this.page * this.limit;
         }
     }
 

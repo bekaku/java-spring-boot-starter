@@ -1,12 +1,15 @@
 package io.beka.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
 import java.util.Set;
 
+@NoArgsConstructor
 @Getter
 @Setter
 @Entity
@@ -25,7 +28,7 @@ public class Role extends BaseEntity {
         }
     }
 
-    @Column(length = 100)
+    @Column(length = 100, nullable = false)
     private String name;
 
     @Column(columnDefinition = "text default null")
@@ -43,4 +46,8 @@ public class Role extends BaseEntity {
             joinColumns = @JoinColumn(name = "role"),
             inverseJoinColumns = @JoinColumn(name = "permission"))
     private Set<Permission> permissions;
+
+    public static Sort getSort(){
+        return Sort.by(Sort.Direction.DESC, "name");
+    }
 }

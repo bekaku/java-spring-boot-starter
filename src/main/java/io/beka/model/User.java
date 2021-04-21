@@ -4,21 +4,17 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
-import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"salt"})
+@EqualsAndHashCode(of = {"salt"}, callSuper = false)
 @Entity
-public class User {
+public class User extends BaseEntity {
     public User(String username, String password, String email, Boolean status, String image, Set<Role> roles) {
         this.salt = UUID.randomUUID().toString();
         this.username = username;
@@ -44,13 +40,6 @@ public class User {
             this.image = image;
         }
     }
-
-    //    @Id
-    //    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-    @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
 
     @Basic(optional = false)
     @Column(nullable = false)
@@ -78,9 +67,4 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role"))
     private Set<Role> roles;
 
-    @CreationTimestamp
-    private Date createdAt;
-
-    @UpdateTimestamp
-    private Date updatedAt;
 }

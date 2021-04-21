@@ -1,5 +1,6 @@
 package io.beka.serviceImpl;
 
+import io.beka.dto.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.exception.ApiError;
 import io.beka.exception.ApiException;
@@ -71,7 +72,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
-    public ResponseListDto<AccessToken> findAllWithPaging(int page, int size, Sort sort) {
+    public ResponseListDto<AccessToken> findAllWithPaging(Paging paging, Sort sort) {
         return null;
     }
 

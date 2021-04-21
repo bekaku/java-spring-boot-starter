@@ -1,5 +1,6 @@
 package io.beka.serviceImpl;
 
+import io.beka.dto.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.dto.RoleDto;
 import io.beka.model.Permission;
@@ -29,8 +30,8 @@ public class RoleServiceImpl implements RoleService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<RoleDto> findAllWithPaging(int page, int size, Sort sort) {
-        Page<Role> resault = roleRepository.findAll(PageRequest.of(page, size, sort));
+    public ResponseListDto<RoleDto> findAllWithPaging(Paging paging, Sort sort) {
+        Page<Role> resault = roleRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
 
         return new ResponseListDto<>(resault.getContent()
                 .stream()
@@ -81,4 +82,8 @@ public class RoleServiceImpl implements RoleService {
         return modelMapper.map(roleDto, Role.class);
     }
 
+    @Override
+    public Optional<Role> findByName(String name) {
+        return roleRepository.findByName(name);
+    }
 }

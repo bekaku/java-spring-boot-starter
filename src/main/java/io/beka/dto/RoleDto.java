@@ -5,22 +5,18 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.*;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 
 @Data
 @JsonRootName("role")
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class RoleDto {
-    private Long roleId;
+    private Long id;
 
-    @NotBlank(message = "can't be blank")
-    @NotNull(message = "can't be null")
+    @NotEmpty(message = "{error.validateRequire}")
     private String name;
 
     private String description;

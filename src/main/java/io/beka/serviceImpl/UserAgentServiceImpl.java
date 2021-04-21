@@ -1,5 +1,6 @@
 package io.beka.serviceImpl;
 
+import io.beka.dto.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.model.UserAgent;
 import io.beka.repository.UserAgentRepository;
@@ -21,7 +22,7 @@ public class UserAgentServiceImpl implements UserAgentService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<UserAgent> findAllWithPaging(int page, int size, Sort sort) {
+    public ResponseListDto<UserAgent> findAllWithPaging(Paging paging, Sort sort) {
         return null;
     }
 
