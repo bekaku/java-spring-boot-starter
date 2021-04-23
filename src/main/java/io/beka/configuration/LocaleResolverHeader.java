@@ -54,7 +54,7 @@ public class LocaleResolverHeader {
         ReloadableResourceBundleMessageSource messageSource =
                 new ReloadableResourceBundleMessageSource();
 //        messageSource.setBasenames("i18n/messages");
-        messageSource.setBasenames("classpath:/i18n/messages", "classpath:/i18n/error/messages");
+        messageSource.setBasenames("classpath:/i18n/messages", "classpath:/i18n/error/messages", "classpath:/i18n/model/messages");
         messageSource.setDefaultEncoding("UTF-8");
         messageSource.setUseCodeAsDefaultMessage(true);
         return messageSource;

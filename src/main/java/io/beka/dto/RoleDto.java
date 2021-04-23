@@ -9,8 +9,6 @@ import javax.validation.constraints.NotEmpty;
 
 @Data
 @JsonRootName("role")
-@Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class RoleDto {

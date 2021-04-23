@@ -7,12 +7,10 @@ import io.beka.dto.RefreshTokenRequest;
 import io.beka.exception.ApiError;
 import io.beka.exception.ApiException;
 import io.beka.exception.AppException;
-import io.beka.model.AccessToken;
-import io.beka.model.ApiClient;
-import io.beka.model.User;
-import io.beka.model.UserAgent;
+import io.beka.model.*;
 import io.beka.repository.UserRepository;
 import io.beka.service.*;
+import io.beka.util.AppUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,6 +30,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
     private final JwtService jwtService;
     private final AccessTokenService accessTokenService;
+    private final LoginLogService loginLogService;
+
     private final I18n i18n;
 
     @Override
@@ -53,10 +53,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthenticationResponse login(User user, LoginRequest loginRequest, ApiClient apiClient, String userAgent) {
-        String token = accessTokenService.generateRefreshToken(user, apiClient, userAgent).getToken();
+        AccessToken token = accessTokenService.generateRefreshToken(user, apiClient, userAgent, new LoginLog(loginRequest.getLoginForm(), user, AppUtil.getIpaddress()));
+//        loginLogService.save(new LoginLog(loginRequest.getLoginForm(), user, AppUtil.getIpaddress()));
         return AuthenticationResponse.builder()
-                .authenticationToken(jwtService.toToken(token, apiClient))
-                .refreshToken(token)
+                .authenticationToken(jwtService.toToken(token.getToken(), apiClient))
+                .refreshToken(token.getToken())
                 .expiresAt(Instant.now().plusMillis(jwtService.expireMillisec()))
                 .email(loginRequest.getEmail())
                 .image(user.getImage())

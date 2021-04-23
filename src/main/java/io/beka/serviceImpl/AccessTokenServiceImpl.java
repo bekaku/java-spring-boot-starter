@@ -4,10 +4,7 @@ import io.beka.dto.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.exception.ApiError;
 import io.beka.exception.ApiException;
-import io.beka.model.AccessToken;
-import io.beka.model.ApiClient;
-import io.beka.model.User;
-import io.beka.model.UserAgent;
+import io.beka.model.*;
 import io.beka.repository.AccessTokenRepository;
 import io.beka.service.AccessTokenService;
 import io.beka.service.UserAgentService;
@@ -44,7 +41,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
-    public AccessToken generateRefreshToken(User user, ApiClient apiClient, String userAgent) {
+    public AccessToken generateRefreshToken(User user, ApiClient apiClient, String userAgent, LoginLog loginLog) {
         //find user agent or create new if not found
         Optional<UserAgent> findAgent = userAgentService.findByAgent(userAgent);
         UserAgent agent = findAgent.orElseGet(() -> userAgentService.save(new UserAgent(userAgent)));
@@ -54,7 +51,8 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 agent,
                 expires,
                 false,
-                apiClient
+                apiClient,
+                loginLog
         );
         return save(accessToken);
     }

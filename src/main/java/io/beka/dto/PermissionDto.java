@@ -7,8 +7,6 @@ import lombok.experimental.Accessors;
 
 @Data
 @JsonRootName("permision")
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)

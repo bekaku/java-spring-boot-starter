@@ -15,10 +15,6 @@ import java.util.Date;
 @Getter
 @Setter
 public class BaseEntity extends BaseEntityId {
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-//    @GenericGenerator(name = "native", strategy = "native")
-//    private Long id;
 
     @CreationTimestamp
     @Column(updatable = false)

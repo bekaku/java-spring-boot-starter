@@ -1,5 +1,6 @@
 package io.beka.model;
 
+import io.beka.annotation.TableSerializable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.*;
 @Setter
 @Entity
 @EqualsAndHashCode(of = {"apiToken"}, callSuper = false)
+@TableSerializable
 @NoArgsConstructor
 public class ApiClient extends BaseEntity {
 

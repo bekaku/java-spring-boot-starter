@@ -1,4 +1,4 @@
-package io.beka.security;
+package io.beka.configuration;
 
 
 import io.beka.dto.UserData;

@@ -1,40 +1,40 @@
 package io.beka.model;
 
+import io.beka.annotation.TableSerializable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.util.Date;
 import java.util.UUID;
 
-import static javax.persistence.FetchType.EAGER;
 import static javax.persistence.FetchType.LAZY;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"token"}, callSuper = false)
+@TableSerializable
 @Entity
 public class AccessToken extends BaseEntity {
 
-    public AccessToken(User user, UserAgent userAgent, Date expiresAt, boolean revoked, ApiClient apiClient) {
+    public AccessToken(User user, UserAgent userAgent, Date expiresAt, boolean revoked, ApiClient apiClient, LoginLog loginLog) {
         this.token = UUID.randomUUID().toString();
         this.user = user;
         this.userAgent = userAgent;
         this.expiresAt = expiresAt;
         this.revoked = revoked;
         this.apiClient = apiClient;
+        this.loginLog = loginLog;
     }
 
 
+    @Column(name = "token", length = 100, unique = true)
     private String token;
 
-    @Column(columnDefinition = "int(1) default 1", length = 1)
+    @Column(columnDefinition = "int(1) default 1", length = 1, name = "service")
     private int service = 1;
 
     @ManyToOne
@@ -49,7 +49,11 @@ public class AccessToken extends BaseEntity {
     @JoinColumn(name = "userAgent")
     private UserAgent userAgent;
 
-    @Column(columnDefinition = "tinyint(1) default 0")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "loginLog", referencedColumnName = "id")
+    private LoginLog loginLog;
+
+    @Column(columnDefinition = "tinyint(1) default 0", name = "revoked")
     private Boolean revoked;
 
     private Date expiresAt;

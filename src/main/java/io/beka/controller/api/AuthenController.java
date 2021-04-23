@@ -1,39 +1,25 @@
 package io.beka.controller.api;
 
 import io.beka.configuration.I18n;
+import io.beka.dto.*;
 import io.beka.exception.ApiError;
 import io.beka.exception.ApiException;
-import io.beka.exception.AppException;
-import io.beka.exception.InvalidRequestException;
-import io.beka.dto.UserData;
-import io.beka.dto.AuthenticationResponse;
-import io.beka.dto.LoginRequest;
-import io.beka.dto.RefreshTokenRequest;
-import io.beka.dto.UserRegisterRequest;
 import io.beka.model.AccessToken;
 import io.beka.model.ApiClient;
 import io.beka.model.Role;
 import io.beka.model.User;
-import io.beka.security.JwtTokenFilter;
 import io.beka.service.*;
 import io.beka.util.AppUtil;
 import io.beka.util.ConstantData;
-import io.beka.vo.IpAddress;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.util.ObjectUtils;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.net.UnknownHostException;
 import java.util.*;
 
 
@@ -48,8 +34,8 @@ public class AuthenController extends BaseApiController {
     private final EncryptService encryptService;
     private final RoleService roleService;
     private final ApiClientService apiClientService;
-    private final I18n i18n;
 
+    private final I18n i18n;
 
     @Value("${image.default}")
     String defaultImage;
@@ -78,10 +64,9 @@ public class AuthenController extends BaseApiController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<Object> signup(@Valid @RequestBody UserRegisterRequest registerDto, BindingResult bindingResult) {
-        checkInput(registerDto, bindingResult);
-
-        //user can have manu role
+    public ResponseEntity<ResponseMessage> signup(@Valid @RequestBody UserRegisterRequest registerDto) {
+        validateUserRegister(registerDto);
+        //user can have many role
         Set<Role> roles = new HashSet<>();
         if (registerDto.getUserRoles().length > 0) {
             Optional<Role> role;
@@ -89,12 +74,12 @@ public class AuthenController extends BaseApiController {
                 role = roleService.findById(Long.valueOf(roleId));
                 role.ifPresent(roles::add);
             }
-        } else {
-            //save defult role for new user
-            Optional<Role> role = roleService.findById(defaultRole);
-            role.ifPresent(roles::add);
         }
-
+//        else {
+        //save defult role for new user
+//            Optional<Role> role = roleService.findById(defaultRole);
+//            role.ifPresent(roles::add);
+//        }
         User user = new User(
                 registerDto.getUsername(),
                 registerDto.getPassword(),
@@ -103,42 +88,23 @@ public class AuthenController extends BaseApiController {
                 defaultImage,
                 roles
         );
-
         //encrypt pwd
         user.setPassword(encryptService.encrypt(user.getPassword(), user.getSalt()));
         userService.save(user);
-
-        Optional<UserData> userData = userService.findUserDataById(user.getId());
-        if (userData.isPresent()) {
-            return ResponseEntity.ok(new HashMap<String, Object>() {{
-                put("user", userData);
-            }});
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.EXPECTATION_FAILED)
-                    .body("Error Message");
-        }
+        return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }
 
-    private void checkInput(@Valid @RequestBody UserRegisterRequest registerParam, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new InvalidRequestException(bindingResult);
-        }
+    private void validateUserRegister(@RequestBody UserRegisterRequest registerParam) {
 
-        if (ObjectUtils.isEmpty(registerParam.getUsername())) {
-            bindingResult.rejectValue("username", "REQUIRED", "can't be empty");
+        List<String> errors = new ArrayList<>();
+        if (userService.findByUsername(registerParam.getUsername()).isPresent()) {
+            errors.add(i18n.getMessage("error.validateDuplicateUsername", registerParam.getUsername()));
         }
-
-        if (userService.findUserDataByUsername(registerParam.getUsername()).isPresent()) {
-            bindingResult.rejectValue("username", "DUPLICATED", "duplicated username");
+        if (userService.findByEmail(registerParam.getEmail()).isPresent()) {
+            errors.add(i18n.getMessage("error.validateDuplicateEmail", registerParam.getEmail()));
         }
-
-        if (userService.findUserDataByEmail(registerParam.getEmail()).isPresent()) {
-            bindingResult.rejectValue("email", "DUPLICATED", "duplicated email");
-        }
-
-        if (bindingResult.hasErrors()) {
-            throw new InvalidRequestException(bindingResult);
+        if (errors.size() > 0) {
+            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"), errors));
         }
     }
 
@@ -159,9 +125,7 @@ public class AuthenController extends BaseApiController {
                     i18n.getMessage("error.userNotFoundWithEmail", loginRequest.getEmail())));
         }
 
-        if (!encryptService.check(
-                encryptService.encrypt(loginRequest.getPassword(), user.get().getSalt()), user.get().getPassword())
-                || !user.get().getStatus()) {
+        if (!encryptService.check(loginRequest.getPassword(), user.get().getPassword()) || !user.get().getStatus()) {
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
         }
@@ -182,8 +146,8 @@ public class AuthenController extends BaseApiController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
-                                         @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+    public ResponseEntity<ResponseMessage> logout(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
+                                                  @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
@@ -197,6 +161,6 @@ public class AuthenController extends BaseApiController {
             accessTokenService.update(token);
         }
 //        accessToken.ifPresent(accessTokenService::delete);
-        return ResponseEntity.status(HttpStatus.OK).body(i18n.getMessage("success.logoutSuccess"));
+        return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }
 }

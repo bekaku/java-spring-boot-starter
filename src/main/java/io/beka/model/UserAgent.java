@@ -1,5 +1,6 @@
 package io.beka.model;
 
+import io.beka.annotation.TableSerializable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -7,6 +8,7 @@ import lombok.Setter;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 
+@TableSerializable(createController = false)
 @NoArgsConstructor
 @Getter
 @Setter

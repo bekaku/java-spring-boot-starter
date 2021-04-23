@@ -1,5 +1,6 @@
 package io.beka.model;
 
+import io.beka.annotation.TableSerializable;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.ibatis.annotations.Property;
@@ -9,6 +10,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import java.util.Set;
 
+@TableSerializable
 @Getter
 @Setter
 @Entity

@@ -23,7 +23,7 @@
         select * from user where username = #{username}
     </select>
     <select id="findByEmail" resultType="io.beka.dto.UserData">
-        select * from user where username = #{email}
+        select * from user where email = #{email}
     </select>
     <select id="findById" resultMap="userDataResult">
         <include refid="selectUserData"/>

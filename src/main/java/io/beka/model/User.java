@@ -1,5 +1,6 @@
 package io.beka.model;
 
+import io.beka.annotation.TableSerializable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,7 @@ import javax.persistence.*;
 import java.util.Set;
 import java.util.UUID;
 
+@TableSerializable
 @Getter
 @Setter
 @NoArgsConstructor
