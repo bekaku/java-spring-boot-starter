@@ -1,4 +1,4 @@
-package io.beka.dto;
+package io.beka.vo;
 
 import lombok.Data;
 import lombok.Getter;

@@ -86,4 +86,12 @@ public class AppUtil {
         }
         return null;
     }
+
+    public static String getSimpleClassName(String className) {
+        return className.substring(className.lastIndexOf('.') + 1);
+    }
+
+    public static String capitalizeFirstLetter(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
 }

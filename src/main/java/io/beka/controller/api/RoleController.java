@@ -1,7 +1,7 @@
 package io.beka.controller.api;
 
 import io.beka.configuration.I18n;
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.dto.RoleDto;
 import io.beka.model.Role;
 import io.beka.service.RoleService;

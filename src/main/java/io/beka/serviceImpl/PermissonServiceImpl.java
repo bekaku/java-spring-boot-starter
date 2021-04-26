@@ -1,10 +1,9 @@
 package io.beka.serviceImpl;
 
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.dto.PermissionDto;
 import io.beka.dto.ResponseListDto;
 import io.beka.mapper.PermissionMapper;
-import io.beka.model.ApiClient;
 import io.beka.model.Permission;
 import io.beka.repository.PermissionRepository;
 import io.beka.service.PermissonService;

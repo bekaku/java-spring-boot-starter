@@ -1,6 +1,6 @@
 package io.beka.model;
 
-import io.beka.annotation.TableSerializable;
+import io.beka.annotation.GenSourceableTable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,7 @@ import static javax.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"token"}, callSuper = false)
-@TableSerializable
+@GenSourceableTable
 @Entity
 public class AccessToken extends BaseEntity {
 

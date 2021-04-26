@@ -1,7 +1,7 @@
 package io.beka.model;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
-import io.beka.annotation.TableSerializable;
+import io.beka.annotation.GenSourceableTable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import javax.persistence.*;
 
 import static javax.persistence.FetchType.LAZY;
 
-@TableSerializable(createController = false)
+@GenSourceableTable(createController = false)
 @EqualsAndHashCode(callSuper = true)
 @Data
 @JsonRootName("apiClientIp")

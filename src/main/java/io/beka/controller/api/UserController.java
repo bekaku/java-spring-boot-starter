@@ -1,12 +1,9 @@
 package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.dto.UserData;
 import io.beka.dto.UserRegisterRequest;
-import io.beka.model.AccessToken;
-import io.beka.model.ApiClient;
-import io.beka.model.ApiClientIp;
 import io.beka.model.User;
 import io.beka.service.*;
 import lombok.RequiredArgsConstructor;

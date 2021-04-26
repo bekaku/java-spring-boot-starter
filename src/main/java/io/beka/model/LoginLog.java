@@ -1,6 +1,6 @@
 package io.beka.model;
 
-import io.beka.annotation.TableSerializable;
+import io.beka.annotation.GenSourceableTable;
 import io.beka.vo.IpAddress;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import javax.persistence.*;
 import java.util.Date;
 
-@TableSerializable(createController = false)
+@GenSourceableTable(createController = false)
 @NoArgsConstructor
 @Getter
 @Setter

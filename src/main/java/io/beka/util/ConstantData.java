@@ -11,7 +11,7 @@ public class ConstantData {
     public static final int REQUEST_FROM_IOS = 2;
     public static final int REQUEST_FROM_ANDROID = 3;
 
-    public static final String DEFAULT_PROJECT_SRC_PATH = "src/main/java/io/beka/test";
-    public static final String DEFAULT_PROJECT_SRC_PACKAGE = "io.beka.test";
+    public static final String DEFAULT_PROJECT_ROOT_PATH = "src/main/java/io/beka";
+    public static final String DEFAULT_PROJECT_ROOT_PACKAGE = "io.beka";
 
 }

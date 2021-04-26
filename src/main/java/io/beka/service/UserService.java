@@ -1,6 +1,6 @@
 package io.beka.service;
 
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.dto.UserData;
 import io.beka.model.User;
 

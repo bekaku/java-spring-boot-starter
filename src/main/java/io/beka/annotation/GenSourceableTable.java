@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface TableSerializable {
+public @interface GenSourceableTable {
 
     boolean createController() default true;
 

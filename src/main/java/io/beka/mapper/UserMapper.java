@@ -1,6 +1,6 @@
 package io.beka.mapper;
 
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.dto.UserData;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

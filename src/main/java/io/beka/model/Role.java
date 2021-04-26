@@ -1,16 +1,15 @@
 package io.beka.model;
 
-import io.beka.annotation.TableSerializable;
+import io.beka.annotation.GenSourceableTable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
 import java.util.Set;
 
-@TableSerializable
+@GenSourceableTable
 @NoArgsConstructor
 @Getter
 @Setter

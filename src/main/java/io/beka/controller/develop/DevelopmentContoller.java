@@ -1,9 +1,10 @@
 package io.beka.controller.develop;
 
-import io.beka.annotation.TableSerializable;
+import io.beka.annotation.GenSourceableTable;
 import io.beka.configuration.I18n;
 import io.beka.configuration.MetadataExtractorIntegrator;
 import io.beka.controller.api.BaseApiController;
+import io.beka.util.AppUtil;
 import io.beka.util.ConstantData;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.boot.Metadata;
@@ -15,12 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.util.*;
 
 @RequestMapping(path = "/dev")
 @RestController
@@ -65,7 +64,7 @@ public class DevelopmentContoller extends BaseApiController {
         String className;
         String packageClassName;
         for (PersistentClass persistentClass : metadata.getEntityBindings()) {
-            className = getSimpleClassName(persistentClass.getClassName());
+            className = AppUtil.getSimpleClassName(persistentClass.getClassName());
             packageClassName = persistentClass.getClassName();
             Table table = persistentClass.getTable();
 
@@ -74,30 +73,28 @@ public class DevelopmentContoller extends BaseApiController {
                     packageClassName,
                     table.getName()
             );
-
-//            TableSerializable tableSerializable = LoginLog.class.getAnnotation(TableSerializable.class);
-
             Class<?> aClass = getClassFromName(packageClassName);
             if (aClass != null) {
-                TableSerializable tableSerializable = aClass.getAnnotation(TableSerializable.class);
-                if (tableSerializable != null) {
+                GenSourceableTable genSourceableTable = aClass.getAnnotation(GenSourceableTable.class);
+                if (genSourceableTable != null) {
 
-                    if (tableSerializable.createDto()) {
+                    if (genSourceableTable.createDto()) {
                         logger.error("  createDto : {} ", className);
+                        generateDto(className);
                     }
-                    if (tableSerializable.createRepository()) {
+                    if (genSourceableTable.createRepository()) {
                         generateRepository(className);
                     }
-                    if (tableSerializable.createService()) {
-                        generateService(className);
+                    if (genSourceableTable.createService()) {
+                        generateService(className, genSourceableTable.createDto());
                     }
-                    if (tableSerializable.createServiceImpl()) {
-                        generateServiceImpl(className);
+                    if (genSourceableTable.createServiceImpl()) {
+                        generateServiceImpl(className, genSourceableTable.createDto());
                     }
-                    if (tableSerializable.createController()) {
+                    if (genSourceableTable.createController()) {
                         generateController(className);
                     }
-                    if (tableSerializable.createMapper()) {
+                    if (genSourceableTable.createMapper()) {
                         logger.error("  createMapper : {} ", className);
                     }
                 }
@@ -141,56 +138,228 @@ public class DevelopmentContoller extends BaseApiController {
 
         return this.responseEntity(HttpStatus.OK);
     }
+
     private void generateDto(String entityName) {
         //package io.beka.controller.api
         String fileName = entityName + "Dto";
-        String className = "io.beka.dto." + fileName;
+        String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto." + fileName;
 
         boolean isExist = getClassFromName(className) != null;
-        logger.error("Class : {} " + (isExist ? "FOUND " : "NOT FOUND"), className);
+        if (!isExist) {
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/dto/" + fileName + ".java", false));
+                writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto").append(";\n");
+                writer.append("\n");
+                writer.append("import com.fasterxml.jackson.annotation.JsonIgnoreProperties;\n");
+                writer.append("import com.fasterxml.jackson.annotation.JsonRootName;\n");
+                writer.append("import lombok.*;\n");
+                writer.append("import lombok.experimental.Accessors;\n");
+                writer.append("\n");
+                writer.append("@Data\n");
+                writer.append("@JsonRootName(\"").append(AppUtil.capitalizeFirstLetter(entityName)).append("\")\n");
+                writer.append("@AllArgsConstructor\n");
+                writer.append("@NoArgsConstructor\n");
+                writer.append("@JsonIgnoreProperties(ignoreUnknown = true)\n");
+                writer.append("@Accessors(chain = true)\n");
+                writer.append("public class ").append(fileName).append("{\n");
+                writer.append("}\n");
+                writer.close();
+                logger.error("Created Class : {} ", className);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
-    private void generateRepository(String className) {
+
+    private void generateRepository(String entityName) {
         //package io.beka.repository
-        String fileName = className + "Repository";
-        String name = "io.beka.repository." + fileName;
-        boolean isExist = getClassFromName(name) != null;
-        logger.error("Class : {} " + (isExist ? "FOUND " : "NOT FOUND"), name);
+        String fileName = entityName + "Repository";
+        String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository." + fileName;
+
+        boolean isExist = getClassFromName(className) != null;
+        if (!isExist) {
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/repository/" + fileName + ".java", false));
+                writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository").append(";\n");
+                writer.append("\n");
+                writer.append("import org.springframework.stereotype.Repository;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
+                writer.append("\n");
+                writer.append("@Repository\n");
+                writer.append("public interface ").append(fileName).append(" extends BaseRepository<").append(entityName).append(",Long> {\n");
+                writer.append("}\n");
+                writer.close();
+                logger.error("Created Class : {} ", className);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
 
-    private void generateService(String className) {
+    private void generateService(String entityName, boolean haveDto) {
         //package io.beka.service
-        String name = "io.beka.service." + className + "Service";
-        boolean isExist = getClassFromName(name) != null;
-        logger.error("Class : {} " + (isExist ? "FOUND " : "NOT FOUND"), name);
+        String fileName = entityName + "Service";
+        String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service." + fileName;
+        boolean isExist = getClassFromName(className) != null;
+        if (!isExist) {
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/service/" + fileName + ".java", false));
+                writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service").append(";\n");
+                if (haveDto) {
+                    writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
+                }
+                writer.append("\n");
+                writer.append("import org.springframework.stereotype.Repository;\n");
+                writer.append("\n");
+                writer.append("public interface ").append(entityName).append("Service extends BaseService<").append(entityName).append(", ").append(haveDto ? entityName + "Dto" : entityName).append("> {\n");
+                writer.append("}\n");
+                writer.close();
+                logger.error("Created Class : {} ", className);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
 
-    private void generateServiceImpl(String className) {
+    private void generateServiceImpl(String entityName, boolean haveDto) {
         //package io.beka.serviceImpl
-        String name = "io.beka.serviceImpl." + className + "ServiceImpl";
-        boolean isExist = getClassFromName(name) != null;
-        logger.error("Class : {} " + (isExist ? "FOUND " : "NOT FOUND"), name);
+        String fileName = entityName + "ServiceImpl";
+        String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".serviceImpl." + fileName;
+
+        boolean isExist = getClassFromName(className) != null;
+        if (!isExist) {
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/serviceImpl/" + fileName + ".java", false));
+                writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".serviceImpl").append(";\n");
+                writer.append("\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".vo.Paging;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.ResponseListDto;\n");
+                if (haveDto) {
+                    writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
+                }
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository.").append(entityName).append("Repository;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.").append(entityName).append("Service;\n");
+                writer.append("import lombok.AllArgsConstructor;\n");
+                writer.append("import org.modelmapper.ModelMapper;\n");
+                writer.append("import org.springframework.data.domain.Page;\n");
+                writer.append("import org.springframework.data.domain.PageRequest;\n");
+                writer.append("import org.springframework.data.domain.Sort;\n");
+                writer.append("import org.springframework.stereotype.Service;\n");
+                writer.append("import org.springframework.transaction.annotation.Transactional;\n");
+                writer.append("\n");
+                writer.append("import java.util.List;\n");
+                writer.append("import java.util.Optional;\n");
+                writer.append("import java.util.stream.Collectors;\n");
+                writer.append("\n");
+                writer.append("@Transactional\n");
+                writer.append("@AllArgsConstructor\n");
+                writer.append("@Service\n");
+                writer.append("public class ").append(entityName).append("ServiceImpl implements ").append(entityName).append("Service {\n");
+                writer.append("    private final ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository;\n");
+                writer.append("    private final ModelMapper modelMapper;\n");
+                //findAllWithPaging
+                writer.append("\n");
+                writer.append("    @Transactional(readOnly = true)\n");
+                writer.append("    @Override\n");
+                writer.append("    public ResponseListDto<").append(haveDto ? entityName + "Dto" : entityName).append("> findAllWithPaging(Paging paging, Sort sort) {\n");
+                writer.append("        Page<").append(entityName).append("> resault = roleRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));\n");
+                writer.append("        return new ResponseListDto<>(resault.getContent()\n");
+                if (haveDto) {
+                    writer.append("                .stream()\n");
+                    writer.append("                .map(this::convertEntityToDto)\n");
+                    writer.append("                .collect(Collectors.toList())\n");
+                }
+                writer.append("                , resault.getTotalPages(), resault.getNumberOfElements(), resault.isLast());\n");
+                writer.append("    }\n");
+                //findAll
+                writer.append("\n");
+                writer.append("    @Transactional(readOnly = true)\n");
+                writer.append("    @Override\n");
+                writer.append("    public List<").append(entityName).append("> findAll() {\n");
+                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.findAll();\n");
+                writer.append("    }\n");
+                writer.append("\n");
+                //save
+                writer.append("\n");
+                writer.append("    public ").append(entityName).append(" save(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
+                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.save(").append(AppUtil.capitalizeFirstLetter(entityName)).append(");\n");
+                writer.append("    }\n");
+                //update
+                writer.append("\n");
+                writer.append("    @Override\n");
+                writer.append("    public ").append(entityName).append(" update(Role ").append(AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
+                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.save(").append(AppUtil.capitalizeFirstLetter(entityName)).append(");\n");
+                writer.append("    }\n");
+                //findById
+                writer.append("\n");
+                writer.append("    @Transactional(readOnly = true)\n");
+                writer.append("    @Override\n");
+                writer.append("    public Optional<").append(entityName).append("> findById(Long id) {\n");
+                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.findById(id);\n");
+                writer.append("    }\n");
+                //delete
+                writer.append("\n");
+                writer.append("    @Override\n");
+                writer.append("    public void delete(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
+                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.delete(").append(AppUtil.capitalizeFirstLetter(entityName)).append(");\n");
+                writer.append("    }\n");
+
+                writer.append("\n");
+                writer.append("    @Override\n");
+                writer.append("    public void deleteById(Long id) {\n");
+                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.deleteById(id);\n");
+                writer.append("    }\n");
+
+                writer.append("\n");
+                writer.append("    @Override\n");
+                writer.append("    public ").append(haveDto ? entityName + "Dto" : entityName).append(" convertEntityToDto(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
+                if (haveDto) {
+                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName)).append(", ").append(entityName).append("Dto.class);\n");
+                } else {
+                    writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("\n");
+                }
+                writer.append("    }\n");
+
+                writer.append("\n");
+                writer.append("    @Override\n");
+                writer.append("    public ").append(entityName).append(" convertDtoToEntity(").append(haveDto ? entityName + "Dto " + AppUtil.capitalizeFirstLetter(entityName) + "Dto" : entityName + " " + AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
+                if (haveDto) {
+                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName)).append("Dto, ").append(entityName).append(".class);\n");
+                }else{
+                    writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("\n");
+                }
+                writer.append("    }\n");
+                writer.append("\n");
+                writer.append("}\n");
+                writer.close();
+                logger.error("Created Class : {} ", className);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
 
     private void generateController(String entityName) {
         //package io.beka.controller.api
         String fileName = entityName + "Controller";
-        String className = "io.beka.controller.api." + fileName;
+        String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api." + fileName;
 
         boolean isExist = getClassFromName(className) != null;
         logger.error("Class : {} " + (isExist ? "FOUND " : "NOT FOUND"), className);
 
         if (!isExist) {
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_SRC_PATH + "/controller/" + fileName + ".java", false));
-                writer.append("package ").append(ConstantData.DEFAULT_PROJECT_SRC_PACKAGE + ".controller").append("; \n");
-                writer.append(" \n");
-                writer.append("import lombok.RequiredArgsConstructor; \n");
-                writer.append("import org.springframework.web.bind.annotation.RestController; \n");
-                writer.append(" \n");
-                writer.append("@RequiredArgsConstructor \n");
-                writer.append("@RestController \n");
-                writer.append("public class ").append(fileName).append("{ \n");
-                writer.append("} \n");
+                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/controller/api/" + fileName + ".java", false));
+                writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api").append(";\n");
+                writer.append("\n");
+                writer.append("import lombok.RequiredArgsConstructor;\n");
+                writer.append("import org.springframework.web.bind.annotation.RestController;\n");
+                writer.append("\n");
+                writer.append("@RequiredArgsConstructor\n");
+                writer.append("@RestController\n");
+                writer.append("public class ").append(fileName).append("{\n");
+                writer.append("}\n");
                 writer.close();
             } catch (Exception e) {
                 logger.error(e.getMessage());
@@ -198,16 +367,11 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private String getSimpleClassName(String className) {
-        return className.substring(className.lastIndexOf('.') + 1);
-    }
 
     private Class<?> getClassFromName(String className) {
         try {
-            //            logger.error("Class : {} found ", className);
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
-//            logger.error("Class : {} not found ", className);
             return null;
         }
     }

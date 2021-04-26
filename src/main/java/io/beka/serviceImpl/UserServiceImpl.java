@@ -1,10 +1,9 @@
 package io.beka.serviceImpl;
 
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.dto.UserData;
 import io.beka.mapper.UserMapper;
-import io.beka.model.Role;
 import io.beka.model.User;
 import io.beka.repository.UserRepository;
 import io.beka.service.UserService;

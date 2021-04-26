@@ -2,7 +2,7 @@ package io.beka.controller.api;
 
 
 import io.beka.configuration.I18n;
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.exception.InvalidRequestException;
 import io.beka.mapper.PermissionMapper;
 import io.beka.dto.PermissionDto;

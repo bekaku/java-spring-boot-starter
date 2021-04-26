@@ -1,22 +1,19 @@
 package io.beka.serviceImpl;
 
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.dto.RoleDto;
-import io.beka.model.Permission;
 import io.beka.model.Role;
 import io.beka.repository.RoleRepository;
 import io.beka.service.RoleService;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

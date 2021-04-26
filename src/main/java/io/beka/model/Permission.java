@@ -1,16 +1,15 @@
 package io.beka.model;
 
-import io.beka.annotation.TableSerializable;
+import io.beka.annotation.GenSourceableTable;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.ibatis.annotations.Property;
 import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import java.util.Set;
 
-@TableSerializable
+@GenSourceableTable
 @Getter
 @Setter
 @Entity

@@ -1,6 +1,6 @@
 package io.beka.serviceImpl;
 
-import io.beka.dto.Paging;
+import io.beka.vo.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.exception.ApiError;
 import io.beka.exception.ApiException;

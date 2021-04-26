@@ -1,13 +1,10 @@
 package io.beka.model;
 
-import io.beka.annotation.TableSerializable;
+import io.beka.annotation.GenSourceableTable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.util.*;
@@ -16,7 +13,7 @@ import java.util.*;
 @Setter
 @Entity
 @EqualsAndHashCode(of = {"apiToken"}, callSuper = false)
-@TableSerializable
+@GenSourceableTable
 @NoArgsConstructor
 public class ApiClient extends BaseEntity {
 

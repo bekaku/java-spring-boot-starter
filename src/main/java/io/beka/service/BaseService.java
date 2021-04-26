@@ -1,7 +1,6 @@
 package io.beka.service;
 
-import io.beka.dto.Paging;
-import io.beka.dto.PermissionDto;
+import io.beka.vo.Paging;
 import io.beka.dto.ResponseListDto;
 import org.springframework.data.domain.Sort;
 
