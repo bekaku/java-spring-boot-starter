@@ -2,7 +2,7 @@ package io.beka.serviceImpl;
 
 import io.beka.vo.Paging;
 import io.beka.dto.ResponseListDto;
-import io.beka.dto.UserData;
+import io.beka.dto.UserDto;
 import io.beka.mapper.UserMapper;
 import io.beka.model.User;
 import io.beka.repository.UserRepository;
@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<UserData> findAllWithPaging(Paging paging, Sort sort) {
+    public ResponseListDto<UserDto> findAllWithPaging(Paging paging, Sort sort) {
         Page<User> resault = userRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
 
         return new ResponseListDto<>(resault.getContent()
@@ -74,12 +74,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserData convertEntityToDto(User user) {
-        return modelMapper.map(user, UserData.class);
+    public UserDto convertEntityToDto(User user) {
+        return modelMapper.map(user, UserDto.class);
     }
 
     @Override
-    public User convertDtoToEntity(UserData userData) {
+    public User convertDtoToEntity(UserDto userData) {
         return modelMapper.map(userData, User.class);
     }
 
@@ -99,25 +99,25 @@ public class UserServiceImpl implements UserService {
     //mapper
     @Transactional(readOnly = true)
     @Override
-    public List<UserData> findAllUserData(Paging page) {
+    public List<UserDto> findAllUserData(Paging page) {
         return userMapper.findAll(page);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<UserData> findUserDataById(Long id) {
+    public Optional<UserDto> findUserDataById(Long id) {
         return userMapper.findById(id);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<UserData> findUserDataByUsername(String username) {
+    public Optional<UserDto> findUserDataByUsername(String username) {
         return userMapper.findByUsername(username);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<UserData> findUserDataByEmail(String email) {
+    public Optional<UserDto> findUserDataByEmail(String email) {
         return userMapper.findByEmail(email);
     }
 }

@@ -1,7 +1,7 @@
 package io.beka.configuration;
 
 
-import io.beka.dto.UserData;
+import io.beka.dto.UserDto;
 import io.beka.model.ApiClient;
 import io.beka.model.User;
 import io.beka.repository.AccessTokenRepository;
@@ -52,7 +52,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 accessTokenRepository.findByToken(refreshToken, false).ifPresent(accessToken -> {
                     User user = accessToken.getUser();
                     if (user.getStatus()) {
-                        UserData userData = new UserData();
+                        UserDto userData = new UserDto();
                         userData.setId(user.getId());
                         userData.setToken(refreshToken);
                         userData.setUsername(user.getUsername());

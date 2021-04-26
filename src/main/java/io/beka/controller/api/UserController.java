@@ -2,7 +2,7 @@ package io.beka.controller.api;
 
 import io.beka.exception.InvalidRequestException;
 import io.beka.vo.Paging;
-import io.beka.dto.UserData;
+import io.beka.dto.UserDto;
 import io.beka.dto.UserRegisterRequest;
 import io.beka.model.User;
 import io.beka.service.*;
@@ -36,7 +36,7 @@ public class UserController {
     Long defaultRole;
 
     @GetMapping("/current-user")
-    public ResponseEntity<Object> currentUser(@AuthenticationPrincipal UserData user) {
+    public ResponseEntity<Object> currentUser(@AuthenticationPrincipal UserDto user) {
 //        return ResponseEntity.ok(new HashMap<String, Object>() {{
 //            put("user", user);
 //        }});
@@ -44,8 +44,8 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserData>> getAllUser(@RequestParam(value = "offset", defaultValue = "0") int offset,
-                                                     @RequestParam(value = "limit", defaultValue = "20") int limit) {
+    public ResponseEntity<List<UserDto>> getAllUser(@RequestParam(value = "offset", defaultValue = "0") int offset,
+                                                    @RequestParam(value = "limit", defaultValue = "20") int limit) {
         return new ResponseEntity<>(userService.findAllUserData(new Paging(offset, limit)), HttpStatus.OK);
     }
 
@@ -72,13 +72,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserData> getUserById(@PathVariable("id") long id) {
-        Optional<UserData> userData = userService.findUserDataById(id);
+    public ResponseEntity<UserDto> getUserById(@PathVariable("id") long id) {
+        Optional<UserDto> userData = userService.findUserDataById(id);
         return userData.map(data -> new ResponseEntity<>(data, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserData> updateUser(@PathVariable("id") long id, @RequestBody UserRegisterRequest param) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable("id") long id, @RequestBody UserRegisterRequest param) {
         Optional<User> user = userService.findById(id);
 
         if (user.isPresent()) {
@@ -91,7 +91,7 @@ public class UserController {
                     defaultImage
             );
 
-            Optional<UserData> userData = userService.findUserDataById(userUpdate.getId());
+            Optional<UserDto> userData = userService.findUserDataById(userUpdate.getId());
             if (userData.isPresent()) {
                 return new ResponseEntity<>(userData.get(), HttpStatus.OK);
             }

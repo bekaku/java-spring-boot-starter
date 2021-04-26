@@ -6,7 +6,7 @@ import io.beka.dto.ResponseListDto;
 import io.beka.mapper.PermissionMapper;
 import io.beka.model.Permission;
 import io.beka.repository.PermissionRepository;
-import io.beka.service.PermissonService;
+import io.beka.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Transactional
 @Service
 @RequiredArgsConstructor
-public class PermissonServiceImpl implements PermissonService {
+public class PermissionServiceImpl implements PermissionService {
 
     @PersistenceContext
     private EntityManager entityManager;

@@ -13,17 +13,17 @@ import java.util.Optional;
 @Repository
 public interface PermissionRepository extends BaseRepository<Permission, Long> {
 
-    Optional<Permission> findByName(String name);
+    Optional<Permission> findByCode(String code);
 
-    List<Permission> findAllByCrudTable(String crudTable);
+    List<Permission> findAllByModule(String module);
 
-    @Query(value = "SELECT * FROM permission p WHERE p.crud_table like ?1%", nativeQuery = true)
-    List<Permission> findAllNativeQuesruByLikeCrudTable(String crudTable);
+    @Query(value = "SELECT * FROM permission p WHERE p.module like ?1%", nativeQuery = true)
+    List<Permission> findAllNativeQuesruByLikeModule(String module);
 
-    @Query("SELECT p FROM Permission p WHERE p.name = ?1")
-    Permission findByQueryName(String name);
+    @Query("SELECT p FROM Permission p WHERE p.code = ?1")
+    Permission findByQueryCode(String code);
 
     @Modifying
-    @Query("UPDATE Permission p SET p.name = :name where p.id = :id")
-    void updateName(@Param(value = "id") long id, @Param(value = "name") String name);
+    @Query("UPDATE Permission p SET p.code = :code where p.id = :id")
+    void updateName(@Param(value = "id") long id, @Param(value = "code") String code);
 }

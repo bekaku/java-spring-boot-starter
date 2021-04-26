@@ -5,7 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
-import javax.persistence.*;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
 import javax.validation.constraints.NotEmpty;
 import java.util.Set;
 
@@ -13,20 +16,15 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-public class Permission extends BaseEntity {
+public class Permission extends BaseEntityId {
     @NotEmpty
     @Column(nullable = false, length = 125)
-    private String name;
+    private String code;
 
-    @Basic(optional = false)
     private String description;
 
-    @Column(columnDefinition = "tinyint(1) default 1", nullable = false)
-    private Boolean status = true;
-
-    @Basic(optional = false)
     @Column(length = 100)
-    private String crudTable;
+    private String module;
 
     @ManyToMany(mappedBy = "permissions")
     Set<Role> roles;

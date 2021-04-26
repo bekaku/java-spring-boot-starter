@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -56,7 +57,7 @@ public class User extends BaseEntity {
 
     private String salt;
 
-    @Column(columnDefinition = "tinyint(1) default 1")
+    @Column(columnDefinition = "tinyint(1) default 1", nullable = false)
     private Boolean status;
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
@@ -68,5 +69,9 @@ public class User extends BaseEntity {
             joinColumns = @JoinColumn(name = "user"),
             inverseJoinColumns = @JoinColumn(name = "role"))
     private Set<Role> roles;
+
+    public static Sort getSort() {
+        return Sort.by(Sort.Direction.ASC, "username");
+    }
 
 }

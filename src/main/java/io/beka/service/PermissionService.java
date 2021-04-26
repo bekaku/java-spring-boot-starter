@@ -9,6 +9,6 @@ import java.util.List;
 
 
 @Service
-public interface PermissonService extends BaseService<Permission, PermissionDto> {
+public interface PermissionService extends BaseService<Permission, PermissionDto> {
     List<Permission> findAllViaMapper(Paging page);
 }

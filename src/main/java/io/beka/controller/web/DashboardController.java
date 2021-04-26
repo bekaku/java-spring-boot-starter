@@ -35,7 +35,7 @@ public class DashboardController {
     public String theymeleaf(ModelMap model) {
         System.out.println("DashboardController > theymeleaf 555" + ", Locale : " + LocaleContextHolder.getLocale());
         Permission permission = new Permission();
-        permission.setName("test");
+        permission.setCode("test");
 
         model.addAttribute("testHello", messageSource.getMessage("message.args", new Object[]{"Chanavee", "Bekaku"}, LocaleContextHolder.getLocale()));
         model.addAttribute("testMessageI18nUtil", i18n.getMessage("message.args", "Chanavee", "From i18n util"));

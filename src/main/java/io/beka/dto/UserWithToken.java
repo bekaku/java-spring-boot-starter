@@ -11,7 +11,7 @@ public class UserWithToken {
     private String image;
     private String token;
 
-    public UserWithToken(UserData userData, String token) {
+    public UserWithToken(UserDto userData, String token) {
         this.email = userData.getEmail();
         this.username = userData.getUsername();
         this.image = userData.getImage();

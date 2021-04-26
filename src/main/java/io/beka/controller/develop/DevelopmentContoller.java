@@ -60,6 +60,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
         */
 
+
         Metadata metadata = MetadataExtractorIntegrator.INSTANCE.getMetadata();
         String className;
         String packageClassName;
@@ -67,6 +68,8 @@ public class DevelopmentContoller extends BaseApiController {
             className = AppUtil.getSimpleClassName(persistentClass.getClassName());
             packageClassName = persistentClass.getClassName();
             Table table = persistentClass.getTable();
+
+            logger.info("capitalizeFirstLetter {} => {}", className, AppUtil.capitalizeFirstLetter(className, true));
 
             System.out.println("--------------------------");
             logger.info("Entity: {} is mapped to table: {}",
@@ -156,7 +159,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import lombok.experimental.Accessors;\n");
                 writer.append("\n");
                 writer.append("@Data\n");
-                writer.append("@JsonRootName(\"").append(AppUtil.capitalizeFirstLetter(entityName)).append("\")\n");
+                writer.append("@JsonRootName(\"").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
                 writer.append("@AllArgsConstructor\n");
                 writer.append("@NoArgsConstructor\n");
                 writer.append("@JsonIgnoreProperties(ignoreUnknown = true)\n");
@@ -164,7 +167,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("public class ").append(fileName).append("{\n");
                 writer.append("}\n");
                 writer.close();
-                logger.error("Created Class : {} ", className);
+                logger.info("Created Class : {} ", className);
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
@@ -189,7 +192,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("public interface ").append(fileName).append(" extends BaseRepository<").append(entityName).append(",Long> {\n");
                 writer.append("}\n");
                 writer.close();
-                logger.error("Created Class : {} ", className);
+                logger.info("Created Class : {} ", className);
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
@@ -209,12 +212,12 @@ public class DevelopmentContoller extends BaseApiController {
                     writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
                 }
                 writer.append("\n");
-                writer.append("import org.springframework.stereotype.Repository;\n");
+                writer.append("import io.beka.model.").append(entityName).append(";\n");
                 writer.append("\n");
                 writer.append("public interface ").append(entityName).append("Service extends BaseService<").append(entityName).append(", ").append(haveDto ? entityName + "Dto" : entityName).append("> {\n");
                 writer.append("}\n");
                 writer.close();
-                logger.error("Created Class : {} ", className);
+                logger.info("Created Class : {} ", className);
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
@@ -256,14 +259,14 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("@AllArgsConstructor\n");
                 writer.append("@Service\n");
                 writer.append("public class ").append(entityName).append("ServiceImpl implements ").append(entityName).append("Service {\n");
-                writer.append("    private final ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository;\n");
+                writer.append("    private final ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository;\n");
                 writer.append("    private final ModelMapper modelMapper;\n");
                 //findAllWithPaging
                 writer.append("\n");
                 writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public ResponseListDto<").append(haveDto ? entityName + "Dto" : entityName).append("> findAllWithPaging(Paging paging, Sort sort) {\n");
-                writer.append("        Page<").append(entityName).append("> resault = roleRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));\n");
+                writer.append("        Page<").append(entityName).append("> resault = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));\n");
                 writer.append("        return new ResponseListDto<>(resault.getContent()\n");
                 if (haveDto) {
                     writer.append("                .stream()\n");
@@ -277,63 +280,81 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public List<").append(entityName).append("> findAll() {\n");
-                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.findAll();\n");
+                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findAll();\n");
                 writer.append("    }\n");
                 writer.append("\n");
                 //save
                 writer.append("\n");
-                writer.append("    public ").append(entityName).append(" save(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
-                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.save(").append(AppUtil.capitalizeFirstLetter(entityName)).append(");\n");
+                writer.append("    public ")
+                        .append(entityName)
+                        .append(" save(")
+                        .append(entityName)
+                        .append(" ")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
+                        .append(") {\n");
+                writer.append("        return ")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
+                        .append("Repository.save(")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
+                        .append(");\n");
                 writer.append("    }\n");
                 //update
                 writer.append("\n");
                 writer.append("    @Override\n");
-                writer.append("    public ").append(entityName).append(" update(Role ").append(AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
-                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.save(").append(AppUtil.capitalizeFirstLetter(entityName)).append(");\n");
+                writer.append("    public ").append(entityName)
+                        .append(" update(").append(entityName)
+                        .append(" ")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
+                        .append(") {\n");
+                writer.append("        return ")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
+                        .append("Repository.save(")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
+                        .append(");\n");
                 writer.append("    }\n");
                 //findById
                 writer.append("\n");
                 writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public Optional<").append(entityName).append("> findById(Long id) {\n");
-                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.findById(id);\n");
+                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findById(id);\n");
                 writer.append("    }\n");
                 //delete
                 writer.append("\n");
                 writer.append("    @Override\n");
-                writer.append("    public void delete(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
-                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.delete(").append(AppUtil.capitalizeFirstLetter(entityName)).append(");\n");
+                writer.append("    public void delete(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
+                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.delete(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 writer.append("    }\n");
 
                 writer.append("\n");
                 writer.append("    @Override\n");
                 writer.append("    public void deleteById(Long id) {\n");
-                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName)).append("Repository.deleteById(id);\n");
+                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.deleteById(id);\n");
                 writer.append("    }\n");
 
                 writer.append("\n");
                 writer.append("    @Override\n");
-                writer.append("    public ").append(haveDto ? entityName + "Dto" : entityName).append(" convertEntityToDto(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
+                writer.append("    public ").append(haveDto ? entityName + "Dto" : entityName).append(" convertEntityToDto(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 if (haveDto) {
-                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName)).append(", ").append(entityName).append("Dto.class);\n");
+                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(", ").append(entityName).append("Dto.class);\n");
                 } else {
-                    writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("\n");
+                    writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\n");
                 }
                 writer.append("    }\n");
 
                 writer.append("\n");
                 writer.append("    @Override\n");
-                writer.append("    public ").append(entityName).append(" convertDtoToEntity(").append(haveDto ? entityName + "Dto " + AppUtil.capitalizeFirstLetter(entityName) + "Dto" : entityName + " " + AppUtil.capitalizeFirstLetter(entityName)).append(") {\n");
+                writer.append("    public ").append(entityName).append(" convertDtoToEntity(").append(haveDto ? entityName + "Dto " + AppUtil.capitalizeFirstLetter(entityName, true) + "Dto" : entityName + " " + AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 if (haveDto) {
-                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName)).append("Dto, ").append(entityName).append(".class);\n");
-                }else{
-                    writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName)).append("\n");
+                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Dto, ").append(entityName).append(".class);\n");
+                } else {
+                    writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
                 }
                 writer.append("    }\n");
                 writer.append("\n");
                 writer.append("}\n");
                 writer.close();
-                logger.error("Created Class : {} ", className);
+                logger.info("Created Class : {} ", className);
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
@@ -346,8 +367,6 @@ public class DevelopmentContoller extends BaseApiController {
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api." + fileName;
 
         boolean isExist = getClassFromName(className) != null;
-        logger.error("Class : {} " + (isExist ? "FOUND " : "NOT FOUND"), className);
-
         if (!isExist) {
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/controller/api/" + fileName + ".java", false));
@@ -361,6 +380,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("public class ").append(fileName).append("{\n");
                 writer.append("}\n");
                 writer.close();
+                logger.info("Created Class : {} ", className);
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }

@@ -91,7 +91,10 @@ public class AppUtil {
         return className.substring(className.lastIndexOf('.') + 1);
     }
 
-    public static String capitalizeFirstLetter(String str) {
+    public static String capitalizeFirstLetter(String str, boolean isLower) {
+        if(isLower){
+            return str.substring(0, 1).toLowerCase() + str.substring(1);
+        }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }

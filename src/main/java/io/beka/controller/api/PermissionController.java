@@ -8,7 +8,7 @@ import io.beka.mapper.PermissionMapper;
 import io.beka.dto.PermissionDto;
 import io.beka.model.Permission;
 import io.beka.repository.PermissionRepository;
-import io.beka.service.PermissonService;
+import io.beka.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import java.util.Optional;
 public class PermissionController {
 
     @Autowired
-    private final PermissonService permissonService;
+    private final PermissionService permissonService;
 
     @Autowired
     private final I18n i18n;
@@ -46,7 +46,7 @@ public class PermissionController {
 
         Permission permission = permissonService.convertDtoToEntity(dto);
 
-        if (permission.getName() == null || permission.getName().length() == 0) {
+        if (permission.getCode() == null || permission.getCode().length() == 0) {
             bindingResult.rejectValue("name", "Blank", "can't be empty");
         }
         if (bindingResult.hasErrors()) {

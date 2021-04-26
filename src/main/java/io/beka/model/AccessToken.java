@@ -16,7 +16,7 @@ import static javax.persistence.FetchType.LAZY;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"token"}, callSuper = false)
-@GenSourceableTable
+@GenSourceableTable(createController = false)
 @Entity
 public class AccessToken extends BaseEntity {
 

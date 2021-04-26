@@ -19,10 +19,10 @@
         <include refid="selectUserData"/>
         limit #{page.offset}, #{page.limit}
     </select>
-    <select id="findByUsername" resultType="io.beka.dto.UserData">
+    <select id="findByUsername" resultType="io.beka.dto.UserDto">
         select * from user where username = #{username}
     </select>
-    <select id="findByEmail" resultType="io.beka.dto.UserData">
+    <select id="findByEmail" resultType="io.beka.dto.UserDto">
         select * from user where email = #{email}
     </select>
     <select id="findById" resultMap="userDataResult">
@@ -33,7 +33,7 @@
 
 
 <!--Result Map-->
-    <resultMap id="userDataResult" type="io.beka.dto.UserData">
+    <resultMap id="userDataResult" type="io.beka.dto.UserDto">
         <id column="id" property="id"/>
         <result column="email" property="email"/>
         <result column="username" property="username"/>

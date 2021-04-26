@@ -46,8 +46,8 @@ public class AuthenController extends BaseApiController {
     Logger logger = LoggerFactory.getLogger(AuthenController.class);
 
     @GetMapping("/test/{id}")
-    public ResponseEntity<UserData> getUserById(@PathVariable("id") long id, @RequestParam String test) {
-        Optional<UserData> userData = userService.findUserDataById(id);
+    public ResponseEntity<UserDto> getUserById(@PathVariable("id") long id, @RequestParam String test) {
+        Optional<UserDto> userData = userService.findUserDataById(id);
         return userData.map(data -> new ResponseEntity<>(data, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
