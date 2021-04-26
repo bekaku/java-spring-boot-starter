@@ -13,8 +13,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class PermissionDto {
     private Long id;
-    private String name;
+    private String code;
     private String description;
-    private String crudTable;
-    private boolean status;
+    private String module;
 }

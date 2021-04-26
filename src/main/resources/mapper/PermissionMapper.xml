@@ -9,7 +9,6 @@
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="description" property="description"/>
-        <result column="status" property="status"/>
-        <result column="crud_table" property="crudTable"/>
+        <result column="module" property="module"/>
     </resultMap>
 </mapper>
