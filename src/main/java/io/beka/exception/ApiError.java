@@ -1,6 +1,7 @@
 package io.beka.exception;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+@JsonIgnoreProperties(value = { "hasError" })
 public class ApiError {
     private HttpStatus status;
     private String message;

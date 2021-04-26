@@ -19,9 +19,9 @@ public class BaseEntity extends BaseEntityId {
     @CreationTimestamp
     @Column(updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date createdAt;
+    private Date createdDate;
 
     @UpdateTimestamp
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date updatedAt;
+    private Date updatedDate;
 }

@@ -10,7 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.ObjectUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +42,8 @@ public class UserController {
 //        return ResponseEntity.ok(new HashMap<String, Object>() {{
 //            put("user", user);
 //        }});
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        UserDto userDetails = (UserDto) authentication.getPrincipal();
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 

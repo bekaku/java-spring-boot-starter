@@ -338,7 +338,7 @@ public class DevelopmentContoller extends BaseApiController {
                 if (haveDto) {
                     writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(", ").append(entityName).append("Dto.class);\n");
                 } else {
-                    writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\n");
+                    writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
                 }
                 writer.append("    }\n");
 
@@ -371,13 +371,86 @@ public class DevelopmentContoller extends BaseApiController {
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/controller/api/" + fileName + ".java", false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api").append(";\n");
-                writer.append("\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".configuration.I18n;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".vo.Paging;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.")
+                        .append(entityName).append("Dto;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.")
+                        .append(entityName).append(";\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.")
+                        .append(entityName).append("Service;\n");
                 writer.append("import lombok.RequiredArgsConstructor;\n");
-                writer.append("import org.springframework.web.bind.annotation.RestController;\n");
+                writer.append("import org.slf4j.Logger;\n");
+                writer.append("import org.slf4j.LoggerFactory;\n");
+                writer.append("import org.springframework.http.HttpStatus;\n");
+                writer.append("import org.springframework.http.ResponseEntity;\n");
+                writer.append("import org.springframework.web.bind.annotation.*;\n");
                 writer.append("\n");
-                writer.append("@RequiredArgsConstructor\n");
+                writer.append("import javax.validation.Valid;\n");
+                writer.append("import java.util.Optional;\n");
+                writer.append("\n");
+                writer.append("@RequestMapping(path = \"/api/")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
                 writer.append("@RestController\n");
-                writer.append("public class ").append(fileName).append("{\n");
+                writer.append("@RequiredArgsConstructor\n");
+                writer.append("public class ").append(fileName).append("extends BaseApiController{\n");
+                writer.append("\n");
+                writer.append("    private final ")
+                        .append(entityName).append("Service ")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service;\n");
+                writer.append("    private final I18n i18n;\n");
+                writer.append(" //   Logger logger = LoggerFactory.getLogger(")
+                        .append(entityName).append("Controller.class);\n");
+                writer.append("\n");
+                //findall
+                writer.append("    @GetMapping\n");
+                writer.append("    public ResponseEntity<Object> findAll(@RequestParam(value = \"page\", defaultValue = \"0\") int page,\n");
+                writer.append("                                          @RequestParam(value = \"limit\", defaultValue = \"20\") int limit) {\n");
+                writer.append("        return this.responseEntity(")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
+                        .append("Service.findAllWithPaging(new Paging(page, limit), ")
+                        .append(entityName).append(".getSort()), HttpStatus.OK);\n");
+                writer.append("    }\n");
+                //create
+                writer.append("\n");
+                writer.append("    @PostMapping\n");
+                writer.append("    public ResponseEntity<Object> create(@Valid @RequestBody ")
+                        .append(entityName).append("Dto dto) {\n");
+                writer.append("        ").append(entityName).append(" role = ")
+                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
+                        .append("Service.convertDtoToEntity(dto);\n");
+
+                //validator
+//                writer.append("        Optional<Role> roleExist = roleService.findByName(dto.getName());\n");
+//                writer.append("        if (roleExist.isPresent()) {\n");
+//                writer.append("            throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage(\"error.validateDuplicate\", dto.getName()));\n");
+//                writer.append("        }\n");
+
+                writer.append("        roleService.save(role);\n");
+                writer.append("        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.OK);\n");
+                writer.append("    }\n");
+
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
+                writer.append("\n");
                 writer.append("}\n");
                 writer.close();
                 logger.info("Created Class : {} ", className);

@@ -1,6 +1,5 @@
 package io.beka.middleware;
 
-import io.beka.exception.NoAuthorizationException;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;

@@ -1,15 +1,16 @@
 package io.beka.controller.api;
 
 import io.beka.configuration.I18n;
-import io.beka.vo.Paging;
 import io.beka.dto.RoleDto;
 import io.beka.model.Role;
 import io.beka.service.RoleService;
+import io.beka.vo.Paging;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManagerFactory;
@@ -36,15 +37,23 @@ public class RoleController extends BaseApiController {
         return this.responseEntity(roleService.findAllWithPaging(new Paging(page, limit), Role.getSort()), HttpStatus.OK);
     }
 
+//    @PreAuthorize("isHasPermission('role_add')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
+
+        logger.info("RoleController > create ");
+
+//        new RoleValidator();
+//        throw this.responseError(HttpStatus.BAD_REQUEST, "Validator test", "Just test validator");
+
         Role role = roleService.convertDtoToEntity(dto);
         Optional<Role> roleExist = roleService.findByName(dto.getName());
         if (roleExist.isPresent()) {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.validateDuplicate", dto.getName()));
         }
         roleService.save(role);
-        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.OK);
+        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
+//        return this.responseEntity(dto, HttpStatus.CREATED);
     }
 
     @PutMapping

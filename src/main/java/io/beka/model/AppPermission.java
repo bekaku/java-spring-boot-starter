@@ -7,7 +7,7 @@ import lombok.Setter;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 
-@GenSourceableTable
+@GenSourceableTable(createDto = true)
 @Getter
 @Setter
 @Entity
