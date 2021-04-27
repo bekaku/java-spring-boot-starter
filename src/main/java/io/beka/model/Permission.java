@@ -17,7 +17,7 @@ import java.util.Set;
 @Setter
 @Entity
 public class Permission extends BaseEntityId {
-    @NotEmpty
+
     @Column(nullable = false, length = 125)
     private String code;
 
@@ -30,7 +30,7 @@ public class Permission extends BaseEntityId {
     Set<Role> roles;
 
     public static Sort getSort(){
-        return Sort.by(Sort.Direction.DESC, "name");
+        return Sort.by(Sort.Direction.DESC, "code");
     }
 
     //JPA entity have a field not mapped to a DB column

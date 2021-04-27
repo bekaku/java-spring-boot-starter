@@ -8,7 +8,6 @@ import io.beka.util.AppUtil;
 import io.beka.util.ConstantData;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.boot.Metadata;
-//import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.slf4j.Logger;
@@ -285,32 +284,14 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("\n");
                 //save
                 writer.append("\n");
-                writer.append("    public ")
-                        .append(entityName)
-                        .append(" save(")
-                        .append(entityName)
-                        .append(" ")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
-                        .append(") {\n");
-                writer.append("        return ")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
-                        .append("Repository.save(")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
-                        .append(");\n");
+                writer.append("    public ").append(entityName).append(" save(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
+                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.save(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 writer.append("    }\n");
                 //update
                 writer.append("\n");
                 writer.append("    @Override\n");
-                writer.append("    public ").append(entityName)
-                        .append(" update(").append(entityName)
-                        .append(" ")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
-                        .append(") {\n");
-                writer.append("        return ")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
-                        .append("Repository.save(")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
-                        .append(");\n");
+                writer.append("    public ").append(entityName).append(" update(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
+                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.save(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 writer.append("    }\n");
                 //findById
                 writer.append("\n");
@@ -373,12 +354,9 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api").append(";\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".configuration.I18n;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".vo.Paging;\n");
-                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.")
-                        .append(entityName).append("Dto;\n");
-                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.")
-                        .append(entityName).append(";\n");
-                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.")
-                        .append(entityName).append("Service;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.").append(entityName).append("Service;\n");
                 writer.append("import lombok.RequiredArgsConstructor;\n");
                 writer.append("import org.slf4j.Logger;\n");
                 writer.append("import org.slf4j.LoggerFactory;\n");
@@ -389,36 +367,26 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import javax.validation.Valid;\n");
                 writer.append("import java.util.Optional;\n");
                 writer.append("\n");
-                writer.append("@RequestMapping(path = \"/api/")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
+                writer.append("@RequestMapping(path = \"/api/").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
                 writer.append("@RestController\n");
                 writer.append("@RequiredArgsConstructor\n");
                 writer.append("public class ").append(fileName).append("extends BaseApiController{\n");
                 writer.append("\n");
-                writer.append("    private final ")
-                        .append(entityName).append("Service ")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service;\n");
+                writer.append("    private final ").append(entityName).append("Service ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service;\n");
                 writer.append("    private final I18n i18n;\n");
-                writer.append(" //   Logger logger = LoggerFactory.getLogger(")
-                        .append(entityName).append("Controller.class);\n");
+                writer.append(" //   Logger logger = LoggerFactory.getLogger(").append(entityName).append("Controller.class);\n");
                 writer.append("\n");
                 //findall
                 writer.append("    @GetMapping\n");
                 writer.append("    public ResponseEntity<Object> findAll(@RequestParam(value = \"page\", defaultValue = \"0\") int page,\n");
                 writer.append("                                          @RequestParam(value = \"limit\", defaultValue = \"20\") int limit) {\n");
-                writer.append("        return this.responseEntity(")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
-                        .append("Service.findAllWithPaging(new Paging(page, limit), ")
-                        .append(entityName).append(".getSort()), HttpStatus.OK);\n");
+                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(new Paging(page, limit), ").append(entityName).append(".getSort()), HttpStatus.OK);\n");
                 writer.append("    }\n");
                 //create
                 writer.append("\n");
                 writer.append("    @PostMapping\n");
-                writer.append("    public ResponseEntity<Object> create(@Valid @RequestBody ")
-                        .append(entityName).append("Dto dto) {\n");
-                writer.append("        ").append(entityName).append(" role = ")
-                        .append(AppUtil.capitalizeFirstLetter(entityName, true))
-                        .append("Service.convertDtoToEntity(dto);\n");
+                writer.append("    public ResponseEntity<Object> create(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
+                writer.append("        ").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertDtoToEntity(dto);\n");
 
                 //validator
 //                writer.append("        Optional<Role> roleExist = roleService.findByName(dto.getName());\n");
@@ -426,31 +394,40 @@ public class DevelopmentContoller extends BaseApiController {
 //                writer.append("            throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage(\"error.validateDuplicate\", dto.getName()));\n");
 //                writer.append("        }\n");
 
-                writer.append("        roleService.save(role);\n");
-                writer.append("        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.OK);\n");
+                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.save(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
+                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("), HttpStatus.OK);\n");
                 writer.append("    }\n");
-
+                //update
                 writer.append("\n");
+                writer.append("    @PutMapping\n");
+                writer.append("    public ResponseEntity<Object> update(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
+                writer.append("        ").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertDtoToEntity(dto);\n");
+                writer.append("        Optional<").append(entityName).append("> oldData = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(dto.getId());\n");
+                writer.append("        if (oldData.isEmpty()) {\n");
+                writer.append("            throw this.responseErrorNotfound();\n");
+                writer.append("        }\n");
+                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.update(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
+                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("), HttpStatus.OK);\n");
+                //findOne
                 writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
-                writer.append("\n");
+                writer.append("    @GetMapping(\"/{id}\")\n");
+                writer.append("    public ResponseEntity<Object> findOne(@PathVariable(\"id\") long id) {\n");
+                writer.append("        Optional<").append(entityName).append("> ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(id);\n");
+                writer.append("        if (permission.isEmpty()) {\n");
+                writer.append("            throw this.responseErrorNotfound();\n");
+                writer.append("        }\n");
+                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".get()), HttpStatus.OK);\n");
+                writer.append("    }\n");
+                //delete
+                writer.append("    @DeleteMapping(\"/{id}\")\n");
+                writer.append("    public ResponseEntity<Object> delete(@PathVariable(\"id\") long id) {\n");
+                writer.append("        Optional<").append(entityName).append("> ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(id);\n");
+                writer.append("        if (role.isEmpty()) {\n");
+                writer.append("            throw this.responseErrorNotfound();\n");
+                writer.append("        }\n");
+                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.deleteById(id);\n");
+                writer.append("        return this.responseEntity(HttpStatus.OK);\n");
+                writer.append("    }\n");
                 writer.append("}\n");
                 writer.close();
                 logger.info("Created Class : {} ", className);

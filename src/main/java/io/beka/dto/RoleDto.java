@@ -24,4 +24,6 @@ public class RoleDto {
 
     private String description;
     private boolean status;
+
+    private int[] permissions;
 }

@@ -8,6 +8,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
@@ -25,13 +26,13 @@ public class DashboardController {
         this.messageSource = messageSource;
     }
 
-    @RequestMapping("/welcome")
+    @GetMapping("/welcome")
     public String welcome(ModelMap model) {
         model.addAttribute("testGetConfig", testConfigFile);
         return "welcomes";
     }
 
-    @RequestMapping("/theymeleaf")
+    @GetMapping("/theymeleaf")
     public String theymeleaf(ModelMap model) {
         System.out.println("DashboardController > theymeleaf 555" + ", Locale : " + LocaleContextHolder.getLocale());
         Permission permission = new Permission();
@@ -42,6 +43,7 @@ public class DashboardController {
         model.addAttribute("permission", permission);
         return "theymeleaf";
     }
+
 //
 //    @RequestMapping(value = "/dashboard/{username}")
 //    public ResponseEntity dashboard(@RequestHeader(value = "Accept-Language", required = false) Locale locale, @PathVariable("username") String username){

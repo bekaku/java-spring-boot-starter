@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class BaseApiController {
@@ -17,6 +18,10 @@ public class BaseApiController {
 
     public ApiException responseError(HttpStatus status, String message, String error) {
         return new ApiException(new ApiError(status, message != null ? message : i18n.getMessage("error.error"), error));
+    }
+
+    public ApiException responseErrorNotfound() {
+        return this.responseError(HttpStatus.NOT_FOUND, null, i18n.getMessage("error.dataNotfound"));
     }
 
     public ApiException responseError(HttpStatus status, String message, List<String> errors) {
@@ -30,6 +35,7 @@ public class BaseApiController {
     public ResponseEntity<Object> responseEntity(@Nullable Object o, HttpStatus status) {
         return new ResponseEntity<>(o, status);
     }
+
     public ResponseEntity<Object> responseEntity(HttpStatus status) {
         return new ResponseEntity<>(status);
     }

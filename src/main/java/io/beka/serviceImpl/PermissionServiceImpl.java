@@ -1,14 +1,16 @@
 package io.beka.serviceImpl;
 
-import io.beka.vo.Paging;
 import io.beka.dto.PermissionDto;
 import io.beka.dto.ResponseListDto;
 import io.beka.mapper.PermissionMapper;
 import io.beka.model.Permission;
 import io.beka.repository.PermissionRepository;
 import io.beka.service.PermissionService;
+import io.beka.vo.Paging;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -33,16 +35,17 @@ public class PermissionServiceImpl implements PermissionService {
     private final PermissionMapper permissionMapper;
     private final ModelMapper modelMapper;
 
+    Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
+
     @Transactional(readOnly = true)
     @Override
     public ResponseListDto<PermissionDto> findAllWithPaging(Paging paging, Sort sort) {
-        Page<Permission> resault = permissionRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
-
-        return new ResponseListDto<>(resault.getContent()
+        Page<Permission> result = permissionRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
+        return new ResponseListDto<>(result.getContent()
                 .stream()
                 .map(this::convertEntityToDto)
                 .collect(Collectors.toList())
-                , resault.getTotalPages(), resault.getNumberOfElements(), resault.isLast());
+                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
     }
 
     @Transactional(readOnly = true)
@@ -92,6 +95,19 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public List<Permission> findAllViaMapper(Paging page) {
         return permissionMapper.findAllWithPaging(page);
+    }
+
+    @Override
+    public boolean isHasPermission(long userId, String permissionCode) {
+        List<String> permissionList = permissionRepository.findPermissionsByUserIdAndPermissionCode(userId, permissionCode);
+        org.slf4j.Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
+        logger.info("Found Permission {}", permissionList);
+        return !permissionList.isEmpty();
+    }
+
+    @Override
+    public Optional<Permission> findByCode(String code) {
+        return permissionRepository.findByCode(code);
     }
 
     //custom JPA query

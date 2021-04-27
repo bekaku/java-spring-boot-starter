@@ -2,15 +2,18 @@ package io.beka.controller.api;
 
 
 import io.beka.configuration.I18n;
-import io.beka.vo.Paging;
+import io.beka.dto.PermissionDto;
 import io.beka.exception.InvalidRequestException;
 import io.beka.mapper.PermissionMapper;
-import io.beka.dto.PermissionDto;
 import io.beka.model.Permission;
 import io.beka.repository.PermissionRepository;
 import io.beka.service.PermissionService;
+import io.beka.serviceImpl.PermissionServiceImpl;
+import io.beka.vo.Paging;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,107 +21,79 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "/api/permission")
 @RequiredArgsConstructor
-public class PermissionController {
+public class PermissionController extends BaseApiController {
 
-    @Autowired
     private final PermissionService permissonService;
-
-    @Autowired
     private final I18n i18n;
+    Logger logger = LoggerFactory.getLogger(PermissionController.class);
 
-    @Autowired
-    private final PermissionMapper permissionMapper;
+    @GetMapping
+    public ResponseEntity<Object> findAll(@RequestParam(value = "page", defaultValue = "0") int page,
+                                          @RequestParam(value = "limit", defaultValue = "20") int limit) {
 
-    @Autowired
-    private final PermissionRepository permissionRepository;
-
-    @Autowired
-    private ModelMapper modelMapper;
+        return this.responseEntity(permissonService.findAllWithPaging(new Paging(page, limit), Permission.getSort()), HttpStatus.OK);
+    }
 
     @PostMapping
-    public ResponseEntity<Object> create(@Valid @RequestBody PermissionDto dto, BindingResult bindingResult) {
+    public ResponseEntity<Object> create(@Valid @RequestBody PermissionDto dto) {
 
         Permission permission = permissonService.convertDtoToEntity(dto);
-
-        if (permission.getCode() == null || permission.getCode().length() == 0) {
-            bindingResult.rejectValue("name", "Blank", "can't be empty");
-        }
-        if (bindingResult.hasErrors()) {
-            throw new InvalidRequestException(bindingResult);
-        }
-        if (bindingResult.hasErrors()) {
-            throw new InvalidRequestException(bindingResult);
+        Optional<Permission> permissionExist = permissonService.findByCode(dto.getCode());
+        if (permissionExist.isPresent()) {
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.validateDuplicate", dto.getCode()));
         }
         permissonService.save(permission);
 //        return ResponseEntity.ok(new HashMap<String, Object>() {{
 //            put("postData", permission);
 //        }});
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+//        return this.responseEntity(new HashMap<String, Object>() {{
+//            put("postData", permission);
+//            put("item2", "item2");
+//        }}, HttpStatus.OK);
+        return this.responseEntity(permissonService.convertEntityToDto(permission), HttpStatus.CREATED);
     }
 
     @PutMapping
-    public ResponseEntity<Object> update(@Valid @RequestBody PermissionDto dto, BindingResult bindingResult) {
-
-        Optional<Permission> optional = permissonService.findById(dto.getId());
-        if (optional.isPresent()) {
-            Permission permission = permissonService.convertDtoToEntity(dto);
-            permissonService.save(permission);
-//            return ResponseEntity.ok(new HashMap<String, Object>() {{
-//                put("updateData", permission);
-//            }});
-            return new ResponseEntity<>(dto, HttpStatus.OK);
+    public ResponseEntity<Object> update(@Valid @RequestBody PermissionDto dto) {
+        Permission permission = permissonService.convertDtoToEntity(dto);
+        Optional<Permission> oldData = permissonService.findById(dto.getId());
+        if (oldData.isEmpty()) {
+            throw this.responseErrorNotfound();
         }
-
-
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (!oldData.get().getCode().equals(permission.getCode())) {
+            Optional<Permission> permissionExist = permissonService.findByCode(dto.getCode());
+            if (permissionExist.isPresent()) {
+                throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.validateDuplicate", dto.getCode()));
+            }
+        }
+        permissonService.update(permission);
+        return this.responseEntity(permissonService.convertEntityToDto(permission), HttpStatus.OK);
     }
 
-    @GetMapping
-    public ResponseEntity<Object> findAll(@RequestParam(value = "page", defaultValue = "0") int page,
-                                  @RequestParam(value = "limit", defaultValue = "20") int limit,
-                                  @RequestHeader(value = "Accept-Language", required = false) Locale locale) {
-
-//        List<Permission> permissionList = permissonService.findAll();
-//        List<PermissionDto> dataList = permissionList.stream()
-//                .map(this::convertToDto)
-//                .collect(Collectors.toList());
-/*
-        return ResponseEntity.ok(new HashMap<String, Object>() {{
-//            put("headerLocale", locale);
-//            put("currentLocale", LocaleContextHolder.getLocale());
-//            put("entityName", i18n.getMessage("app.name"));
-//            put("dataList", dataList);
-//            put("permissionByMapper", permissonService.findAllViaMapper(new Page(offset, limit)));
-//            put("permissionsByMapper", permissionMapper.findAllWithPaging(new Page(offset, limit)));
-//            put("hibernateFindAll", permissionRepository.findAll());
-
-//            put("hibernateFindAllSort", permissionRepository.findAll(Sort.by(Sort.Direction.DESC, "id")));
-//            put("hibernateFindAllPaging", permissionRepository.findAll(PageRequest.of(0, 1, Sort.by(Sort.Direction.ASC, "id"))));
-//            put("hibernateFindAllPaging", permissonService.findAllWithPaging(0, 1, Sort.by(Sort.Direction.ASC, "id")));
-//            put("findByName", permissionRepository.findByName("permission_code"));
-//            put("findAllByCrudTable", permissionRepository.findAllByCrudTable("app_user"));
-//            put("findAllNativeQuesruByLikeCrudTable", permissionRepository.findAllNativeQuesruByLikeCrudTable("app_user"));
-//            put("findByQueryName", permissionRepository.findByQueryName("permission_code"));
-//            put("findCustomAllByCrudTableAndActive", permissionRepository.findCustomAllByCrudTableAndActive("app_user", true));
-//            put("findAllByCustomObject", permissionRepository.findAllByCustomObject());
-        }});
-        */
-
-        return new ResponseEntity<>(permissonService.findAllWithPaging(new Paging(page, limit), Permission.getSort()), HttpStatus.OK);
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
+        Optional<Permission> permission = permissonService.findById(id);
+        if (permission.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        return this.responseEntity(permissonService.convertEntityToDto(permission.get()), HttpStatus.OK);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> delete(@PathVariable("id") long id) {
+        Optional<Permission> role = permissonService.findById(id);
+        if (role.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        permissonService.deleteById(id);
+        return this.responseEntity(HttpStatus.OK);
+    }
+
 }
-//@Getter
-//@JsonRootName("permision")
-//@NoArgsConstructor
-//class PermssionsParam {
-//    @NotBlank(message = "can't be empty")
-//    private String name;
-//    private String description;
-//    private String crudTable;
-//}

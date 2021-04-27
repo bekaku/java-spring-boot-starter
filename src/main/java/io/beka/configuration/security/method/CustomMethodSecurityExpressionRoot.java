@@ -1,16 +1,13 @@
 package io.beka.configuration.security.method;
 
 import io.beka.dto.UserDto;
-import io.beka.model.User;
-import io.beka.service.UserService;
+import io.beka.service.PermissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.expression.SecurityExpressionRoot;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;
 import org.springframework.security.core.Authentication;
-
-import java.util.Optional;
 
 public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot implements MethodSecurityExpressionOperations {
 
@@ -20,17 +17,17 @@ public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot i
     private final UserDto userDto;
     Logger logger = LoggerFactory.getLogger(CustomMethodSecurityExpressionRoot.class);
 
-    private final UserService userService;
+    private final PermissionService permissionService;
 
     /**
      * Creates a new instance
      *
      * @param authentication the {@link Authentication} to use. Cannot be null.
      */
-    public CustomMethodSecurityExpressionRoot(Authentication authentication, UserService userService) {
+    public CustomMethodSecurityExpressionRoot(Authentication authentication, PermissionService permissionService) {
         super(authentication);
         this.userDto = (UserDto) authentication.getPrincipal();
-        this.userService = userService;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -66,10 +63,9 @@ public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot i
      * Custom 'isHasPermission()' expression
      */
     public boolean isHasPermission(String permission) {
-        // TODO: Implement
-        logger.info("CustomMethodSecurityExpressionRoot > isHasPermission >  permission {}, userDetail : {}", permission, this.userDto);
-        Optional<User> user = userService.findById(this.userDto.getId());
-        user.ifPresent(value -> logger.info("isHasPermission : username {}", value.getUsername()));
+        boolean hasPermit = permissionService.isHasPermission(this.userDto.getId(), permission);
+        logger.info("isHasPermission >  permission= '{}', userDetail= {}, hasPermit {}", permission, this.userDto, hasPermit);
+//        return permissionService.isHasPermission(this.userDto.getId(), permission);
         return true;
     }
 }
