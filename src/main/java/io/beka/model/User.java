@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,14 +19,13 @@ import java.util.UUID;
 @EqualsAndHashCode(of = {"salt"}, callSuper = false)
 @Entity
 public class User extends BaseEntity {
-    public User(String username, String password, String email, Boolean status, String image, Set<Role> roles) {
+    public User(String username, String password, String email, Boolean status, String image) {
         this.salt = UUID.randomUUID().toString();
         this.username = username;
         this.password = password;
         this.email = email;
         this.image = image;
         this.status = status;
-        this.roles = roles;
     }
 
     public void update(String username, String password, String email, Boolean status, String image) {
@@ -45,12 +45,12 @@ public class User extends BaseEntity {
     }
 
     @Basic(optional = false)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String username;
 
-    @Basic(optional = false)
     private String password;
 
+    @Column(length = 100)
     private String email;
 
     private String image;
@@ -68,7 +68,7 @@ public class User extends BaseEntity {
             name = "user_role",
             joinColumns = @JoinColumn(name = "user"),
             inverseJoinColumns = @JoinColumn(name = "role"))
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     public static Sort getSort() {
         return Sort.by(Sort.Direction.ASC, "username");

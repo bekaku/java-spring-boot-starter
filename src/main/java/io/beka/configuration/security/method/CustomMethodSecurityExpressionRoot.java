@@ -63,9 +63,9 @@ public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot i
      * Custom 'isHasPermission()' expression
      */
     public boolean isHasPermission(String permission) {
-        boolean hasPermit = permissionService.isHasPermission(this.userDto.getId(), permission);
-        logger.info("isHasPermission >  permission= '{}', userDetail= {}, hasPermit {}", permission, this.userDto, hasPermit);
-//        return permissionService.isHasPermission(this.userDto.getId(), permission);
-        return true;
+//        boolean hasPermit = permissionService.isHasPermission(this.userDto.getId(), permission);
+//        logger.info("isHasPermission >  permission= '{}', userDetail= {}, hasPermit {}", permission, this.userDto, hasPermit);
+        return permissionService.isHasPermission(this.userDto.getId(), permission);
+//        return true;
     }
 }

@@ -6,6 +6,8 @@ import io.beka.model.UserAgent;
 import io.beka.repository.UserAgentRepository;
 import io.beka.service.UserAgentService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class UserAgentServiceImpl implements UserAgentService {
 
@@ -22,7 +24,7 @@ public class UserAgentServiceImpl implements UserAgentService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<UserAgent> findAllWithPaging(Paging paging, Sort sort) {
+    public ResponseListDto<UserAgent> findAllWithPaging(Pageable pageable) {
         return null;
     }
 

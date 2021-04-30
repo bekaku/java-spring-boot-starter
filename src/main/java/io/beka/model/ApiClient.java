@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
 import java.util.*;
@@ -47,4 +48,7 @@ public class ApiClient extends BaseEntity {
     @OneToMany(mappedBy = "apiClient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<ApiClientIp> apiClientIps= new HashSet<>();
 
+    public static Sort getSort() {
+        return Sort.by(Sort.Direction.ASC, "apiName");
+    }
 }

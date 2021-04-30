@@ -4,6 +4,7 @@ import java.util.*;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +34,8 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     // 400
+
+    @NotNull
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(final MethodArgumentNotValidException ex, final HttpHeaders headers, final HttpStatus status, final WebRequest request) {
 //        logger.info(ex.getClass().getName());

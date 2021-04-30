@@ -1,16 +1,21 @@
 package io.beka.serviceImpl;
 
+import io.beka.controller.test.TestApiController;
 import io.beka.dto.ApiClientDto;
-import io.beka.vo.Paging;
 import io.beka.dto.ResponseListDto;
 import io.beka.model.ApiClient;
 import io.beka.repository.AccessTokenRepository;
 import io.beka.repository.ApiClientRepository;
 import io.beka.service.ApiClientService;
+import io.beka.vo.Paging;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +25,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class ApiClientServiceImpl implements ApiClientService {
 
     private final ApiClientRepository apiClientRepository;
     private final AccessTokenRepository accessTokenRepository;
     private final ModelMapper modelMapper;
+
+    Logger logger = LoggerFactory.getLogger(ApiClientServiceImpl.class);
 
     @Transactional(readOnly = true)
     @Override
@@ -36,14 +43,15 @@ public class ApiClientServiceImpl implements ApiClientService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<ApiClientDto> findAllWithPaging(Paging paging, Sort sort) {
-        Page<ApiClient> resault = apiClientRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
+    public ResponseListDto<ApiClientDto> findAllWithPaging(Pageable pageable) {
+        Page<ApiClient> result = apiClientRepository.findAll(pageable);
+        logger.info("findAllWithPaging {} ", result.getContent());
 
-        return new ResponseListDto<>(resault.getContent()
+        return new ResponseListDto<>(result.getContent()
                 .stream()
                 .map(this::convertEntityToDto)
                 .collect(Collectors.toList())
-                , resault.getTotalPages(), resault.getNumberOfElements(), resault.isLast());
+                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
     }
 
     @Transactional(readOnly = true)

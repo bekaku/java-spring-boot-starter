@@ -11,6 +11,7 @@ import io.beka.service.UserAgentService;
 import io.beka.util.DateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -70,7 +71,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
-    public ResponseListDto<AccessToken> findAllWithPaging(Paging paging, Sort sort) {
+    public ResponseListDto<AccessToken> findAllWithPaging(Pageable pageable) {
         return null;
     }
 

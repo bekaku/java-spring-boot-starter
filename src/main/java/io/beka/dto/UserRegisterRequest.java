@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
 
 
 @Setter
@@ -16,6 +17,7 @@ import javax.validation.constraints.NotEmpty;
 public class UserRegisterRequest {
 
     @NotEmpty(message = "{error.validateRequire}")
+    @Size(max = 100, message = "{error.SizeLimit100}")
     private String username;
 
     @NotEmpty(message = "{error.validateRequire}")
@@ -23,7 +25,8 @@ public class UserRegisterRequest {
 
     @NotEmpty(message = "{error.validateRequire}")
     @Email(message = "{error.emailFormat}")
+    @Size(max = 100, message = "{error.SizeLimit100}")
     private String email;
 
-    private String[] userRoles;
+    private long[] selectedRoles;
 }

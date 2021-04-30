@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,8 +40,8 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<PermissionDto> findAllWithPaging(Paging paging, Sort sort) {
-        Page<Permission> result = permissionRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
+    public ResponseListDto<PermissionDto> findAllWithPaging(Pageable pageable) {
+        Page<Permission> result = permissionRepository.findAll(pageable);
         return new ResponseListDto<>(result.getContent()
                 .stream()
                 .map(this::convertEntityToDto)
@@ -67,7 +68,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Transactional(readOnly = true)
     @Override
     public Optional<Permission> findById(Long id) {
-        return Optional.empty();
+        return permissionRepository.findById(id);
     }
 
     @Override
@@ -97,11 +98,10 @@ public class PermissionServiceImpl implements PermissionService {
         return permissionMapper.findAllWithPaging(page);
     }
 
+
     @Override
     public boolean isHasPermission(long userId, String permissionCode) {
         List<String> permissionList = permissionRepository.findPermissionsByUserIdAndPermissionCode(userId, permissionCode);
-        org.slf4j.Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
-        logger.info("Found Permission {}", permissionList);
         return !permissionList.isEmpty();
     }
 

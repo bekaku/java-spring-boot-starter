@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +32,8 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public ResponseListDto<UserDto> findAllWithPaging(Paging paging, Sort sort) {
-        Page<User> resault = userRepository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));
+    public ResponseListDto<UserDto> findAllWithPaging(Pageable pageable) {
+        Page<User> resault = userRepository.findAll(pageable);
 
         return new ResponseListDto<>(resault.getContent()
                 .stream()

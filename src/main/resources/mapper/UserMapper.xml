@@ -39,7 +39,7 @@
         <result column="username" property="username"/>
         <result column="image" property="image"/>
         <result column="status" property="status"/>
-        <collection property="userRoles" javaType="list" ofType="string">
+        <collection property="selectedRoles" javaType="list" ofType="string">
             <result column="roleId"/>
         </collection>
     </resultMap>

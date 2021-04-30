@@ -68,10 +68,10 @@ public class AuthenController extends BaseApiController {
         validateUserRegister(registerDto);
         //user can have many role
         Set<Role> roles = new HashSet<>();
-        if (registerDto.getUserRoles().length > 0) {
+        if (registerDto.getSelectedRoles().length > 0) {
             Optional<Role> role;
-            for (String roleId : registerDto.getUserRoles()) {
-                role = roleService.findById(Long.valueOf(roleId));
+            for (long roleId : registerDto.getSelectedRoles()) {
+                role = roleService.findById(roleId);
                 role.ifPresent(roles::add);
             }
         }
@@ -85,9 +85,9 @@ public class AuthenController extends BaseApiController {
                 registerDto.getPassword(),
                 registerDto.getEmail(),
                 true,
-                defaultImage,
-                roles
+                defaultImage
         );
+        user.setRoles(roles);
         //encrypt pwd
         user.setPassword(encryptService.encrypt(user.getPassword(), user.getSalt()));
         userService.save(user);

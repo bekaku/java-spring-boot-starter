@@ -12,6 +12,8 @@ import java.util.Optional;
 @Repository
 public interface PermissionRepository extends BaseRepository<Permission, Long> {
 
+    //https://www.baeldung.com/spring-data-jpa-query
+
     Optional<Permission> findByCode(String code);
 
     List<Permission> findAllByModule(String module);

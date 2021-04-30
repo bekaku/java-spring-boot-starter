@@ -17,5 +17,5 @@ public class UserDto {
     private String token;
     private String image;
     private Boolean status;
-    private List<String> userRoles;
+    private List<String> selectedRoles;
 }

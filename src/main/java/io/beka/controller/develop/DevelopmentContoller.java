@@ -159,8 +159,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("\n");
                 writer.append("@Data\n");
                 writer.append("@JsonRootName(\"").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
-                writer.append("@AllArgsConstructor\n");
-                writer.append("@NoArgsConstructor\n");
+                writer.append("//@AllArgsConstructor\n");
+                writer.append("//@NoArgsConstructor\n");
                 writer.append("@JsonIgnoreProperties(ignoreUnknown = true)\n");
                 writer.append("@Accessors(chain = true)\n");
                 writer.append("public class ").append(fileName).append("{\n");
@@ -255,7 +255,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import java.util.stream.Collectors;\n");
                 writer.append("\n");
                 writer.append("@Transactional\n");
-                writer.append("@AllArgsConstructor\n");
+                writer.append("@RequiredArgsConstructor\n");
                 writer.append("@Service\n");
                 writer.append("public class ").append(entityName).append("ServiceImpl implements ").append(entityName).append("Service {\n");
                 writer.append("    private final ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository;\n");
@@ -264,15 +264,15 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("\n");
                 writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
-                writer.append("    public ResponseListDto<").append(haveDto ? entityName + "Dto" : entityName).append("> findAllWithPaging(Paging paging, Sort sort) {\n");
-                writer.append("        Page<").append(entityName).append("> resault = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findAll(PageRequest.of(paging.getPage(), paging.getLimit(), sort));\n");
-                writer.append("        return new ResponseListDto<>(resault.getContent()\n");
+                writer.append("    public ResponseListDto<").append(haveDto ? entityName + "Dto" : entityName).append("> findAllWithPaging(Pageable pageable) {\n");
+                writer.append("        Page<").append(entityName).append("> result = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findAll(pageable);\n");
+                writer.append("        return new ResponseListDto<>(result.getContent()\n");
                 if (haveDto) {
                     writer.append("                .stream()\n");
                     writer.append("                .map(this::convertEntityToDto)\n");
                     writer.append("                .collect(Collectors.toList())\n");
                 }
-                writer.append("                , resault.getTotalPages(), resault.getNumberOfElements(), resault.isLast());\n");
+                writer.append("                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());\n");
                 writer.append("    }\n");
                 //findAll
                 writer.append("\n");
@@ -363,6 +363,9 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import org.springframework.http.HttpStatus;\n");
                 writer.append("import org.springframework.http.ResponseEntity;\n");
                 writer.append("import org.springframework.web.bind.annotation.*;\n");
+                writer.append("import org.springframework.security.access.prepost.PreAuthorize;\n");
+                writer.append("import org.springframework.data.domain.PageRequest;\n");
+                writer.append("import org.springframework.data.domain.Pageable;\n");
                 writer.append("\n");
                 writer.append("import javax.validation.Valid;\n");
                 writer.append("import java.util.Optional;\n");
@@ -370,20 +373,26 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("@RequestMapping(path = \"/api/").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
                 writer.append("@RestController\n");
                 writer.append("@RequiredArgsConstructor\n");
-                writer.append("public class ").append(fileName).append("extends BaseApiController{\n");
+                writer.append("public class ").append(fileName).append(" extends BaseApiController{\n");
                 writer.append("\n");
                 writer.append("    private final ").append(entityName).append("Service ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service;\n");
                 writer.append("    private final I18n i18n;\n");
                 writer.append(" //   Logger logger = LoggerFactory.getLogger(").append(entityName).append("Controller.class);\n");
                 writer.append("\n");
                 //findall
+                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_list')\")\n");
                 writer.append("    @GetMapping\n");
-                writer.append("    public ResponseEntity<Object> findAll(@RequestParam(value = \"page\", defaultValue = \"0\") int page,\n");
-                writer.append("                                          @RequestParam(value = \"limit\", defaultValue = \"20\") int limit) {\n");
-                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(new Paging(page, limit), ").append(entityName).append(".getSort()), HttpStatus.OK);\n");
+
+//                writer.append("    public ResponseEntity<Object> findAll(@RequestParam(value = \"page\", defaultValue = \"0\") int page,\n");
+//                writer.append("                                          @RequestParam(value = \"limit\", defaultValue = \"20\") int limit) {\n");
+                writer.append("    public ResponseEntity<Object> findAll(Pageable pageable) {\n");
+//                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(new Paging(page, limit), ").append(entityName).append(".getSort()), HttpStatus.OK);\n");
+                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :\n");
+                writer.append("                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
                 writer.append("    }\n");
                 //create
                 writer.append("\n");
+                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_add')\")\n");
                 writer.append("    @PostMapping\n");
                 writer.append("    public ResponseEntity<Object> create(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
                 writer.append("        ").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertDtoToEntity(dto);\n");
@@ -399,6 +408,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    }\n");
                 //update
                 writer.append("\n");
+                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_edit')\")\n");
                 writer.append("    @PutMapping\n");
                 writer.append("    public ResponseEntity<Object> update(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
                 writer.append("        ").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertDtoToEntity(dto);\n");
@@ -408,21 +418,25 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("        }\n");
                 writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.update(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("), HttpStatus.OK);\n");
+                writer.append("    }\n");
                 //findOne
                 writer.append("\n");
+                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_view')\")\n");
                 writer.append("    @GetMapping(\"/{id}\")\n");
                 writer.append("    public ResponseEntity<Object> findOne(@PathVariable(\"id\") long id) {\n");
                 writer.append("        Optional<").append(entityName).append("> ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(id);\n");
-                writer.append("        if (permission.isEmpty()) {\n");
+                writer.append("        if (").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".isEmpty()) {\n");
                 writer.append("            throw this.responseErrorNotfound();\n");
                 writer.append("        }\n");
                 writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".get()), HttpStatus.OK);\n");
                 writer.append("    }\n");
                 //delete
+                writer.append("\n");
+                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_delete')\")\n");
                 writer.append("    @DeleteMapping(\"/{id}\")\n");
                 writer.append("    public ResponseEntity<Object> delete(@PathVariable(\"id\") long id) {\n");
                 writer.append("        Optional<").append(entityName).append("> ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(id);\n");
-                writer.append("        if (role.isEmpty()) {\n");
+                writer.append("        if (").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".isEmpty()) {\n");
                 writer.append("            throw this.responseErrorNotfound();\n");
                 writer.append("        }\n");
                 writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.deleteById(id);\n");

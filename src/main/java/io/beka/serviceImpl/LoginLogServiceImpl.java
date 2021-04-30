@@ -6,6 +6,7 @@ import io.beka.model.LoginLog;
 import io.beka.repository.LoginLogRepository;
 import io.beka.service.LoginLogService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,7 @@ public class LoginLogServiceImpl implements LoginLogService {
     private final LoginLogRepository loginLogRepository;
 
     @Override
-    public ResponseListDto<LoginLog> findAllWithPaging(Paging paging, Sort sort) {
+    public ResponseListDto<LoginLog> findAllWithPaging(Pageable pageable) {
         return null;
     }
 

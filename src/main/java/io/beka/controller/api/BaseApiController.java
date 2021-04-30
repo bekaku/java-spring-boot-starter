@@ -24,6 +24,10 @@ public class BaseApiController {
         return this.responseError(HttpStatus.NOT_FOUND, null, i18n.getMessage("error.dataNotfound"));
     }
 
+    public ApiException responseErrorDuplicate(String data) {
+        return this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.validateDuplicate", data));
+    }
+
     public ApiException responseError(HttpStatus status, String message, List<String> errors) {
         return new ApiException(new ApiError(status, message != null ? message : i18n.getMessage("error.error"), errors));
     }

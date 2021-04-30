@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 
 @GenSourceableTable
@@ -42,12 +43,11 @@ public class Role extends BaseEntity {
     @ManyToMany(mappedBy = "roles")
     Set<User> users;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "role_permission",
-            joinColumns = @JoinColumn(name = "role"),
-            inverseJoinColumns = @JoinColumn(name = "permission"))
-    private Set<Permission> permissions;
+    @ManyToMany
+    @JoinTable(name = "role_permission",
+            joinColumns = {@JoinColumn(name = "role")},
+            inverseJoinColumns = {@JoinColumn(name = "permission")})
+    private Set<Permission> permissions = new HashSet<>();
 
     public static Sort getSort() {
         return Sort.by(Sort.Direction.ASC, "name");

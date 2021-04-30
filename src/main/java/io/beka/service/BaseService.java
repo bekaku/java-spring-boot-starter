@@ -1,7 +1,9 @@
 package io.beka.service;
 
+import io.beka.dto.PermissionDto;
 import io.beka.vo.Paging;
 import io.beka.dto.ResponseListDto;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
@@ -9,7 +11,8 @@ import java.util.Optional;
 
 public interface BaseService<T, DTO> {
 
-    ResponseListDto<DTO> findAllWithPaging(Paging paging, Sort sort);
+//    ResponseListDto<DTO> findAllWithPaging(Paging paging, Sort sort);
+    ResponseListDto<DTO> findAllWithPaging(Pageable pageable);
 
     List<T> findAll();
 

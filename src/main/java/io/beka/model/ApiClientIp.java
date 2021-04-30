@@ -5,12 +5,15 @@ import io.beka.annotation.GenSourceableTable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
 
 import static javax.persistence.FetchType.LAZY;
 
-@GenSourceableTable(createController = false)
+@GenSourceableTable(createDto = true)
 @EqualsAndHashCode(callSuper = true)
 @Data
 @JsonRootName("apiClientIp")
@@ -18,8 +21,9 @@ import static javax.persistence.FetchType.LAZY;
 @Entity
 public class ApiClientIp extends BaseEntity {
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = LAZY, optional = false)
     @JoinColumn(name = "apiClient", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ApiClient apiClient;
 
     @Column(length = 50)
@@ -27,5 +31,9 @@ public class ApiClientIp extends BaseEntity {
 
     @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean status;
+
+    public static Sort getSort() {
+        return Sort.by(Sort.Direction.ASC, "ipAddress");
+    }
 
 }
