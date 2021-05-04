@@ -6,6 +6,7 @@ import io.beka.model.Permission;
 import io.beka.model.Role;
 import io.beka.service.PermissionService;
 import io.beka.service.RoleService;
+import io.beka.validator.RoleValidator;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +30,11 @@ public class RoleController extends BaseApiController {
     private final RoleService roleService;
     private final PermissionService permissionService;
     private final I18n i18n;
+    private final RoleValidator roleValidator;
 
     Logger logger = LoggerFactory.getLogger(RoleController.class);
 
-    @Value("${log.enable}")
+    @Value("${app.loging.enable}")
     boolean logEnable;
 
     @PreAuthorize("isHasPermission('role_list')")
@@ -48,6 +50,14 @@ public class RoleController extends BaseApiController {
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
         Role role = roleService.convertDtoToEntity(dto);
+        roleValidator.validate(role);
+//        return this.responseEntity(dto, HttpStatus.OK);
+        roleService.save(role);
+        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
+
+
+        /*
+        Role role = roleService.convertDtoToEntity(dto);
         Optional<Role> roleExist = roleService.findByName(dto.getName());
         if (roleExist.isPresent()) {
             throw this.responseErrorDuplicate(dto.getName());
@@ -57,6 +67,8 @@ public class RoleController extends BaseApiController {
 //        return this.responseEntity(role, HttpStatus.CREATED);
         roleService.save(role);
         return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
+
+         */
     }
 
     private void setRolePermission(RoleDto dto, Role role) {
@@ -73,7 +85,9 @@ public class RoleController extends BaseApiController {
     @PutMapping
     public ResponseEntity<Object> update(@Valid @RequestBody RoleDto dto) {
         Role role = roleService.convertDtoToEntity(dto);
-
+        roleValidator.validate(role);
+        return this.responseEntity(dto, HttpStatus.OK);
+        /*
         Optional<Role> oldData = roleService.findById(role.getId());
         if (oldData.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -93,6 +107,8 @@ public class RoleController extends BaseApiController {
 
         roleService.update(role);
         return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.OK);
+
+         */
     }
 
     @PreAuthorize("isHasPermission('role_view')")

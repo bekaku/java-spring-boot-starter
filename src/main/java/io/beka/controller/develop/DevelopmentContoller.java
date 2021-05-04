@@ -27,7 +27,7 @@ public class DevelopmentContoller extends BaseApiController {
     private final I18n i18n;
     Logger logger = LoggerFactory.getLogger(DevelopmentContoller.class);
 
-    @Value("${production}")
+    @Value("${environments.production}")
     boolean isProduction;
 
     @PostMapping("/generateSrc")

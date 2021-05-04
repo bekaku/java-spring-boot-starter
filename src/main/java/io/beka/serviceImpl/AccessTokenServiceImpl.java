@@ -29,10 +29,10 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     private final AccessTokenRepository accessTokenRepository;
     private final UserAgentService userAgentService;
 
-    @Value("${jwt.sessionTime}")
+    @Value("${app.jwt.session-time}")
     int sessionTime;
 
-    @Value("${jwt.secret}")
+    @Value("${app.jwt.secret}")
     String jwtSecret;
 
     @Override

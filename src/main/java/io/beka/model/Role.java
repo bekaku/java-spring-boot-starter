@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,6 +40,9 @@ public class Role extends BaseEntity {
 
     @Column(name = "status", columnDefinition = "tinyint(1) default 1")
     private Boolean status;
+
+    @Column(columnDefinition = "date default null")
+    private LocalDate expiredAt;
 
     @ManyToMany(mappedBy = "roles")
     Set<User> users;

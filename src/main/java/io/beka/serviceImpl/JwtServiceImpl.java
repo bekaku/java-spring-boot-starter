@@ -25,8 +25,8 @@ public class JwtServiceImpl implements JwtService {
     Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
 
     @Autowired
-    public JwtServiceImpl(@Value("${jwt.secret}") String secret,
-                          @Value("${jwt.sessionTime}") int sessionTime) {
+    public JwtServiceImpl(@Value("${app.jwt.secret}") String secret,
+                          @Value("${app.jwt.session-time}") int sessionTime) {
         this.secret = secret;
         this.sessionTime = sessionTime;
     }
@@ -48,7 +48,7 @@ public class JwtServiceImpl implements JwtService {
 
             long expiredTime = claimsJws.getBody().getExpiration().getTime();
             long nowTime = System.currentTimeMillis();
-            if(nowTime>expiredTime){
+            if (nowTime > expiredTime) {
                 return Optional.empty();
             }
             return Optional.ofNullable(claimsJws.getBody().getSubject());

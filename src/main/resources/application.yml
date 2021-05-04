@@ -1,0 +1,135 @@
+# https://github.com/gothinkster/spring-boot-realworld-example-app
+# https://docs.spring.io/spring-boot/docs/1.5.6.RELEASE/reference/html/boot-features-external-config.html
+# https://mkyong.com/spring-boot/spring-boot-yaml-example/
+# https://www.baeldung.com/configuration-properties-in-spring-boot
+environments:
+  production: false
+
+spring:
+  jackson:
+    deserialization:
+      UNWRAP_ROOT_VALUE: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+      use-new-id-generator-mappings: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  datasource:
+#    url: jdbc:mysql://${MYSQL_HOST:demo.appedr.com}:13537/springboot_bekaku?allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password:
+#    password: '@Dev@ats[]^9yl'
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      #maximum number of milliseconds that a client will wait for a connection
+      connection-timeout: 30000
+      #minimum number of idle connections maintained by HikariCP in a connection pool
+      minimum-idle: 10
+      maximum-pool-size: 20
+      #idleTimeout: 600000
+      idle-timeout: 600000
+      # maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      max-lifetime: 2000000
+      keepalive-time: 30000
+      autoCommit: true
+    pool-prepared-statements: true
+    max-open-prepared-statements: 250
+  thymeleaf:
+    cache: false
+    #spring.freemarker.suffix=.html
+    prefix: classpath:/templates/
+    suffix: .html
+  # Uncomment the following line to enable and allow access to the h2-console
+  h2:
+    console:
+      enabled:true
+  devtools:
+    add-properties: false
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+  mail:
+    host: smtp.mailtrap.io
+    port: 25
+    username:
+    password:
+    protocol: smtp
+  mvc:
+    #setting to default locale th_TH, en_US
+    locale: th_TH
+    #force locale resolver to spring boot reconized your settings
+    locale-resolver: fixed
+server:
+  port: 8084
+  error:
+    include-message: always
+    include-binding-errors: always
+
+logging:
+  level:
+    web: DEBUG
+    io.beka: DEBUG
+    org:
+      springframework: ERROR
+      hibernate:
+        SQL: DEBUG
+        type: TRACE
+
+#spring.freemarker.suffix=.html
+mybatis:
+  typeAliasesPackage: io.beka.model
+  # type-handlers-package: io.spring.infrastructure.mybatis
+  # mybatis.mapper-locations=mapper/*.xml
+  mapperLocations: classpath:mapper/*.xml
+  configuration:
+    cache-enabled: true
+    default-statement-timeout: 3000
+    map-underscore-to-camel-case: true
+    use-generated-keys: true
+
+
+app:
+  version: 1.0.0
+  loging:
+    enable: true
+  jwt:
+    secret: nRvyYC4soFxBdZ-F-5Nnzz5USXstR1YylsTd-mA0aKtI9HUlriGrtkf-TiuDapkLiUCogO3JOK7kwZisrHp6wA
+    #default is 0 , if default set to 0 it automatic set exprires date in 1 day , you can set eg. 1 day to 86400, 2592000 = 30days
+    session-time: 2592000
+  default:
+    image: https://static.productionready.io/images/smiley-cyrus.jpg
+    role: 2
+  #Object properties
+  mail-config:
+    host: smtp.mailtrap.io
+    port: 25
+    username:
+    password:
+    protocol: smtp
+  #List properties
+  default-recipients:
+    - admin@mail.com
+    - owner@mail.com
+  #Map Properties
+  additional-headers:
+    redelivery: true
+    secure: true
+  #Object list
+  menus:
+    - title: Home
+      name: Home
+      path: /
+    - title: About
+      name: About
+      path: /about
+
+
+custom:
+  config:
+    file: Config Spring Startertemplate From Inside JAR
+

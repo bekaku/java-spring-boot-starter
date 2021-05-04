@@ -33,7 +33,7 @@ public class UserController extends BaseApiController {
     private final EncryptService encryptService;
     private final I18n i18n;
 
-    @Value("${image.default}")
+    @Value("${app.default.image}")
     String defaultImage;
 
     @GetMapping("/current-user")

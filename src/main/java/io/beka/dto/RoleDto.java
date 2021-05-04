@@ -1,5 +1,6 @@
 package io.beka.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.*;
@@ -9,6 +10,8 @@ import org.hibernate.validator.constraints.Length;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @JsonRootName("role")
@@ -21,6 +24,9 @@ public class RoleDto {
     @NotEmpty(message = "{error.NotEmpty}")
     @Size(min = 3, max = 100, message = "{error.Size3Limit100}")
     private String name;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate expiredAt= LocalDate.now();
 
     private String description;
     private boolean status;

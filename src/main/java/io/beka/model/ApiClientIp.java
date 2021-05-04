@@ -5,6 +5,7 @@ import io.beka.annotation.GenSourceableTable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.domain.Sort;
@@ -17,9 +18,15 @@ import static javax.persistence.FetchType.LAZY;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @JsonRootName("apiClientIp")
-@Getter
 @Entity
+@NoArgsConstructor
 public class ApiClientIp extends BaseEntity {
+
+    public ApiClientIp(ApiClient apiClient,String ipAddress, Boolean status) {
+        this.apiClient = apiClient;
+        this.ipAddress = ipAddress;
+        this.status = status;
+    }
 
     @ManyToOne(fetch = LAZY, optional = false)
     @JoinColumn(name = "apiClient", nullable = false)
