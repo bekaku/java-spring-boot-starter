@@ -8,7 +8,7 @@ Only supported on Java 1.8 and up.
 ## Usage
 
 ### 1. Download this repository
-```
+```git
 git clone https://github.com/bekaku/java-spring-boot-starter my-app
 ```
 
@@ -17,15 +17,15 @@ Repository will be downloaded into `my-app/` folder
 
 Database file located at `my-app`/src/main/resources/files/bekaku.sql and you can use following command for restore to your db.
 
-```sql
+```batch
 $ mysql -uroot -p your_db_name < your_backup_file_path
 ```
 example on windows
-```sql
+```batch
 $ mysql -uroot -p your_db_name < E:\bak\db\bekaku.sql
 ```
 example on Ubuntu
-```sql
+```batch
 $ mysql -uroot -p your_db_name < /var/tmp/bekaku.sql
 ```
 
@@ -41,7 +41,7 @@ Config your database connection at `my-app`/src/main/resources/`application.yml`
 
 Open Terminal and run following command 
 
-```
+```batch
 gradle bootRun
 ```
 
