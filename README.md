@@ -90,3 +90,26 @@ Body : raw JSON
   }
 }
 ```
+
+**Response success example** :tada:
+```json
+{
+  "user": {
+    "email" : "admin@mydomain.com",
+    "password" : "1234",
+    "loginForm" : 1
+  }
+}
+```
+**Response fail example** :imp:
+
+```json
+{
+  "status": "UNAUTHORIZED",
+  "message": "Error",
+  "errors": [
+    "Login failed please verify that your username and password are correct."
+  ],
+  "timestamp": "2021-05-04 17:19:32"
+}
+```
