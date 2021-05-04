@@ -9,7 +9,7 @@ Only supported on Java 1.8 and up.
 
 ### 1. Download this repository
 ```
-git clone https://github.com/bekaku/java-spring-boot-rest-api my-app
+git clone https://github.com/bekaku/java-spring-boot-starter my-app
 ```
 
 Repository will be downloaded into `my-app/` folder
@@ -22,18 +22,14 @@ $ mysql -uroot -p your_db_name < your_backup_file_path
 ```
 example on windows
 ```sql
-$ mysql -uroot -p bekaku_php < E:\bak\db\bekaku.sql
+$ mysql -uroot -p your_db_name < E:\bak\db\bekaku.sql
 ```
 example on Ubuntu
 ```sql
-$ mysql -uroot -p bekaku_php < /var/tmp/bekaku.sql
+$ mysql -uroot -p your_db_name < /var/tmp/bekaku.sql
 ```
-default admin username and password
-```
-Username : admin
-Password : P@ssw0rd
-```
-Config your database connection at `my-app`/src/main/resources/`application.properties`
+
+Config your database connection at `my-app`/src/main/resources/`application.yml`
 
 ## Getting started
 
@@ -48,4 +44,10 @@ Or You can test from Postman
 ```
 Content-Type : application/json
 Accept-Language : th
+```
+
+default admin username and password
+```
+Username : admin@mydomain.com
+Password : 1234
 ```
