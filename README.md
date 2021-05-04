@@ -39,6 +39,10 @@ Config your database connection at `my-app`/src/main/resources/`application.yml`
 
 ## Getting started
 
+### Project structure
+![image](https://user-images.githubusercontent.com/33171470/116986615-32423a00-acf8-11eb-88f7-db2e44a77b12.png)
+
+
 Open Terminal and run following command 
 
 ```batch
