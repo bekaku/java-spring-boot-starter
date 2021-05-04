@@ -119,6 +119,14 @@ Json root name : user
 }
 ```
 ---
+**Resquest Header after logined**
+
+| Key                  | Value                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| Content-Type         | application/json;charset=utf-8   |               |
+| Accept-Language      | th                               |       th, en        |
+| Accept-ApiClient     | default                          |               |
+| Authorization    |Bearer `YOUR_authenticationToken` ||
 
 ## 2. Permission
 
@@ -129,16 +137,6 @@ METHOD : GET
 URL : /api/permission?page={currentPage}&size={size}&sort={#sortField,#sortType}
 EXAMPLE : /api/permission?page=0&size=2&sort=code,asc
 ```
-
-**Resquest Header**
-
-| Key                  | Value                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| Content-Type         | application/json;charset=utf-8   |               |
-| Accept-Language      | th                               |       th, en        |
-| Accept-ApiClient     | default                          |               |
-| Authorization    |Bearer `YOUR_authenticationToken` ||
-
 **Resquest Parameter**
 
 | Key                  | Data type                            | Description   |
@@ -175,16 +173,6 @@ EXAMPLE : /api/permission?page=0&size=2&sort=code,asc
 METHOD : POST
 URL : /api/permission
 ```
-
-**Resquest Header**
-
-| Key                  | Value                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| Content-Type         | application/json;charset=utf-8   |               |
-| Accept-Language      | th                               |       th, en        |
-| Accept-ApiClient     | default                          |               |
-| Authorization    |Bearer `YOUR_authenticationToken` ||
-
 **Resquest Parameter**
 ```
 Json root name : permission
@@ -198,9 +186,62 @@ Json root name : permission
 ```json
 {
   "permission": {
-    "code": "user_delete",
-    "description": "user delete",
+    "code": "read_report",
+    "description": "user can read report",
     "module": "AD"
   }
 }
 ```
+
+### Update data
+
+```
+METHOD : PUT
+URL : /api/permission
+```
+**Resquest Parameter**
+```
+Json root name : permission
+```
+| Key                  | Data type                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| id         | Long  ||
+| code         | String  ||
+| description      | String ||
+| module     | String    ||
+
+```json
+{
+  "permision": {
+    "id": 2,
+    "code": "permission1",
+    "description": "permission1_detail",
+    "module": "app_user5"
+  }
+}
+```
+
+### Find one
+
+```
+METHOD : GET
+URL : /api/permission/{id}
+EXAMPLE : /api/permission/1
+```
+```json
+{
+  "id": 1,
+  "code": "api_client_list",
+  "description": "api_client_list",
+  "module": "AD"
+}
+```
+### Delete data
+
+```
+METHOD : DELETE
+URL : /api/permission/{id}
+EXAMPLE : /api/permission/1
+```
+
+---
