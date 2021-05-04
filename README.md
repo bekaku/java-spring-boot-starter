@@ -30,6 +30,12 @@ $ mysql -uroot -p your_db_name < /var/tmp/bekaku.sql
 ```
 
 Config your database connection at `my-app`/src/main/resources/`application.yml`
+```yml
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/`your_db_name`?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: `your_db_password`
+```
 
 ## Getting started
 
@@ -39,7 +45,7 @@ Open Terminal and run following command
 gradle bootRun
 ```
 
-To test that it works, open a browser tab at http://localhost:8080/welcome
+To test that it works, open a browser tab at http://localhost:8084/welcome
 Or You can test from Postman
 ```
 Content-Type : application/json
