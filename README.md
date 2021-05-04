@@ -39,7 +39,8 @@ Config your database connection at `my-app`/src/main/resources/`application.yml`
 
 ## Getting started
 
-***Project structure***
+**Project structure**
+
 ![image](https://user-images.githubusercontent.com/33171470/116986615-32423a00-acf8-11eb-88f7-db2e44a77b12.png)
 
 
@@ -49,15 +50,43 @@ Open Terminal and run following command
 gradle bootRun
 ```
 
-To test that it works, open a browser tab at http://localhost:8084/welcome
-Or You can test from Postman
+To test that it works, open a browser tab at http://localhost:8084/welcome, Or You can test from Postman
+
+
+## API Test
+
+### 1. Login
+
 ```
-Content-Type : application/json
-Accept-Language : th
+METHOD : POST
+URL : http://localhost:8084/api/auth/login
 ```
 
-default admin username and password
+**Resquest Header**
+
+| Key                  | Value                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| Content-Type         | application/json;charset=utf-8   |               |
+| Accept-Language      | th                               |       th, en        |
+| Accept-ApiClient     | default                          |               |
+
+**Resquest Parameter**
 ```
-Username : admin@mydomain.com
-Password : 1234
+Json root name : user
+Body : raw JSON
+```
+| Key                  | Data type                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| email         | String  ||
+| password      | String ||
+| loginForm     | Int    |Login From – 1 : web browser , 2 : iOS, 3 : Android|
+
+```json
+{
+  "user": {
+    "email" : "admin@mydomain.com",
+    "password" : "1234",
+    "loginForm" : 1
+  }
+}
 ```

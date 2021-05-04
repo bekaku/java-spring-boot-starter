@@ -4,7 +4,6 @@
 # https://www.baeldung.com/configuration-properties-in-spring-boot
 environments:
   production: false
-
 spring:
   jackson:
     deserialization:
@@ -18,11 +17,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
   datasource:
-#    url: jdbc:mysql://${MYSQL_HOST:demo.appedr.com}:13537/springboot_bekaku?allowPublicKeyRetrieval=true&useSSL=false
+    #    url: jdbc:mysql://${MYSQL_HOST:my.mysqlserver.com}:13537/springboot_bekaku?allowPublicKeyRetrieval=true&useSSL=false
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password:
-#    password: '@Dev@ats[]^9yl'
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       #maximum number of milliseconds that a client will wait for a connection
@@ -91,8 +89,6 @@ mybatis:
     default-statement-timeout: 3000
     map-underscore-to-camel-case: true
     use-generated-keys: true
-
-
 app:
   version: 1.0.0
   loging:
