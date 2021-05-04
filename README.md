@@ -50,7 +50,7 @@ Open Terminal and run following command
 gradle bootRun
 ```
 
-To test that it works, open a browser tab at http://localhost:8084/welcome, Or You can test from Postman
+To test that it works, open a browser tab at http://localhost:8084/welcome
 
 ---
 
@@ -183,6 +183,7 @@ Json root name : permission
 | description      | String ||
 | module     | String    ||
 
+**Request example**
 ```json
 {
   "permission": {
@@ -210,6 +211,7 @@ Json root name : permission
 | description      | String ||
 | module     | String    ||
 
+**Request example**
 ```json
 {
   "permision": {
@@ -228,6 +230,7 @@ METHOD : GET
 URL : /api/permission/{id}
 EXAMPLE : /api/permission/1
 ```
+**Response success example** :tada:
 ```json
 {
   "id": 1,
@@ -242,6 +245,134 @@ EXAMPLE : /api/permission/1
 METHOD : DELETE
 URL : /api/permission/{id}
 EXAMPLE : /api/permission/1
+```
+---
+
+## 3. Role
+
+### Retrieve data
+
+```
+METHOD : GET
+URL : /api/role?page={currentPage}&size={size}&sort={#sortField,#sortType}
+EXAMPLE : /api/role?page=0&size=2&sort=code,asc
+```
+**Resquest Parameter**
+
+| Key                  | Data type                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| page         | Int  ||
+| size      | Int ||
+| sort     | string,string    |exampel `createdDate,asc`|
+
+**Response success example** :tada:
+```json
+{
+    "dataList": [
+        {
+            "id": 1,
+            "name": "develop",
+            "description": "developer",
+            "status": true,
+            "selectdPermissions": null
+        }
+    ],
+    "totalPages": 1,
+    "totalElements": 1,
+    "last": true
+}
+```
+### Create data
+
+```
+METHOD : POST
+URL : /api/role
+```
+**Resquest Parameter**
+```
+Json root name : role
+```
+| Key                  | Data type                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| code         | String  ||
+| description      | String ||
+| status     | Boolean    ||
+| selectdPermissions     | Long[]    | |
+
+**Request example**
+```json
+{
+  "role": {
+    "name": "develop",
+    "description": "developer 555",
+    "status": true,
+    "selectdPermissions": [
+      1,
+      2,
+      3,
+      4
+    ]
+  }
+}
+```
+
+### Update data
+
+```
+METHOD : PUT
+URL : /api/role
+```
+**Resquest Parameter**
+```
+Json root name : permission
+```
+| Key                  | Data type                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| id         | Long  ||
+| code         | String  ||
+| description      | String ||
+| status     | Boolean    ||
+| selectdPermissions     | Long[]    | |
+**Request example**
+```json
+{
+  "role": {
+    "id": 55,
+    "name": "develop",
+    "description": "developer",
+    "status": true,
+    "selectdPermissions": [
+      1,
+      2
+    ]
+  }
+}
+```
+
+### Find one
+
+```
+METHOD : GET
+URL : /api/role/{id}
+EXAMPLE : /api/role/1
+```
+**Response success example** :tada:
+```json
+{
+  "id": 1,
+  "name": "develop",
+  "description": "developer",
+  "status": true,
+  "selectdPermissions": null
+}
+```
+
+### Delete data
+
+```
+METHOD : DELETE
+URL : /api/role/{id}
+EXAMPLE : /api/role/1
 ```
 
 ---
