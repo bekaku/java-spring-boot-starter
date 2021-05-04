@@ -36,7 +36,7 @@ nbdist/
 # Logs and databases #
 ######################
 *.log
-#*.sql
+*.sql
 *.sqlite
 
 # OS generated files #
