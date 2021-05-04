@@ -36,7 +36,7 @@ Config your database connection at `my-app`/src/main/resources/`application.yml`
     username: root
     password: `your_db_password`
 ```
-
+---
 ## Getting started
 
 **Project structure**
@@ -52,14 +52,19 @@ gradle bootRun
 
 To test that it works, open a browser tab at http://localhost:8084/welcome, Or You can test from Postman
 
+---
 
 ## API Test
-
-### 1. Login
+Server run at port `8084` can config server port at /src/main/resources/`application.yml`  
+```yml
+server:
+  port: 8084
+```
+## 1. Login
 
 ```
 METHOD : POST
-URL : http://localhost:8084/api/auth/login
+URL : /api/auth/login
 ```
 
 **Resquest Header**
@@ -73,7 +78,6 @@ URL : http://localhost:8084/api/auth/login
 **Resquest Parameter**
 ```
 Json root name : user
-Body : raw JSON
 ```
 | Key                  | Data type                            | Description   |
 | -------------------- |----------------------------------| --------------|
@@ -94,11 +98,12 @@ Body : raw JSON
 **Response success example** :tada:
 ```json
 {
-  "user": {
-    "email" : "admin@mydomain.com",
-    "password" : "1234",
-    "loginForm" : 1
-  }
+  "authenticationToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkZjQwYjMwMC02NGIxLTRiYjAtOWFlMS00ODNhZDBjMGM3MTkiLCJpYXQiOjE2MjAxMjM5MjEsImV4cCI6MTYyMjcxNTkyMX0.u3XIpyePy40AYk_E-F2WqEa_pKSg0FELzukrgwqfPJYQbKnpdxGsdyRhyVxGVEtFfZalU0Xn4ikEHL2Zq1LxGQ",
+  "refreshToken": "df40b300-64b1-4bb0-9ae1-483ad0c0c719",
+  "expiresAt": "2021-04-14T17:22:34.404501800Z",
+  "email": "admin@mydomain.com",
+  "username": "admin",
+  "image": "https://static.productionready.io/images/smiley-cyrus.jpg"
 }
 ```
 **Response fail example** :imp:
@@ -111,5 +116,91 @@ Body : raw JSON
     "Login failed please verify that your username and password are correct."
   ],
   "timestamp": "2021-05-04 17:19:32"
+}
+```
+---
+
+## 2. Permission
+
+### Retrieve data
+
+```
+METHOD : GET
+URL : /api/permission?page={currentPage}&size={size}&sort={#sortField,#sortType}
+EXAMPLE : /api/permission?page=0&size=2&sort=code,asc
+```
+
+**Resquest Header**
+
+| Key                  | Value                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| Content-Type         | application/json;charset=utf-8   |               |
+| Accept-Language      | th                               |       th, en        |
+| Accept-ApiClient     | default                          |               |
+| Authorization    |Bearer `YOUR_authenticationToken` ||
+
+**Resquest Parameter**
+
+| Key                  | Data type                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| page         | Int  ||
+| size      | Int ||
+| sort     | string,string    |exampel `createdDate,asc`|
+
+**Response success example** :tada:
+```json
+{
+  "dataList": [
+    {
+      "id": 2,
+      "code": "api_client_add",
+      "description": "api_client_list_add",
+      "module": "AD"
+    },
+    {
+      "id": 5,
+      "code": "api_client_delete",
+      "description": "api_client_delete",
+      "module": "AD"
+    }
+  ],
+  "totalPages": 10,
+  "totalElements": 2,
+  "last": false
+}
+```
+### Create data
+
+```
+METHOD : POST
+URL : /api/permission
+```
+
+**Resquest Header**
+
+| Key                  | Value                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| Content-Type         | application/json;charset=utf-8   |               |
+| Accept-Language      | th                               |       th, en        |
+| Accept-ApiClient     | default                          |               |
+| Authorization    |Bearer `YOUR_authenticationToken` ||
+
+**Resquest Parameter**
+```
+Json root name : permission
+```
+| Key                  | Data type                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| code         | String  ||
+| description      | String ||
+| module     | String    ||
+
+```json
+{
+  "permission": {
+    "code": "user_delete",
+    "description": "user delete",
+    "module": "AD"
+  }
 }
 ```
