@@ -488,7 +488,8 @@ public class RoleController extends BaseApiController {
   "timestamp": "2021-05-05 09:03:45"
 }
 ```
-## Auto Generate source
+## Auto generate starter source
+
 ### Create model class
 
 Add an annotation `@GenSourceableTable` to indicate that you want to create Auto source.
@@ -528,9 +529,9 @@ public class Role extends BaseEntity {
 }
 ```
 
-### Generate Source
+### Generate starter source
 
-Call /dev/generateSrc to auto generate source
+Call `/dev/generateSrc` to auto generate source
 ```
 METHOD : POST
 URL : /dev/generateSrc

@@ -30,7 +30,7 @@ public class DevelopmentContoller extends BaseApiController {
     @Value("${environments.production}")
     boolean isProduction;
 
-    @PostMapping("/generateSrc")
+    @RequestMapping(value = "/generateSrc", method = RequestMethod.POST)
     public ResponseEntity<Object> generateSrc() {
 
         logger.warn("Production : {}", isProduction);
