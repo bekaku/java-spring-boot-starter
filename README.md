@@ -67,7 +67,7 @@ METHOD : POST
 URL : /api/auth/login
 ```
 
-**Request Header**
+**Request Headers**
 
 | Key                  | Value                            | Description   |
 | -------------------- |----------------------------------| --------------|
@@ -75,7 +75,7 @@ URL : /api/auth/login
 | Accept-Language      | th                               |       th, en        |
 | Accept-ApiClient     | default                          |               |
 
-**Request Parameter**
+**Request Parameters**
 ```
 Json root name : user
 ```
@@ -119,7 +119,7 @@ Json root name : user
 }
 ```
 ---
-**Request headers after login**
+**The header for the endpoint requires login verification.**
 
 | Key                  | Value                            | Description   |
 | -------------------- |----------------------------------| --------------|
