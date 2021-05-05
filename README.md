@@ -5,13 +5,15 @@ Requirements
 
 Only supported on Java 1.8 and up.
 ## Gradle installation
-- Installationguide https://gradle.org/install/
+- Installation guide https://gradle.org/install/
   
 - Configure your system environment
  
-  - Linux & MacOS users Configure your PATH environment variable to include the bin directory of the unzipped distribution, e.g.:
+  - Linux & MacOS users  
+    Configure your PATH environment variable to include the bin directory of the unzipped distribution, e.g.:
     `$ export PATH=$PATH:/opt/gradle/gradle-7.0/bin`
-  -  Microsoft Windows users
+  -  Microsoft Windows users 
+     
      In File Explorer `right-click on the This` PC (or Computer) icon, then click `Properties -> Advanced System Settings -> Environmental Variables.`
      Under System Variables select Path, then click Edit. Add an entry for `C:\Gradle\gradle-7.0\bin`. Click OK to save.
 - Verify your installation  
