@@ -1,0 +1,25 @@
+environments:
+  production: false
+spring:
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+logging:
+  pattern:
+    rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
+  file:
+#    name: D:/code/logs/MyApp.log
+    path:
+#    path: D:/code/logs
+    max-history: 30
+    total-size-cap: 10MB
+    clean-history-on-start: true
+
+app:
+  test-prop: develop mode
+  version: 1.0.1

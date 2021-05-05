@@ -3,8 +3,11 @@
 # https://mkyong.com/spring-boot/spring-boot-yaml-example/
 # https://www.baeldung.com/configuration-properties-in-spring-boot
 environments:
-  production: false
+  production: true
 spring:
+  profiles:
+    active: dev
+#    active: prod
   jackson:
     deserialization:
       UNWRAP_ROOT_VALUE: true
@@ -20,7 +23,7 @@ spring:
     #    url: jdbc:mysql://${MYSQL_HOST:my.mysqlserver.com}:13537/springboot_bekaku?allowPublicKeyRetrieval=true&useSSL=false
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password:
+    password: '@YOUR_REAL_MYSQL_PASSWORD'
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       #maximum number of milliseconds that a client will wait for a connection
@@ -69,14 +72,23 @@ server:
     include-binding-errors: always
 
 logging:
+  pattern:
+    rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
+  file:
+    #    name: D:/code/logs/MyApp.log
+    path: /var/log/spring/
+    max-history: 30
+    total-size-cap: 10MB
+    clean-history-on-start: true
   level:
+    root: WARN
     web: DEBUG
     io.beka: DEBUG
     org:
       springframework: ERROR
       hibernate:
-        SQL: DEBUG
-        type: TRACE
+        SQL: ERROR
+        type: ERROR
 
 #spring.freemarker.suffix=.html
 mybatis:
@@ -90,6 +102,7 @@ mybatis:
     map-underscore-to-camel-case: true
     use-generated-keys: true
 app:
+  test-prop: production mode
   version: 1.0.0
   loging:
     enable: true

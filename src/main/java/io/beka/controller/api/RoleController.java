@@ -37,10 +37,16 @@ public class RoleController extends BaseApiController {
     @Value("${app.loging.enable}")
     boolean logEnable;
 
+    @Value("${app.test-prop}")
+    String testProperties;
+
+    @Value("${environments.production}")
+    boolean isProduction;
+
     @PreAuthorize("isHasPermission('role_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
-        logger.info("logEnable {}", logEnable);
+        logger.error("logEnable {}, testProperties {}, isProduction {}", logEnable, testProperties, isProduction);
 
         return this.responseEntity(roleService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
                 PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Role.getSort())), HttpStatus.OK);
@@ -51,7 +57,7 @@ public class RoleController extends BaseApiController {
     public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
         Role role = roleService.convertDtoToEntity(dto);
         roleValidator.validate(role);
-//        return this.responseEntity(dto, HttpStatus.OK);
+        setRolePermission(dto, role);
         roleService.save(role);
         return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
 
@@ -86,6 +92,12 @@ public class RoleController extends BaseApiController {
     public ResponseEntity<Object> update(@Valid @RequestBody RoleDto dto) {
         Role role = roleService.convertDtoToEntity(dto);
         roleValidator.validate(role);
+        // add permission to this role
+        if (dto.getSelectdPermissions().length > 0) {
+            setRolePermission(dto, role);
+        } else {
+            role.setPermissions(new HashSet<>());
+        }
         return this.responseEntity(dto, HttpStatus.OK);
         /*
         Optional<Role> oldData = roleService.findById(role.getId());

@@ -48,3 +48,5 @@ nbdist/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+logs/

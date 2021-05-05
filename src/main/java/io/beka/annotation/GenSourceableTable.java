@@ -20,5 +20,5 @@ public @interface GenSourceableTable {
 
     boolean createMapper() default false;
 
-    boolean createDto() default false;
+    boolean createDto() default true;
 }

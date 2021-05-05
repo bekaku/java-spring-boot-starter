@@ -425,7 +425,8 @@ Json root name : userRegister
 ## ACL(Access control list)
 
 **Access control list example usage**
-add annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method
+
+Just add annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method in controller.
 
 
 ```java
@@ -448,7 +449,7 @@ public class RoleController extends BaseApiController {
     @PreAuthorize("isHasPermission('role_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
-        logger.info("logEnable {}", logEnable);
+        logger.info("/api/role > findAll, isLogEnable {}", logEnable);
         return this.responseEntity(roleService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
                 PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Role.getSort())), HttpStatus.OK);
     }
@@ -458,8 +459,19 @@ public class RoleController extends BaseApiController {
     public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
         Role role = roleService.convertDtoToEntity(dto);
         roleValidator.validate(role);
+        setRolePermission(dto, role);
         roleService.save(role);
         return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
+    }
+
+    private void setRolePermission(RoleDto dto, Role role) {
+        if (dto.getSelectdPermissions().length > 0) {
+            Optional<Permission> permission;
+            for (long permissionId : dto.getSelectdPermissions()) {
+                permission = permissionService.findById(permissionId);
+                permission.ifPresent(value -> role.getPermissions().add(value));
+            }
+        }
     }
 }
 ```
@@ -476,4 +488,59 @@ public class RoleController extends BaseApiController {
   "timestamp": "2021-05-05 09:03:45"
 }
 ```
+## Auto Generate source
+### Create model class
 
+Add an annotation `@GenSourceableTable` to indicate that you want to create Auto source.
+```java
+package io.beka.model;
+
+import io.beka.annotation.GenSourceableTable;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.domain.Sort;
+
+import javax.persistence.*;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
+@GenSourceableTable
+@NoArgsConstructor
+@Getter
+@Setter
+@Entity
+public class Role extends BaseEntity {
+
+    @Column(name = "name", length = 100, nullable = false, unique = true)
+    private String name;
+
+    @Column(name = "description", columnDefinition = "text default null")
+    private String description;
+
+    @Column(name = "status", columnDefinition = "tinyint(1) default 1")
+    private Boolean status;
+
+    public static Sort getSort() {
+        return Sort.by(Sort.Direction.ASC, "name");
+    }
+}
+```
+
+### Generate Source
+
+Call /dev/generateSrc to auto generate source
+```
+METHOD : POST
+URL : /dev/generateSrc
+```
+
+The system will generate the following files.
+
+1. `RoleDto` dto Package
+2. `RoleRepository` repository Package
+3. `RoleService` service Package
+4. `RoleServiceImpl` serviceImpl Package
+5. `RoleController` api.controller Package
+---
