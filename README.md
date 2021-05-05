@@ -143,7 +143,7 @@ EXAMPLE : /api/permission?page=0&size=2&sort=code,asc
 | -------------------- |----------------------------------| --------------|
 | page         | Int  ||
 | size      | Int ||
-| sort     | string,string    |exampel `createdDate,asc`|
+| sort     | string,string    |example `createdDate,asc`|
 
 **Response success example** :tada:
 ```json
@@ -263,7 +263,7 @@ EXAMPLE : /api/role?page=0&size=2&sort=code,asc
 | -------------------- |----------------------------------| --------------|
 | page         | Int  ||
 | size      | Int ||
-| sort     | string,string    |exampel `createdDate,asc`|
+| sort     | string,string    |example `createdDate,asc`|
 
 **Response success example** :tada:
 ```json
@@ -421,3 +421,42 @@ Json root name : userRegister
   "timestamp": "2021-05-05 09:02:24"
 }
 ```
+---
+## ACL(Access control list)
+
+**Access control list example usage**
+```java{16}
+package io.beka.controller.api;
+@RequestMapping(path = "/api/role")
+@RestController
+@RequiredArgsConstructor
+public class RoleController extends BaseApiController {
+    private final RoleService roleService;
+    private final PermissionService permissionService;
+    private final I18n i18n;
+    private final RoleValidator roleValidator;
+
+    Logger logger = LoggerFactory.getLogger(RoleController.class);
+
+    @Value("${app.loging.enable}")
+    boolean logEnable;
+
+    @PreAuthorize("isHasPermission('role_list')")
+    @GetMapping
+    public ResponseEntity<Object> findAll(Pageable pageable) {
+        logger.info("logEnable {}", logEnable);
+        return this.responseEntity(roleService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Role.getSort())), HttpStatus.OK);
+    }
+
+    @PreAuthorize("isHasPermission('role_add')")
+    @PostMapping
+    public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
+        Role role = roleService.convertDtoToEntity(dto);
+        roleValidator.validate(role);
+        roleService.save(role);
+        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
+    }
+}
+```
+
