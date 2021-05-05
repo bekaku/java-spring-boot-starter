@@ -376,3 +376,48 @@ EXAMPLE : /api/role/1
 ```
 
 ---
+
+## 4. User
+### Create data
+
+```
+METHOD : POST
+URL : /api/user
+```
+**Resquest Parameter**
+```
+Json root name : userRegister
+```
+| Key                  | Data type                            | Description   |
+| -------------------- |----------------------------------| --------------|
+| email         | String  |unique|
+| username      | String |unique|
+| password     | String    ||
+| selectedRoles     | Long[]    ||
+
+```json
+{
+  "userRegister": {
+    "email": "baekaku@gmail.com",
+    "username": "baekaku",
+    "password": "1234",
+    "selectedRoles": [
+      1,2
+    ]
+  }
+}
+```
+
+**Response fail example** :imp:
+
+```json
+{
+  "status": "BAD_REQUEST",
+  "message": "Error",
+  "errors": [
+    "Username admin already exists. ",
+    "Email admin@mydomain.com already exists. "
+  ],
+  "timestamp": "2021-05-05 09:02:24"
+}
+```

@@ -45,12 +45,12 @@ public class User extends BaseEntity {
     }
 
     @Basic(optional = false)
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, unique = true)
     private String username;
 
     private String password;
 
-    @Column(length = 100)
+    @Column(length = 100, unique = true, nullable = false)
     private String email;
 
     private String image;
