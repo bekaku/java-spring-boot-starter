@@ -67,7 +67,7 @@ METHOD : POST
 URL : /api/auth/login
 ```
 
-**Resquest Header**
+**Request Header**
 
 | Key                  | Value                            | Description   |
 | -------------------- |----------------------------------| --------------|
@@ -75,7 +75,7 @@ URL : /api/auth/login
 | Accept-Language      | th                               |       th, en        |
 | Accept-ApiClient     | default                          |               |
 
-**Resquest Parameter**
+**Request Parameter**
 ```
 Json root name : user
 ```
@@ -119,7 +119,7 @@ Json root name : user
 }
 ```
 ---
-**Resquest Header after logined**
+**Request headers after login**
 
 | Key                  | Value                            | Description   |
 | -------------------- |----------------------------------| --------------|
@@ -137,7 +137,7 @@ METHOD : GET
 URL : /api/permission?page={currentPage}&size={size}&sort={#sortField,#sortType}
 EXAMPLE : /api/permission?page=0&size=2&sort=code,asc
 ```
-**Resquest Parameter**
+**Request Parameter**
 
 | Key                  | Data type                            | Description   |
 | -------------------- |----------------------------------| --------------|
@@ -173,7 +173,7 @@ EXAMPLE : /api/permission?page=0&size=2&sort=code,asc
 METHOD : POST
 URL : /api/permission
 ```
-**Resquest Parameter**
+**Request Parameter**
 ```
 Json root name : permission
 ```
@@ -200,7 +200,7 @@ Json root name : permission
 METHOD : PUT
 URL : /api/permission
 ```
-**Resquest Parameter**
+**Request Parameter**
 ```
 Json root name : permission
 ```
@@ -257,7 +257,7 @@ METHOD : GET
 URL : /api/role?page={currentPage}&size={size}&sort={#sortField,#sortType}
 EXAMPLE : /api/role?page=0&size=2&sort=code,asc
 ```
-**Resquest Parameter**
+**Request Parameter**
 
 | Key                  | Data type                            | Description   |
 | -------------------- |----------------------------------| --------------|
@@ -288,7 +288,7 @@ EXAMPLE : /api/role?page=0&size=2&sort=code,asc
 METHOD : POST
 URL : /api/role
 ```
-**Resquest Parameter**
+**Request Parameter**
 ```
 Json root name : role
 ```
@@ -322,7 +322,7 @@ Json root name : role
 METHOD : PUT
 URL : /api/role
 ```
-**Resquest Parameter**
+**Request Parameter**
 ```
 Json root name : permission
 ```
@@ -384,7 +384,7 @@ EXAMPLE : /api/role/1
 METHOD : POST
 URL : /api/user
 ```
-**Resquest Parameter**
+**Request Parameter**
 ```
 Json root name : userRegister
 ```
