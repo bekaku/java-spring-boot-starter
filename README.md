@@ -54,13 +54,13 @@ To test that it works, open a browser tab at http://localhost:8084/welcome
 
 ---
 
-## API Test
+## API Docs
 Server run at port `8084` can config server port at /src/main/resources/`application.yml`  
 ```yml
 server:
   port: 8084
 ```
-## 1. Login
+## Login
 
 ```
 METHOD : POST
@@ -128,7 +128,7 @@ Json root name : user
 | Accept-ApiClient     | default                          |               |
 | Authorization    |Bearer `YOUR_authenticationToken` ||
 
-## 2. Permission
+## Permission
 
 ### Retrieve data
 
@@ -248,7 +248,7 @@ EXAMPLE : /api/permission/1
 ```
 ---
 
-## 3. Role
+## Role
 
 ### Retrieve data
 
@@ -377,7 +377,7 @@ EXAMPLE : /api/role/1
 
 ---
 
-## 4. User
+## User
 ### Create data
 
 ```
