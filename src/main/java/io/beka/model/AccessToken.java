@@ -18,7 +18,7 @@ import static javax.persistence.FetchType.LAZY;
 @EqualsAndHashCode(of = {"token"}, callSuper = false)
 @GenSourceableTable(createController = false)
 @Entity
-public class AccessToken extends BaseEntity {
+public class AccessToken extends Auditable<Long> {
 
     public AccessToken(User user, UserAgent userAgent, Date expiresAt, boolean revoked, ApiClient apiClient, LoginLog loginLog) {
         this.token = UUID.randomUUID().toString();

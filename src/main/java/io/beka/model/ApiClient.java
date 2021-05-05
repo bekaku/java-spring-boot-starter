@@ -16,7 +16,7 @@ import java.util.*;
 @EqualsAndHashCode(of = {"apiToken"}, callSuper = false)
 @GenSourceableTable
 @NoArgsConstructor
-public class ApiClient extends BaseEntity {
+public class ApiClient extends Auditable<Long> {
 
     public ApiClient(String apiName, Boolean byPass, Boolean status) {
         this.apiToken = UUID.randomUUID().toString();

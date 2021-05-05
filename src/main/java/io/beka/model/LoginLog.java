@@ -15,7 +15,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
-public class LoginLog extends BaseEntityId {
+public class LoginLog extends BaseId {
 
     public LoginLog(int loginForm, User user, IpAddress ipAddress) {
         this.loginForm = loginForm;

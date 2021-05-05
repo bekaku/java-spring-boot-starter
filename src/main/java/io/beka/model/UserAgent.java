@@ -13,7 +13,7 @@ import javax.persistence.Entity;
 @Getter
 @Setter
 @Entity
-public class UserAgent extends BaseEntityId {
+public class UserAgent extends BaseId {
 
     public UserAgent(String agent) {
         this.agent = agent;

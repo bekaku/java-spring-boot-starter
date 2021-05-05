@@ -20,7 +20,7 @@ import static javax.persistence.FetchType.LAZY;
 @JsonRootName("apiClientIp")
 @Entity
 @NoArgsConstructor
-public class ApiClientIp extends BaseEntity {
+public class ApiClientIp extends Auditable<Long> {
 
     public ApiClientIp(ApiClient apiClient,String ipAddress, Boolean status) {
         this.apiClient = apiClient;

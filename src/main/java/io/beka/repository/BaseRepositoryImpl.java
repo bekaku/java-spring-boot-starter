@@ -1,4 +1,4 @@
-package io.beka.repositoryImpl;
+package io.beka.repository;
 
 import io.beka.repository.BaseRepository;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;

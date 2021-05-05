@@ -13,7 +13,7 @@ import java.io.Serializable;
 @MappedSuperclass
 @Getter
 @Setter
-public class BaseEntityId implements Serializable {
+public class BaseId implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")

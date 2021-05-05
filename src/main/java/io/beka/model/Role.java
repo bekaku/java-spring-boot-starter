@@ -16,7 +16,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-public class Role extends BaseEntity {
+public class Role extends Auditable<Long> {
     public Role(String name, String description) {
         this.name = name;
         this.description = description;

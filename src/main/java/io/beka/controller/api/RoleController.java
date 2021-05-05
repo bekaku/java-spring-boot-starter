@@ -98,7 +98,8 @@ public class RoleController extends BaseApiController {
         } else {
             role.setPermissions(new HashSet<>());
         }
-        return this.responseEntity(dto, HttpStatus.OK);
+        roleService.update(role);
+        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.OK);
         /*
         Optional<Role> oldData = roleService.findById(role.getId());
         if (oldData.isEmpty()) {

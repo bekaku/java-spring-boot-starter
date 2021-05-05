@@ -6,7 +6,6 @@ import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,7 +13,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-public class Permission extends BaseEntityId {
+public class Permission extends BaseId {
 
     @Column(nullable = false, length = 125)
     private String code;

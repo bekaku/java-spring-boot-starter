@@ -18,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"salt"}, callSuper = false)
 @Entity
-public class User extends BaseEntity {
+public class User extends Auditable<Long> {
     public User(String username, String password, String email, Boolean status, String image) {
         this.salt = UUID.randomUUID().toString();
         this.username = username;
