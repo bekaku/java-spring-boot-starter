@@ -98,7 +98,7 @@ Json root name : user
 **Response success example** :tada:
 ```json
 {
-  "authenticationToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkZjQwYjMwMC02NGIxLTRiYjAtOWFlMS00ODNhZDBjMGM3MTkiLCJpYXQiOjE2MjAxMjM5MjEsImV4cCI6MTYyMjcxNTkyMX0.u3XIpyePy40AYk_E-F2WqEa_pKSg0FELzukrgwqfPJYQbKnpdxGsdyRhyVxGVEtFfZalU0Xn4ikEHL2Zq1LxGQ",
+  "authenticationToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
   "refreshToken": "df40b300-64b1-4bb0-9ae1-483ad0c0c719",
   "expiresAt": "2021-04-14T17:22:34.404501800Z",
   "email": "admin@mydomain.com",
