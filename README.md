@@ -426,7 +426,7 @@ Json root name : userRegister
 
 **Access control list example usage**
 
-Just add annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method in controller.
+Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method in controller.
 
 
 ```java
