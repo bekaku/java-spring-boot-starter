@@ -425,8 +425,12 @@ Json root name : userRegister
 ## ACL(Access control list)
 
 **Access control list example usage**
-```java{16}
+add annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method
+
+
+```java
 package io.beka.controller.api;
+
 @RequestMapping(path = "/api/role")
 @RestController
 @RequiredArgsConstructor
@@ -457,6 +461,19 @@ public class RoleController extends BaseApiController {
         roleService.save(role);
         return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
     }
+}
+```
+
+**Access is denied response example** :imp:
+
+```json
+{
+  "status": "INTERNAL_SERVER_ERROR",
+  "message": "Access is denied",
+  "errors": [
+    "error occurred"
+  ],
+  "timestamp": "2021-05-05 09:03:45"
 }
 ```
 
