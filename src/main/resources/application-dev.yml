@@ -12,6 +12,15 @@ spring:
 logging:
   pattern:
     rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
+  level:
+    root: WARN
+    web: DEBUG
+    io.beka: DEBUG
+    org:
+      springframework: ERROR
+      hibernate:
+        SQL: TRACE
+        type: ERROR
   file:
 #    name: D:/code/logs/MyApp.log
     path:

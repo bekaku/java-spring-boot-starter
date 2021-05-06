@@ -7,8 +7,8 @@ import java.util.List;
 @Data
 public class ResponseListDto<T> {
     private List<T> dataList;
-    private int totalPages = 0;
-    private int totalElements = 0;
+    private int totalPages;
+    private int totalElements;
     private boolean isLast;
 
     public ResponseListDto(List<T> dataList, int totalPages, int totalElements, boolean isLast) {

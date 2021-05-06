@@ -37,10 +37,10 @@ public class AuthenController extends BaseApiController {
 
     private final I18n i18n;
 
-    @Value("${app.default.image}")
+    @Value("${app.defaults.image}")
     String defaultImage;
 
-    @Value("${app.default.role}")
+    @Value("${app.defaults.role}")
     Long defaultRole;
 
     Logger logger = LoggerFactory.getLogger(AuthenController.class);

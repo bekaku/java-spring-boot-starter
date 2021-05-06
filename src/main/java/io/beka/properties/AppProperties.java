@@ -1,5 +1,7 @@
 package io.beka.properties;
 
+import io.beka.vo.DefaultConfig;
+import io.beka.vo.JwtConfig;
 import io.beka.vo.MailConfig;
 import io.beka.vo.MenuConfig;
 import lombok.Getter;
@@ -16,9 +18,12 @@ import java.util.Map;
 @Configuration
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
+    private String testProp;
     private String version;
     private MailConfig mailConfig;//app.mail-config
     private List<String> defaultRecipients;//app.default-recipients
     private Map<String, String> additionalHeaders;//app.additional-headers
     private List<MenuConfig> menus = new ArrayList<>();//app.menus
+    private JwtConfig jwt;
+    private DefaultConfig defaults;
 }

@@ -98,6 +98,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .antMatchers(HttpMethod.GET, "/test/**")
                 .permitAll()
+                .antMatchers(HttpMethod.POST, "/test/**")
+                .permitAll()
                 //test
                 .antMatchers(HttpMethod.GET, "/welcome", "/theymeleaf")
                 .permitAll()

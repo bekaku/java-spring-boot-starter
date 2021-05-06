@@ -46,7 +46,7 @@ public class RoleController extends BaseApiController {
     @PreAuthorize("isHasPermission('role_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
-        logger.error("logEnable {}, testProperties {}, isProduction {}", logEnable, testProperties, isProduction);
+        logger.info("logEnable {}, testProperties {}, isProduction {}", logEnable, testProperties, isProduction);
 
         return this.responseEntity(roleService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
                 PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Role.getSort())), HttpStatus.OK);
@@ -60,21 +60,6 @@ public class RoleController extends BaseApiController {
         setRolePermission(dto, role);
         roleService.save(role);
         return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
-
-
-        /*
-        Role role = roleService.convertDtoToEntity(dto);
-        Optional<Role> roleExist = roleService.findByName(dto.getName());
-        if (roleExist.isPresent()) {
-            throw this.responseErrorDuplicate(dto.getName());
-        }
-        // add permission to this role
-        setRolePermission(dto, role);
-//        return this.responseEntity(role, HttpStatus.CREATED);
-        roleService.save(role);
-        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
-
-         */
     }
 
     private void setRolePermission(RoleDto dto, Role role) {
@@ -100,28 +85,6 @@ public class RoleController extends BaseApiController {
         }
         roleService.update(role);
         return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.OK);
-        /*
-        Optional<Role> oldData = roleService.findById(role.getId());
-        if (oldData.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-        if (!oldData.get().getName().equals(role.getName())) {
-            Optional<Role> roleExist = roleService.findByName(role.getName());
-            if (roleExist.isPresent()) {
-                throw this.responseErrorDuplicate(dto.getName());
-            }
-        }
-        // add permission to this role
-        if (dto.getSelectdPermissions().length > 0) {
-            setRolePermission(dto, role);
-        } else {
-            role.setPermissions(new HashSet<>());
-        }
-
-        roleService.update(role);
-        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.OK);
-
-         */
     }
 
     @PreAuthorize("isHasPermission('role_view')")

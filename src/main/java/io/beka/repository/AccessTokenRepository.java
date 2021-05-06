@@ -13,9 +13,9 @@ public interface AccessTokenRepository extends BaseRepository<AccessToken, Long>
 
     Optional<AccessToken> findByToken(String token);
 
-    @Query("SELECT a FROM AccessToken a WHERE a.token =:token AND a.revoked =:revoked ")
-    Optional<AccessToken> findByToken(@Param(value = "token") String token, @Param(value = "revoked") boolean revoked);
-    
+    @Query("SELECT a FROM AccessToken a WHERE a.token =?1 AND a.revoked =?2 ")
+    Optional<AccessToken> findAccessTokenByToken(String token, boolean revoked);
+
     void deleteByToken(String token);
 
     void deleteByApiClient(ApiClient apiClient);
