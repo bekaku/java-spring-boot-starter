@@ -11,4 +11,4 @@ pluginManagement {
 		}
 	}
 }
-rootProject.name = 'beka'
+rootProject.name = 'java-springboot-starter'

@@ -7,8 +7,8 @@ plugins {
 }
 
 group = 'io.beka'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
+version = '1.0.0'
+sourceCompatibility = '16'
 
 configurations {
     compileOnly {

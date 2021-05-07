@@ -5,9 +5,9 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password:
+    password: CH789162be
     driver-class-name: com.mysql.cj.jdbc.Driver
 logging:
   pattern:

@@ -89,7 +89,7 @@ public class TestApiController extends BaseApiController {
         this.initSearchParam();
 
         SearchSpecification<Course> specification = new SearchSpecification<>();
-        specification.add(new SearchCriteria("title", "web", SearchOperation.MATCH));
+//        specification.add(new SearchCriteria("title", "web", SearchOperation.MATCH));
         Page<Course> result = courseRepository.findAll(specification, pageable);
 
         ResponseListDto<CourseDto> list = new ResponseListDto<>(result.getContent()

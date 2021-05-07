@@ -11,7 +11,7 @@
  Target Server Version : 50539
  File Encoding         : 65001
 
- Date: 04/05/2021 16:33:45
+ Date: 07/05/2021 10:59:26
 */
 
 SET NAMES utf8mb4;
@@ -23,8 +23,6 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `access_token`;
 CREATE TABLE `access_token`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `created_date` datetime NULL DEFAULT NULL,
-  `updated_date` datetime NULL DEFAULT NULL,
   `expires_at` datetime NULL DEFAULT NULL,
   `revoked` tinyint(1) NULL DEFAULT 0,
   `service` int(1) NULL DEFAULT 1,
@@ -43,13 +41,16 @@ CREATE TABLE `access_token`  (
   CONSTRAINT `FK9adhg4bm3rvd167xpgg38aqfs` FOREIGN KEY (`login_log`) REFERENCES `login_log` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `FKjll8aufysmo6yvf124vsqpd81` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `FKsca4jypki6xernocxdhewrlgk` FOREIGN KEY (`user_agent`) REFERENCES `user_agent` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Records of access_token
 -- ----------------------------
-INSERT INTO `access_token` VALUES (1, '2021-04-26 12:01:53', '2021-04-26 12:01:53', '2021-05-26 12:01:53', 0, 1, '2b359d9c-261e-4fc8-89ca-c6b587d2d49f', 1, 1, 1, 1);
-INSERT INTO `access_token` VALUES (2, '2021-04-27 09:24:27', '2021-04-27 09:24:27', '2021-05-27 09:24:27', 0, 1, '01bc83fc-0525-404d-ad6f-c304a07da11a', 1, 2, 1, 1);
+INSERT INTO `access_token` VALUES (1, '2021-05-26 12:01:53', 0, 1, '2b359d9c-261e-4fc8-89ca-c6b587d2d49f', 1, 1, 1, 1);
+INSERT INTO `access_token` VALUES (2, '2021-05-27 09:24:27', 0, 1, '01bc83fc-0525-404d-ad6f-c304a07da11a', 1, 2, 1, 1);
+INSERT INTO `access_token` VALUES (3, '2021-06-03 17:25:21', 0, 1, 'df40b300-64b1-4bb0-9ae1-483ad0c0c719', 1, 3, 1, 2);
+INSERT INTO `access_token` VALUES (4, '2021-06-03 17:26:57', 0, 1, '236a1d1b-a963-4ef8-8a6a-ab5716666af5', 1, 4, 1, 2);
+INSERT INTO `access_token` VALUES (5, '2021-06-05 11:24:48', 0, 1, 'ee16133a-a6ca-4262-8ffa-623e6144b2c6', 1, 5, 1, 2);
 
 -- ----------------------------
 -- Table structure for api_client
@@ -63,14 +64,16 @@ CREATE TABLE `api_client`  (
   `created_date` datetime NULL DEFAULT NULL,
   `status` tinyint(1) NULL DEFAULT 1,
   `updated_date` datetime NULL DEFAULT NULL,
+  `created_user` bigint(20) NULL DEFAULT NULL,
+  `updated_user` bigint(20) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = COMPACT;
 
 -- ----------------------------
 -- Records of api_client
 -- ----------------------------
-INSERT INTO `api_client` VALUES (1, 'default', '41d6c48b-3af8-43fa-a75f-b171d812ba8c', 1, '2021-04-21 10:48:40', 1, '2021-04-21 10:48:43');
-INSERT INTO `api_client` VALUES (5, 'edrMobile', 'd46c07e8-4af9-4c35-9ee7-9814233f532a', 1, '2021-05-03 10:56:05', 1, '2021-05-03 11:10:09');
+INSERT INTO `api_client` VALUES (1, 'default', '41d6c48b-3af8-43fa-a75f-b171d812ba8c', 1, '2021-04-21 10:48:40', 1, '2021-04-21 10:48:43', NULL, NULL);
+INSERT INTO `api_client` VALUES (5, 'edrMobile', 'd46c07e8-4af9-4c35-9ee7-9814233f532a', 1, '2021-05-03 10:56:05', 1, '2021-05-03 11:10:09', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for api_client_ip
@@ -83,6 +86,8 @@ CREATE TABLE `api_client_ip`  (
   `ip_address` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `status` tinyint(1) NULL DEFAULT 1,
   `api_client` bigint(20) NOT NULL,
+  `created_user` bigint(20) NULL DEFAULT NULL,
+  `updated_user` bigint(20) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `FK5pu9gbj8rvr9gdx27uwua7ug9`(`api_client`) USING BTREE,
   CONSTRAINT `FK5pu9gbj8rvr9gdx27uwua7ug9` FOREIGN KEY (`api_client`) REFERENCES `api_client` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -91,8 +96,28 @@ CREATE TABLE `api_client_ip`  (
 -- ----------------------------
 -- Records of api_client_ip
 -- ----------------------------
-INSERT INTO `api_client_ip` VALUES (3, '2021-05-03 10:56:05', '2021-05-03 10:56:05', '192.168.7.11', 1, 5);
-INSERT INTO `api_client_ip` VALUES (4, '2021-05-03 10:56:05', '2021-05-03 10:56:05', '192.168.7.15', 1, 5);
+INSERT INTO `api_client_ip` VALUES (3, '2021-05-03 10:56:05', '2021-05-03 10:56:05', '192.168.7.11', 1, 5, NULL, NULL);
+INSERT INTO `api_client_ip` VALUES (4, '2021-05-03 10:56:05', '2021-05-03 10:56:05', '192.168.7.15', 1, 5, NULL, NULL);
+
+-- ----------------------------
+-- Table structure for courses
+-- ----------------------------
+DROP TABLE IF EXISTS `courses`;
+CREATE TABLE `courses`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `abbreviation` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `fee` double NOT NULL,
+  `modules` int(11) NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of courses
+-- ----------------------------
+INSERT INTO `courses` VALUES (1, 'ML', 1500, 12, 'Machine Learning');
+INSERT INTO `courses` VALUES (2, 'DS', 800, 8, 'Database Systems');
+INSERT INTO `courses` VALUES (3, 'WB', 0, 10, 'Web Basics');
 
 -- ----------------------------
 -- Table structure for login_log
@@ -108,13 +133,16 @@ CREATE TABLE `login_log`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `FK2qpnc9vsk5481p4gnc31yg3dy`(`user`) USING BTREE,
   CONSTRAINT `FK2qpnc9vsk5481p4gnc31yg3dy` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Records of login_log
 -- ----------------------------
 INSERT INTO `login_log` VALUES (1, '2021-04-26 12:01:53', 'bekaku', '192.168.159.2', 1, 1);
 INSERT INTO `login_log` VALUES (2, '2021-04-27 09:24:27', 'bekaku', '192.168.159.2', 1, 1);
+INSERT INTO `login_log` VALUES (3, '2021-05-04 17:25:21', 'bekaku', '192.168.159.2', 1, 1);
+INSERT INTO `login_log` VALUES (4, '2021-05-04 17:26:57', 'bekaku', '192.168.159.2', 1, 1);
+INSERT INTO `login_log` VALUES (5, '2021-05-06 11:24:48', 'bekaku', '192.168.159.2', 1, 1);
 
 -- ----------------------------
 -- Table structure for permission
@@ -164,14 +192,17 @@ CREATE TABLE `role`  (
   `name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `status` tinyint(1) NULL DEFAULT 1,
   `expired_at` date NULL DEFAULT NULL,
+  `created_user` bigint(20) NULL DEFAULT NULL,
+  `updated_user` bigint(20) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `UK_8sewwnpamngi6b1dwaa88askk`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Records of role
 -- ----------------------------
-INSERT INTO `role` VALUES (1, '2021-04-28 13:15:25', '2021-04-28 13:31:18', 'developer', 'develop', 1, NULL);
+INSERT INTO `role` VALUES (1, '2021-04-28 13:15:25', '2021-04-28 13:31:18', 'developer', 'develop', 1, NULL, NULL, NULL);
+INSERT INTO `role` VALUES (2, '2021-05-04 18:17:04', '2021-05-05 18:18:07', 'implement 555', 'implement', 1, '2021-05-05', 1, 1);
 
 -- ----------------------------
 -- Table structure for role_permission
@@ -211,6 +242,43 @@ INSERT INTO `role_permission` VALUES (1, 19);
 INSERT INTO `role_permission` VALUES (1, 20);
 
 -- ----------------------------
+-- Table structure for students
+-- ----------------------------
+DROP TABLE IF EXISTS `students`;
+CREATE TABLE `students`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `age` int(11) NOT NULL,
+  `grade` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of students
+-- ----------------------------
+INSERT INTO `students` VALUES (1, 15, '8th', 'John Doe');
+
+-- ----------------------------
+-- Table structure for students_courses
+-- ----------------------------
+DROP TABLE IF EXISTS `students_courses`;
+CREATE TABLE `students_courses`  (
+  `student_id` bigint(20) NOT NULL,
+  `course_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`student_id`, `course_id`) USING BTREE,
+  INDEX `FKcc42107lsifo5rjyjlhdu6i6u`(`course_id`) USING BTREE,
+  CONSTRAINT `FKcc42107lsifo5rjyjlhdu6i6u` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `FKr16q8s9m6kr7xupi4fw9iqpgl` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of students_courses
+-- ----------------------------
+INSERT INTO `students_courses` VALUES (1, 1);
+INSERT INTO `students_courses` VALUES (1, 2);
+INSERT INTO `students_courses` VALUES (1, 3);
+
+-- ----------------------------
 -- Table structure for user
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
@@ -224,13 +292,15 @@ CREATE TABLE `user`  (
   `status` tinyint(1) NULL DEFAULT 1,
   `updated_date` datetime NULL DEFAULT NULL,
   `username` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `created_user` bigint(20) NULL DEFAULT NULL,
+  `updated_user` bigint(20) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = COMPACT;
 
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, '2021-04-22 18:10:20', 'admin@mydomain.com', 'https://static.productionready.io/images/smiley-cyrus.jpg', '$2a$10$oqntqVRd2GtCS8s3S5e23OPn4stBaOA//MwgWBYlNnj9hB2JyHxGS', 'c1878158-e0bb-424e-bba6-b052a1577ada', 1, '2021-04-22 18:10:20', 'admin');
+INSERT INTO `user` VALUES (1, '2021-04-22 18:10:20', 'admin@mydomain.com', 'https://static.productionready.io/images/smiley-cyrus.jpg', '$2a$10$oqntqVRd2GtCS8s3S5e23OPn4stBaOA//MwgWBYlNnj9hB2JyHxGS', 'c1878158-e0bb-424e-bba6-b052a1577ada', 1, '2021-04-22 18:10:20', 'admin', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for user_agent
@@ -240,12 +310,13 @@ CREATE TABLE `user_agent`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `agent` varchar(120) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Records of user_agent
 -- ----------------------------
 INSERT INTO `user_agent` VALUES (1, 'PostmanRuntime/7.26.10');
+INSERT INTO `user_agent` VALUES (2, 'PostmanRuntime/7.28.0');
 
 -- ----------------------------
 -- Table structure for user_role
