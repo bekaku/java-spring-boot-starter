@@ -1,39 +1,27 @@
 version: '3.9'
-
 services:
-  docker-mysql:
+  api_service:
+    build: .
     restart: always
-    container_name: docker-mysql
-    image: mysql:5.6
-    environment:
-      MYSQL_DATABASE: springboot
-      MYSQL_ROOT_PASSWORD: CH789162be
-      MYSQL_USER: dockerMysqlUser
-      MYSQL_PASSWORD: CH789162be
-      MYSQL_ROOT_HOST: '%'
-    volumes:
-      - ./sql:/docker-entrypoint-initdb.d
-    ports:
-      - "3308:3306"
-    healthcheck:
-      test: "/usr/bin/mysql --user=root --password=CH789162be--execute \"SHOW DATABASES;\""
-      interval: 2s
-      timeout: 20s
-      retries: 10
-  spring-starter-app:
-    container_name: spring-starter-app
-    restart: on-failure
-    build: ./
-    expose:
-      - "8084"
     ports:
       - 8080:8084
-    environment:
-      WAIT_HOSTS: mysql:3306
     depends_on:
-      - docker-mysql
-
-
+      - mysql_db
+    command: sh -c './wait-for mysql_db:3306 -- npm start'
+  mysql_db:
+    image: "mysql:5.6"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+    ports:
+      - 3308:3306
+    environment:
+      MYSQL_DATABASE: springboot_db
+      MYSQL_USER: bekaku
+      MYSQL_PASSWORD: CH789162be
+      MYSQL_ROOT_PASSWORD: CH789162be
+volumes:
+  mysql_data:
 
 
 
