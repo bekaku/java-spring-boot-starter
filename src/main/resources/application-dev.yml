@@ -5,7 +5,11 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:mysql_db}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
+    # porduction to docker config from docker-compose.yml
+#    url: jdbc:mysql://${MYSQL_HOST:mysql_db}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
+
+    # connect to mysql form docker via port 3308
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: CH789162be
     driver-class-name: com.mysql.cj.jdbc.Driver
