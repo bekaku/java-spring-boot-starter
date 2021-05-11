@@ -5,14 +5,36 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    # porduction to docker config from docker-compose.yml
+
+    # normal connection to mysql server
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
+
+    # link to docker config from docker-compose.yml
 #    url: jdbc:mysql://${MYSQL_HOST:mysql_db}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
 
-    # connect to mysql form docker via port 3308
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
+    # link mysql to docker   $ docker run -d --restart unless-stopped -p 3308:3306 --name=docker-mysql --env="MYSQL_ROOT_PASSWORD=CH789162be" --env="MYSQL_PASSWORD=CH789162be" --env="MYSQL_USER=bekaku" --env="MYSQL_DATABASE=springboot" mysql:5.6
+#    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
+
+    # connect to mysql form local docker via port 3308
+#    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password: CH789162be
+    password:
+#    password: CH789162be
     driver-class-name: com.mysql.cj.jdbc.Driver
+  mvc:
+    static-path-pattern: /content/**
+  thymeleaf:
+    cache: false
+    #spring.freemarker.suffix=.html
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    prefix: classpath:/templates/
+#    prefix: file:src/main/resources/templates/
+  resources:
+#    static-locations: file:src/main/resources/static/
+    cache:
+      period: 0
 logging:
   pattern:
     rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
@@ -32,7 +54,20 @@ logging:
     max-history: 30
     total-size-cap: 10MB
     clean-history-on-start: true
+server:
+  port: 8084
+  error:
+    whitelabel:
+      enabled: false
 
 app:
   test-prop: develop mode
   version: 1.0.1
+  # call resource path http://localhost:8084/cdn/default_avata.png map to D:/grandats/edrdata/ folder
+  cdn-path: file:///D:/grandats/edrdata/
+  # docker path
+#  cdn-path: file:////usr/edrdata/
+
+custom:
+  config:
+    file: Config Spring Startertemplate From DEVELOPMENT MODE (resources/application-dev.yml)

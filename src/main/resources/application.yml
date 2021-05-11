@@ -44,7 +44,8 @@ spring:
     #spring.freemarker.suffix=.html
     prefix: classpath:/templates/
     suffix: .html
-  # Uncomment the following line to enable and allow access to the h2-console
+    mode: HTML
+    encoding: UTF-8
   h2:
     console:
       enabled:true
@@ -65,11 +66,25 @@ spring:
     locale: th_TH
     #force locale resolver to spring boot reconized your settings
     locale-resolver: fixed
+
+    # url pattern from resources/static can call with http://localhost:8080/content/about.html
+    static-path-pattern: /content/**
+  servlet :
+    multipart:
+      #upload files configurations
+      enabled: true
+      #It specifies the maximum size permitted for uploaded files. The default is 1MB.
+      max-file-size: 10MB
+      # It specifies the maximum size allowed for multipart/form-data requests. The default is 10MB.
+      max-request-size: 15MB
+
 server:
   port: 8084
   error:
     include-message: always
     include-binding-errors: always
+    whitelabel:
+      enabled: false
 
 logging:
   pattern:
@@ -104,6 +119,7 @@ mybatis:
 app:
   test-prop: production mode
   version: 1.0.0
+  cdn-path: file:////usr/edrdata/
   loging:
     enable: true
   jwt:
@@ -140,5 +156,5 @@ app:
 
 custom:
   config:
-    file: Config Spring Startertemplate From Inside JAR
+    file: Config Spring Startertemplate From PRODUCTION MODE (resources/application.yml)
 

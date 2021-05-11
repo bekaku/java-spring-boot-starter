@@ -32,7 +32,6 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
-
 # Logs and databases #
 ######################
 *.log
@@ -50,3 +49,4 @@ ehthumbs.db
 Thumbs.db
 
 logs/
+edrdata/
