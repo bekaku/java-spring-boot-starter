@@ -61,6 +61,8 @@ server:
       enabled: false
 
 app:
+  url: http://localhost
+  port: 8084
   test-prop: develop mode
   version: 1.0.1
   # call resource path http://localhost:8084/cdn/default_avata.png map to D:/grandats/edrdata/ folder

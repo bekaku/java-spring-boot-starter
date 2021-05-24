@@ -10,27 +10,31 @@ import io.beka.model.Student;
 import io.beka.properties.AppProperties;
 import io.beka.repository.CourseRepository;
 import io.beka.repository.StudentRepository;
-import io.beka.specification.CourseSpecification;
-import io.beka.specification.SearchCriteria;
-import io.beka.specification.SearchOperation;
 import io.beka.specification.SearchSpecification;
 import io.beka.util.AppUtil;
+import io.beka.util.ConstantData;
+import io.beka.util.DateUtil;
+import io.beka.util.FileUtil;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequestMapping(path = "/test")
@@ -159,5 +163,61 @@ public class TestApiController extends BaseApiController {
 
     public StudentDto convertStudentEntityToDto(Student student) {
         return modelMapper.map(student, StudentDto.class);
+    }
+
+
+    //test upload file
+    @PostMapping("/upload")
+    public ResponseEntity<Object> singleFileUpload(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, "Please select a file to upload");
+        }
+        String yearMonthImages = FileUtil.getImagesYearMonthDirectory();
+        String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthImages);
+        String newName = FileUtil.generateFileName(FileUtil.getMultipartFileName(file));
+        try {
+            // Get the file and save it somewhere
+            byte[] bytes = file.getBytes();
+            Path path = Paths.get(uploadPath + newName);
+            Files.write(path, bytes);
+        } catch (IOException e) {
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        }
+
+        //resize image
+//        imgscalrResize(uploadPath, newName);
+        thumbnailatorResize(uploadPath, newName);
+        if (appProperties.getUploadImage().isCreateThumbnail()) {
+            thumbnailatorCreateThumnail(uploadPath, newName);
+        }
+
+        String pathInDb = yearMonthImages + newName;
+        return this.responseEntity(new HashMap<String, Object>() {{
+            put("originalName", FileUtil.getMultipartFileName(file));
+            put("pathInDb", pathInDb);
+            put("uploadPath", uploadPath);
+            put("imageCdnUrl", FileUtil.generateCdnPath(appProperties.getCdnForPublic(), pathInDb, null));
+            put("imageThumbnailCdnUrl", FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(pathInDb, appProperties.getUploadImage().getThumbnailExname()), null));
+        }}, HttpStatus.OK);
+    }
+
+    private void thumbnailatorResize(String uploadFile, String fileName) {
+        try {
+            BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
+            BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 0.90);
+            ImageIO.write(outputImage, "jpg", new File(uploadFile + fileName));
+        } catch (IOException e) {
+            throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+        }
+    }
+
+    private void thumbnailatorCreateThumnail(String uploadFile, String fileName) {
+        try {
+            BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
+            BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 0.90);
+            ImageIO.write(outputImage, "jpg", new File(uploadFile + FileUtil.generateThumbnailName(fileName, appProperties.getUploadImage().getThumbnailExname())));
+        } catch (IOException e) {
+            throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+        }
     }
 }

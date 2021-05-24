@@ -15,6 +15,8 @@ public class WebConfigurerAdapter implements WebMvcConfigurer {
 
     @Value("${app.cdn-path}")
     String cdnPath;
+    @Value("${app.cdn-path-alias}")
+    String cdnPathAlias;
 
     @Bean
     public LocaleChangeInterceptor localeChangeInterceptor() {
@@ -32,7 +34,7 @@ public class WebConfigurerAdapter implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         WebMvcConfigurer.super.addResourceHandlers(registry);
-        registry.addResourceHandler("/cdn/**").addResourceLocations(cdnPath);
+        registry.addResourceHandler("/"+cdnPathAlias+"/**").addResourceLocations(cdnPath);
     }
 
 

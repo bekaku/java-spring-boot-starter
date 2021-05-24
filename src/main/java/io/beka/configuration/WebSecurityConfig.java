@@ -34,6 +34,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${spring.h2.console.enabled:false}")
     private boolean h2ConsoleEnabled;
 
+    @Value("${app.cdn-path-alias}")
+    String cdnPathAlias;
+
     @Autowired
     private UserDetailsService userDetailsService;
 
@@ -90,7 +93,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .antMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/content/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/cdn/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/"+cdnPathAlias+"/**").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/auth/**")
                 .permitAll()
                 .antMatchers(HttpMethod.GET, "/api/auth/**")

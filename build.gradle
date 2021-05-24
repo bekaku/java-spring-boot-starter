@@ -49,6 +49,10 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
+    //Image processing
+    implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.14'
+
+
 //    caching
     implementation group: 'javax.cache', name: 'cache-api', version: '1.1.1'
     implementation group: 'org.ehcache', name: 'ehcache', version: '3.9.2'

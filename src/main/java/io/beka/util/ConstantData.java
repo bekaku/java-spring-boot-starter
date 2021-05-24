@@ -16,7 +16,15 @@ public class ConstantData {
     public static final int REQUEST_FROM_IOS = 2;
     public static final int REQUEST_FROM_ANDROID = 3;
 
+    public static final String UNDER_SCORE = "_";
+    public static final String MIDDLE_SCORE = "-";
+    public static final String DOT = ".";
+    public static final String COLON = ":";
+    public static final String BACK_SLACK = "/";
+
     public static final String DEFAULT_PROJECT_ROOT_PATH = "src/main/java/io/beka";
     public static final String DEFAULT_PROJECT_ROOT_PACKAGE = "io.beka";
+
+    public static final String IMAGES = "images";
 
 }
