@@ -1,6 +1,7 @@
 package io.beka.util;
 
 import net.coobird.thumbnailator.Thumbnails;
+import org.apache.tika.Tika;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,6 +11,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -82,4 +85,31 @@ public class FileUtil {
         return fileName.replace(".jpg", thumPostFixName + ".jpg");
     }
 
+    public static String getMimeType(File file) throws IOException {
+        if (file == null) {
+            return null;
+        }
+        Tika tika = new Tika();
+        return tika.detect(file);
+    }
+
+    public static String getMimeType(MultipartFile file) {
+        return file != null ? file.getContentType() : null;
+    }
+
+    public static Long getFileSize(MultipartFile file) {
+        return file != null ? file.getSize() : 0;
+    }
+
+    public static String humanReadableByteCountSI(long bytes) {
+        if (-1000 < bytes && bytes < 1000) {
+            return bytes + " B";
+        }
+        CharacterIterator ci = new StringCharacterIterator("kMGTPE");
+        while (bytes <= -999_950 || bytes >= 999_950) {
+            bytes /= 1000;
+            ci.next();
+        }
+        return String.format("%.1f %cB", bytes / 1000.0, ci.current());
+    }
 }

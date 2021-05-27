@@ -175,24 +175,26 @@ public class TestApiController extends BaseApiController {
         String yearMonthImages = FileUtil.getImagesYearMonthDirectory();
         String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthImages);
         String newName = FileUtil.generateFileName(FileUtil.getMultipartFileName(file));
-        try {
-            // Get the file and save it somewhere
-            byte[] bytes = file.getBytes();
-            Path path = Paths.get(uploadPath + newName);
-            Files.write(path, bytes);
-        } catch (IOException e) {
-            throw this.responseError(HttpStatus.BAD_REQUEST, null, e.getMessage());
-        }
+//        try {
+//            // Get the file and save it somewhere
+//            byte[] bytes = file.getBytes();
+//            Path path = Paths.get(uploadPath + newName);
+//            Files.write(path, bytes);
+//        } catch (IOException e) {
+//            throw this.responseError(HttpStatus.BAD_REQUEST, null, e.getMessage());
+//        }
 
         //resize image
-//        imgscalrResize(uploadPath, newName);
-        thumbnailatorResize(uploadPath, newName);
-        if (appProperties.getUploadImage().isCreateThumbnail()) {
-            thumbnailatorCreateThumnail(uploadPath, newName);
-        }
+//        thumbnailatorResize(uploadPath, newName);
+//        if (appProperties.getUploadImage().isCreateThumbnail()) {
+//            thumbnailatorCreateThumnail(uploadPath, newName);
+//        }
 
         String pathInDb = yearMonthImages + newName;
         return this.responseEntity(new HashMap<String, Object>() {{
+            put("getFileSize", FileUtil.getFileSize(file));
+            put("humanReadableByteCountSI", FileUtil.humanReadableByteCountSI(FileUtil.getFileSize(file)));
+            put("getMimeType", FileUtil.getMimeType(file));
             put("originalName", FileUtil.getMultipartFileName(file));
             put("pathInDb", pathInDb);
             put("uploadPath", uploadPath);
