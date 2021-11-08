@@ -88,6 +88,9 @@ server:
     include-binding-errors: always
     whitelabel:
       enabled: false
+  tomcat:
+    threads:
+      max: 250
 
 logging:
   pattern:
