@@ -5,7 +5,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
@@ -19,8 +18,7 @@ public class LocaleResolverHeader {
     @Value("${spring.mvc.locale}")
     String defaultLocale;
 
-    List<Locale> LOCALES = Arrays.asList(new Locale("en"),
-            new Locale("th"));
+    List<Locale> LOCALES = Arrays.asList(new Locale("en"), new Locale("th"));
 
 //    @Override
 //    public Locale resolveLocale(HttpServletRequest request) {

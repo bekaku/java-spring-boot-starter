@@ -1,6 +1,7 @@
 package io.beka.controller.api;
 
 import io.beka.exception.BaseResponseException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 
-import javax.servlet.http.HttpServletRequest;
 
 public class BaseApiController extends BaseResponseException {
 

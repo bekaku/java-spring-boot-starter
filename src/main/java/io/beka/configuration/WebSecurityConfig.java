@@ -12,10 +12,12 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -29,7 +31,7 @@ import static java.util.Arrays.asList;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfig {
 
     @Value("${spring.h2.console.enabled:false}")
     private boolean h2ConsoleEnabled;
@@ -37,13 +39,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${app.cdn-path-alias}")
     String cdnPathAlias;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return super.userDetailsService();
-    }
+    @Value("${environments.production}")
+    boolean isProduction;
 
     @Bean
     public JwtTokenFilter jwtTokenFilter() {
@@ -55,28 +52,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
+//    @Bean
+//    public DaoAuthenticationProvider authProvider() {
+//        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+//        authProvider.setUserDetailsService(userDetailsService);
+//        authProvider.setPasswordEncoder(encoder());
+//        return authProvider;
+//    }
+
     @Bean
-    public DaoAuthenticationProvider authProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(encoder());
-        return authProvider;
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().antMatchers(
+                "/css/**", "/js/**", "/img/**", "/lib/**", "/content/**", "/" + cdnPathAlias + "/**", "/favicon.ico", "/oauth2");
     }
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(authProvider());
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-
-        if (h2ConsoleEnabled) {
-            http.authorizeRequests()
-                    .antMatchers("/h2-console", "/h2-console/**").permitAll()
-                    .and()
-                    .headers().frameOptions().sameOrigin();
-        }
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.csrf()
                 .disable()
@@ -89,36 +80,34 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers(HttpMethod.OPTIONS)
-                .permitAll()
+                .antMatchers(HttpMethod.OPTIONS).permitAll()
                 .antMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/content/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/"+cdnPathAlias+"/**").permitAll()
-                .antMatchers(HttpMethod.POST, "/api/auth/**")
-                .permitAll()
-                .antMatchers(HttpMethod.GET, "/api/auth/**")
-                .permitAll()
-                .antMatchers(HttpMethod.POST, "/dev/**")
-                .permitAll()
-                .antMatchers(HttpMethod.GET, "/test/**")
-                .permitAll()
-                .antMatchers(HttpMethod.POST, "/test/**")
-                .permitAll()
+                .antMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/auth/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/dev/**").permitAll()
                 //test
-                .antMatchers(HttpMethod.GET, "/welcome", "/theymeleaf")
-                .permitAll()
-                .anyRequest()
-                .authenticated();
+                .antMatchers(HttpMethod.GET, "/test/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/test/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/welcome", "/theymeleaf").permitAll()
+                .anyRequest().authenticated();
 
         http.addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+        return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
 //        configuration.setAllowedOrigins(Collections.singletonList("*"));
-        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
-//        configuration.setAllowedOrigins(List.of("http://localhost:8084", "https://hoppscotch.io/"));
+        if (isProduction) {
+            configuration.setAllowedOrigins(List.of("http://localhost:8084", "https://hoppscotch.io/"));// production
+        } else {
+            configuration.setAllowedOriginPatterns(Collections.singletonList("*"));// development only
+        }
+
+//        configuration.setAllowedOrigins(List.of("http://localhost:8088/"));
         configuration.setAllowedMethods(asList("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
         // setAllowCredentials(true) is important, otherwise:
         // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.

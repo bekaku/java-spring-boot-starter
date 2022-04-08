@@ -1,12 +1,11 @@
 package io.beka.model;
 
 import io.beka.annotation.GenSourceableTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
 
 @GenSourceableTable(createController = false)
 @NoArgsConstructor

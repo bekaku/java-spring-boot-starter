@@ -1,6 +1,5 @@
 package io.beka.repository;
 
-import io.beka.model.Course;
 import io.beka.model.Student;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Page;

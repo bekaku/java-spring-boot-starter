@@ -1,14 +1,13 @@
 plugins {
-    id 'org.springframework.boot' version '2.4.4'
+    id 'org.springframework.boot' version '3.0.0-M2'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
-    id 'idea'
 //    id 'war'
 }
 
 group = 'io.beka'
 version = '1.0.0'
-sourceCompatibility = '11'
+sourceCompatibility = '18'
 
 configurations {
     compileOnly {
@@ -32,42 +31,45 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.4'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
 //    Databases
     runtimeOnly 'mysql:mysql-connector-java'
 
-    implementation group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
+    implementation group: 'com.zaxxer', name: 'HikariCP', version: '5.0.1'
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
 
 
     implementation 'log4j:log4j:1.2.17'
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
-    implementation 'joda-time:joda-time:2.10.10'
-    implementation 'org.modelmapper:modelmapper:2.4.0'
+    implementation 'joda-time:joda-time:2.10.14'
+    implementation 'org.modelmapper:modelmapper:3.1.0'
 
-    compileOnly 'org.projectlombok:lombok:1.18.20'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
     //Image processing
-    implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.14'
-    implementation group: 'org.apache.tika', name: 'tika-core', version: '2.0.0-ALPHA'
+    implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.17'
+    implementation group: 'org.apache.tika', name: 'tika-core', version: '2.3.0'
 
 
 //    caching
     implementation group: 'javax.cache', name: 'cache-api', version: '1.1.1'
-    implementation group: 'org.ehcache', name: 'ehcache', version: '3.9.2'
+    implementation group: 'org.ehcache', name: 'ehcache', version: '3.10.0'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:2.1.2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.6'
     testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.projectlombok:lombok:1.18.20'
-    testImplementation 'com.h2database:h2:1.4.200'
-    implementation 'junit:junit:4.12'
+    testImplementation 'org.projectlombok:lombok:1.18.22'
+    testImplementation 'com.h2database:h2:2.1.210'
+//    implementation 'junit:junit:4.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+
 
 }
 

@@ -1,10 +1,10 @@
 package io.beka.repository;
 
 import io.beka.repository.BaseRepository;
+import jakarta.persistence.EntityManager;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.io.Serializable;
 
 public class BaseRepositoryImpl <T, ID extends Serializable>

@@ -2,13 +2,13 @@ package io.beka.validator;
 
 import io.beka.configuration.I18n;
 import io.beka.exception.BaseResponseException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +36,7 @@ public class BaseValidator extends BaseResponseException {
     public void addErrorDuplicate(String data) {
         errors.add(i18n.getMessage("error.validateDuplicate", data));
     }
+
     public void addErrorNotFound() {
         errors.add(i18n.getMessage("error.dataNotfound"));
     }

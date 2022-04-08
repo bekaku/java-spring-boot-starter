@@ -1,14 +1,15 @@
 package io.beka.model;
 
 import io.beka.annotation.GenSourceableTable;
-import lombok.EqualsAndHashCode;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Sort;
 
-import javax.persistence.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,7 +17,6 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"salt"}, callSuper = false)
 @Entity
 public class User extends Auditable<Long> {
     public User(String username, String password, String email, Boolean status, String image) {
@@ -74,4 +74,16 @@ public class User extends Auditable<Long> {
         return Sort.by(Sort.Direction.ASC, "username");
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        User user = (User) o;
+        return getId() != null && Objects.equals(getId(), user.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

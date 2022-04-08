@@ -1,11 +1,13 @@
 package io.beka.model;
 
 import io.beka.annotation.GenSourceableTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToMany;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
-import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 

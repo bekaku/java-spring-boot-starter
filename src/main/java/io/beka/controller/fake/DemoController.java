@@ -1,5 +1,6 @@
-package io.beka.controller.test;
+package io.beka.controller.fake;
 
+import io.beka.configuration.I18n;
 import io.beka.controller.api.BaseApiController;
 import io.beka.dto.CourseDto;
 import io.beka.dto.ResponseListDto;
@@ -12,9 +13,8 @@ import io.beka.repository.CourseRepository;
 import io.beka.repository.StudentRepository;
 import io.beka.specification.SearchSpecification;
 import io.beka.util.AppUtil;
-import io.beka.util.ConstantData;
-import io.beka.util.DateUtil;
 import io.beka.util.FileUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -27,22 +27,21 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import javax.validation.Valid;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequestMapping(path = "/test")
 @RestController
 @RequiredArgsConstructor
-public class TestApiController extends BaseApiController {
+public class DemoController extends BaseApiController {
 
-    Logger logger = LoggerFactory.getLogger(TestApiController.class);
+    Logger logger = LoggerFactory.getLogger(DemoController.class);
 
     //    private final MailProperties mailProperties;
     private final AppProperties appProperties;
@@ -52,11 +51,16 @@ public class TestApiController extends BaseApiController {
 
     private final ModelMapper modelMapper;
 
+    private final I18n i18n;
+
     @GetMapping
     public ResponseEntity<Object> testGet() {
         logger.info("testGet");
+        logger.info(i18n.getMessage("message"));
+        System.out.println("Test get i18n >>>> "+i18n.getMessage("message"));
         return this.responseEntity(new HashMap<String, Object>() {{
             put("camelToSnake", AppUtil.camelToSnake("ApiClient"));
+            put("i18nMessage", i18n.getMessage("message.args", "Chanavee", "From i18n util"));
         }}, HttpStatus.OK);
     }
 

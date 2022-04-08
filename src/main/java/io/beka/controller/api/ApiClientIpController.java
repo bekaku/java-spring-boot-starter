@@ -1,24 +1,21 @@
 package io.beka.controller.api;
 
 import io.beka.configuration.I18n;
-import io.beka.model.ApiClient;
-import io.beka.service.ApiClientService;
-import io.beka.vo.Paging;
 import io.beka.dto.ApiClientIpDto;
+import io.beka.model.ApiClient;
 import io.beka.model.ApiClientIp;
 import io.beka.service.ApiClientIpService;
+import io.beka.service.ApiClientService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
-import javax.validation.Valid;
-import java.util.HashMap;
 import java.util.Optional;
 
 @RequestMapping(path = "/api/apiClient/{apiClientId}/apiClientIp")
