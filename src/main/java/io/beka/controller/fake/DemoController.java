@@ -30,6 +30,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
@@ -57,7 +60,7 @@ public class DemoController extends BaseApiController {
     public ResponseEntity<Object> testGet() {
         logger.info("testGet");
         logger.info(i18n.getMessage("message"));
-        System.out.println("Test get i18n >>>> "+i18n.getMessage("message"));
+        System.out.println("Test get i18n >>>> " + i18n.getMessage("message"));
         return this.responseEntity(new HashMap<String, Object>() {{
             put("camelToSnake", AppUtil.camelToSnake("ApiClient"));
             put("i18nMessage", i18n.getMessage("message.args", "Chanavee", "From i18n util"));
@@ -76,7 +79,7 @@ public class DemoController extends BaseApiController {
         }}, HttpStatus.OK);
     }
 
-    //Spring Data JPA Many To Many Relationship Mapping Example
+    //Spring Data JPA Many-To-Many Relationship Mapping Example
     @PostMapping("/createCourse")
     public ResponseEntity<Object> createCourse(@Valid @RequestBody Course course) {
 
@@ -179,20 +182,22 @@ public class DemoController extends BaseApiController {
         String yearMonthImages = FileUtil.getImagesYearMonthDirectory();
         String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthImages);
         String newName = FileUtil.generateFileName(FileUtil.getMultipartFileName(file));
-//        try {
-//            // Get the file and save it somewhere
-//            byte[] bytes = file.getBytes();
-//            Path path = Paths.get(uploadPath + newName);
-//            Files.write(path, bytes);
-//        } catch (IOException e) {
-//            throw this.responseError(HttpStatus.BAD_REQUEST, null, e.getMessage());
-//        }
+        try {
+            // Get the file and save it somewhere
+            byte[] bytes = file.getBytes();
+            Path path = Paths.get(uploadPath + newName);
+            Files.write(path, bytes);
+        } catch (IOException e) {
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        }
 
         //resize image
-//        thumbnailatorResize(uploadPath, newName);
-//        if (appProperties.getUploadImage().isCreateThumbnail()) {
-//            thumbnailatorCreateThumnail(uploadPath, newName);
-//        }
+        thumbnailatorResize(uploadPath, newName);
+
+        //create thumbnail
+        if (appProperties.getUploadImage().isCreateThumbnail()) {
+            thumbnailatorCreateThumnail(uploadPath, newName);
+        }
 
         String pathInDb = yearMonthImages + newName;
         return this.responseEntity(new HashMap<String, Object>() {{
@@ -209,9 +214,18 @@ public class DemoController extends BaseApiController {
 
     private void thumbnailatorResize(String uploadFile, String fileName) {
         try {
+            int limitWidth = appProperties.getUploadImage().getLimitWidth();
+            int limitHeight = appProperties.getUploadImage().getLimitHeight();
             BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
-            BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 0.90);
-            ImageIO.write(outputImage, "jpg", new File(uploadFile + fileName));
+
+            //get width and height of image
+            int imageWidth = originalImage.getWidth();
+            int imageHeight = originalImage.getHeight();
+            if (imageWidth > limitWidth || imageHeight > limitHeight) {
+                BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 0.90);
+                ImageIO.write(outputImage, "jpg", new File(uploadFile + fileName));
+            }
+
         } catch (IOException e) {
             throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
         }
