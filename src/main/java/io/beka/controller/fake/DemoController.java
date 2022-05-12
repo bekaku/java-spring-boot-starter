@@ -108,6 +108,7 @@ public class DemoController extends BaseApiController {
                 .map(this::convertCourseEntityToDto)
                 .collect(Collectors.toList())
                 , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
+                
         return this.responseEntity(list, HttpStatus.OK);
     }
 
