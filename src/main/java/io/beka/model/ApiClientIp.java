@@ -2,10 +2,10 @@ package io.beka.model;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
 import io.beka.annotation.GenSourceableTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.Hibernate;
@@ -15,7 +15,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.Objects;
 
-import static jakarta.persistence.FetchType.LAZY;
+import static javax.persistence.FetchType.LAZY;
 
 
 @GenSourceableTable(createDto = true)

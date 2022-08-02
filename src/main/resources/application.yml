@@ -18,7 +18,7 @@ spring:
       use-new-id-generator-mappings: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        dialect: org.hibernate.dialect.MySQL8Dialect
   datasource:
     #    url: jdbc:mysql://${MYSQL_HOST:my.mysqlserver.com}:13537/springboot_bekaku?allowPublicKeyRetrieval=true&useSSL=false
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false

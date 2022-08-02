@@ -1,8 +1,8 @@
 package io.beka.model;
 
 import io.beka.annotation.GenSourceableTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import javax.persistence.Column;
+import javax.persistence.Entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

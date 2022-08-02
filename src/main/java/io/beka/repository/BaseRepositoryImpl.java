@@ -1,7 +1,7 @@
 package io.beka.repository;
 
 import io.beka.repository.BaseRepository;
-import jakarta.persistence.EntityManager;
+import javax.persistence.EntityManager;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 

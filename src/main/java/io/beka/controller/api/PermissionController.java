@@ -5,7 +5,7 @@ import io.beka.configuration.I18n;
 import io.beka.dto.PermissionDto;
 import io.beka.model.Permission;
 import io.beka.service.PermissionService;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

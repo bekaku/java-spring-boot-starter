@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '3.0.0-M2'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'org.springframework.boot' version '2.7.2'
+    id 'io.spring.dependency-management' version '1.0.12.RELEASE'
     id 'java'
 //    id 'war'
 }
@@ -20,7 +20,6 @@ configurations {
 }
 repositories {
     mavenCentral()
-    maven { url 'https://repo.spring.io/milestone' }
 }
 
 dependencies {
@@ -35,7 +34,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 //    Databases
-    runtimeOnly 'mysql:mysql-connector-java'
+    runtimeOnly 'mysql:mysql-connector-java:8.0.29'
 
     implementation group: 'com.zaxxer', name: 'HikariCP', version: '5.0.1'
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'

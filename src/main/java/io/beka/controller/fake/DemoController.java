@@ -14,7 +14,7 @@ import io.beka.repository.StudentRepository;
 import io.beka.specification.SearchSpecification;
 import io.beka.util.AppUtil;
 import io.beka.util.FileUtil;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;

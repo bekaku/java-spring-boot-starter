@@ -6,7 +6,7 @@ import io.beka.model.ApiClient;
 import io.beka.model.ApiClientIp;
 import io.beka.service.ApiClientIpService;
 import io.beka.service.ApiClientService;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

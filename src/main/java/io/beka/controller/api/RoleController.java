@@ -7,7 +7,7 @@ import io.beka.model.Role;
 import io.beka.service.PermissionService;
 import io.beka.service.RoleService;
 import io.beka.validator.RoleValidator;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -2,7 +2,7 @@ package io.beka.validator;
 
 import io.beka.configuration.I18n;
 import io.beka.exception.BaseResponseException;
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;

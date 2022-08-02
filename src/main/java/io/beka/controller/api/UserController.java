@@ -8,7 +8,7 @@ import io.beka.model.User;
 import io.beka.service.EncryptService;
 import io.beka.service.RoleService;
 import io.beka.service.UserService;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;

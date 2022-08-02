@@ -1,6 +1,6 @@
 package io.beka.model;
 
-import jakarta.persistence.MappedSuperclass;
+import javax.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 

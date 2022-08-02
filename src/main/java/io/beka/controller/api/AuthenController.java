@@ -11,7 +11,7 @@ import io.beka.model.User;
 import io.beka.service.*;
 import io.beka.util.AppUtil;
 import io.beka.util.ConstantData;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
