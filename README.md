@@ -29,7 +29,7 @@ example on Ubuntu
 $ mysql -uroot -p your_db_name < /var/tmp/bekaku.sql
 ```
 
-Config your database connection at `my-app`/src/main/resources/`application.yml`
+Config your database connection at `my-app`/src/main/resources/`application.yml` or `application-dev.yml`
 ```yml
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/`your_db_name`?allowPublicKeyRetrieval=true&useSSL=false
@@ -162,12 +162,13 @@ Json root name : user
 | Accept-Language      | th                               |       th, en        |
 | Accept-ApiClient     | default                          |               |
 | Authorization    |Bearer `YOUR_authenticationToken` ||
+
 **Get current User**
 ```
 METHOD : GET
 URL : /api/user/currentUserData
 ```
-**Response fail example** :imp:
+**Response success example** :tada:
 
 ```json
 {
