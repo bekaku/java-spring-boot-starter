@@ -162,7 +162,35 @@ Json root name : user
 | Accept-Language      | th                               |       th, en        |
 | Accept-ApiClient     | default                          |               |
 | Authorization    |Bearer `YOUR_authenticationToken` ||
+**Get current User**
+```
+METHOD : GET
+URL : /api/user/currentUserData
+```
+**Response fail example** :imp:
 
+```json
+{
+  "id": 1,
+  "email": "admin@mydomain.com",
+  "username": "admin",
+  "token": null,
+  "fcmToken": null,
+  "accessTokenId": null,
+  "avatarFileId": null,
+  "coverFileId": null,
+  "avatar": {
+    "image": "http://127.0.0.1:8080/cdn/images/default-avatar.png",
+    "thumbnail": "http://127.0.0.1:8080/cdn/images/default-avatar.png"
+  },
+  "cover": null,
+  "active": true,
+  "selectedRoles": [
+    1
+  ],
+  "defaultLocale": "th"
+}
+```
 ## Permission
 
 ### Retrieve data
