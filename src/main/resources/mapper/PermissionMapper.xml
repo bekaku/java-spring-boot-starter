@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="io.beka.mapper.PermissionMapper">
+<mapper namespace="com.grandats.api.givedeefive.mapper.PermissionMapper">
     <select id="findAllWithPaging" resultMap="resultPermission">
         select * from permission
         limit #{page.offset}, #{page.limit}
     </select>
-    <resultMap id="resultPermission" type="io.beka.model.Permission">
+    <resultMap id="resultPermission" type="com.grandats.api.givedeefive.model.Permission">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="description" property="description"/>

@@ -1,40 +1,41 @@
-# https://github.com/gothinkster/spring-boot-realworld-example-app
-# https://docs.spring.io/spring-boot/docs/1.5.6.RELEASE/reference/html/boot-features-external-config.html
-# https://mkyong.com/spring-boot/spring-boot-yaml-example/
-# https://www.baeldung.com/configuration-properties-in-spring-boot
 environments:
   production: true
 spring:
+  main:
+    allow-circular-references: true
   profiles:
+#    active: prod
     active: dev
-  #    active: prod
   jackson:
     deserialization:
       UNWRAP_ROOT_VALUE: true
   jpa:
     #    open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: none # Hibernate ddl auto (create, create-drop, validate, update)
       use-new-id-generator-mappings: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+  #    properties:
+  #      hibernate:
+  #        dialect: org.hibernate.dialect.MySQLDialect
+
   datasource:
     #    url: jdbc:mysql://${MYSQL_HOST:my.mysqlserver.com}:13537/springboot_bekaku?allowPublicKeyRetrieval=true&useSSL=false
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
+    #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/super_synapse?allowPublicKeyRetrieval=true&useSSL=false
+    #    Docker mysql network
+    url: jdbc:mysql://${MYSQL_HOST:YOUR_PRODUCTION_SERVER}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password: '@YOUR_REAL_MYSQL_PASSWORD'
+    password: 'pwd'
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       #maximum number of milliseconds that a client will wait for a connection
       connection-timeout: 30000
       #minimum number of idle connections maintained by HikariCP in a connection pool
       minimum-idle: 10
-      maximum-pool-size: 20
+      maximum-pool-size: 50
       #idleTimeout: 600000
       idle-timeout: 600000
       # maximum lifetime in milliseconds of a connection in the pool after it is closed.
-      max-lifetime: 2000000
+      max-lifetime: 1800000
       keepalive-time: 30000
       autoCommit: true
     pool-prepared-statements: true
@@ -49,18 +50,30 @@ spring:
   h2:
     console:
       enabled:true
-  devtools:
-    add-properties: false
-    restart:
-      enabled: true
-    livereload:
-      enabled: true
+  #  devtools:
+  #    add-properties: false
+  #    restart:
+  #      enabled: false
+  #    livereload:
+  #      enabled: true
   mail:
-    host: smtp.mailtrap.io
-    port: 25
-    username:
-    password:
-    protocol: smtp
+    default-encoding: UTF-8
+    host: mail.cloud.com
+    port: 465
+    username: mail@yourdomain.com
+    password: 'pwd'
+    properties:
+      mail:
+        smtp:
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+          auth: true
+          socketFactory:
+            port: 465
+            class: javax.net.ssl.SSLSocketFactory
+  #          starttls:
+  #            enable: true
   mvc:
     #setting to default locale th_TH, en_US
     locale: th_TH
@@ -69,42 +82,76 @@ spring:
 
     # url pattern from resources/static can call with http://localhost:8080/content/about.html
     static-path-pattern: /content/**
+    problemdetails:
+      enabled: true
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
   servlet:
     multipart:
       #upload files configurations
       enabled: true
       #It specifies the maximum size permitted for uploaded files. The default is 1MB.
-      max-file-size: 10MB
+      max-file-size: 100MB
       # It specifies the maximum size allowed for multipart/form-data requests. The default is 10MB.
-      max-request-size: 15MB
+      max-request-size: 100MB
   http:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 100MB
+      max-request-size: 100MB
+  rabbitmq:
+    dynamic: true
+    host: 127.0.0.1
+    port: 5672
+    username: local_jobs
+    password: 'pwd'
+    listener:
+      simple:
+        concurrency: 1
+        retry:
+          enabled: true
+          initial-interval: 5000
+          max-attempts: 10
+          max-interval: 30000
+          multiplier: 3.0
+
 server:
-  port: 8084
+  servlet:
+    encoding:
+      charset: UTF-8
+      force-response: true
+  connection-timeout: 5s
+  max-http-header-size: 8KB
+  port: 8080
   error:
     include-message: always
     include-binding-errors: always
     whitelabel:
       enabled: false
   tomcat:
+    #    max-swallow-size: 10MB
+    max-http-post-size: 1MB
+    accesslog:
+      enabled: true
+    accept-count: 500
+    max-connections: 10000
     threads:
-      max: 250
-
+      max: 500
+      min-spare: 10
 logging:
+  config: classpath:log4j2-prod.xml
   pattern:
     rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
   file:
-    #    name: D:/code/logs/MyApp.log
-    path: /var/log/spring/
+    path: ${app.cdn-directory}logs
     max-history: 30
     total-size-cap: 10MB
     clean-history-on-start: true
   level:
     root: WARN
-    web: DEBUG
-    io.beka: DEBUG
+    web: WARN
+    #    com.grandats.api.givedeefive: DEBUG
+    com.grandats.api.givedeefive: INFO
     org:
       springframework: ERROR
       hibernate:
@@ -113,7 +160,7 @@ logging:
 
 #spring.freemarker.suffix=.html
 mybatis:
-  typeAliasesPackage: io.beka.model
+  typeAliasesPackage: com.grandats.api.givedeefive.model
   # type-handlers-package: io.spring.infrastructure.mybatis
   # mybatis.mapper-locations=mapper/*.xml
   mapperLocations: classpath:mapper/*.xml
@@ -123,28 +170,44 @@ mybatis:
     map-underscore-to-camel-case: true
     use-generated-keys: true
 app:
-  url: https://www.mydomain.com
+  group: com.grandats.api.givedeefive
+  url: https://api.your-domain.com
   port: 443
   test-prop: production mode
   version: 1.0.0
-  cdn-path: file:////usr/edrdata/
+  cdn-directory: /usr/spring-data/
+  cdn-path: file:///${app.cdn-directory}
+#  cdn-path: file:////usr/spring-data/
   cdn-path-alias: cdn
+  #  cdn-url: https://api.your-domain.com
+  #  cdn-port: 443
+  cdn-url: ${app.url}
+  cdn-port: ${app.port}
   upload-image:
-    limit-width: 960
-    limit-height: 960
+    limit-width: 1280
+    limit-height: 1280
     create-thumbnail: true
-    thumbnail-width: 160
+    thumbnail-width: 196
     thumbnail-exname: '_thumb'
-
+  queue:
+    key: rx7ThHQf@S29
+    name: myQueue
+    name2: myQueue2
+    userLevelFrequency: 1 #1 = every month, 2 = every 2 month, 3 = every 3 months
+  fcm:
+    user-topic: ${app.group}.fcm.user.
   loging:
     enable: true
   jwt:
-    secret: nRvyYC4soFxBdZ-F-5Nnzz5USXstR1YylsTd-mA0aKtI9HUlriGrtkf-TiuDapkLiUCogO3JOK7kwZisrHp6wA
+    secret: 9b538258fed154f034a7cbc23a75a00775db76cba292370b31ba570010783d3e32e360077c14a7f78c17992a2c911402b37f773071eb632ee1ce88be56739994
     #default is 0 , if default set to 0 it automatic set exprires date in 1 day , you can set eg. 1 day to 86400, 2592000 = 30days
-    session-time: 2592000
+    session-time: 0
+    #    session-time: 2592000
+    session-day: 30
   defaults:
     image: https://static.productionready.io/images/smiley-cyrus.jpg
     role: 2
+    userpwd: 1234
   #Object properties
   mail-config:
     host: smtp.mailtrap.io
@@ -168,6 +231,16 @@ app:
     - title: About
       name: About
       path: /about
+  allow-mimes:
+    - image/jpeg
+    - image/png
+    - image/gif
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    - application/pdf
+  cron:
+    test-expression: 0 */2 * * * *
 
 
 custom:

@@ -1,0 +1,140 @@
+[
+  {
+    "header": "",
+    "pages": [
+      {
+        "icon": "bi-house-door",
+        "color": "info",
+        "iconText": "",
+        "title": "nav.dashboard",
+        "to": "/backend",
+        "permission": "backend_login",
+        "noActiveLink": true
+      }
+    ]
+  },
+  {
+    "header": "nav.developers",
+    "pages": [
+      {
+        "color": "red",
+        "title": "nav.systemData",
+        "icon": "bi-gear",
+        "iconText": "",
+        "items": [
+          {
+            "title": "model_permission",
+            "icon": "bi-shield-check",
+            "to": "/backend/permission",
+            "permission": "permission_list"
+          }
+        ]
+      },
+      {
+        "color": "red",
+        "title": "nav.dIndexCal",
+        "icon": "bi-calculator",
+        "iconText": "",
+        "items": [
+          {
+            "title": "model.de_formula.table",
+            "icon": "bi-calculator",
+            "to": "/backend/de-formula",
+            "permission": "de_formula_list"
+          },
+          {
+            "title": "model.graph_config.table",
+            "icon": "bi-graph-up",
+            "to": "/backend/graph-config",
+            "permission": "graph_config_list"
+          }
+        ]
+      },
+      {
+        "title": "model.card_form.table",
+        "icon": "bi-card-heading",
+        "to": "/backend/card-form",
+        "permission": "card_form_list"
+      }
+    ]
+  },
+  {
+    "header": "nav.forAdmin",
+    "pages": [
+      {
+        "title": "nav.userData",
+        "icon": "bi-person-badge",
+        "color": "yellow darken-4",
+        "items": [
+          {
+            "title": "nav.userRole",
+            "icon": "bi-people",
+            "to": "/backend/role",
+            "permission": "role_list"
+          },
+          {
+            "title": "nav.appUser",
+            "icon": "bi-person",
+            "to": "/backend/user",
+            "permission": "user_list"
+          }
+        ]
+      },
+      {
+        "color": "red",
+        "title": "nav.systemData",
+        "icon": "bi-folder",
+        "iconText": "",
+        "items": [
+          {
+            "title": "model.system_configuration.table",
+            "icon": "bi-wrench",
+            "to": "/backend/system-configuration/view/1",
+            "permission": "system_configuration_manage"
+          },
+          {
+            "title": "model.greeting_msg.table",
+            "icon": "bi-chat-quote",
+            "to": "/backend/greeting-msg",
+            "permission": "greeting_msg_list"
+          },
+          {
+            "title": "model.system_announcement.table",
+            "icon": "bi-megaphone",
+            "to": "/backend/system-announcement",
+            "permission": "system_announcement_list"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "header": "nav.companyData",
+    "pages": [
+      {
+        "title": "model.company_type.table",
+        "icon": "bi-building",
+        "to": "/backend/company-type",
+        "permission": "company_type_list"
+      },
+      {
+        "title": "model.company.table",
+        "icon": "bi-person-rolodex",
+        "to": "/backend/company",
+        "permission": "company_list"
+      }
+    ]
+  },
+  {
+    "border": true,
+    "header": "nav.more",
+    "pages": [
+      {
+        "title": "model_files_manager",
+        "icon": "bi-folder",
+        "to": "/backend/myFiles?_id=root",
+        "permission": "files_manager_for_user"
+      }
+    ]
+  }
+]

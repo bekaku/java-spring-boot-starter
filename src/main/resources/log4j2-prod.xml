@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <!--    <springProperty name="APP_LOG_ROOT_PROP" source="logging.file.path"/>-->
+    <Properties>
+        <!--        <Property name="logFilePath">${bundle:application:logging.file.path}/spring-boot-logger-log4j2.log</Property>-->
+        <!--        <Property name="APP_LOG_ROOT">${bundle:application:logging.file.path}</Property>-->
+        <!--        <Property name="APP_LOG_ROOT">${bundle:application:logging.file.path}/spring-boot-logger-log4j2.log</Property>-->
+
+        <Property name="APP_LOG_ROOT">/usr/spring-data/logs</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout disableAnsi="false"
+                           pattern="%highlight{%d{HH:mm:ss.SSS} %-5level %logger{36}.%M() @%L - %msg%n}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=blue, DEBUG=green, TRACE=blue bold}"/>
+        </Console>
+
+        <RollingFile name="RollingFile"
+                     fileName="${sys:APP_LOG_ROOT}/spring-boot-logger-log4j2.log"
+                     filePattern="${sys:APP_LOG_ROOT}/$${date:yyyy-MM}/spring-boot-logger-log4j2-%d{-dd-MMMM-yyyy}-%i.log.gz">
+
+            <PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <!-- rollover on startup, daily and when the file reaches
+                    10 MegaBytes -->
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy
+                        size="10 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="RollingFileLogin"
+                     fileName="${sys:APP_LOG_ROOT}/login-log.log"
+                     filePattern="${sys:APP_LOG_ROOT}/$${date:yyyy-MM}/spring-boot-logger-log4j2-%d{-dd-MMMM-yyyy}-%i.log.gz">
+
+            <PatternLayout>
+                <pattern>%d %p %C{1.} [%t] %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <!-- rollover on startup, daily and when the file reaches
+                    10 MegaBytes -->
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy
+                        size="10 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- LOG everything at INFO level -->
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+
+        <!-- LOG "com.baeldung*" at TRACE level -->
+        <Logger name="com.grandats.api.givedeefive" level="trace"/>
+
+        <Logger name="com.grandats.api.givedeefive.mapper" level="error"/>
+
+        <Logger name="login-log" level="info" additivity="false">
+            <AppenderRef ref="RollingFileLogin"/>
+        </Logger>
+    </Loggers>
+
+</Configuration>

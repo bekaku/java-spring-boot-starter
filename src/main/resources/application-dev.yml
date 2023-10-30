@@ -1,25 +1,36 @@
 environments:
   production: false
 spring:
+  main:
+    allow-circular-references: false
+  devtools:
+    restart:
+      poll-interval: 10s
+      #      quiet-period: 1s
+      enabled: true
+      exclude: static/**
+      additional-paths: i18n/**,mapper/**
+    livereload:
+      enabled: false
+  jpa:
+    #    open-in-view: false
+    hibernate:
+      ddl-auto: none  #update, none  validate Hibernate ddl auto (none, create, create-drop, validate, update)
+
   output:
     ansi:
       enabled: ALWAYS
   datasource:
-
     # normal connection to mysql server
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/springboot?allowPublicKeyRetrieval=true&useSSL=false
-
+    #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/super_synapse?allowPublicKeyRetrieval=true&useSSL=false
     # link to docker config from docker-compose.yml
-#    url: jdbc:mysql://${MYSQL_HOST:mysql_db}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
-
+    #    url: jdbc:mysql://${MYSQL_HOST:mysql_db}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
     # link mysql to docker   $ docker run -d --restart unless-stopped -p 3308:3306 --name=docker-mysql --env="MYSQL_ROOT_PASSWORD=CH789162be" --env="MYSQL_PASSWORD=CH789162be" --env="MYSQL_USER=bekaku" --env="MYSQL_DATABASE=springboot" mysql:5.6
-#    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
-
+    #    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
     # connect to mysql form local docker via port 3308
-#    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password:
-#    password: CH789162be
+    password: CH789162be
     driver-class-name: com.mysql.cj.jdbc.Driver
   mvc:
     static-path-pattern: /content/**
@@ -30,45 +41,61 @@ spring:
     mode: HTML
     encoding: UTF-8
     prefix: classpath:/templates/
-#    prefix: file:src/main/resources/templates/
   resources:
-#    static-locations: file:src/main/resources/static/
     cache:
       period: 0
+  rabbitmq:
+    dynamic : true
+    #host: 192.168.7.31
+    host: 127.0.0.1
+    port: 5672
+    username: local_jobs
+    password: 'pwd'
+
 logging:
+  config: classpath:log4j2-dev.xml
   pattern:
     rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
   level:
     root: WARN
     web: DEBUG
-    io.beka: DEBUG
+    com.grandats.api.givedeefive: DEBUG
     org:
       springframework: ERROR
       hibernate:
         SQL: TRACE
         type: ERROR
   file:
-#    name: D:/code/logs/MyApp.log
-    path:
-#    path: D:/code/logs
+    path: ${app.cdn-directory}logs
+#    path: D:/code/tutorial/spring-data/logs
     max-history: 30
     total-size-cap: 10MB
     clean-history-on-start: true
 server:
-  port: 8084
+  port: 8080
   error:
     whitelabel:
       enabled: false
 
 app:
-  url: http://localhost
-  port: 8084
+  url: http://127.0.0.1
+  port: 8080
   test-prop: develop mode
   version: 1.0.1
-  # call resource path http://localhost:8084/cdn/default_avata.png map to D:/grandats/edrdata/ folder
-  cdn-path: file:///D:/grandats/edrdata/
-  # docker path
-#  cdn-path: file:////usr/edrdata/
+  cdn-directory: D:/code/java/java-spring-starter/spring-data/
+  cdn-path: file:///${app.cdn-directory}
+#  cdn-path: file:///D:/code/tutorial/spring-data/
+
+  #Dev
+#  cdn-url: http://127.0.0.1
+  cdn-url: ${app.url}
+  cdn-port: 8080
+
+  jwt:
+    #    secret: d3db548b2325f7aa199da97cb48b55535839f9972f696293369d291ee4e8c9ced9e005c7c4333961f13fa65b129e0918d08a9516adbba9c5a537f43ae7a1be10
+    #default is 0 , if default set to 0 it automatic set exprires date in 365 day , you can set eg. 1 day to 86400, 2592000 = 30days
+    session-time: 0
+    session-day: 365
 
 custom:
   config:

@@ -1,23 +1,9 @@
-# Java spring boot rest api
+# Springboot rest api 2023
 
 Requirements
 ------------
 
-Only supported on Java 1.8 and up.
-## Gradle installation
-- Installation guide https://gradle.org/install/
-  
-- Configure your system environment
- 
-  - Linux & MacOS users  
-    Configure your PATH environment variable to include the bin directory of the unzipped distribution, e.g.:
-    `$ export PATH=$PATH:/opt/gradle/gradle-7.0/bin`
-  -  Microsoft Windows users 
-     
-     In File Explorer right-click on the `This PC` (or Computer) icon, then click `Properties -> Advanced System Settings -> Environmental Variables.`
-     Under System Variables select Path, then click Edit. Add an entry for `C:\Gradle\gradle-7.0\bin`. Click OK to save.
-- Verify your installation  
-  `$ gradle -v`
+Only supported on Java 1.8 and up, MySql 8 and up.
 
 ## Usage
 
@@ -29,7 +15,7 @@ git clone https://github.com/bekaku/java-spring-boot-starter my-app
 Repository will be downloaded into `my-app/` folder
 ## Database
 
-Database file located at `my-app`/src/main/resources/files/bekaku.sql and you can use following command for restore to your db.
+Database file located at `my-app`/spring-data/files/spring_starter.sql and you can use following command for restore to your db.
 
 ```batch
 $ mysql -uroot -p your_db_name < your_backup_file_path
@@ -47,33 +33,70 @@ Config your database connection at `my-app`/src/main/resources/`application.yml`
 ```yml
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/`your_db_name`?allowPublicKeyRetrieval=true&useSSL=false
-    username: root
+    username: `db_username`
     password: `your_db_password`
 ```
 ---
 ## Getting started
 
-**Project structure**
+[//]: # (**Project structure**)
 
-![image](https://user-images.githubusercontent.com/33171470/116986615-32423a00-acf8-11eb-88f7-db2e44a77b12.png)
+[//]: # (![image]&#40;https://user-images.githubusercontent.com/33171470/116986615-32423a00-acf8-11eb-88f7-db2e44a77b12.png&#41;)
 
 
 Open Terminal and run following command 
 
 ```batch
-gradle bootRun
+./gradlew bootRun
 ```
 
-To test that it works, open a browser tab at http://localhost:8084/welcome
+To test that it works, open a browser tab at http://localhost:8080/welcome
 
 ---
+Build production jar and run following command jar location `/build/libs/`
+
+```batch
+./gradlew bootJar
+```
+
+Docker run 
+```batch
+docker-compose build
+docker-compose up -d
+```
 
 ## API Docs
-Server run at port `8084` can config server port at /src/main/resources/`application.yml`  
+Server run at port `8080` can config server port at /src/main/resources/`application.yml`  
 ```yml
 server:
-  port: 8084
+  port: 8080
 ```
+
+Change profiles active for development mode
+```yml
+spring:
+  profiles:
+#    active: prod
+    active: dev
+```
+
+Development mode properties config at /src/main/resources/`application-dev.yml`
+```yml
+app:
+  url: http://YOUR_SERVER_IP or http://127.0.0.1
+  port: 8080
+  cdn-directory: D:/code/tutorial/spring-data/ #your spring-data directory path
+```
+
+Log4j path config at resources/`log4j2-dev.xml` and resources/`log4j2-prod.xml`
+```xml
+<Property name="APP_LOG_ROOT">D:/code/tutorial/spring-data/logs</Property>
+```
+Log4j path config at resources/`log4j2-dev.xml` and resources/`log4j2-prod.xml`
+```xml
+<Property name="APP_LOG_ROOT">/usr/spring-data/logs</Property>
+```
+
 ## Login
 
 ```
@@ -102,8 +125,8 @@ Json root name : user
 ```json
 {
   "user": {
-    "email" : "admin@mydomain.com",
-    "password" : "1234",
+    "emailOrUsername" : "admin@mydomain.com",
+    "password" : "P@ssw0rd",
     "loginForm" : 1
   }
 }
@@ -112,12 +135,10 @@ Json root name : user
 **Response success example** :tada:
 ```json
 {
-  "authenticationToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-  "refreshToken": "df40b300-64b1-4bb0-9ae1-483ad0c0c719",
-  "expiresAt": "2021-04-14T17:22:34.404501800Z",
-  "email": "admin@mydomain.com",
-  "username": "admin",
-  "image": "https://static.productionready.io/images/smiley-cyrus.jpg"
+  "userId": 1,
+  "authenticationToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJmNGQxOGRlZi1hZTBjLTQ2MjItODE4OS1iNzExOTViNTkwNGYiLCJleHAiOjE3MzAxNjUwODYsImlhdCI6MTY5ODYyOTA4Nn0.hKun9E7D4rc-yEOA85Ex6rFYfWQww7ViOS9mpdIUn2Ql66JGCyxYf2vtqjbsQ-DSz8HB1lmVRSWtJ4XeBFkwCg",
+  "refreshToken": "f4d18def-ae0c-4622-8189-b71195b5904f",
+  "expiresAt": "2024-10-29T01:24:46.019+00:00"
 }
 ```
 **Response fail example** :imp:
@@ -442,9 +463,8 @@ Json root name : userRegister
 
 Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method in controller.
 
-
 ```java
-package io.beka.controller.api;
+package com.grandats.api.givedeefive.controller.api;
 
 @RequestMapping(path = "/api/role")
 @RestController
@@ -507,19 +527,17 @@ public class RoleController extends BaseApiController {
 ### Create model class
 
 Add an annotation `@GenSourceableTable` to indicate that you want to create Auto source.
-```java
-package io.beka.model;
 
-import io.beka.annotation.GenSourceableTable;
+```java
+package com.grandats.api.givedeefive.model;
+
+import annotation.com.grandats.api.givedeefive.GenSourceableTable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
-import javax.persistence.*;
-import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import jakarta.persistence.*;
 
 @GenSourceableTable
 @NoArgsConstructor
@@ -545,10 +563,10 @@ public class Role extends BaseEntity {
 
 ### Generate starter source
 
-Call `/dev/generateSrc` to auto generate source
+Call `/dev/development/generateSrc` to auto generate source
 ```
 METHOD : POST
-URL : /dev/generateSrc
+URL : dev/development/generateSrc
 ```
 
 The system will generate the following files.

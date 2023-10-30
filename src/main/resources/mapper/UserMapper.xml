@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="io.beka.mapper.UserMapper">
-<!--    Query-->
+<mapper namespace="com.grandats.api.givedeefive.mapper.UserMapper">
+    <!--    Query ffff-->
     <sql id="selectUserData">
         select
         U.id,
         U.email,
         U.username,
-        U.image,
-        U.status,
+        U.avatar_file_id avatarFileId,
+        U.active,
         UR.role roleId
         from
         user U
@@ -17,30 +17,33 @@
 
     <select id="findAll" resultMap="userDataResult">
         <include refid="selectUserData"/>
+        where U.deleted is false
         limit #{page.offset}, #{page.limit}
     </select>
-    <select id="findByUsername" resultType="io.beka.dto.UserDto">
-        select * from user where username = #{username}
+    <select id="findByUsername" resultType="com.grandats.api.givedeefive.dto.UserDto">
+        select * from user where deleted is false AND username = #{username}
     </select>
-    <select id="findByEmail" resultType="io.beka.dto.UserDto">
-        select * from user where email = #{email}
+    <select id="findByEmail" resultType="com.grandats.api.givedeefive.dto.UserDto">
+        select * from user where deleted is false AND email = #{email}
     </select>
     <select id="findById" resultMap="userDataResult">
         <include refid="selectUserData"/>
-        where U.id = #{id}
+        where U.deleted is false AND U.id = #{id}
     </select>
 
 
 
-<!--Result Map-->
-    <resultMap id="userDataResult" type="io.beka.dto.UserDto">
+
+    <!--Result Map-->
+    <resultMap id="userDataResult" type="com.grandats.api.givedeefive.dto.UserDto">
         <id column="id" property="id"/>
         <result column="email" property="email"/>
         <result column="username" property="username"/>
-        <result column="image" property="image"/>
+        <result column="avatarFileId" property="avatarFileId"/>
         <result column="status" property="status"/>
         <collection property="selectedRoles" javaType="list" ofType="string">
             <result column="roleId"/>
         </collection>
     </resultMap>
+
 </mapper>

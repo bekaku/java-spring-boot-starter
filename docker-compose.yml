@@ -1,48 +1,40 @@
 version: '3.9'
 services:
-  api_service:
-    container_name: app_api
+  api-service-1:
+    container_name: api-service-1
     build: .
+    #image: "spring-api-service:latest"
     restart: always
     ports:
-      - 8080:8084
-    depends_on:
-      - mysql_db
+      - '8080:8080'
     expose:
       - 8080
     networks:
-      - spring-network
+      - my-docker-network
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms512m
     volumes:
-      - logs_data:/logs
-      - edr_data:/usr/edrdata
-    command: sh -c './wait-for mysql_db:3306 -- npm start'
-  mysql_db:
-    container_name: mysql_db
-    image: "mysql:5.6"
-    volumes:
-      - mysql_data:/var/lib/mysql
+      - d:\code\spring-data:/usr/spring-data
+      - d:\code\spring-data\logs:/usr/spring-data/logs
+      #linux
+  #      - /mnt/cdn/spring-data:/usr/spring-data
+  #      - /mnt/cdn/spring-data/logs:/usr/spring-data/logs
+  api-service-2:
+    container_name: api-service-2
+    build: .
+    #image: "spring-api-service:latest"
     restart: always
     ports:
-      - 3308:3306
+      - '8081:8080'
+    expose:
+      - 8081
     networks:
-      - spring-network
+      - my-docker-network
+    volumes:
+      - d:\code\spring-data:/usr/spring-data
+      - d:\code\spring-data\logs:/usr/spring-data/logs
     environment:
-      MYSQL_DATABASE: springboot_db
-      MYSQL_USER: bekaku
-      MYSQL_PASSWORD: CH789162be
-      MYSQL_ROOT_PASSWORD: CH789162be
-    command: --innodb-use-native-aio=0
-    security_opt:
-      - seccomp:unconfined
-volumes:
-  mysql_data: { }
-  logs_data: { }
-  edr_data: { }
+      - JAVA_OPTS=-Xmx512m -Xms512m
 networks:
-  spring-network:
+  my-docker-network:
     driver: bridge
-
-
-
-
-
