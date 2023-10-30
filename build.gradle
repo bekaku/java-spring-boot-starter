@@ -5,7 +5,7 @@ plugins {
 //    id 'war'
 }
 
-group = 'com.grandats.api.givedeefive'
+group = 'com.bekaku.api.spring'
 version = '1.0.0'
 java {
     sourceCompatibility = '17'

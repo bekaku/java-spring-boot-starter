@@ -59,7 +59,7 @@ logging:
   level:
     root: WARN
     web: DEBUG
-    com.grandats.api.givedeefive: DEBUG
+    com.bekaku.api.spring: DEBUG
     org:
       springframework: ERROR
       hibernate:

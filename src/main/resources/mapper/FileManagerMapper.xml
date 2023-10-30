@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.grandats.api.givedeefive.mapper.FileManagerMapper">
+<mapper namespace="com.bekaku.api.spring.mapper.FileManagerMapper">
     <!--    Query https://mybatis.org/mybatis-3/dynamic-sql.html-->
     <sql id="mainQuery">
         SELECT f.id,
@@ -60,7 +60,7 @@
     </select>
 
     <!--Result Map-->
-    <resultMap id="findForPublicByIdResult" type="com.grandats.api.givedeefive.vo.FileManagerPublicVo">
+    <resultMap id="findForPublicByIdResult" type="com.bekaku.api.spring.vo.FileManagerPublicVo">
         <id column="id" property="id"/>
         <result column="fileMime" property="fileMime"/>
         <result column="fileName" property="fileName"/>

@@ -150,8 +150,7 @@ logging:
   level:
     root: WARN
     web: WARN
-    #    com.grandats.api.givedeefive: DEBUG
-    com.grandats.api.givedeefive: INFO
+    com.bekaku.api.spring: INFO
     org:
       springframework: ERROR
       hibernate:
@@ -160,7 +159,7 @@ logging:
 
 #spring.freemarker.suffix=.html
 mybatis:
-  typeAliasesPackage: com.grandats.api.givedeefive.model
+  typeAliasesPackage: com.bekaku.api.spring.model
   # type-handlers-package: io.spring.infrastructure.mybatis
   # mybatis.mapper-locations=mapper/*.xml
   mapperLocations: classpath:mapper/*.xml
@@ -170,7 +169,7 @@ mybatis:
     map-underscore-to-camel-case: true
     use-generated-keys: true
 app:
-  group: com.grandats.api.givedeefive
+  group: com.bekaku.api.spring
   url: https://api.your-domain.com
   port: 443
   test-prop: production mode

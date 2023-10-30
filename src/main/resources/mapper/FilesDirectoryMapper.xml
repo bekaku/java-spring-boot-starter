@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.grandats.api.givedeefive.mapper.FilesDirectoryMapper">
+<mapper namespace="com.bekaku.api.spring.mapper.FilesDirectoryMapper">
     <!--    Query-->
     <sql id="mainQueryBak">
         SELECT * FROM (
@@ -46,7 +46,7 @@
     </select>
 
     <!--Result Map-->
-    <resultMap id="findByIdResult" type="com.grandats.api.givedeefive.dto.FilesDirectoryDto">
+    <resultMap id="findByIdResult" type="com.bekaku.api.spring.dto.FilesDirectoryDto">
         <id column="id" property="id"/>
         <result column="active" property="active"/>
         <result column="filesDirectoryParentId" property="filesDirectoryParentId"/>

@@ -492,7 +492,7 @@ Json root name : userRegister
 Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method in controller.
 
 ```java
-package com.grandats.api.givedeefive.controller.api;
+package com.bekaku.api.spring.controller.api;
 
 @RequestMapping(path = "/api/role")
 @RestController
@@ -557,9 +557,9 @@ public class RoleController extends BaseApiController {
 Add an annotation `@GenSourceableTable` to indicate that you want to create Auto source.
 
 ```java
-package com.grandats.api.givedeefive.model;
+package com.bekaku.api.spring.model;
 
-import annotation.com.grandats.api.givedeefive.GenSourceableTable;
+import annotation.com.bekaku.api.spring.GenSourceableTable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

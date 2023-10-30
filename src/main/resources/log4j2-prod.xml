@@ -57,9 +57,9 @@
         </Root>
 
         <!-- LOG "com.baeldung*" at TRACE level -->
-        <Logger name="com.grandats.api.givedeefive" level="trace"/>
+        <Logger name="com.bekaku.api.spring" level="trace"/>
 
-        <Logger name="com.grandats.api.givedeefive.mapper" level="error"/>
+        <Logger name="com.bekaku.api.spring.mapper" level="error"/>
 
         <Logger name="login-log" level="info" additivity="false">
             <AppenderRef ref="RollingFileLogin"/>
