@@ -184,8 +184,8 @@ URL : /api/user/currentUserData
   "avatarFileId": null,
   "coverFileId": null,
   "avatar": {
-    "image": "http://127.0.0.1:8080/cdn/images/default-avatar.png",
-    "thumbnail": "http://127.0.0.1:8080/cdn/images/default-avatar.png"
+    "image": "http://127.0.0.1:8080/cdn/images/default-men-avatar.png",
+    "thumbnail": "http://127.0.0.1:8080/cdn/images/default-men-avatar.png"
   },
   "cover": null,
   "active": true,
