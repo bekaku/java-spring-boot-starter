@@ -1,7 +1,7 @@
 # Springboot rest api 2023
 
 # Front end
-- Vue Js + Quasar [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app)
+- Vue Js 3 + Quasar 2+ [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app)
 
 Requirements
 ------------
