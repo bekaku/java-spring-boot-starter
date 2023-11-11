@@ -82,7 +82,7 @@ app:
   port: 8080
   test-prop: develop mode
   version: 1.0.1
-  cdn-directory: D:/code/java/java-spring-starter/spring-data/
+  cdn-directory: D:/code/github/java-spring-starter/spring-data/
   cdn-path: file:///${app.cdn-directory}
 #  cdn-path: file:///D:/code/tutorial/spring-data/
 

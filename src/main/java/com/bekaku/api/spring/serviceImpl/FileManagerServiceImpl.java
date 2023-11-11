@@ -150,7 +150,7 @@ public class FileManagerServiceImpl implements FileManagerService {
 
     public ImageDto getDefaultAvatar() {
         ImageDto imageDto = new ImageDto();
-        String path = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), "images/default-avatar.png", null);
+        String path = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), "images/default-men-avatar.png", null);
         imageDto.setImage(path);
         imageDto.setThumbnail(path);
         return imageDto;

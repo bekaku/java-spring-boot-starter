@@ -53,7 +53,6 @@ public class RoleController extends BaseApiController {
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
         SearchSpecification<Role> specification = new SearchSpecification<>(getSearchCriteriaList());
-        specification.add(new SearchCriteria("company", null, SearchOperation.IS_NULL));
         return this.responseEntity(roleService.findAllWithSearch(specification, getPageable(pageable, Role.getSort())), HttpStatus.OK);
     }
 
@@ -66,15 +65,6 @@ public class RoleController extends BaseApiController {
                         .collect(Collectors.toList()),
                 HttpStatus.OK);
     }
-
-//    @GetMapping("/findAllSystemFrontend")
-//    public ResponseEntity<Object> findAllSystemFrontend() {
-//        return this.responseEntity(roleService.findAllByFrontEndAndCompanyIsNullOrderByNameAsc(true)
-//                        .stream()
-//                        .map(roleService::convertEntityToDto)
-//                        .collect(Collectors.toList()),
-//                HttpStatus.OK);
-//    }
 
     @PreAuthorize("isHasPermission('role_manage')")
     @PostMapping

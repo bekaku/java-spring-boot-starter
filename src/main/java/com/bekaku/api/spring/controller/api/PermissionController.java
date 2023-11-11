@@ -44,9 +44,6 @@ public class PermissionController extends BaseApiController {
     @Value("classpath:/acl.json")
     private Resource jsonAcl;
 
-    @Value("classpath:/frontendAcl.json")
-    private Resource frontendAcl;
-
     //http://localhost:8084/api/permission?page=0&size=10&sort=code,asc&_q=code:permission_list,name:user_list,id>10,id>=20,id!=10,id<10,id<=10,id=1
     @PreAuthorize("isHasPermission('permission_list')")
     @GetMapping
@@ -164,23 +161,16 @@ public class PermissionController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         List<String> userPermissions = permissionService.findAllPermissionCodeByUserId(userAuthen.getId(), false);
-        List<String> userFrontendPermissions = permissionService.findAllPermissionCodeByUserId(userAuthen.getId(), true);
         JSONArray filterMenus = new JSONArray();
-        JSONArray filterFrontendMenus = new JSONArray();
         if (getMenuList) {
             JSONArray rawNavMenus = getJsonFromResource(jsonAcl);
-            JSONArray rawFrontNavMenus = getJsonFromResource(frontendAcl);
             filterMenus = checkAclPermisison(rawNavMenus, userPermissions);
-            filterFrontendMenus = checkAclPermisison(rawFrontNavMenus, userFrontendPermissions);
         }
 
         JSONArray finalFilterMenus = filterMenus;
-        JSONArray finalFilterFrontendMenus = filterFrontendMenus;
         return this.responseEntity(new HashMap<String, Object>() {{
             put("menus", finalFilterMenus);
             put("permissions", userPermissions);
-            put("frontendMenus", finalFilterFrontendMenus);
-            put("frontendPermissions", userFrontendPermissions);
         }}, HttpStatus.OK);
     }
 

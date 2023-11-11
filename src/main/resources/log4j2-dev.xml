@@ -3,7 +3,7 @@
 <Configuration>
     <Properties>
 <!--        <Property name="APP_LOG_ROOT">${bundle:application:app.cdn-directory}logs</Property>-->
-        <Property name="APP_LOG_ROOT">D:/code/java/java-spring-starter/spring-data/logs</Property>
+        <Property name="APP_LOG_ROOT">D:/code/github/java-spring-starter/spring-data/logs</Property>
     </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT" follow="true">

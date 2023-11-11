@@ -45,8 +45,8 @@ dependencies {
 
     implementation 'org.jetbrains:annotations:24.0.1'
 //    Databases
-    implementation 'com.mysql:mysql-connector-j:8.1.0'
-    implementation 'com.zaxxer:HikariCP:5.0.1'
+    implementation 'com.mysql:mysql-connector-j:8.2.0'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
@@ -63,7 +63,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
     implementation 'net.coobird:thumbnailator:0.4.20'
-    implementation 'org.apache.tika:tika-core:2.9.0'
+    implementation 'org.apache.tika:tika-core:2.9.1'
     implementation 'org.apache.poi:poi-ooxml:5.2.4'
 
 //    caching
@@ -71,7 +71,7 @@ dependencies {
 //    implementation group: 'org.ehcache', name: 'ehcache', version: '3.10.8'
     implementation 'javax.cache:cache-api:1.1.1'
     implementation 'org.ehcache:ehcache:3.10.8'
-    implementation 'org.jsoup:jsoup:1.16.1'
+    implementation 'org.jsoup:jsoup:1.16.2'
     implementation 'com.google.guava:guava:32.1.2-jre'
     implementation 'com.google.firebase:firebase-admin:9.2.0'
 
@@ -83,11 +83,23 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.projectlombok:lombok:1.18.30'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+tasks.register('runGenerateSrc') {
+    def url = 'http://localhost:8080/dev/development/generateSrc'
+    // Here's the JSON
+    def body = '{}'
+    def content = "content-type:application/json"
+    def command = ['curl', '-s', '--request', 'POST', '--data', body, '--header', content, url]
+    println "command:" + command
+    def proc = command.execute()
+    proc.waitFor()
+    def jsonstr = proc.in.text
+    println jsonstr
 }
 tasks.register('runDev') {
     dependsOn 'bootRun'
