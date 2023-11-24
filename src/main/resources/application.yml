@@ -139,6 +139,7 @@ server:
       max: 500
       min-spare: 10
 logging:
+  include-application-name: false
   config: classpath:log4j2-prod.xml
   pattern:
     rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"

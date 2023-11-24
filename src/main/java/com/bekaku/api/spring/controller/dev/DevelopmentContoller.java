@@ -383,11 +383,11 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("public class ").append(fileName).append("{\n");
                 writer.append("    private Long id;\n");
 
-                for (Iterator propertyIterator = persistentClass.getPropertyIterator();
+                for (Iterator propertyIterator = persistentClass.getProperties().listIterator();
                      propertyIterator.hasNext(); ) {
                     Property property = (Property) propertyIterator.next();
 
-                    for (Iterator columnIterator = property.getColumnIterator();
+                    for (Iterator columnIterator = property.getColumns().iterator();
                          columnIterator.hasNext(); ) {
                         Column column = (Column) columnIterator.next();
 
