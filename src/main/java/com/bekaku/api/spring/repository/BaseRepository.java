@@ -16,9 +16,9 @@ public interface BaseRepository<T, ID extends Serializable> extends JpaRepositor
 //    @Modifying
 //    void softDeleteById(ID id);
 
-    @Query("delete from #{#entityName} e where e.id=?1")
-    @Modifying
-    void deleteById(ID id);
+//    @Query("delete from #{#entityName} e where e.id=?1")
+//    @Modifying
+//    void deleteById(ID id);
 
 //    @Query("UPDATE #{#entityName} e SET deleted = true WHERE e.id=?1 AND deleted = false")
 //    @Modifying
