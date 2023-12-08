@@ -3,14 +3,14 @@ package com.bekaku.api.spring.model;
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.enumtype.AppLocale;
 import com.bekaku.api.spring.model.superclass.SoftDeletedAuditable;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.domain.Sort;
 
-import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -29,7 +29,7 @@ import java.util.UUID;
         }
 )
 @SQLDelete(sql = "UPDATE user SET deleted = true WHERE id=?")
-@Where(clause = "deleted=false")
+@SQLRestriction("deleted=false")
 public class User extends SoftDeletedAuditable<Long> {
 
     public void addNew(String username, String password, String email, Boolean active) {

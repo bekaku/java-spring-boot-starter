@@ -2,14 +2,12 @@ package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.model.superclass.SoftDeletedAuditable;
-
 import jakarta.persistence.*;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.domain.Sort;
 
 import java.util.HashSet;
@@ -26,7 +24,7 @@ import java.util.Set;
         @Index(columnList = "created_user"),
 })
 @SQLDelete(sql = "UPDATE role SET deleted = true WHERE id=?")
-@Where(clause = "deleted=false")
+@SQLRestriction("deleted=false")
 public class Role extends SoftDeletedAuditable<Long> {
 
     public Role(String name, String nameEn, Boolean active, Boolean frontEnd) {
