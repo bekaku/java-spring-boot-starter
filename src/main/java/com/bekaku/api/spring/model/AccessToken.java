@@ -2,12 +2,13 @@ package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.model.superclass.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
@@ -25,15 +26,16 @@ import static jakarta.persistence.FetchType.LAZY;
                 @Index(columnList = "revoked"),
                 @Index(columnList = "fcmEnable"),
                 @Index(columnList = "fcmToken"),
+                @Index(columnList = "lastest_active"),
         }
 )
 @Entity
 public class AccessToken extends Id {
 
-    public AccessToken(User user, UserAgent userAgent, Date expiresAt, boolean revoked, ApiClient apiClient, LoginLog loginLog, LocalDateTime createdDate, String fcmToken) {
+    public AccessToken(User user, Date expiresAt, boolean revoked, ApiClient apiClient,
+                       LoginLog loginLog, LocalDateTime createdDate, String fcmToken) {
         this.token = UUID.randomUUID().toString();
         this.user = user;
-        this.userAgent = userAgent;
         this.expiresAt = expiresAt;
         this.revoked = revoked;
         this.apiClient = apiClient;
@@ -45,6 +47,7 @@ public class AccessToken extends Id {
 
     @Column(name = "token", length = 100, unique = true)
     private String token;
+
     private String fcmToken;
 
     @Column(columnDefinition = "tinyint(1) default 1")
@@ -53,18 +56,17 @@ public class AccessToken extends Id {
     @Column(columnDefinition = "int(1) default 1", length = 1, name = "service")
     private int service = 1;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user")
     private User user;
 
+    @JsonIgnore
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "apiClient")
     private ApiClient apiClient;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "userAgent")
-    private UserAgent userAgent;
-
+    @JsonIgnore
     @OneToOne(fetch = LAZY)
     @JoinColumn(name = "loginLog", referencedColumnName = "id")
     private LoginLog loginLog;

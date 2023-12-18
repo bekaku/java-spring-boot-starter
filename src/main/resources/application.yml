@@ -1,6 +1,9 @@
 environments:
   production: true
 spring:
+  threads:
+    virtual:
+      enabled: true
   main:
     allow-circular-references: true
   profiles:

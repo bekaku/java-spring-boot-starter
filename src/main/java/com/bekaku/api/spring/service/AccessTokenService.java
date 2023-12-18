@@ -18,7 +18,7 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
 
     Optional<AccessToken> findAccessTokenByToken(String token, boolean revoked);
 
-    AccessToken generateRefreshToken(User user, ApiClient apiClient, String userAgent, LoginLog loginLog, String fcmToken);
+    AccessToken generateRefreshToken(User user, ApiClient apiClient,  LoginLog loginLog, String fcmToken);
 
     List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked);
 

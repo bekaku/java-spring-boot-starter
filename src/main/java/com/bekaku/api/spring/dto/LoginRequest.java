@@ -6,12 +6,13 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 
 import jakarta.validation.constraints.NotBlank;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 
-@Getter
+@Data
 @JsonRootName("user")
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -22,5 +23,7 @@ public class LoginRequest {
     @NotBlank(message = "{error.validateRequire}")
     private String password;
     private String fcmToken;
+
+    private String deviceId;
     private LoginLogType loginFrom;
 }

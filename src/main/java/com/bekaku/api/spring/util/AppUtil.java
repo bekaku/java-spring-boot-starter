@@ -4,6 +4,7 @@ import com.bekaku.api.spring.enumtype.EmojiType;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.vo.IpAddress;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.ObjectUtils;
@@ -96,7 +97,22 @@ public class AppUtil {
         }
         return null;
     }
-
+    public static IpAddress getIpaddress(HttpServletRequest request) {
+        String ip = request.getHeader(ConstantData.X_REAL_IP);
+        if (!isEmpty(ip)) {
+            return new IpAddress(ip, null);
+        }
+        InetAddress inetAddress;
+        try {
+            inetAddress = InetAddress.getLocalHost();
+        } catch (Exception e) {
+            throw new ApiException(new ApiError(HttpStatus.NOT_FOUND, e.getMessage(), ""));
+        }
+        if (inetAddress != null) {
+            return new IpAddress(inetAddress.getHostAddress(), inetAddress.getHostName());
+        }
+        return null;
+    }
     public static String getSimpleClassName(String className) {
         return className.substring(className.lastIndexOf('.') + 1);
     }

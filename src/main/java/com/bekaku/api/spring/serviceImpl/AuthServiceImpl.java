@@ -7,13 +7,13 @@ import com.bekaku.api.spring.dto.RefreshTokenResponse;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.exception.AppException;
-import com.bekaku.api.spring.model.AccessToken;
-import com.bekaku.api.spring.model.ApiClient;
-import com.bekaku.api.spring.model.LoginLog;
-import com.bekaku.api.spring.model.User;
+import com.bekaku.api.spring.model.*;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.util.AppUtil;
+import com.bekaku.api.spring.vo.IpAddress;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,17 +25,27 @@ import java.util.UUID;
 
 @Transactional
 @Service
-@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserService userService;
-    private final JwtService jwtService;
-    private final AccessTokenService accessTokenService;
-    private final LoginLogService loginLogService;
-    private final FileManagerService fileManagerService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private JwtService jwtService;
+    @Autowired
+    private AccessTokenService accessTokenService;
+    @Autowired
+    private LoginLogService loginLogService;
+    @Autowired
+    private FileManagerService fileManagerService;
 
-    private final I18n i18n;
+    private UserAgentService userAgentService;
+    @Autowired
+    private I18n i18n;
 
+    @Autowired
+    public AuthServiceImpl(@Lazy UserAgentService userAgentService) {
+        this.userAgentService = userAgentService;
+    }
     @Override
     @Transactional(readOnly = true)
     public User getCurrentUser() {
@@ -54,9 +64,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public RefreshTokenResponse login(User user, LoginRequest loginRequest, ApiClient apiClient, String userAgent) {
-        LoginLog loginLog = loginLogService.save(new LoginLog(loginRequest.getLoginFrom(), user, AppUtil.getIpaddress()));
-        AccessToken token = accessTokenService.generateRefreshToken(user, apiClient, userAgent, loginLog, loginRequest.getFcmToken());
+    public RefreshTokenResponse login(User user, LoginRequest loginRequest, ApiClient apiClient, String userAgent, IpAddress ipAddress) {
+        Optional<UserAgent> findAgent = userAgentService.findByAgent(userAgent);
+        UserAgent agent = findAgent.orElseGet(() -> userAgentService.save(new UserAgent(userAgent)));
+        LoginLog loginLog = loginLogService.save(new LoginLog(loginRequest.getLoginFrom(), user, ipAddress, loginRequest.getDeviceId(), agent));
+        AccessToken token = accessTokenService.generateRefreshToken(user, apiClient, loginLog, loginRequest.getFcmToken());
 
 //        AuthenticationResponse response = AuthenticationResponse.builder()
 //                .authenticationToken(jwtService.toToken(token.getToken(), apiClient))

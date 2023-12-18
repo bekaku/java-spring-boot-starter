@@ -11,6 +11,7 @@ import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.model.User;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,6 +100,7 @@ public class AuthController extends BaseApiController {
 
     @PostMapping("/login")
     public RefreshTokenResponse login(@Valid @RequestBody LoginRequest loginRequest,
+                                      HttpServletRequest request,
                                       @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                       @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
@@ -128,7 +130,7 @@ public class AuthController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
         }
-        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent);
+        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
     }
 
     @PostMapping("/refreshToken")

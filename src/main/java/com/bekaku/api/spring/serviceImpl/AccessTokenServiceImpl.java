@@ -80,14 +80,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
-    public AccessToken generateRefreshToken(User user, ApiClient apiClient, String userAgent, LoginLog loginLog, String fcmToken) {
+    public AccessToken generateRefreshToken(User user, ApiClient apiClient, LoginLog loginLog, String fcmToken) {
         //find user agent or create new if not found
-        Optional<UserAgent> findAgent = userAgentService.findByAgent(userAgent);
-        UserAgent agent = findAgent.orElseGet(() -> userAgentService.save(new UserAgent(userAgent)));
 //        Date expires = new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_YEAR));
         AccessToken accessToken = new AccessToken(
                 user,
-                agent,
                 jwtService.expireTimeFromNow(),
                 false,
                 apiClient,
@@ -110,7 +107,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return AccessTokenDto.builder()
                 .id(accessToken.getId())
                 .hostName(accessToken.getLoginLog().getHostName())
-                .agent(accessToken.getUserAgent().getAgent())
+                .agent(accessToken.getLoginLog().getUserAgent().getAgent())
                 .ipAddredd(accessToken.getLoginLog().getIp())
                 .createdDate(accessToken.getCreatedDate())
                 .lastestActive(accessToken.getLastestActive())
