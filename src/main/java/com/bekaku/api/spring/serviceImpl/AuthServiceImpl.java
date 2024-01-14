@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -93,20 +94,21 @@ public class AuthServiceImpl implements AuthService {
                 () -> new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
                         i18n.getMessage("error.tokenNOtFound", refreshTokenRequest.getRefreshToken()))));
 
-        User user = userService.findByEmail(refreshTokenRequest.getEmail()).orElseThrow(
-                () -> new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
-                        i18n.getMessage("error.userNotFoundWithEmail", refreshTokenRequest.getEmail()))));
+//        User user = userService.findByEmail(refreshTokenRequest.getEmail()).orElseThrow(
+//                () -> new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
+//                        i18n.getMessage("error.userNotFoundWithEmail", refreshTokenRequest.getEmail()))));
 
         //update refresh token
+        Date dateExpired = jwtService.expireTimeFromNow();
         String token = UUID.randomUUID().toString();
         accessToken.setToken(token);
-        accessToken.setExpiresAt(jwtService.expireTimeFromNow());
+        accessToken.setExpiresAt(dateExpired);
         accessTokenService.save(accessToken);
 
         return RefreshTokenResponse.builder()
                 .authenticationToken(jwtService.toToken(token, apiClient))
                 .refreshToken(token)
-                .expiresAt(jwtService.expireTimeFromNow())
+                .expiresAt(dateExpired)
                 .build();
     }
 

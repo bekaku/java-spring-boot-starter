@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Collections;
+import java.util.List;
 
 import static java.util.Arrays.asList;
 
@@ -79,7 +80,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout", "/api/auth/refreshToken").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
                         //test
@@ -134,11 +135,8 @@ public class WebSecurityConfig {
 //        } else {
 //            configuration.setAllowedOriginPatterns(Collections.singletonList("*"));// development only
 //        }
-        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
-
-//        configuration.setAllowedOrigins(List.of("http://localhost:8088/"));
-//        configuration.setAllowedMethods(asList("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
-        configuration.setAllowedMethods(asList("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // setAllowCredentials(true) is important, otherwise:
         // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
         configuration.setAllowCredentials(true);

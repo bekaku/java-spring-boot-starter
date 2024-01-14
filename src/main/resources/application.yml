@@ -174,6 +174,7 @@ mybatis:
     use-generated-keys: true
 app:
   group: com.bekaku.api.spring
+  domain: givedeefive.com
   url: https://api.your-domain.com
   port: 443
   test-prop: production mode
@@ -203,8 +204,8 @@ app:
     enable: true
   jwt:
     secret: 9b538258fed154f034a7cbc23a75a00775db76cba292370b31ba570010783d3e32e360077c14a7f78c17992a2c911402b37f773071eb632ee1ce88be56739994
-    #default is 0 , if default set to 0 it automatic set exprires date in 1 day , you can set eg. 1 day to 86400, 2592000 = 30days
-    session-time: 0
+    #default is 7 days , if default set to 0 it automatic set exprires date in 7 days , you can set eg. 1 day to 86400, 2592000 = 30days
+    session-time: 604800
     #    session-time: 2592000
     session-day: 30
   defaults:

@@ -4,6 +4,7 @@ import com.bekaku.api.spring.enumtype.EmojiType;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.vo.IpAddress;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class AppUtil {
@@ -232,5 +234,32 @@ public class AppUtil {
 
     public static boolean isEmpty(Object o) {
         return ObjectUtils.isEmpty(o);
+    }
+    public static String getCookieByName(Cookie[] cookies, String targetCookieName) {
+        String value = null;
+        if (cookies != null) {
+            // Iterate through the cookies and find the one with the specified name
+            for (Cookie cookie : cookies) {
+                if (targetCookieName.equals(cookie.getName())) {
+                    // Found the desired cookie
+                    value = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        return value;
+    }
+
+    public static Optional<String> readCookie(Cookie[] cookies, String key) {
+        if (cookies == null) {
+            return Optional.empty();
+        }
+        return Arrays.stream(cookies)
+                .filter(c -> key.equals(c.getName()))
+                .map(Cookie::getValue)
+                .findAny();
+    }
+    public static int getCookieMaxAgeDays(int days) {
+        return days * 24 * 60 * 60;
     }
 }

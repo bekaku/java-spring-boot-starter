@@ -120,4 +120,6 @@ public class ConstantData {
     public static final int USERLEVEL_MAX_Y = 5;
     public static final int CONTENT_LIMIT_LENGTH = 45;
 
+    public static final String COOKIE_JWT_REFRESH_TOKEN = "_device_jid";
+
 }

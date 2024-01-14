@@ -11,7 +11,9 @@ import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.model.User;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +51,10 @@ public class AuthController extends BaseApiController {
 
     @Value("${app.defaults.role}")
     Long defaultRole;
+    @Value("${environments.production}")
+    boolean isProduction;
+    @Value("${app.domain}")
+    String appDomain;
 
     Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -101,6 +107,7 @@ public class AuthController extends BaseApiController {
     @PostMapping("/login")
     public RefreshTokenResponse login(@Valid @RequestBody LoginRequest loginRequest,
                                       HttpServletRequest request,
+                                      HttpServletResponse response,
                                       @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                       @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
@@ -130,11 +137,53 @@ public class AuthController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
         }
-        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+        RefreshTokenResponse tokenResponse = authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+        setRefreshTokenCookie(response, tokenResponse);
+        return tokenResponse;
     }
+    private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
+        logger.info("setRefreshTokenCookie {}", tokenResponse.getRefreshToken());
+        Cookie cookie = new Cookie(ConstantData.COOKIE_JWT_REFRESH_TOKEN, tokenResponse.getRefreshToken());
+        cookie.setMaxAge(AppUtil.getCookieMaxAgeDays(90));//cookie expired in 3 months
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/"); // global cookie accessible every where
+        cookie.setAttribute("SameSite", "None");
+//        cookie.setAttribute("SameSite", "Lax");
+        if(isProduction){
+            cookie.setDomain(appDomain);
+        }
+//        cookie.setAttribute("SameSite", "None");
+        response.addCookie(cookie);
+//        if (isProduction) {
+//            response.setHeader("Set-Cookie", ConstantData.COOKIE_JWT_REFRESH_TOKEN + "=" + tokenResponse.getRefreshToken() + "; Max-Age=" + maxAge + ";SameSite=None; Path=/; Secure; HttpOnly");
+//        } else {
+//            response.setHeader("Set-Cookie", ConstantData.COOKIE_JWT_REFRESH_TOKEN + "=" + tokenResponse.getRefreshToken() + "; Max-Age=" + maxAge + "; SameSite=None; Path=/; HttpOnly");
+//        }
 
+    }
+    private void deleteCookie(HttpServletResponse response) {
+        // create a cookie
+        Cookie cookie = new Cookie(ConstantData.COOKIE_JWT_REFRESH_TOKEN, null);
+        cookie.setMaxAge(0);
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        if(isProduction){
+            cookie.setDomain(appDomain);
+        }
+        response.addCookie(cookie);
+//        if (isProduction) {
+//            response.setHeader("Set-Cookie",
+//                    cookieName + "=; Max-Age=" + 0 + ";SameSite=None; Path=/; Secure; HttpOnly");
+//        } else {
+//            response.setHeader("Set-Cookie",
+//                    cookieName + "=; Max-Age=" + 0 + "; SameSite=None; Path=/; HttpOnly");
+//        }
+    }
     @PostMapping("/refreshToken")
-    public RefreshTokenResponse refreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
+    public RefreshTokenResponse refreshToken(HttpServletResponse response,
+                                             @CookieValue(value = ConstantData.COOKIE_JWT_REFRESH_TOKEN, defaultValue = "") String refreshToken,
                                              @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                              @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
@@ -142,17 +191,23 @@ public class AuthController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
                     "Api Client Not found"));
         }
-        return authService.refreshToken(refreshTokenRequest, apiClient.get(), AppUtil.getUserAgent(userAgent));
+        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
+        refreshTokenRequest.setRefreshToken(refreshToken);
+        RefreshTokenResponse tokenResponse = authService.refreshToken(refreshTokenRequest, apiClient.get(), AppUtil.getUserAgent(userAgent));
+        setRefreshTokenCookie(response, tokenResponse);
+        return tokenResponse;
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ResponseMessage> logout(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
+    public ResponseEntity<ResponseMessage> logout(HttpServletResponse response,
+                                                  @Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
                                                   @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isPresent() && !ObjectUtils.isEmpty(refreshTokenRequest.getRefreshToken())) {
             Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken().trim());
             accessToken.ifPresent(this::logoutProcess);
         }
+        deleteCookie(response);
         return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }
 
