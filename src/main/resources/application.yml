@@ -208,6 +208,7 @@ app:
     session-time: 604800
     #    session-time: 2592000
     session-day: 30
+    refresh-token-name: _myappkey_device_jid
   defaults:
     image: https://static.productionready.io/images/smiley-cyrus.jpg
     role: 2

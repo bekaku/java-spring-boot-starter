@@ -55,7 +55,7 @@ public class JwtServiceImpl implements JwtService {
         return Jwts.builder()
                 .subject(token)
                 .issuedAt(new Date())
-                .expiration(expireTimeFromNow())
+                .expiration(expireTimeOneWeek())
                 .signWith(getKey(apiClient))
                 .compact();
     }
@@ -121,7 +121,7 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Date expireTimeFromNow() {
-        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_WEEK));
+        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_MONTH*3));//3 months
     }
 
     @Override

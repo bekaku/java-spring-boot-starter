@@ -9,9 +9,8 @@ import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.exception.AppException;
 import com.bekaku.api.spring.model.*;
 import com.bekaku.api.spring.service.*;
-import com.bekaku.api.spring.util.AppUtil;
+import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.vo.IpAddress;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -100,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
 
         //update refresh token
         Date dateExpired = jwtService.expireTimeFromNow();
-        String token = UUID.randomUUID().toString();
+        String token = UUID.randomUUID() + "-" + DateUtil.getCurrentMilliTimeStamp();
         accessToken.setToken(token);
         accessToken.setExpiresAt(dateExpired);
         accessTokenService.save(accessToken);

@@ -96,6 +96,7 @@ app:
     #default is 0 , if default set to 0 it automatic set exprires date in 365 day , you can set eg. 1 day to 86400, 2592000 = 30days
     session-time: 0
     session-day: 365
+    refresh-token-name: _test_myappkey_device_jid
 
 custom:
   config:

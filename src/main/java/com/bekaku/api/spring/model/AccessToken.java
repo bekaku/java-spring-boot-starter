@@ -2,6 +2,7 @@ package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.model.superclass.Id;
+import com.bekaku.api.spring.util.DateUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -34,7 +35,7 @@ public class AccessToken extends Id {
 
     public AccessToken(User user, Date expiresAt, boolean revoked, ApiClient apiClient,
                        LoginLog loginLog, LocalDateTime createdDate, String fcmToken) {
-        this.token = UUID.randomUUID().toString();
+        this.token = UUID.randomUUID() +"-"+ DateUtil.getCurrentMilliTimeStamp();
         this.user = user;
         this.expiresAt = expiresAt;
         this.revoked = revoked;

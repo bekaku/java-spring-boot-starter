@@ -2,13 +2,13 @@ package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.*;
-import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.model.User;
+import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import jakarta.servlet.http.Cookie;
@@ -57,6 +57,9 @@ public class AuthController extends BaseApiController {
     String appDomain;
 
     Logger logger = LoggerFactory.getLogger(AuthController.class);
+
+    @Value("${app.jwt.refresh-token-name}")
+    String cookieJwtRefreshTokenName;
 
     @PostMapping("/signup")
     public ResponseEntity<ResponseMessage> signup(@Valid @RequestBody UserRegisterRequest registerDto) {
@@ -141,16 +144,17 @@ public class AuthController extends BaseApiController {
         setRefreshTokenCookie(response, tokenResponse);
         return tokenResponse;
     }
+
     private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
         logger.info("setRefreshTokenCookie {}", tokenResponse.getRefreshToken());
-        Cookie cookie = new Cookie(ConstantData.COOKIE_JWT_REFRESH_TOKEN, tokenResponse.getRefreshToken());
+        Cookie cookie = new Cookie(cookieJwtRefreshTokenName, tokenResponse.getRefreshToken());
         cookie.setMaxAge(AppUtil.getCookieMaxAgeDays(90));//cookie expired in 3 months
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
         cookie.setPath("/"); // global cookie accessible every where
         cookie.setAttribute("SameSite", "None");
 //        cookie.setAttribute("SameSite", "Lax");
-        if(isProduction){
+        if (isProduction) {
             cookie.setDomain(appDomain);
         }
 //        cookie.setAttribute("SameSite", "None");
@@ -162,14 +166,15 @@ public class AuthController extends BaseApiController {
 //        }
 
     }
+
     private void deleteCookie(HttpServletResponse response) {
         // create a cookie
-        Cookie cookie = new Cookie(ConstantData.COOKIE_JWT_REFRESH_TOKEN, null);
+        Cookie cookie = new Cookie(cookieJwtRefreshTokenName, null);
         cookie.setMaxAge(0);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        if(isProduction){
+        if (isProduction) {
             cookie.setDomain(appDomain);
         }
         response.addCookie(cookie);
@@ -181,18 +186,26 @@ public class AuthController extends BaseApiController {
 //                    cookieName + "=; Max-Age=" + 0 + "; SameSite=None; Path=/; HttpOnly");
 //        }
     }
+
     @PostMapping("/refreshToken")
     public RefreshTokenResponse refreshToken(HttpServletResponse response,
-                                             @CookieValue(value = ConstantData.COOKIE_JWT_REFRESH_TOKEN, defaultValue = "") String refreshToken,
+                                             HttpServletRequest request,
                                              @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                              @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
+        Optional<String> refreshToken = AppUtil.readCookie(request.getCookies(), cookieJwtRefreshTokenName);
+        refreshToken.ifPresent(s -> logger.info("refreshToken readCookieBy:{}", s));
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
-                    "Api Client Not found"));
+            deleteCookie(response);
+            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Api Client Not found"));
+        }
+
+        if (refreshToken.isEmpty()) {
+            deleteCookie(response);
+            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
         RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-        refreshTokenRequest.setRefreshToken(refreshToken);
+        refreshTokenRequest.setRefreshToken(refreshToken.get());
         RefreshTokenResponse tokenResponse = authService.refreshToken(refreshTokenRequest, apiClient.get(), AppUtil.getUserAgent(userAgent));
         setRefreshTokenCookie(response, tokenResponse);
         return tokenResponse;
