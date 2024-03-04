@@ -52,12 +52,24 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String toToken(String token, ApiClient apiClient) {
+        return toTokenBy(token, apiClient, expireJwtTimeFromNow());
+        //test
+//        return toTokenBy(token, apiClient, new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_MINUTE * 10));
+    }
+
+    private String toTokenBy(String token, ApiClient apiClient, Date expireTime) {
         return Jwts.builder()
                 .subject(token)
                 .issuedAt(new Date())
-                .expiration(expireTimeOneWeek())
+//                .claim("hello", "world")
+                .expiration(expireTime)
                 .signWith(getKey(apiClient))
                 .compact();
+    }
+
+    @Override
+    public String toToken(String token, ApiClient apiClient, Date expireTime) {
+        return toTokenBy(token, apiClient, expireTime);
     }
 
     @Override
@@ -67,6 +79,20 @@ public class JwtServiceImpl implements JwtService {
             return Optional.ofNullable(claimsJws.getPayload().getSubject());
         } catch (Exception e) {
             return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<String> getExpiredSubFromToken(String token, ApiClient apiClient) {
+        try {
+            Jws<Claims> claimsJws = Jwts.parser().verifyWith(getKey(apiClient)).build().parseSignedClaims(token);
+            return Optional.ofNullable(claimsJws.getPayload().getSubject());
+        } catch (ExpiredJwtException e) {
+            //don't trust the JWT!
+            String subject = e.getClaims().getSubject();
+            logger.info("getUnTrustSubFromToken :{}", e.getClaims().getSubject());
+            System.out.println("Error: " + subject + "'s jwt failed valiation");
+            return Optional.ofNullable(e.getClaims().getSubject());
         }
     }
 
@@ -96,6 +122,11 @@ public class JwtServiceImpl implements JwtService {
         return dto.get();
     }
 
+    @Override
+    public Optional<String> getAuthorizatoinTokenString(String header) {
+        return getTokenString(header);
+    }
+
     private Optional<String> getTokenString(String header) {
         if (header == null) {
             return Optional.empty();
@@ -121,7 +152,13 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Date expireTimeFromNow() {
-        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_MONTH*3));//3 months
+        return new Date(System.currentTimeMillis() + (DateUtil.MILLS_IN_MONTH * 2));//2 months
+//        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_MONTH * 2));//2 months
+    }
+
+    @Override
+    public Date expireJwtTimeFromNow() {
+        return new Date(System.currentTimeMillis() + (DateUtil.MILLS_IN_DAY * 7));
     }
 
     @Override

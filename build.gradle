@@ -78,6 +78,7 @@ dependencies {
     implementation 'com.google.guava:guava:32.1.2-jre'
     implementation 'com.google.firebase:firebase-admin:9.2.0'
 
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }

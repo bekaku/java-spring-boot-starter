@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,14 +48,6 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public DaoAuthenticationProvider authProvider() {
-//        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-//        authProvider.setUserDetailsService(userDetailsService);
-//        authProvider.setPasswordEncoder(encoder());
-//        return authProvider;
-//    }
-
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()
@@ -75,73 +68,42 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(requests -> requests
-                        .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout", "/api/auth/refreshToken").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
-                        //test
-                        .requestMatchers(HttpMethod.POST, "dev/development/**").permitAll().requestMatchers(HttpMethod.GET, "/dev/development/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/test/**").permitAll().requestMatchers(HttpMethod.POST, "/test/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/welcome", "/theymeleaf").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-        return httpSecurity.build();
-/*
-   http.csrf()
-                .disable()
-                .cors()
-                .and()
-                .exceptionHandling()
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
+                .securityMatcher("/api/**", "/schedule/**", "/test/**", "/" + cdnPathAlias + "/**")
                 .authorizeHttpRequests(requests -> requests
                                 .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                                .requestMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
+//                                .requestMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
+//                                .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout", "/api/auth/refreshToken").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/schedule/queue/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
                                 //test
                                 .requestMatchers(HttpMethod.POST, "dev/development/**").permitAll().requestMatchers(HttpMethod.GET, "/dev/development/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/test/**").permitAll().requestMatchers(HttpMethod.POST, "/test/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/welcome", "/theymeleaf").permitAll()
                                 .anyRequest().authenticated()
-                );
+                )
+                .headers(headers ->
+                        headers.xssProtection(
+                                xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
+                        ).contentSecurityPolicy(
+                                cps -> cps.policyDirectives("script-src 'self'")
+                        ))
+//                .httpBasic(Customizer.withDefaults())
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
-        http.addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-        return http.build();
- */
-
+        return httpSecurity.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(Collections.singletonList("*"));
-//        if (isProduction) {
-//            configuration.setAllowedOrigins(List.of("http://localhost:8084", "https://app.supersynapse.net/"));// production
-//        } else {
-//            configuration.setAllowedOriginPatterns(Collections.singletonList("*"));// development only
-//        }
+//        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
         configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // setAllowCredentials(true) is important, otherwise:
-        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
         configuration.setAllowCredentials(true);
-        // setAllowedHeaders is important! Without it, OPTIONS preflight request
-        // will fail with 403 Invalid CORS request
         configuration.setAllowedHeaders(asList(
                 ConstantData.AUTHORIZATION,
                 "Cache-Control",

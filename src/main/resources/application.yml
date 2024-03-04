@@ -203,9 +203,9 @@ app:
   loging:
     enable: true
   jwt:
-    secret: 9b538258fed154f034a7cbc23a75a00775db76cba292370b31ba570010783d3e32e360077c14a7f78c17992a2c911402b37f773071eb632ee1ce88be56739994
+    secret: f885c555f292236d89c14d5e24475bafce32f08f0bba95e6d9b06504275984f5220e62096b1b4fcf5e681851dcdf4a07542481cb6d70a16ac36eb44c7840b353
     #default is 7 days , if default set to 0 it automatic set exprires date in 7 days , you can set eg. 1 day to 86400, 2592000 = 30days
-    session-time: 604800
+    session-time: 0
     #    session-time: 2592000
     session-day: 30
     refresh-token-name: _myappkey_device_jid

@@ -1,13 +1,14 @@
 package com.bekaku.api.spring.util;
 
-import com.bekaku.api.spring.enumtype.NotifyPeriod;
-
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -20,9 +21,12 @@ public class DateUtil {
     public static long MILLS_IN_YEAR = 1000L * 60 * 60 * 24 * 365;
     public static long MILLS_IN_MONTH = 1000L * 60 * 60 * 24 * 30;
     public static long MILLS_IN_DAY = 1000L * 60 * 60 * 24;
+    public static long MILLS_IN_HOUR = 1000L * 60 * 60;
+    public static long MILLS_IN_MINUTE = 1000L * 60;
     public static long MILLS_IN_WEEK = 1000L * 60 * 60 * 24 * 7;
 
     public static String DATE_FORMAT = "uuuu-MM-dd";
+    public static String DATE_FORMAT_2 = "dd/MM/yyyy";
     public static String MONT_FORMAT = "MM";
     public static String DATE_TIME_FORMAT = "uuuu-MM-dd HH:mm:ss";
     public static String DATE_TIME_WITH_FACTION_OR_SECOND_FORMAT = "uuuu-MM-dd HH:mm:ss.SSS";//2022-04-25 14:42:26 702
@@ -95,6 +99,10 @@ public class DateUtil {
         return date.minusDays(days);
     }
 
+    public static LocalDateTime minusLocalDatetimeMinutes(LocalDateTime date, Long minutes) {
+        return date.minusMinutes(minutes);
+    }
+
     public static long datetimeDiffMinutes(LocalDateTime fromDate, LocalDateTime toDate) {
         if (fromDate == null || toDate == null) {
             return 0;
@@ -113,9 +121,18 @@ public class DateUtil {
         return dtf.format(date); // 2021/03/22
     }
 
+    /**
+     * @param date
+     * @param formatStyle eg FormatStyle.LONG, FormatStyle.MEDIUM, FormatStyle.SHORT, FormatStyle.FULL
+     * @return LONG  17 February 2022, MEDUIM 17-Feb-2022, SHORT 17/02/22, FULL //Thursday, 17 February, 2022
+     */
+    public static String getLocalDateByFormat(LocalDate date, FormatStyle formatStyle) {
+        return date.format(DateTimeFormatter.ofLocalizedDate(formatStyle));
+    }
+
     public static String getLocalDateByForMat(LocalDateTime date, String format) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern(format);
-        return dtf.format(date); // 2021/03/22
+        return dtf.format(date);
     }
 
     public static String getLocalDateMonth(LocalDate date) {
@@ -221,6 +238,14 @@ public class DateUtil {
         return left.isAfter(right);
     }
 
+    public static boolean isAfter(LocalDateTime left, LocalDateTime right) {
+        return left.isAfter(right);
+    }
+
+    public static boolean isBefore(LocalDateTime left, LocalDateTime right) {
+        return left.isBefore(right);
+    }
+
     public static boolean isEqual(LocalDate left, LocalDate right) {
         return left.isEqual(right);
     }
@@ -229,23 +254,64 @@ public class DateUtil {
         return left.isEqual(right) || left.isAfter(right);
     }
 
-    public static LocalDate calculateNextNotifyDate(NotifyPeriod notifyPeriod, LocalDate fromDate) {
-        if (notifyPeriod == null || notifyPeriod == NotifyPeriod.NO_PROGRESS) {
-            return null;
+    public static boolean isDateInRange(LocalDate currentDate, LocalDate dateStart, LocalDate dateEnd) {
+        return (currentDate.isEqual(dateStart) || currentDate.isAfter(dateStart)) && (currentDate.isEqual(dateEnd) || currentDate.isBefore(dateEnd));
+    }
+
+    public static LocalDate getEveryMonthNextDateBy(LocalDate currentDate, int dayNo) {
+        LocalDate nextDay = currentDate.plusMonths(1);
+        return getDayOfMonthByDayNo(nextDay, dayNo);
+    }
+
+    public static LocalDate getEveryTwoMonthNextDateBy(LocalDate currentDate, int dayNo) {
+        int monthNo = getMonthNoBy(currentDate);
+        int plusMonth = monthNo % 2 == 0 ? 2 : 1;
+        LocalDate nextDay = currentDate.plusMonths(plusMonth);
+        return getDayOfMonthByDayNo(nextDay, dayNo);
+    }
+
+    public static LocalDate getEveryThreeMonthNextDateBy(LocalDate currentDate, int dayNo) {
+        int monthNo = getMonthNoBy(currentDate);
+        int plusMonth = 3 - (monthNo % 3);
+        LocalDate nextDay = currentDate.plusMonths(plusMonth);
+        return getDayOfMonthByDayNo(nextDay, dayNo);
+    }
+
+    public static LocalDate getDayOfMonthByDayNo(LocalDate currentDate, int dayNo) {
+        int dateLenghtInMonth = getLengthOfMonthByDate(currentDate);
+        LocalDate nextDate;
+        if (dayNo == 0 || dateLenghtInMonth < dayNo) {
+            nextDate = currentDate.with(TemporalAdjusters.lastDayOfMonth());
+        } else {
+            nextDate = currentDate.withDayOfMonth(dayNo);
         }
-        if (fromDate == null) {
-            fromDate = getLocalDateNow();
-        }
-        int progressFrequency = notifyPeriod.ordinal();
-        return DateUtil.plusLocalDate(fromDate, (progressFrequency * 7L));
+        return nextDate;
+    }
+
+    public static int getMonthNoBy(LocalDate currentDate) {
+        return currentDate.getMonthValue();
+    }
+
+    public static int getYearNoBy(LocalDate currentDate) {
+        return currentDate.getYear();
+    }
+
+    public static int getLengthOfMonthByDate(LocalDate currentDate) {
+        // Get the current month and year
+        int currentYear = currentDate.getYear();
+        int currentMonth = currentDate.getMonthValue();
+        // Create a YearMonth object for the current year and month
+        YearMonth currentYearMonth = YearMonth.of(currentYear, currentMonth);
+        // Get the length (number of days) in the current month
+        return currentYearMonth.lengthOfMonth();
     }
 
     public static int checkQuarterLogRound(LocalDate nowDate) {
         int yearNow = DateUtil.getLocalDateYear(nowDate);
-        LocalDate quarterOne = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_APRIL_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalDate quarterTwo = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_JULY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalDate quarterThree = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_OCTOBER_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalDate quarterFour = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_JANUARY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate quarterOne = DateUtil.parseDate(yearNow + ConstantData.FRIST_APRIL_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate quarterTwo = DateUtil.parseDate(yearNow + ConstantData.FRIST_JULY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate quarterThree = DateUtil.parseDate(yearNow + ConstantData.FRIST_OCTOBER_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate quarterFour = DateUtil.parseDate(yearNow + ConstantData.FRIST_JANUARY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
         if (nowDate.equals(quarterOne)) {
             return 1;
         } else if (nowDate.equals(quarterTwo)) {
@@ -260,12 +326,12 @@ public class DateUtil {
 
     public static int checkTwoMonthLogRound(LocalDate nowDate) {
         int yearNow = DateUtil.getLocalDateYear(nowDate);
-        LocalDate roundOne = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_MARCH_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalDate roundTwo = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_MAY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalDate roundThree = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_JULY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalDate roundFoure = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_SEPTEMBER_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalDate roundFive = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_NOVEMBER_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
-        LocalDate roundSix = DateUtil.parseDate(yearNow + "" + ConstantData.FRIST_JANUARY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate roundOne = DateUtil.parseDate(yearNow + ConstantData.FRIST_MARCH_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate roundTwo = DateUtil.parseDate(yearNow + ConstantData.FRIST_MAY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate roundThree = DateUtil.parseDate(yearNow + ConstantData.FRIST_JULY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate roundFoure = DateUtil.parseDate(yearNow + ConstantData.FRIST_SEPTEMBER_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate roundFive = DateUtil.parseDate(yearNow + ConstantData.FRIST_NOVEMBER_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDate roundSix = DateUtil.parseDate(yearNow + ConstantData.FRIST_JANUARY_MONTH_DATE, DateTimeFormatter.ISO_LOCAL_DATE);
         if (nowDate.equals(roundOne)) {
             return 1;
         } else if (nowDate.equals(roundTwo)) {
@@ -319,5 +385,33 @@ public class DateUtil {
 
     public static LocalDate convertDatetimeToDate(LocalDateTime dateTime) {
         return dateTime.toLocalDate();
+    }
+
+    /**
+     * @param year    Change this to the desired year
+     * @param quarter Change this to the desired quarter (1, 2, 3, or 4)
+     * @return LocalDate
+     */
+    public static LocalDate getQuarterStartDate(int year, int quarter) {
+        return YearMonth.of(year, Month.of((quarter - 1) * 3 + 1)).atDay(1);
+    }
+
+    /**
+     * @param year    Change this to the desired year
+     * @param quarter Change this to the desired quarter (1, 2, 3, or 4)
+     * @return LocalDate
+     */
+    public static LocalDate getQuarterEndDate(int year, int quarter) {
+        return YearMonth.of(year, Month.of(quarter * 3)).atEndOfMonth();
+    }
+
+    public static LocalDateTime convertDateToLacalDatetime(Date d) {
+        if (d == null) {
+            return null;
+        }
+        // Convert Date to Instant
+        Instant instant = d.toInstant();
+        // Convert Instant to LocalDateTime using the system default time zone
+        return instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 }

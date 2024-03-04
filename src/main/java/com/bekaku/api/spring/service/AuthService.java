@@ -19,5 +19,7 @@ public interface AuthService {
 
     RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest, ApiClient apiClient, String userAgent);
 
+    RefreshTokenResponse refreshToken(AccessToken accessToken, ApiClient apiClient, String userAgent);
+
     void verifyAccount(String token);
 }

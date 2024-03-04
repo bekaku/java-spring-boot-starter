@@ -69,21 +69,11 @@ public class AuthServiceImpl implements AuthService {
         UserAgent agent = findAgent.orElseGet(() -> userAgentService.save(new UserAgent(userAgent)));
         LoginLog loginLog = loginLogService.save(new LoginLog(loginRequest.getLoginFrom(), user, ipAddress, loginRequest.getDeviceId(), agent));
         AccessToken token = accessTokenService.generateRefreshToken(user, apiClient, loginLog, loginRequest.getFcmToken());
-
-//        AuthenticationResponse response = AuthenticationResponse.builder()
-//                .authenticationToken(jwtService.toToken(token.getToken(), apiClient))
-//                .refreshToken(token.getToken())
-//                .expiresAt(jwtService.expireTimeFromNow())
-//                .email(loginRequest.getEmail())
-//                .username(user.getUsername())
-//                .build();
-//        Optional<ImageDto> imageDto = fileManagerService.findImageDtoBy(user.getAvatarFile());
-//        imageDto.ifPresent(response::setAvatar);
         return RefreshTokenResponse.builder()
                 .userId(user.getId())
                 .authenticationToken(jwtService.toToken(token.getToken(), apiClient))
                 .refreshToken(token.getToken())
-                .expiresAt(jwtService.expireTimeFromNow())
+                .expiresAt(jwtService.expireJwtTimeFromNow())
                 .build();
     }
 
@@ -110,7 +100,20 @@ public class AuthServiceImpl implements AuthService {
                 .expiresAt(dateExpired)
                 .build();
     }
+    @Override
+    public RefreshTokenResponse refreshToken(AccessToken accessToken, ApiClient apiClient, String userAgent) {
+        //update refresh token
+        String token = UUID.randomUUID() + "-" + DateUtil.getCurrentMilliTimeStamp();
+        accessToken.setToken(token);
+        accessToken.setExpiresAt(jwtService.expireTimeFromNow());
+        accessTokenService.update(accessToken);
 
+        return RefreshTokenResponse.builder()
+                .authenticationToken(jwtService.toToken(token, apiClient))
+                .refreshToken(token)
+                .expiresAt(jwtService.expireJwtTimeFromNow())
+                .build();
+    }
     @Override
     public void verifyAccount(String token) {
         Optional<AccessToken> verificationToken = accessTokenService.findByToken(token);

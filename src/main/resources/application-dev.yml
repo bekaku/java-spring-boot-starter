@@ -76,7 +76,9 @@ server:
   error:
     whitelabel:
       enabled: false
-
+springdoc:
+  api-docs:
+    path: /api-docs
 app:
   url: http://127.0.0.1
   port: 8080

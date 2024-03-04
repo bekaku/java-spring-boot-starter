@@ -69,6 +69,11 @@ docker-compose up -d
 ```
 
 ## API Docs
+OpenAI, Swagger UI form API doc path
+```
+/api-docs, /swagger-ui/index.html
+```
+
 Server run at port `8080` can config server port at /src/main/resources/`application.yml`  
 ```yml
 server:
