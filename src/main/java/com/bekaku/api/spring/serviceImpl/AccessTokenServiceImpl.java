@@ -1,7 +1,9 @@
 package com.bekaku.api.spring.serviceImpl;
 
+import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.AccessTokenDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
+import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.mapper.AccessTokenMapper;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -52,6 +55,8 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     @Value("${app.jwt.session-day}")
     Long sessionDay;
+    @Autowired
+    private I18n i18n;
 
     @Autowired
     public AccessTokenServiceImpl(@Lazy JwtService jwtService) {
@@ -72,6 +77,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Transactional(readOnly = true)
     public Optional<AccessToken> findByToken(String token) {
         return accessTokenRepository.findByToken(token);
+    }
+
+    @Override
+    public Optional<AccessToken> findAccessTokenByTokenAndUser(User user, String token) {
+        return accessTokenRepository.findAccessTokenByTokenAndUser(user, token);
     }
 
     @Override
@@ -97,7 +107,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     @Override
     public List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked) {
-        List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, revoked);
+        List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, AccessTokenServiceType.LOGIN, revoked);
         return list.stream()
                 .map(this::setDto)
                 .collect(Collectors.toList());
@@ -148,6 +158,42 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     public void updateLastestActive(LocalDateTime lastestActive, Long id) {
 //        accessTokenRepository.updateLastestActive(lastestActive, id);
         accessTokenMapper.updateLastestActive(lastestActive, id);
+    }
+    @Override
+    public AccessToken generateTokenBy(User user, Date expiresAt, String token, AccessTokenServiceType service) {
+        Optional<AccessToken> accessToken = accessTokenRepository.findLatestAccessTokenByUser(user, service);
+        AccessToken accessTokenResponse = null;
+        if (accessToken.isPresent()) {
+            boolean isExpired = isTokenExpired(accessToken.get());
+            if (isExpired) {
+                delete(accessToken.get());
+            } else {
+                accessTokenResponse = accessToken.get();
+            }
+        } else {
+            accessTokenResponse = new AccessToken();
+            accessTokenResponse.onCreateToken(user, expiresAt, token, service);
+            save(accessTokenResponse);
+        }
+        return accessTokenResponse;
+    }
+    @Override
+    public Date getExpireDateBy(AccessTokenServiceType service) {
+        Date expire = null;
+        switch (service) {
+            case FORGOT_PASSWORD -> expire = new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_MINUTE * 15);
+        }
+        return expire;
+    }
+    @Override
+    public boolean isTokenExpired(AccessToken accessToken) {
+        LocalDateTime now = DateUtil.getLocalDateTimeNow();
+        LocalDateTime expireDatetime = DateUtil.convertDateToLacalDatetime(accessToken.getExpiresAt());
+        boolean isBefore = DateUtil.isBefore(expireDatetime, now);
+        if (isBefore) {
+            return true;
+        }
+        return false;
     }
 
     @Override

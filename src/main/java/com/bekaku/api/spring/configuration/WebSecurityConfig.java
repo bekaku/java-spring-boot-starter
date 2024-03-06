@@ -74,7 +74,14 @@ public class WebSecurityConfig {
 //                                .requestMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
 //                                .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout", "/api/auth/refreshToken").permitAll()
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/auth/login",
+                                        "/api/auth/logout",
+                                        "/api/auth/refreshToken",
+                                        "/api/auth/requestVerifyCodeToResetPwd",
+                                        "/api/auth/sendVerifyCodeToResetPwd",
+                                        "/api/auth/resetPassword"
+                                ).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
                                 //test

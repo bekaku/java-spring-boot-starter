@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface UserService extends BaseService<User, UserDto> {
 
-
+    void updatePasswordBy(User user, String password);
     //Repository
     Optional<User> findByEmail(String email);
 

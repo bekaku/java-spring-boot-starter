@@ -11,6 +11,7 @@ import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.model.User;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.validator.UserValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -266,7 +267,11 @@ public class UserController extends BaseApiController {
                     i18n.getMessage("error.error"),
                     i18n.getMessage("error.error.newPasswordEmpty")));
         }
-
+        //validate pwd strong
+        boolean isStrong = AppUtil.validatePasswordStrong(dto.getNewPassword());
+        if(!isStrong){
+            return this.responseServerMessage(i18n.getMessage("error.pwd.policy.alert"), HttpStatus.BAD_REQUEST);
+        }
         if (!encryptService.check(dto.getPassword(), user.get().getPassword()) || !user.get().isActive()) {
             return this.responseServerMessage(i18n.getMessage("error.ondPasswordWrong"), HttpStatus.BAD_REQUEST, false);
         }

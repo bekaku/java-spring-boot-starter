@@ -215,6 +215,9 @@ app:
     userpwd: 1234
   #Object properties
   mail-config:
+    noreply-address: noreply@yourdomain.com
+    #minutes
+    tokenExpire: 15
     host: smtp.mailtrap.io
     port: 25
     username:

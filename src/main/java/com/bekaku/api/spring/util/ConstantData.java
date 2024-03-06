@@ -121,5 +121,7 @@ public class ConstantData {
     public static final int CONTENT_LIMIT_LENGTH = 45;
 
     public static final String COOKIE_JWT_REFRESH_TOKEN = "_device_jid";
+    public static final String EMAIL_TEMPLATE_FORGOT = "mail-forgot-password-template.html";
+    public static final String EMAIL_TEMPLATE = "mail-template.html";
 
 }

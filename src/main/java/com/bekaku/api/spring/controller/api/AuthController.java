@@ -2,6 +2,7 @@ package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.*;
+import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.model.AccessToken;
@@ -12,6 +13,7 @@ import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -47,6 +49,8 @@ public class AuthController extends BaseApiController {
     private ApiClientService apiClientService;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private EmailService emailService;
     @Autowired
     private I18n i18n;
 
@@ -225,23 +229,81 @@ public class AuthController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
         //validate expred token
-        LocalDateTime now = DateUtil.getLocalDateTimeNow();
-        LocalDateTime expireDatetime = DateUtil.convertDateToLacalDatetime(accessToken.get().getExpiresAt());
-        boolean isBefore = DateUtil.isBefore(expireDatetime, now);
-        logger.info("expireDatetime :{}, now :{}, isBefore :{}", expireDatetime, now, isBefore);
-        if (isBefore) {
-            deleteCookie(response);
+        boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
+        if (isExpired) {
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
-
-
         RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
         refreshTokenRequest.setRefreshToken(dto.getRefreshToken());
         //        RefreshTokenResponse tokenResponse = authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
 //        setRefreshTokenCookie(response, tokenResponse);
         return authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
     }
+    @PostMapping("/requestVerifyCodeToResetPwd")
+    public ResponseEntity<Object> requestVerifyCodeToResetPwd(@Valid @RequestBody ForgotPasswordRequest reqBody,
+                                                              @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+                                                              @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) throws MessagingException {
 
+        Optional<User> user = userService.findByEmail(reqBody.getEmail());
+        if (user.isEmpty()) {
+            throw new ApiException(new ApiError(HttpStatus.NOT_FOUND, i18n.getMessage("error.error"),
+                    i18n.getMessage("error.userNotFound", reqBody.getEmail())));
+        }
+
+        String token = AppUtil.generateRandomNumber(6);
+        AccessToken accessToken = accessTokenService.generateTokenBy(user.get(), accessTokenService.getExpireDateBy(AccessTokenServiceType.FORGOT_PASSWORD), token, AccessTokenServiceType.FORGOT_PASSWORD);
+        if(accessToken.isNewToken()){
+            emailService.sendEmailRecoveryToken(accessToken);
+        }
+        return this.responseServerMessage(i18n.getMessage("authen.token_not_expire", reqBody.getEmail()));
+    }
+    @PostMapping("/sendVerifyCodeToResetPwd")
+    public ResponseEntity<Object> sendVerifyCodeToResetPwd(@Valid @RequestBody ForgotPasswordRequest reqBody,
+                                                           @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+                                                           @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
+        AccessToken accessToken = getRequestForgotPasswordAccesstoken(reqBody);
+        return this.responseEntity(HttpStatus.OK);
+    }
+
+    private AccessToken getRequestForgotPasswordAccesstoken(ForgotPasswordRequest reqBody) {
+        Optional<User> user = userService.findByEmail(reqBody.getEmail());
+        if (user.isEmpty()) {
+            throw this.responseErrorBadRequest();
+        }
+        if (AppUtil.isEmpty(reqBody.getToken())) {
+            throw this.responseErrorBadRequest();
+        }
+        Optional<AccessToken> accessToken = accessTokenService.findAccessTokenByTokenAndUser(user.get(), reqBody.getToken());
+        if (accessToken.isEmpty()) {
+            throw this.responseErrorBadRequest();
+        }
+        boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
+        if (isExpired) {
+            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"),
+                    i18n.getMessage("error.token.expired")));
+        }
+        return accessToken.get();
+    }
+
+    @PostMapping("/resetPassword")
+    public ResponseEntity<Object> resetPassword(@Valid @RequestBody ForgotPasswordRequest reqBody,
+                                                @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+                                                @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
+        if (AppUtil.isEmpty(reqBody.getNewPassword())) {
+            throw this.responseErrorBadRequest();
+        }
+        //validate pwd strong
+        boolean isStrong = AppUtil.validatePasswordStrong(reqBody.getNewPassword());
+        if(!isStrong){
+            return this.responseServerMessage(i18n.getMessage("error.pwd.policy.alert", reqBody.getEmail()), HttpStatus.BAD_REQUEST);
+        }
+
+        AccessToken accessToken = getRequestForgotPasswordAccesstoken(reqBody);
+        String newPassword = encryptService.encrypt(reqBody.getNewPassword(), accessToken.getUser().getSalt());
+        userService.updatePasswordBy(accessToken.getUser(), newPassword);
+        accessTokenService.delete(accessToken);
+        return this.responseServerMessage(i18n.getMessage("helper.reset_pwd_ok", reqBody.getEmail()));
+    }
     @PostMapping("/logout")
     public ResponseEntity<ResponseMessage> logout(HttpServletResponse response,
                                                   @Valid @RequestBody RefreshTokenRequest refreshTokenRequest,

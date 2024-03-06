@@ -140,6 +140,11 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
         return modelMapper.map(userData, User.class);
     }
 
+    @Override
+    public void updatePasswordBy(User user, String password) {
+        userRepository.updatePasswordBy(user, password);
+    }
+
     @Transactional(readOnly = true)
     @Override
     public Optional<User> findByEmail(String email) {

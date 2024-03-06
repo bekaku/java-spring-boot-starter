@@ -1,5 +1,8 @@
 package com.bekaku.api.spring.service;
 
+import com.bekaku.api.spring.model.AccessToken;
+import jakarta.mail.MessagingException;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -17,9 +20,7 @@ public interface EmailService {
                                    String text,
                                    String pathToAttachment);
 
-    void sendMessageUsingThymeleafTemplate(String to,
-                                           String subject,
-                                           Map<String, Object> templateModel)
-            throws IOException;
+    void sendMessageUsingThymeleafTemplate(String htmlTemplate, String to, String subject, Map<String, Object> templateModel) throws MessagingException;
 
+    void sendEmailRecoveryToken(AccessToken accessToken) throws MessagingException;
 }

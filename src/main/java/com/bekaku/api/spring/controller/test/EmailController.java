@@ -4,6 +4,8 @@ package com.bekaku.api.spring.controller.test;
 import com.bekaku.api.spring.controller.api.BaseApiController;
 import com.bekaku.api.spring.service.EmailService;
 import com.bekaku.api.spring.properties.AppProperties;
+import com.bekaku.api.spring.util.ConstantData;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,13 +65,14 @@ public class EmailController extends BaseApiController {
         return this.responseEntity(HttpStatus.OK);
     }
     @GetMapping("/test/sendMailHtml")
-    public ResponseEntity<Object> sendMailHtml() throws  IOException {
+    public ResponseEntity<Object> sendMailHtml() throws  MessagingException {
         logger.info("Start sending");
         Map<String, Object> templateModel = new HashMap<>();
         templateModel.put("recipientName", "baekaku");
         templateModel.put("text", "Test Send HtML template");
         templateModel.put("senderName", "supersynapse");
         emailService.sendMessageUsingThymeleafTemplate(
+                ConstantData.EMAIL_TEMPLATE,
                 "baekaku@gmail.com",
                 "Send from html template",
                 templateModel);

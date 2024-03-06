@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
+import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.model.superclass.Id;
 import com.bekaku.api.spring.util.DateUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -45,7 +46,16 @@ public class AccessToken extends Id {
         this.fcmToken = fcmToken;
         this.fcmEnable = true;
     }
-
+    public void onCreateToken(User user, Date expiresAt, String token, AccessTokenServiceType service) {
+        this.token = token;
+        this.user = user;
+        this.expiresAt = expiresAt;
+        this.revoked = false;
+        this.createdDate = DateUtil.getLocalDateTimeNow();
+        this.fcmEnable = false;
+        this.service = service;
+        this.newToken = true;
+    }
     @Column(name = "token", length = 100, unique = true)
     private String token;
 
@@ -54,8 +64,8 @@ public class AccessToken extends Id {
     @Column(columnDefinition = "tinyint(1) default 1")
     private Boolean fcmEnable;
 
-    @Column(columnDefinition = "int(1) default 1", length = 1, name = "service")
-    private int service = 1;
+    @Column(columnDefinition = "tinyint(2) default 1", length = 1, name = "service")
+    private AccessTokenServiceType service;
 
     @JsonIgnore
     @ManyToOne
@@ -85,7 +95,8 @@ public class AccessToken extends Id {
 
     @Column(name = "lastest_active")
     private LocalDateTime lastestActive;
-
+    @Transient
+    private boolean newToken;
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

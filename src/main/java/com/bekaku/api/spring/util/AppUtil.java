@@ -18,6 +18,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Random;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AppUtil {
@@ -261,5 +263,58 @@ public class AppUtil {
     }
     public static int getCookieMaxAgeDays(int days) {
         return days * 24 * 60 * 60;
+    }
+
+    public static String generateRandomNumber(int length) {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(random.nextInt(10)); // Appending random digits (0-9)
+        }
+        return sb.toString();
+    }
+    public static boolean validatePasswordStrong(String password) {
+        // Initialize variables
+        int strength = 0;
+        StringBuilder tips = new StringBuilder();
+
+        // Check password length
+        if (password.length() < 8) {
+            tips.append("Make the password longer. ");
+        } else {
+            strength += 1;
+        }
+
+        // Check for mixed case
+        if (password.matches(".*[a-z].*") && password.matches(".*[A-Z].*")) {
+            strength += 1;
+        } else {
+            tips.append("Use both lowercase and uppercase letters. ");
+        }
+
+        // Check for numbers
+        if (password.matches(".*\\d.*")) {
+            strength += 1;
+        } else {
+            tips.append("Include at least one number. ");
+        }
+
+        // Check for special characters
+        Pattern pattern = Pattern.compile(".*[^a-zA-Z\\d].*");
+        Matcher matcher = pattern.matcher(password);
+        if (matcher.find()) {
+            strength += 1;
+        } else {
+            tips.append("Include at least one special character. ");
+        }
+
+        // Return results
+        if (strength < 3) {
+            // return "Easy to guess. " + tips.toString();
+            return false;
+        } else {
+            // return "Medium difficulty or above. " + tips.toString();
+            return true;
+        }
     }
 }
