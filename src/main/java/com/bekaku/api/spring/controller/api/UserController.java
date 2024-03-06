@@ -251,9 +251,12 @@ public class UserController extends BaseApiController {
     }
 
     @GetMapping("/currentAuthSession")
-    public List<AccessTokenDto> currentAuthSession(@AuthenticationPrincipal UserDto userAuthen) {
-        return accessTokenService.findAllByUserAndRevoked(userAuthen.getId(), false);
+    public List<AccessTokenDto> currentAuthSession(HttpServletRequest request, @AuthenticationPrincipal UserDto userAuthen, Pageable pageable) {
+//        Optional<String> readCookieBy = AppUtil.readCookie(request.getCookies(), ConstantData.COOKIE_JWT_REFRESH_TOKEN);
+//        readCookieBy.ifPresent(s -> logger.info("COOKIE_JWT_REFRESH_TOKEN readCookieBy:{}", s));
+        return accessTokenService.findAllByUserAndRevoked(userAuthen.getId(), false, pageable);
     }
+
 
     @PutMapping("/selfUpdatePassword")
     public ResponseEntity<Object> selfUpdatePassword(@AuthenticationPrincipal UserDto userAuthen, @Valid @RequestBody UserChangePasswordRequest dto) {

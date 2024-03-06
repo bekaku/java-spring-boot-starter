@@ -15,7 +15,7 @@ spring:
   jpa:
     #    open-in-view: false
     hibernate:
-      ddl-auto: none  #update, none  validate Hibernate ddl auto (none, create, create-drop, validate, update)
+      ddl-auto: update  #update, none  validate Hibernate ddl auto (none, create, create-drop, validate, update)
 
   output:
     ansi:

@@ -6,6 +6,7 @@ import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.User;
 import com.bekaku.api.spring.model.LoginLog;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -26,6 +27,7 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
 
     List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked);
 
+    List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked, Pageable pageable);
     void validateRefreshToken(String token);
 
     void deleteRefreshToken(String token);

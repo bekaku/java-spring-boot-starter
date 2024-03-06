@@ -13,6 +13,7 @@ import com.bekaku.api.spring.service.AccessTokenService;
 import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.service.UserAgentService;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -113,18 +114,29 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked, Pageable pageable) {
+        List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, AccessTokenServiceType.LOGIN, revoked, pageable);
+        return list.stream()
+                .map(this::setDto)
+                .collect(Collectors.toList());
+    }
+
     private AccessTokenDto setDto(AccessToken accessToken) {
         return AccessTokenDto.builder()
                 .id(accessToken.getId())
                 .hostName(accessToken.getLoginLog().getHostName())
-                .agent(accessToken.getLoginLog().getUserAgent().getAgent())
+                .agent(accessToken.getLoginLog().getUserAgent() != null ? accessToken.getLoginLog().getUserAgent().getAgent() : null)
                 .ipAddredd(accessToken.getLoginLog().getIp())
                 .createdDate(accessToken.getCreatedDate())
                 .lastestActive(accessToken.getLastestActive())
                 .loginFrom(accessToken.getLoginLog().getLoginFrom())
-                .activeNow(accessToken.getLastestActive() != null &&
-                        DateUtil.datetimeDiffMinutes(accessToken.getLastestActive(), DateUtil.getLocalDateTimeNow()) <= 5)
+                .activeNow(isActiveNow(accessToken))
                 .build();
+    }
+    private boolean isActiveNow(AccessToken accessToken) {
+        return accessToken.getLastestActive() != null &&
+                DateUtil.datetimeDiffMinutes(accessToken.getLastestActive(), DateUtil.getLocalDateTimeNow()) <= ConstantData.ONLINE_MINUTES_CLAIM;
     }
 
     @Transactional(readOnly = true)

@@ -4,6 +4,7 @@ import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -38,6 +39,9 @@ public interface AccessTokenRepository extends BaseRepository<AccessToken, Long>
 
     @Query("SELECT a FROM AccessToken a WHERE a.user.id =?1 AND a.service=?2 AND a.revoked=?3 ORDER BY a.lastestActive DESC, a.id DESC ")
     List<AccessToken> findAllByUserAndRevoked(Long userId, AccessTokenServiceType service, boolean revoked);
+
+    @Query("SELECT a FROM AccessToken a WHERE a.user.id =?1 AND a.service=?2 AND a.revoked=?3 ORDER BY a.lastestActive DESC, a.id DESC ")
+    List<AccessToken> findAllByUserAndRevoked(Long userId, AccessTokenServiceType service, boolean revoked, Pageable pageable);
 
     @Query(value = "SELECT a.fcm_token FROM access_token a " +
             "WHERE a.`user` = ?1 AND a.revoked IS FALSE AND a.fcm_enable IS TRUE AND a.fcm_token IS NOT NULL", nativeQuery = true)

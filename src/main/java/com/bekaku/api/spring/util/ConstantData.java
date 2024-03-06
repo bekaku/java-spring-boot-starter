@@ -106,7 +106,7 @@ public class ConstantData {
     public static final String AT_SIGN = "@";
 
     public static String CONTENT_TYPE_EXCEL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
+    public static final int ONLINE_MINUTES_CLAIM = 5;
     public static final int[][] USER_LEVEL_CHART_TABLE = {
             {0, 0, 0, 0, 0, 0},//Row 0
             {0, 1, 1, 2, 3, 3},//Row 1
