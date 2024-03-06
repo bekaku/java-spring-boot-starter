@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.1.0, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 8.3.0, for Linux (x86_64)
 --
 -- Host: localhost    Database: spring_starter
 -- ------------------------------------------------------
--- Server version	8.1.0
+-- Server version	8.3.0
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -26,29 +26,30 @@ CREATE TABLE `access_token` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `created_date` datetime(6) DEFAULT NULL,
   `expires_at` datetime(6) DEFAULT NULL,
+  `fcm_enable` tinyint(1) DEFAULT '1',
+  `fcm_token` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `lastest_active` datetime(6) DEFAULT NULL,
   `logouted_date` datetime(6) DEFAULT NULL,
   `revoked` tinyint(1) DEFAULT '0',
-  `service` int DEFAULT '1',
-  `token` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `service` tinyint DEFAULT '1',
+  `token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `api_client` bigint DEFAULT NULL,
   `login_log` bigint DEFAULT NULL,
   `user` bigint DEFAULT NULL,
-  `fcm_token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `fcm_enable` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK_1djybee0iap4odfl91gkxoxem` (`token`),
+  UNIQUE KEY `UK_t05x1jr0mk2n2se3ogxi1rt59` (`login_log`),
   KEY `IDXkf29lomp4g8kwqr49239nfpjo` (`revoked`),
-  KEY `FK5kmvrg6uuo55il7lx84mimu4f` (`api_client`),
-  KEY `FK9adhg4bm3rvd167xpgg38aqfs` (`login_log`),
-  KEY `FKjll8aufysmo6yvf124vsqpd81` (`user`),
-  KEY `IDXi8vvu91hco9k5ymwafnff27jo` (`fcm_token`),
   KEY `IDX7i22j43748d8cnciffepm0jk8` (`fcm_enable`),
+  KEY `IDXi8vvu91hco9k5ymwafnff27jo` (`fcm_token`),
   KEY `IDXs2vq59h0rbe4abafu72vay7bl` (`lastest_active`),
+  KEY `FK5kmvrg6uuo55il7lx84mimu4f` (`api_client`),
+  KEY `FKjll8aufysmo6yvf124vsqpd81` (`user`),
   CONSTRAINT `FK5kmvrg6uuo55il7lx84mimu4f` FOREIGN KEY (`api_client`) REFERENCES `api_client` (`id`),
   CONSTRAINT `FK9adhg4bm3rvd167xpgg38aqfs` FOREIGN KEY (`login_log`) REFERENCES `login_log` (`id`),
-  CONSTRAINT `FKjll8aufysmo6yvf124vsqpd81` FOREIGN KEY (`user`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2628 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT `FKjll8aufysmo6yvf124vsqpd81` FOREIGN KEY (`user`) REFERENCES `user` (`id`),
+  CONSTRAINT `access_token_chk_1` CHECK ((`service` between 0 and 1))
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -57,7 +58,6 @@ CREATE TABLE `access_token` (
 
 LOCK TABLES `access_token` WRITE;
 /*!40000 ALTER TABLE `access_token` DISABLE KEYS */;
-INSERT INTO `access_token` VALUES (2612,'2023-10-30 11:16:03.530280','2024-10-29 11:16:03.527000','2023-10-30 11:17:18.147875',NULL,0,1,'0f192b8b-199e-4c4c-bc53-fc41ec97210e',1,2794,1,NULL,1),(2613,'2023-10-30 11:41:16.965006','2024-10-29 11:41:16.961000','2023-10-30 11:41:33.565792',NULL,0,1,'6af2dd98-a215-4e72-b39a-7ca62ad0ac1c',1,2795,1,NULL,1),(2614,'2023-10-30 12:04:31.173818','2024-10-29 12:04:31.171000','2023-10-30 12:05:05.590237',NULL,0,1,'caab36dd-19f9-486f-a217-d219790f14d3',1,2796,1,NULL,1),(2615,'2023-11-11 10:59:29.881144','2024-11-10 10:59:29.876000','2023-11-11 15:06:14.913599',NULL,0,1,'40a7d8f0-6c0e-41b2-b888-e84cbb2b56b5',1,2797,1,NULL,1),(2619,'2023-11-13 09:40:46.770103','2024-11-12 09:40:46.770000','2023-11-13 09:40:47.090613',NULL,0,1,'b61115df-c4e1-4b96-ae03-e525a9e1389b',1,2801,1,NULL,1),(2621,'2023-11-18 14:50:38.747086','2024-11-17 14:50:38.747000','2023-11-18 14:53:27.358780',NULL,0,1,'fe29dba9-806a-4197-b0ec-9069e7a7ab2d',1,2803,1,NULL,1),(2623,'2023-11-25 14:30:18.736049','2024-11-24 14:30:18.732000','2023-11-25 15:14:30.751589',NULL,0,1,'cecd86a7-a78b-42bf-97e8-ec1ae1e92321',1,2805,1,NULL,1),(2625,'2023-11-27 08:13:05.053591','2024-11-26 08:13:05.053000','2023-11-27 08:13:38.986997',NULL,0,1,'f3ae39f6-bf9b-4d66-8b20-353f143219e0',1,2807,1,NULL,1),(2626,'2023-12-08 09:15:45.129423','2024-12-07 09:15:45.126000','2023-12-08 09:17:35.854975',NULL,0,1,'1d4b2035-9926-4042-8341-70a9ea807457',1,2808,1,NULL,1);
 /*!40000 ALTER TABLE `access_token` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -261,19 +261,20 @@ DROP TABLE IF EXISTS `login_log`;
 CREATE TABLE `login_log` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `created_at` datetime(6) DEFAULT NULL,
-  `host_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `user` bigint DEFAULT NULL,
-  `login_from` tinyint(1) DEFAULT '1',
   `device_id` varchar(125) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `host_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ip` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `login_from` tinyint(1) DEFAULT '1',
+  `user` bigint DEFAULT NULL,
   `user_agent` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
+  KEY `IDX1g886n9ijc3v1kn2ja05c61gx` (`device_id`),
   KEY `FK2qpnc9vsk5481p4gnc31yg3dy` (`user`),
   KEY `FKqegw0bjfp1kh6o349sbls6qm3` (`user_agent`),
-  KEY `IDX1g886n9ijc3v1kn2ja05c61gx` (`device_id`),
   CONSTRAINT `FK2qpnc9vsk5481p4gnc31yg3dy` FOREIGN KEY (`user`) REFERENCES `user` (`id`),
-  CONSTRAINT `FKqegw0bjfp1kh6o349sbls6qm3` FOREIGN KEY (`user_agent`) REFERENCES `user_agent` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2810 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT `FKqegw0bjfp1kh6o349sbls6qm3` FOREIGN KEY (`user_agent`) REFERENCES `user_agent` (`id`),
+  CONSTRAINT `login_log_chk_1` CHECK ((`login_from` between 0 and 2))
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -282,7 +283,7 @@ CREATE TABLE `login_log` (
 
 LOCK TABLES `login_log` WRITE;
 /*!40000 ALTER TABLE `login_log` DISABLE KEYS */;
-INSERT INTO `login_log` VALUES (2794,'2023-10-30 11:16:03.423000','bekaku','192.168.7.228',1,NULL,NULL,NULL),(2795,'2023-10-30 11:41:16.870000','bekaku','192.168.7.228',1,NULL,NULL,NULL),(2796,'2023-10-30 12:04:31.078000','bekaku','192.168.7.228',1,NULL,NULL,NULL),(2797,'2023-11-11 10:59:29.673000','bekaku','192.168.7.228',1,0,NULL,NULL),(2798,'2023-11-11 15:07:05.883000','bekaku','192.168.7.228',1,0,NULL,NULL),(2799,'2023-11-13 08:35:25.829000','bekaku','192.168.7.228',1,0,NULL,NULL),(2800,'2023-11-13 08:49:19.856000','bekaku','192.168.7.228',1,0,NULL,NULL),(2801,'2023-11-13 09:40:46.736000','bekaku','192.168.7.228',1,0,NULL,NULL),(2802,'2023-11-18 10:30:28.046000','bekaku','192.168.7.228',1,0,NULL,NULL),(2803,'2023-11-18 14:50:38.674000','bekaku','192.168.7.228',1,0,NULL,NULL),(2804,'2023-11-24 09:53:51.534000','bekaku','192.168.7.228',1,0,NULL,NULL),(2805,'2023-11-25 14:30:18.607000','bekaku','192.168.7.228',1,0,NULL,NULL),(2806,'2023-11-25 16:10:38.710000','bekaku','192.168.7.228',1,0,NULL,NULL),(2807,'2023-11-27 08:13:04.953000','bekaku','192.168.7.228',1,0,NULL,NULL),(2808,'2023-12-08 09:15:45.013000','bekaku','192.168.7.228',1,0,NULL,NULL),(2809,'2023-12-08 09:18:02.691000','bekaku','192.168.7.228',1,0,NULL,NULL);
+INSERT INTO `login_log` VALUES (1,'2024-03-06 15:44:29.411000','965bcf9f-c186-4731-823d-227bee15434f','bekaku','192.168.7.228',0,1,3);
 /*!40000 ALTER TABLE `login_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -469,7 +470,7 @@ CREATE TABLE `user_agent` (
   `agent` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   KEY `IDX8po4lxsgivw9m6ohl7qi37cxs` (`agent`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -478,7 +479,7 @@ CREATE TABLE `user_agent` (
 
 LOCK TABLES `user_agent` WRITE;
 /*!40000 ALTER TABLE `user_agent` DISABLE KEYS */;
-INSERT INTO `user_agent` VALUES (2,'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'),(1,'PostmanRuntime/7.34.0');
+INSERT INTO `user_agent` VALUES (2,'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'),(3,'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'),(1,'PostmanRuntime/7.34.0');
 /*!40000 ALTER TABLE `user_agent` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -547,4 +548,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-12-18  3:58:56
+-- Dump completed on 2024-03-06  8:50:15
