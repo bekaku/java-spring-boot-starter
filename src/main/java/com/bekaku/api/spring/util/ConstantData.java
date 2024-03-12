@@ -8,6 +8,8 @@ public class ConstantData {
     public static final String USER_AGENT = "User-Agent";
     public static final String ACCEPT_LANGUGE = "Accept-Language";
     public static final String CONTENT_TYPE = "Content-Type";
+    public static final String CACHE_CONTROL = "Cache-Control";
+    public static final String CONTENT_DISPOSITION = "Content-Disposition";
     public static final String X_REAL_IP = "X-Real-IP";
     public static final String HOST_NAME = "Host";
 
