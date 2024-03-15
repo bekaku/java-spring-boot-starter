@@ -470,8 +470,8 @@ Json root name : userRegister
 ```json
 {
   "userRegister": {
-    "email": "baekaku@gmail.com",
-    "username": "baekaku",
+    "email": "admin@mydomain.com",
+    "username": "admin",
     "password": "1234",
     "selectedRoles": [
       1,2
