@@ -25,11 +25,11 @@ $ mysql -uroot -p your_db_name < your_backup_file_path
 ```
 example on windows
 ```batch
-$ mysql -uroot -p your_db_name < E:\bak\db\bekaku.sql
+$ mysql -uroot -p your_db_name < E:\bak\db\spring_starter.sql
 ```
 example on Ubuntu
 ```batch
-$ mysql -uroot -p your_db_name < /var/tmp/bekaku.sql
+$ mysql -uroot -p your_db_name < /var/tmp/spring_starter.sql
 ```
 
 Config your database connection at `my-app`/src/main/resources/`application.yml` or `application-dev.yml`
