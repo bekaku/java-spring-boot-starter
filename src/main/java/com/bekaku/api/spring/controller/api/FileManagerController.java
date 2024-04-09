@@ -116,7 +116,7 @@ public class FileManagerController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         fileManagerService.deleteFileBy(fileManager.get());
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 
     @DeleteMapping("/deleteFileApi/{id}")

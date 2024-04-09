@@ -696,8 +696,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
                 writer.append("    @PostMapping\n");
                 if (haveDto) {
-//                    writer.append("    public ResponseEntity<Object> create(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
-                    writer.append("    public ").append(entityName).append(" create(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
+                    writer.append("    public ").append(entityName).append("Dto create(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
                 } else {
                     writer.append("    public ").append(entityName).append(" create(@Valid @RequestBody ").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 }
@@ -710,37 +709,39 @@ public class DevelopmentContoller extends BaseApiController {
 //                writer.append("            throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage(\"error.validateDuplicate\", dto.getName()));\n");
 //                writer.append("        }\n");
 
-                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.save(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
-//                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(", HttpStatus.OK);\n");
-                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
+                if (haveDto) {
+                    writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
+                }else{
+                    writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
+                }
                 writer.append("    }\n");
+
                 //update
                 writer.append("\n");
                 writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
-                writer.append("    @PutMapping\n");
+                writer.append("    @PutMapping(\"/{id}\")\n");
                 if (haveDto) {
-                    writer.append("    public ResponseEntity<Object> update(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
+                    writer.append("    public ").append(entityName).append("Dto update(@PathVariable(\"id\") Long id, @Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
                 } else {
-                    writer.append("    public ResponseEntity<Object> update(@Valid @RequestBody ").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
+                    writer.append("    public ").append(entityName).append(" update(@PathVariable(\"id\") Long id, @Valid @RequestBody ").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 }
                 if (haveDto) {
                     writer.append("        ").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertDtoToEntity(dto);\n");
-                    writer.append("        Optional<").append(entityName).append("> oldData = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(dto.getId());\n");
                 } else {
-                    writer.append("        Optional<").append(entityName).append("> oldData = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".getId());\n");
+//                    writer.append("        Optional<").append(entityName).append("> oldData = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".getId());\n");
                 }
+                writer.append("        Optional<").append(entityName).append("> oldData = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(id);\n");
 
                 writer.append("        if (oldData.isEmpty()) {\n");
                 writer.append("            throw this.responseErrorNotfound();\n");
                 writer.append("        }\n");
                 writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.update(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 if (haveDto) {
-                    writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("), HttpStatus.OK);\n");
-                } else {
-//                    writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(", HttpStatus.OK);\n");
-                    writer.append("        return this.reponseUpdatedMessage();\n");
+                    writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
+                }else{
+                    writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
                 }
-
+//                writer.append("        return this.reponseUpdatedMessage();\n");
                 writer.append("    }\n");
 
                 //findOne
@@ -748,7 +749,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_view')\")\n");
                 writer.append("    @GetMapping(\"/{id}\")\n");
                 if (haveDto) {
-                    writer.append("    public ").append(entityName).append("Dto").append(" findOne(@PathVariable(\"id\") Long id) {\n");
+                    writer.append("    public ").append(entityName).append("Dto findOne(@PathVariable(\"id\") Long id) {\n");
                 }else{
                     writer.append("    public ").append(entityName).append(" findOne(@PathVariable(\"id\") Long id) {\n");
                 }
@@ -775,8 +776,10 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("        }\n");
 //                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.deleteById(id);\n");
                 writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.delete(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".get());\n");
-                writer.append("        return this.reponseDeleteMessage();\n");
+                writer.append("        return this.responseDeleteMessage();\n");
                 writer.append("    }\n");
+
+
                 writer.append("}\n");
                 writer.close();
                 logger.info("Created Class : {} ", className);

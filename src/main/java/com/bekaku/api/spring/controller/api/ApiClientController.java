@@ -123,6 +123,6 @@ public class ApiClientController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         apiClientService.delete(apiClient.get());
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 }

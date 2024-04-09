@@ -141,6 +141,6 @@ public class RoleController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         roleService.delete(role.get());
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 }

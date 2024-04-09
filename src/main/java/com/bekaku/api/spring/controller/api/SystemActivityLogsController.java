@@ -65,6 +65,6 @@ public class SystemActivityLogsController extends BaseApiController{
             throw this.responseErrorNotfound();
         }
         systemActivityLogsService.delete(systemActivityLogs.get());
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 }

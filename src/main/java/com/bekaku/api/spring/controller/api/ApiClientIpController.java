@@ -95,6 +95,6 @@ public class ApiClientIpController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         apiClientIpService.delete(apiClientIp.get());
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 }

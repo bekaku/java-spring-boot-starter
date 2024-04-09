@@ -204,7 +204,7 @@ public class UserController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         deleteUserManage(user.get());
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 
 

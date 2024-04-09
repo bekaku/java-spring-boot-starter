@@ -151,7 +151,7 @@ public class PermissionController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         permissionService.delete(permission.get());
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 
     @GetMapping("/userAcl")

@@ -1,12 +1,13 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.specification.SearchCriteria;
-import com.bekaku.api.spring.vo.Paging;
 import com.bekaku.api.spring.exception.BaseResponseException;
+import com.bekaku.api.spring.specification.SearchCriteria;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.ControllerUtil;
 import com.bekaku.api.spring.util.DateUtil;
+import com.bekaku.api.spring.vo.Paging;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -37,16 +37,16 @@ public class BaseApiController extends BaseResponseException {
    public ResponseEntity<Object> responseEntity(@Nullable Object o) {
         return new ResponseEntity<>(o, HttpStatus.OK);
     }
-    public ResponseEntity<Object> reponseDeleteMessage() {
+    public ResponseEntity<Object> responseDeleteMessage() {
         return this.responseServerMessage(i18n.getMessage("success.deleteSuccesfull"), HttpStatus.OK);
     }
-    public ResponseEntity<Object> reponseCreatedMessage() {
+    public ResponseEntity<Object> responseCreatedMessage() {
         return this.responseServerMessage(i18n.getMessage("success.insertSuccesfull"), HttpStatus.OK);
     }
-    public ResponseEntity<Object> reponseUpdatedMessage() {
+    public ResponseEntity<Object> responseUpdatedMessage() {
         return this.responseServerMessage(i18n.getMessage("success.updateSuccesfull"), HttpStatus.OK);
     }
-    public ResponseEntity<Object> reponseSuccessMessage() {
+    public ResponseEntity<Object> responseSuccessMessage() {
         return this.responseServerMessage(i18n.getMessage("success"), HttpStatus.OK);
     }
     public ResponseEntity<Object> responseEntity(@Nullable Object o, HttpStatus status, String viewPermission, String managePermission) {
@@ -84,11 +84,32 @@ public class BaseApiController extends BaseResponseException {
     public Optional<String> getParameter(String parameterName) {
         return Optional.ofNullable(request.getParameter(parameterName));
     }
-
-    public Pageable getPageable(Pageable pageable, Sort defaultSort) {
-        return !pageable.getSort().isEmpty() ? pageable : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), defaultSort);
+    private boolean isValidSortOrder(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            for (Sort.Order order : pageable.getSort()) {
+                String field = order.getProperty();
+                String direction = order.getDirection().toString().toLowerCase();
+                if (!direction.equals("asc") && !direction.equals("desc")) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    private Pageable getPagableWithValidateSort(Pageable pageable, Sort defaultSort) {
+        if (!isValidSortOrder(pageable)) {
+            getPageableCustomSort(pageable, defaultSort);
+        }
+        return pageable;
     }
 
+    public Pageable getPageable(Pageable pageable, Sort defaultSort) {
+        return !pageable.getSort().isEmpty() ? getPagableWithValidateSort(pageable, defaultSort) :
+                getPageableCustomSort(pageable, defaultSort);
+    }
+    public Pageable getPageableCustomSort(Pageable pageable, Sort defaultSort) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), defaultSort);
+    }
     public Paging getPaging(Pageable pageable) {
         Pageable p = pageable.isPaged() ? pageable : null;
         String sortString = null;

@@ -102,6 +102,6 @@ public class UserLoginLogsController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         userLoginLogsService.delete(userLoginLogs.get());
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 }

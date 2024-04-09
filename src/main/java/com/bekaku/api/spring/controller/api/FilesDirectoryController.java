@@ -133,6 +133,6 @@ public class FilesDirectoryController extends BaseApiController {
         fileManagerService.deleteAllFileByFilesDirectory(filesDirectory.get());
         filesDirectoryService.deleteById(id);
 
-        return this.reponseDeleteMessage();
+        return this.responseDeleteMessage();
     }
 }
