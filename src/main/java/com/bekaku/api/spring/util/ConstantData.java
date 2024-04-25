@@ -126,4 +126,6 @@ public class ConstantData {
     public static final String EMAIL_TEMPLATE_FORGOT = "mail-forgot-password-template.html";
     public static final String EMAIL_TEMPLATE = "mail-template.html";
 
+    public static final String PART_SEPARATOR = ",";
+
 }

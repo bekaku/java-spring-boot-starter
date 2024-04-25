@@ -3,6 +3,7 @@ package com.bekaku.api.spring.controller.api;
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.FileManagerDto;
 import com.bekaku.api.spring.dto.ResponseMessage;
+import com.bekaku.api.spring.dto.UploadRequest;
 import com.bekaku.api.spring.dto.UserDto;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FileMime;
@@ -13,7 +14,9 @@ import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.service.FileMimeService;
 import com.bekaku.api.spring.service.FilesDirectoryService;
 import com.bekaku.api.spring.service.UserService;
+import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
+import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.util.FileUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -36,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Optional;
 
 @RequestMapping(path = "/api/fileManager")
@@ -130,92 +134,197 @@ public class FileManagerController extends BaseApiController {
         return this.responseEntity(HttpStatus.OK);
     }
 
+    @DeleteMapping("/internalDeleteFileApi/{id}")
+    public ResponseEntity<Object> internalDeleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal UserDto auth, HttpServletRequest request) {
+        Optional<FileManager> fileManager = fileManagerService.findById(id);
+        if (fileManager.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        logger.info("internalDeleteFileApi > id:{}", id);
+        fileManagerService.deleteFileBy(fileManager.get());
+        return responseEntity(new HashMap<String, Object>() {{
+            put("id", id);
+            put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
+        }}, HttpStatus.OK);
+    }
+
     //    @PreAuthorize("isHasPermission('file_manager_manage')")
     @PostMapping("/uploadApi")
     public ResponseEntity<Object> uploadApi(@RequestParam(ConstantData.FILES_UPLOAD_ATT) MultipartFile file,
-                                            @RequestParam("fileDirectoryId") long fileDirectoryId,
+                                            @RequestParam(name = "fileDirectoryId", required = false, defaultValue = "0") long fileDirectoryId,
+                                            @RequestParam(name = "resizeImage", required = false, defaultValue = "1") boolean resizeImage,
                                             @AuthenticationPrincipal UserDto user) {
 
         if (file.isEmpty()) {
             throw this.responseError(HttpStatus.OK, null, i18n.getMessage("error.fileUploadNotFound"));
         }
 
+        FileManager f = uploadProcess(file, user, resizeImage);
+        if (f == null) {
+            throw this.responseErrorBadRequest();
+        }
         Optional<FilesDirectory> directory = Optional.empty();
         if (fileDirectoryId > 0) {
             directory = filesDirectoryService.findById(fileDirectoryId);
         }
-        FileManager f = uploadProcess(file, user);
         directory.ifPresent(f::setFilesDirectory);
         fileManagerService.save(f);
         return this.responseEntity(fileManagerService.convertEntityToDto(f), HttpStatus.OK);
+
+//        String mimeType = FileUtil.getMimeType(file).toLowerCase();
+//        boolean isImage = FileUtil.isImage(mimeType);
+//        long fileSize = FileUtil.getFileSize(file);
+//        String originalName = FileUtil.getMultipartFileName(file);
+//        Optional<String> extenstion = FileUtil.getExtensionByStringHandling(originalName);
+//        if (extenstion.isEmpty()) {
+//            originalName = FileUtil.generateFileNameByMimeType(user.getId() + "", mimeType);
+//        }
+//        String finalOriginalName = originalName;
+//        return this.responseEntity(new HashMap<String, Object>() {{
+//            put("isImage", isImage);
+//            put("mimeType", mimeType);
+//            put("size", fileSize);
+//            put("originalName", finalOriginalName);
+//        }}, HttpStatus.OK);
     }
 
-    private FileManager uploadProcess(MultipartFile file, UserDto user) {
-
-        String mimeType = FileUtil.getMimeType(file).toLowerCase();
-
-        if (!appProperties.getAllowMimes().contains(mimeType)) {
-            throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.fileMimeNotAllow"));
+    @PostMapping("/uploadBase64Api")
+    public ResponseEntity<Object> uploadBase64Api(@Valid @RequestBody UploadRequest dto, @AuthenticationPrincipal UserDto user) {
+        if (AppUtil.isEmpty(dto.getFileBase64())) {
+            throw this.responseErrorBadRequest();
+        }
+        FileManager f = uploadBase64Process(dto, user);
+        if (f == null) {
+            throw this.responseErrorBadRequest();
         }
 
-        boolean isImage = FileUtil.isImage(mimeType);
-        Long fileSize = FileUtil.getFileSize(file);
-        String originalName = FileUtil.getMultipartFileName(file);
+        Optional<FilesDirectory> directory = Optional.empty();
+        if (dto.getFileDirectoryId() != null && dto.getFileDirectoryId() > 0) {
+            directory = filesDirectoryService.findById(dto.getFileDirectoryId());
+        }
+        directory.ifPresent(f::setFilesDirectory);
+        fileManagerService.save(f);
+        return this.responseEntity(fileManagerService.convertEntityToDto(f), HttpStatus.OK);
 
-        String yearMonthFolder = isImage ? FileUtil.getImagesYearMonthDirectory() : FileUtil.getFilesYearMonthDirectory();
+
+//        String mimeType = FileUtil.detectBase64MimeType(dto.getFileBase64());
+//        int size = FileUtil.getFileSizeFromBase64(dto.getFileBase64());
+//        return this.responseEntity(new HashMap<String, Object>() {{
+//            put("getFileExtensionByMimeType", FileUtil.getFileExtensionByMimeType(mimeType));
+//            put("mimeType", mimeType);
+//            put("size", size);
+//        }}, HttpStatus.OK);
+    }
+
+    private void validateAllowMemeType(String mimeType) {
+        if (AppUtil.isEmpty(mimeType) || !appProperties.getAllowMimes().contains(mimeType)) {
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.fileMimeNotAllow"));
+        }
+    }
+
+    private FileManager uploadBase64Process(UploadRequest dto, UserDto user) {
+        String mimeType = FileUtil.detectBase64MimeType(dto.getFileBase64());
+        this.validateAllowMemeType(mimeType);
+        long fileSize = FileUtil.getFileSizeFromBase64(dto.getFileBase64());
+        String originalName = "image_" + System.currentTimeMillis() + ".jpg";
+        String yearMonthFolder = FileUtil.getImagesYearMonthDirectory();
         String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
-//        String newName = FileUtil.generateFileName(user.getId() + "", originalName);
-        String newName = isImage ? FileUtil.generateJpgFileName(user.getId() + "", originalName) :
-                FileUtil.generateFileName(user.getId() + "", originalName);
+        String newName = FileUtil.generateJpgFileNameByMemeType(user.getId() + "", mimeType);
+        byte[] decodedImg = FileUtil.convertBase64ToByteArray(dto.getFileBase64());
+        return uploadAndResizeProcess(decodedImg, mimeType, yearMonthFolder, uploadPath, originalName, newName, fileSize, true, dto.isResizeImage());
+    }
+
+    private FileManager uploadAndResizeProcess(byte[] bytes, String mimeType, String yearMonthFolder, String uploadPath,
+                                               String originalName, String newName, long fileSize, boolean isImage, boolean isResizeImage) {
+        if (bytes == null) {
+            return null;
+        }
         try {
-            // Get the file and save it somewhere
-            byte[] bytes = file.getBytes();
             Path path = Paths.get(uploadPath + newName);
             Files.write(path, bytes);
         } catch (IOException e) {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, e.getMessage());
         }
+        //resize image
         if (isImage) {
-            //resize image
-            thumbnailatorResize(uploadPath, newName);
+            if (isResizeImage) {
+                thumbnailatorResize(uploadPath, newName);
+            }
             //create thumbnail
             if (appProperties.getUploadImage().isCreateThumbnail()) {
                 thumbnailatorCreateThumnail(uploadPath, newName);
             }
         }
-
         Optional<FileMime> fileMime = fileMimeService.findByName(mimeType);
         FileMime fileMimeForSave = fileMime.orElseGet(() -> fileMimeService.save(new FileMime(mimeType)));
         return new FileManager(null, originalName, fileSize, fileMimeForSave, yearMonthFolder + newName);
     }
 
-    private void thumbnailatorResize(String uploadFile, String fileName) {
+    private String generateOriginalFileName(MultipartFile file, UserDto user, String mimeType) {
+        String originalName = FileUtil.getMultipartFileName(file);
+        Optional<String> extension = FileUtil.getExtensionByStringHandling(originalName);
+        if (extension.isEmpty()) {
+            originalName = FileUtil.generateFileNameByMimeType(user.getId() + "", mimeType);
+        }
+
+        return originalName;
+    }
+
+    private FileManager uploadProcess(MultipartFile file, UserDto user, boolean resizeImage) {
+
+        String mimeType = FileUtil.getMimeType(file).toLowerCase();
+        this.validateAllowMemeType(mimeType);
+
+        boolean isImage = FileUtil.isImage(mimeType);
+        long fileSize = FileUtil.getFileSize(file);
+        String originalName = generateOriginalFileName(file, user, mimeType);
+
+        String yearMonthFolder = isImage ? FileUtil.getImagesYearMonthDirectory() : FileUtil.getFilesYearMonthDirectory();
+        String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
+        String newName = isImage ? FileUtil.generateJpgFileName(user.getId() + "", originalName) :
+                FileUtil.generateFileName(user.getId() + "", originalName);
+        byte[] bytes;
         try {
-            int limitWidth = appProperties.getUploadImage().getLimitWidth();
-            int limitHeight = appProperties.getUploadImage().getLimitHeight();
-            BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
-
-            //get width and height of image
-            int imageWidth = originalImage.getWidth();
-            int imageHeight = originalImage.getHeight();
-            if (imageWidth > limitWidth || imageHeight > limitHeight) {
-                BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 1);
-                ImageIO.write(outputImage, "jpg", new File(uploadFile + fileName));
-            }
-
+            bytes = file.getBytes();
         } catch (IOException e) {
-            throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, e.getMessage());
+        }
+
+        return uploadAndResizeProcess(bytes, mimeType, yearMonthFolder, uploadPath, originalName, newName, fileSize, isImage, resizeImage);
+    }
+
+
+    private void thumbnailatorResize(String uploadFile, String fileName) {
+
+        if (FileUtil.fileExists(uploadFile + fileName)) {
+            try {
+                int limitWidth = appProperties.getUploadImage().getLimitWidth();
+                int limitHeight = appProperties.getUploadImage().getLimitHeight();
+                BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
+
+                //get width and height of image
+                int imageWidth = originalImage.getWidth();
+                int imageHeight = originalImage.getHeight();
+                if (imageWidth > limitWidth || imageHeight > limitHeight) {
+                    BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 1);
+                    ImageIO.write(outputImage, "jpg", new File(uploadFile + fileName));
+                }
+            } catch (IOException e) {
+                throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+            }
         }
     }
 
     private void thumbnailatorCreateThumnail(String uploadFile, String fileName) {
-        try {
-            String thumbName = FileUtil.generateThumbnailName(fileName, appProperties.getUploadImage().getThumbnailExname());
-            BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
-            BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 1);
-            ImageIO.write(outputImage, "jpg", new File(uploadFile + thumbName));
-        } catch (IOException e) {
-            throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+        if (FileUtil.fileExists(uploadFile + fileName)) {
+            try {
+                String thumbName = FileUtil.generateThumbnailName(fileName, appProperties.getUploadImage().getThumbnailExname());
+                BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
+                BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 1);
+                ImageIO.write(outputImage, "jpg", new File(uploadFile + thumbName));
+            } catch (IOException e) {
+                throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
+            }
         }
     }
 
