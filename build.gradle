@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '3.2.4'
+    id 'org.springframework.boot' version '3.2.5'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'java'
 //    id 'war'
@@ -39,8 +39,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    implementation 'org.springframework.boot:spring-boot-starter-mail:3.2.4'
-    implementation 'org.springframework.boot:spring-boot-starter-amqp:3.2.4'
+    implementation 'org.springframework.boot:spring-boot-starter-mail:3.2.5'
+    implementation 'org.springframework.boot:spring-boot-starter-amqp:3.2.5'
     implementation 'commons-validator:commons-validator:1.8.0'
 
     // bug whith springboot version 3.2.0 to be develop by mybatis dev
