@@ -411,7 +411,7 @@ public class DevelopmentContoller extends BaseApiController {
 
     private void generateDto(String entityName, PersistentClass persistentClass) {
         //package com.grandats.api.givedeefive.controller.api
-        String fileName = entityName + "TestDto";
+        String fileName = entityName + "Dto";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto." + fileName;
 
         boolean isExist = getClassFromName(className) != null;
