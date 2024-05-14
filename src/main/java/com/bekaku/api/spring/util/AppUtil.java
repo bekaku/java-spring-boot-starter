@@ -7,6 +7,8 @@ import com.bekaku.api.spring.vo.IpAddress;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.validator.routines.EmailValidator;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.ObjectUtils;
 
@@ -17,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -90,6 +93,7 @@ public class AppUtil {
     }
 
     public static IpAddress getIpaddress() {
+
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getLocalHost();
@@ -101,6 +105,7 @@ public class AppUtil {
         }
         return null;
     }
+
     public static IpAddress getIpaddress(HttpServletRequest request) {
         String ip = request.getHeader(ConstantData.X_REAL_IP);
         if (!isEmpty(ip)) {
@@ -117,6 +122,7 @@ public class AppUtil {
         }
         return null;
     }
+
     public static String getSimpleClassName(String className) {
         return className.substring(className.lastIndexOf('.') + 1);
     }
@@ -126,6 +132,13 @@ public class AppUtil {
             return str.substring(0, 1).toLowerCase() + str.substring(1);
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    public static String upperLowerCaseString(String str, boolean isLower) {
+        if (isLower) {
+            return str.toLowerCase();
+        }
+        return str.toUpperCase();
     }
 
     public static String camelToSnake(String str) {
@@ -170,14 +183,34 @@ public class AppUtil {
         return (obtained * 100) / total;
     }
 
+    public static double calculatePercentage(BigDecimal obtained, BigDecimal totalAmount) {
+        BigDecimal zero = BigDecimal.valueOf(0);
+        if (obtained.compareTo(zero) == 0 || totalAmount.compareTo(zero) == 0) {
+            return 0;
+        }
+        BigDecimal percentageResult = obtained.multiply(new BigDecimal("100")).divide(totalAmount, 2, RoundingMode.HALF_UP);
+        return percentageResult.doubleValue();
+    }
+
     public static double round(double n, int decimals) {
         return Math.floor(n * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    }
+
+    public static float roundFloat(float n, int decimals) {
+        return (float) (Math.floor(n * Math.pow(10, decimals)) / Math.pow(10, decimals));
     }
 
     public static double roundDouble(double obtained, int scale, RoundingMode mode) {
         if (scale > 0) {
             BigDecimal bd = new BigDecimal(obtained).setScale(scale, mode);
             return bd.doubleValue();
+        }
+        return obtained;
+    }
+
+    public static BigDecimal roundBigDecimal(BigDecimal obtained, int scale, RoundingMode mode) {
+        if (scale > 0 && obtained.compareTo(BigDecimal.ZERO) > 0) {
+            return obtained.setScale(scale, mode);
         }
         return obtained;
     }
@@ -237,6 +270,7 @@ public class AppUtil {
     public static boolean isEmpty(Object o) {
         return ObjectUtils.isEmpty(o);
     }
+
     public static String getCookieByName(Cookie[] cookies, String targetCookieName) {
         String value = null;
         if (cookies != null) {
@@ -261,8 +295,13 @@ public class AppUtil {
                 .map(Cookie::getValue)
                 .findAny();
     }
+
     public static int getCookieMaxAgeDays(int days) {
         return days * 24 * 60 * 60;
+    }
+
+    public static boolean equals(Object a, Object b) {
+        return Objects.equals(a, b);
     }
 
     public static String generateRandomNumber(int length) {
@@ -273,6 +312,7 @@ public class AppUtil {
         }
         return sb.toString();
     }
+
     public static boolean validatePasswordStrong(String password) {
         // Initialize variables
         int strength = 0;
@@ -316,5 +356,63 @@ public class AppUtil {
             // return "Medium difficulty or above. " + tips.toString();
             return true;
         }
+    }
+
+    public static boolean isValidSortOrder(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            for (Sort.Order order : pageable.getSort()) {
+                String direction = order.getDirection().toString().toLowerCase();
+                if (!direction.equals("asc") && !direction.equals("desc")) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static boolean isNumber(String str) {
+        return str.matches("-?\\d+");
+    }
+
+    public static boolean isNonNegativeNumber(String str) {
+        return str.matches("\\d+");
+    }
+
+    public static int maxRunningNoByLength(int length) {
+        StringBuilder maxRunningString = new StringBuilder();
+        int maxRunning;
+        for (int i = 0; i < length; i++) {
+            maxRunningString.append("9");
+        }
+        maxRunning = Integer.parseInt(maxRunningString.toString());
+        return maxRunning;
+    }
+
+    public static String runningNoPrependPrefix(int maxLength, int runningNo) {
+        int runningLength = String.valueOf(runningNo).length();
+        StringBuilder runningNoPrefix = new StringBuilder();
+        if (runningLength < maxLength) {
+            int prefixLength = maxLength - runningLength;
+            for (int i = 0; i < prefixLength; i++) {
+                runningNoPrefix.append("0");
+            }
+        }
+        return runningNoPrefix.toString() + runningNo;
+    }
+
+    public static long[] getLongListFromGroupConcatString(String groupConcat, String separator) {
+        if (isEmpty(groupConcat)) {
+            return new long[0];
+        }
+        String[] parts = groupConcat.split(separator);
+        long[] result = new long[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            result[i] = Long.parseLong(parts[i]);
+        }
+        return result;
+    }
+
+    public static boolean findStringInString(String text, String searchText) {
+        return text.contains(searchText);
     }
 }

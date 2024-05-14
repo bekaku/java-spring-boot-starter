@@ -279,4 +279,14 @@ public class FileUtil {
 
         return ConstantData.CONTENT_TYPE_EXCEL.equals(file.getContentType());
     }
+    public static boolean folderExist(String folderPath) {
+        File folder = new File(folderPath);
+        return folder.exists() && folder.isDirectory();
+    }
+
+    public static boolean folderCreate(String folderPath) {
+        File folder = new File(folderPath);
+        // Use mkdirs() to create parent directories if they don't exist
+        return folder.mkdirs();
+    }
 }

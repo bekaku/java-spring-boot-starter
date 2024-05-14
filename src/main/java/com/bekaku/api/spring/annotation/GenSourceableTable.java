@@ -25,4 +25,5 @@ public @interface GenSourceableTable {
     boolean createPermission() default true;
 
     boolean createValidator() default false;
+    boolean createFrontend() default false;
 }

@@ -127,5 +127,6 @@ public class ConstantData {
     public static final String EMAIL_TEMPLATE = "mail-template.html";
 
     public static final String PART_SEPARATOR = ",";
+    public static final String DEFAULT_FRONTEND_GENERATE_DIRECTORY = "build/generated/frontend";
 
 }

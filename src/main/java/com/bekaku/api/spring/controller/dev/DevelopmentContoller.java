@@ -12,6 +12,8 @@ import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.service.RoleService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
+import com.bekaku.api.spring.util.FileUtil;
+import com.bekaku.api.spring.vo.GenerateTableSrcItem;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.Column;
@@ -29,8 +31,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 @RequestMapping(path = "/dev/development")
 @RestController
@@ -45,6 +49,22 @@ public class DevelopmentContoller extends BaseApiController {
 
     @Value("${environments.production}")
     boolean isProduction;
+    private List<GenerateTableSrcItem> propertyList;
+    private static final String TYPE_BOOLEAN = "boolean";
+    private static final String TYPE_STRING = "string";
+    private static final String TYPE_TEXT = "text";
+    private static final String DOT = ".";
+    private static final String TYPE_LOCAL_DATETIME = "LocalDateTime";
+    private static final String TYPE_LOCAL_DATE = "LocalDate";
+    private static final String TYPE_BIG_DECIMAL = "big_decimal";
+    private static final String TYPE_FLOAT = "float";
+    private static final String TYPE_INTEGER = "integer";
+    private static final String TYPESCRIPT_STRING = "string";
+    private static final String TYPESCRIPT_NUMBER = "number";
+    private static final String TYPESCRIPT_BOOLEAN = "boolean";
+    private static final String TYPESCRIPT_UNDEFINED = "undefined";
+    private static final String TYPESCRIPT_NULL = "null";
+    private static final String TYPESCRIPT_OR_SIGN = "|";
 
     @RequestMapping(value = "/migrateData", method = RequestMethod.POST)
     public ResponseEntity<Object> migrateData() {
@@ -234,6 +254,38 @@ public class DevelopmentContoller extends BaseApiController {
         return this.responseEntity(HttpStatus.OK);
     }
 
+    private void setPropertyList(Table table, PersistentClass persistentClass) {
+        propertyList = new ArrayList<>();
+        for (Iterator propertyIterator = persistentClass.getProperties().listIterator();
+             propertyIterator.hasNext(); ) {
+            Property property = (Property) propertyIterator.next();
+            for (Iterator columnIterator = property.getColumns().iterator();
+                 columnIterator.hasNext(); ) {
+                Column column = (Column) columnIterator.next();
+                propertyList.add(GenerateTableSrcItem.builder()
+                        .tableName(null)
+                        .propertyName(property.getName())
+                        .sqlName(column.getName())
+                        .sqlType(column.getSqlType())
+                        .propertyType(property.getType().getName())
+                        .unique(column.isUnique())
+                        .length(column.getLength())
+                        .nullable(column.isNullable())
+                        .typeTextArea(isTypeTextArea(column.getSqlType(), property.getType().getName()))
+                        .build());
+//                logger.info("Property: {} is mapped on table column: {} of type: {} uniqe : {}, length : {}, propertyTypeName : {} , isNullable :{}",
+//                        property.getName(),
+//                        column.getName(),
+//                        column.getSqlType(),
+//                        column.isUnique(),
+//                        column.getLength(),
+//                        property.getType().getName(),
+//                        column.isNullable()
+//                );
+            }
+        }
+    }
+
     private void generateProcess() {
         logger.warn("Production : {}", isProduction);
         if (isProduction) {
@@ -268,14 +320,10 @@ public class DevelopmentContoller extends BaseApiController {
             className = AppUtil.getSimpleClassName(persistentClass.getClassName());
             packageClassName = persistentClass.getClassName();
             Table table = persistentClass.getTable();
-
-            logger.info("capitalizeFirstLetter {} => {}", className, AppUtil.capitalizeFirstLetter(className, true));
-
+            setPropertyList(table, persistentClass);
             System.out.println("--------------------------");
-            logger.info("Entity: {} is mapped to table: {}",
-                    packageClassName,
-                    table.getName()
-            );
+            logger.info("capitalizeFirstLetter {} => {}", className, AppUtil.capitalizeFirstLetter(className, true));
+            logger.info("-Entity: {} is mapped to table: {}", packageClassName, table.getName());
             Class<?> aClass = getClassFromName(packageClassName);
             if (aClass != null) {
                 GenSourceableTable genSourceableTable = aClass.getAnnotation(GenSourceableTable.class);
@@ -302,6 +350,9 @@ public class DevelopmentContoller extends BaseApiController {
                     }
                     if (genSourceableTable.createValidator()) {
                         logger.error("  createValidator : {} ", className);
+                    }
+                    if (genSourceableTable.createFrontend()) {
+                        generateFrontend(className, persistentClass);
                     }
                     if (genSourceableTable.createPermission()) {
                         if (permissonService.findByCode(table.getName() + "_list").isEmpty()) {
@@ -359,55 +410,85 @@ public class DevelopmentContoller extends BaseApiController {
     }
 
     private void generateDto(String entityName, PersistentClass persistentClass) {
-        //package com.bekaku.api.spring.controller.api
-        String fileName = entityName + "Dto";
+        //package com.grandats.api.givedeefive.controller.api
+        String fileName = entityName + "TestDto";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto." + fileName;
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
+            logger.info("---generateDto : {} ", fileName);
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/dto/" + fileName + ".java", false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto").append(";\n");
                 writer.append("\n");
                 writer.append("import com.fasterxml.jackson.annotation.JsonIgnoreProperties;\n");
                 writer.append("import com.fasterxml.jackson.annotation.JsonRootName;\n");
-                writer.append("import lombok.Data;\n");
+                writer.append("import com.fasterxml.jackson.annotation.JsonFormat;\n");
+                writer.append("import java.math.BigDecimal;\n");
+                writer.append("import java.time.LocalDate;\n");
+                writer.append("import java.time.LocalDateTime;\n");
+                writer.append("import lombok.Getter;\n");
+                writer.append("import lombok.Setter;\n");
                 writer.append("import lombok.experimental.Accessors;\n");
+                writer.append("import jakarta.validation.constraints.DecimalMax;\n");
+                writer.append("import jakarta.validation.constraints.DecimalMin;\n");
+                writer.append("import jakarta.validation.constraints.NotEmpty;\n");
+                writer.append("import jakarta.validation.constraints.Size;\n");
+                writer.append("import jakarta.validation.constraints.Positive;\n");
+                writer.append("import jakarta.validation.constraints.Max;\n");
+                writer.append("import jakarta.validation.constraints.Min;\n");
+                writer.append("import jakarta.validation.constraints.NotNull;\n");
+
                 writer.append("\n");
-                writer.append("@Data\n");
+                writer.append("@Getter\n");
+                writer.append("@Setter\n");
                 writer.append("@JsonRootName(\"").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
 //                writer.append("//@AllArgsConstructor\n");
 //                writer.append("//@NoArgsConstructor\n");
                 writer.append("@JsonIgnoreProperties(ignoreUnknown = true)\n");
                 writer.append("@Accessors(chain = true)\n");
-                writer.append("public class ").append(fileName).append("{\n");
-                writer.append("    private Long id;\n");
+                writer.append("public class ").append(fileName).append(" extends DtoId {\n");
+//                writer.append("    private Long id;\n");
+                for (GenerateTableSrcItem src : propertyList) {
+                    String propertyName = src.getPropertyName();
+                    if (!exceptField(propertyName)) {
+                        String type = getJavaType(src.getPropertyType());
+                        boolean isNullable = src.isNullable();
+                        Long size = src.getLength();
+                        if (type != null) {
+                            if (src.getPropertyType().equals(TYPE_LOCAL_DATETIME)) {
+                                writer.append("    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyy-MM-dd HH:mm:ss\")\n");
+                            } else if (src.getPropertyType().equals(TYPE_LOCAL_DATE)) {
+                                writer.append("    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyy-MM-dd\")\n");
+                            }
 
-                for (Iterator propertyIterator = persistentClass.getProperties().listIterator();
-                     propertyIterator.hasNext(); ) {
-                    Property property = (Property) propertyIterator.next();
-
-                    for (Iterator columnIterator = property.getColumns().iterator();
-                         columnIterator.hasNext(); ) {
-                        Column column = (Column) columnIterator.next();
-
-//                        logger.info("Property: {} is mapped on table column: {} of type: {} uniqe : {}, length : {}, propertyTypeName : {} , isNullable :{}",
-//                                property.getName(),
-//                                column.getName(),
-//                                column.getSqlType(),
-//                                column.isUnique(),
-//                                column.getLength(),
-//                                property.getType().getName(),
-//                                column.isNullable()
-//                        );
-                        if (!property.getName().equals("createdDate") && !property.getName().equals("createdUser") && !property.getName().equals("updatedDate") && !property.getName().equals("updatedUser")) {
-                            writer.append("    //private ").append(property.getType().getName()).append(" ").append(property.getName()).append(";\n");
+                            if (!isNullable) {
+                                writer.append("    @NotEmpty(message = \"{error.NotEmpty}\")\n");
+                            }
+                            if (size != null && !src.getPropertyType().equals(TYPE_BIG_DECIMAL)) {
+                                if (src.getPropertyType().equals(TYPE_LOCAL_DATE)) {
+                                    writer.append("    @Size(max = 10, message = \"{error.SizeLimitMaxFormat}\")\n");
+                                } else if (src.getPropertyType().equals(TYPE_LOCAL_DATETIME)) {
+                                    writer.append("    @Size(max = 19, message = \"{error.SizeLimitMaxFormat}\")\n");
+                                } else {
+                                    writer.append("    @Size(max = ").append(String.valueOf(size)).append(", message = \"{error.SizeLimitMaxFormat}\")\n");
+                                }
+                            } else if (src.getPropertyType().equals(TYPE_BIG_DECIMAL)) {
+                                writer.append("    @DecimalMax(value = \"999999999999.0\", message = \"{error.DecimalMax.message}\")\n");
+                                writer.append("    @DecimalMin(value = \"0.0\", message = \"{error.DecimalMin.message}\")\n");
+                            }
+                            if (isObjectLink(src.getPropertyType())) {
+                                writer.append("    //private ").append(type).append(" ").append(propertyName).append(";\n");
+                            } else {
+                                writer.append("    private ").append(type).append(" ").append(propertyName).append(";\n");
+                            }
+                            writer.append("\n");
                         }
                     }
                 }
                 writer.append("}\n");
                 writer.close();
-                logger.info("Created Class : {} ", className);
+                logger.info("     Created Class : {} ", className);
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
@@ -681,7 +762,7 @@ public class DevelopmentContoller extends BaseApiController {
 //                writer.append("    public ResponseEntity<Object> findAll(Pageable pageable) {\n");
                 if (haveDto) {
                     writer.append("    public ResponseListDto<").append(entityName).append("Dto").append("> findAll(Pageable pageable) {\n");
-                }else{
+                } else {
                     writer.append("    public ResponseListDto<").append(entityName).append("> findAll(Pageable pageable) {\n");
                 }
 //                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(new Paging(page, limit), ").append(entityName).append(".getSort()), HttpStatus.OK);\n");
@@ -711,7 +792,7 @@ public class DevelopmentContoller extends BaseApiController {
 
                 if (haveDto) {
                     writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
-                }else{
+                } else {
                     writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
                 }
                 writer.append("    }\n");
@@ -738,7 +819,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.update(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 if (haveDto) {
                     writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
-                }else{
+                } else {
                     writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
                 }
 //                writer.append("        return this.reponseUpdatedMessage();\n");
@@ -750,7 +831,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    @GetMapping(\"/{id}\")\n");
                 if (haveDto) {
                     writer.append("    public ").append(entityName).append("Dto findOne(@PathVariable(\"id\") Long id) {\n");
-                }else{
+                } else {
                     writer.append("    public ").append(entityName).append(" findOne(@PathVariable(\"id\") Long id) {\n");
                 }
                 writer.append("        Optional<").append(entityName).append("> ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(id);\n");
@@ -789,6 +870,626 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
+    private void generateFrontend(String entityName, PersistentClass persistentClass) {
+        Table table = persistentClass.getTable();
+        String tableName = table.getName();
+        String tableNameKebabCase = tableName.replace("_", "-");
+        String dirName = ConstantData.DEFAULT_FRONTEND_GENERATE_DIRECTORY + "/" + tableNameKebabCase;
+        String listName = dirName + "/List.vue";
+        String formName = dirName + "/Form.vue";
+        String apiName = dirName + "/"+entityName + "Service.ts";
+        logger.info("generateFrontend > TableName :{},  listName :{}, formName :{}, apiName :{}", tableName, listName, formName, apiName);
+
+        if (!FileUtil.folderExist(dirName)) {
+            FileUtil.folderCreate(dirName);
+            logger.info("generateFrontend > created folder :{} ", dirName);
+        }
+        if (!FileUtil.fileExists(listName)) {
+            logger.info("generateFrontend > file :{}, created", listName);
+            generateFrontList(listName, entityName, tableName);
+        }
+        if (!FileUtil.fileExists(formName)) {
+            logger.info("generateFrontend > file :{}, created", formName);
+            generateFrontForm(formName, entityName, tableName);
+        }
+        if (!FileUtil.fileExists(apiName)) {
+            logger.info("generateFrontend > file :{}, created", apiName);
+            generateFrontService(apiName, entityName, tableName);
+        }
+    }
+
+    private void generateFrontForm(String filePathName, String entityName, String tableName) {
+        String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
+        String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
+        String tableNameKebabCase = tableName.replace("_", "-");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+            writer.append("<template>\n");
+            writer.append("  <q-page padding>\n");
+            writer.append("    <crud-api-form\n");
+            writer.append("      :icon=\"biFileEarmark\"\n");
+            writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
+            writer.append("      :crud-name=\"crudName\"\n");
+            writer.append("      :crud-action=\"crudAction\"\n");
+            writer.append("      :list-permission=\"").append(upperTableName).append(".list\"\n");
+            writer.append("      :manage-permission=\"").append(upperTableName).append(".manage\"\n");
+            writer.append("      :loading=\"loading\"\n");
+            writer.append("      is-frontend\n");
+            writer.append("      @on-back=\"onBack\"\n");
+            writer.append("      @on-submit=\"onSubmit\"\n");
+            writer.append("      @on-delete=\"onDelete\"\n");
+            writer.append("    >\n");
+            //start crudFromContent slot
+            writer.append("      <template #crudFromContent>\n");
+            //start row
+            writer.append("        <div class=\"row\">\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    String typeScriptType = getTypscriptType(propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
+                    boolean isTextAreaType = isTypeTextArea(src.getSqlType(), propertyTypeName);
+                    boolean isNumberType = propertyTypeName.equals(TYPE_FLOAT) || propertyTypeName.equals(TYPE_BIG_DECIMAL) || propertyTypeName.equals(TYPE_INTEGER);
+                    Long limitText = src.getLength();
+                    boolean isRefClass = isObjectLink(propertyTypeName);
+                    //start col
+                    writer.append("          <div class=\"col-12 col-md-4 q-pa-sm\">\n");
+                    if (isRefClass) {
+                        //if reference to other Object class
+                        writer.append("          <!-- type ").append(propertyTypeName).append(" -->\n");
+                        writer.append("          <!-- TODO implement object link -->\n");
+                    } else if (propertyTypeName.equals(TYPE_STRING) || isNumberType) {
+                        writer.append("              <q-input\n");
+                        writer.append("                outlined\n");
+                        writer.append("                v-model=\"crudEntity.").append(propertyName).append("\"\n");
+                        writer.append("                bottom-slots\n");
+                        writer.append("                :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
+                        if (isTextAreaType) {
+                            writer.append("                autogrow\n");
+                            writer.append("                class=\"limited-autogrow\"\n");
+                            writer.append("                type=\"textarea\"\n");
+                            if (!isNullable) {
+                                writer.append("                :rules=\"[required]\"\n");
+                            }
+                        } else if (propertyTypeName.equals(TYPE_STRING)) {
+                            writer.append("                type=\"text\"\n");
+                            if (!isNullable) {
+                                writer.append("                :rules=\"[required]\"\n");
+                            }
+                        } else {
+                            writer.append("                type=\"number\"\n");
+                            writer.append("                min=\"0\"\n");
+                            if (!isNullable) {
+                                writer.append("                :rules=\"[requiredNotMinusNumberOrFloat]\"\n");
+                            }
+                        }
+
+
+                        if (!isTextAreaType && limitText != null) {
+                            writer.append("                 maxlength=\"").append(String.valueOf(limitText)).append("\"\n");
+                            writer.append("                 counter\n");
+                        }
+                        writer.append("                >\n");
+                        if (!isNullable) {
+                            writer.append("                <template v-slot:hint>\n");
+//                        writer.append("                          {{ t('helper.requireMinimumLetter', { no: 4 }) }}\n");
+                            writer.append("                  <span class=\"text-negative\">*</span>\n");
+                            writer.append("                </template>\n");
+                        }
+
+                        writer.append("            </q-input>\n");
+                    } else if (propertyTypeName.equals(TYPE_BOOLEAN)) {
+                        writer.append("             <form-togle v-model=\"crudEntity.").append(propertyName).append("\"\n");
+                        writer.append("              :title=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
+                        writer.append("              />\n");
+                    } else if (propertyTypeName.equals(TYPE_LOCAL_DATE)) {
+                        writer.append("            <date-picker\n");
+                        writer.append("              v-model=\"crudEntity.").append(propertyName).append("\"\n");
+                        writer.append("              :title=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
+                        if (!isNullable) {
+                            writer.append("             date-required\n");
+                        }
+                        writer.append("            />\n");
+                    } else if (propertyTypeName.equals(TYPE_LOCAL_DATETIME)) {
+                        writer.append("          <!-- type ").append(propertyTypeName).append(" -->\n");
+                        writer.append("          <!-- TODO implement Datetime -->\n");
+                    }
+
+
+                    writer.append("          </div>\n");//end col
+                }
+            }
+            writer.append("\n");
+            writer.append("        </div>\n");//end row
+            writer.append("      </template>\n");//end crudFromContent slot
+            writer.append("    </crud-api-form>\n");//end crud-api-form
+            writer.append("  </q-page>\n");//end page
+            writer.append("</template>\n");
+            writer.append("\n");
+
+            writer.append("<script setup lang=\"ts\">\n");
+            writer.append("import { useLang } from '@/composables/UseLang';\n");
+            writer.append("import { useCrudForm } from '@/composables/UseCrudForm';\n");
+            writer.append("import { ").append(entityName).append(" } from '@/types/Models';\n");
+            writer.append("import { useAppMeta } from '@/composables/UseAppMeta';\n");
+            writer.append("import CrudApiForm from '@/components/base/CrudApiForm.vue';\n");
+            writer.append("import { useValidation } from '@/composables/UseValidation';\n");
+            writer.append("import { biPencil, biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
+            writer.append("import { ").append(upperTableName).append(" } from '@/utils/AppPermissionList';\n");
+            writer.append("import FormTogle from '@/components/form/FormTogle.vue';\n");
+            writer.append("import DatePicker from '@/components/form/DatePicker.vue';\n");
+            writer.append("import { getCurrentDateByFormat } from '@/utils/DateUtil';\n");
+            writer.append("import { AdminRootPath } from '@/utils/Constant';\n");
+            writer.append("\n");
+
+            writer.append("const { t } = useLang();\n");
+            writer.append("const { required, requiredNotMinusNumberOrFloat } = useValidation();\n");
+
+            //initial entity
+            writer.append("const entity: ").append(entityName).append(" = Object.freeze({\n");
+            writer.append("  id: null,\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    boolean typeScriptType = isTypeTextArea(src.getSqlType(), propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
+                    writer.append("  ").append(propertyName).append(": ").append(defaultValue).append(",\n");
+                }
+            }
+            writer.append("});\n");
+
+            writer.append("const {\n");
+            writer.append("  crudName,\n");
+            writer.append("  crudAction,\n");
+            writer.append("  loading,\n");
+            writer.append("  onBack,\n");
+            writer.append("  onSubmit,\n");
+            writer.append("  onDelete,\n");
+            writer.append("  crudEntity\n");
+            writer.append("} = useCrudForm<").append(entityName).append(">(\n");
+            writer.append("  {\n");
+            writer.append("    crudName: 'wi_document_type',\n");
+            writer.append("    backLink: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
+//            writer.append("    backLink: ").append(tableNameKebabCase).append(",\n");
+            writer.append("    backToPreviousPath: true,\n");
+            writer.append("    apiEndpoint: '/api',\n");
+            writer.append("    fectchDataOnLoad: true,\n");
+            writer.append("    methodPutIncludeId: true\n");
+            writer.append("  },\n");
+            writer.append("  entity\n");
+            writer.append(");\n");
+            writer.append("\n");
+            writer.append("useAppMeta({\n");
+            writer.append("  additionalTitle: t('crudAction.' + crudAction.value)\n");
+            writer.append("});\n");
+            writer.append("</script>\n");
+            writer.append("\n");
+            writer.close();
+            logger.info("     Created Class : {} ", filePathName);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+    }
+
+    private void generateFrontList(String filePathName, String entityName, String tableName) {
+        String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
+        String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
+        String tableNameKebabCase = tableName.replace("_", "-");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+            writer.append("<template>\n");
+            writer.append("  <q-page padding>\n");
+            writer.append("    <crud-api-list\n");
+            writer.append("      :icon=\"biFileEarmark\"\n");
+            writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
+            writer.append("      :crud-name=\"crudName\"\n");
+            writer.append("      :loading=\"loading\"\n");
+            writer.append("      :frist-load=\"fristLoad\"\n");
+            writer.append("      :pages=\"pages\"\n");
+            writer.append("      :headers=\"headers\"\n");
+            writer.append("      :sort=\"sort\"\n");
+            writer.append("      :list=\"filteredList\"\n");
+            writer.append("      :is-frontend=\"true\"\n");
+            writer.append("      :view-permission=\"").append(upperTableName).append(".view\"\n");
+            writer.append("      :manage-permission=\"").append(upperTableName).append(".manage\"\n");
+            writer.append("      @on-item-click=\"onItemClick\"\n");
+            writer.append("      @on-item-copy=\"onItemCopy\"\n");
+            writer.append("      @on-page-no-change=\"onPageNoChange\"\n");
+            writer.append("      @on-items-perpage-change=\"onItemPerPageChange\"\n");
+            writer.append("      @on-sort=\"onSort\"\n");
+            writer.append("      @on-sort-mode=\"onSortMode\"\n");
+            writer.append("      @on-reload=\"onReload\"\n");
+            writer.append("      @update-search=\"filterText = $event\"\n");
+            writer.append("      @on-advance-search=\"onAdvanceSearch\"\n");
+            writer.append("      @on-item-delete=\"onItemDelete\"\n");
+            writer.append("      @on-new-form=\"onNewForm\"\n");
+            writer.append("    >\n");
+            writer.append("    </crud-api-list>\n");
+            writer.append("  </q-page>\n");
+            writer.append("</template>\n");
+            writer.append("\n");
+
+            writer.append("<script setup lang=\"ts\">\n");
+
+            //api service
+            writer.append("/* move this api service to /src/breadcrumbs/AdminBreadcrumbs.ts or /src/BackendBreadcrumbs/backendRoutes.ts \n");
+
+            writer.append("\n");
+            writer.append("*/\n");
+            writer.append("\n");
+
+            String breadcrumbsName = "Bc" + entityName + "Form";
+            //breadcrumbs
+            writer.append("/* move this variable to /src/breadcrumbs/AdminBreadcrumbs.ts or /src/BackendBreadcrumbs/backendRoutes.ts \n");
+            writer.append("export const ").append(breadcrumbsName).append(": Breadcrumb[] = [\n");
+            writer.append("  {\n");
+            writer.append("    label: 'model.").append(entityNameLowerFirst).append(".table',\n");
+//            writer.append("    to: '/").append(tableNameKebabCase).append("',\n");
+            writer.append("    to: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
+            writer.append("    icon: biFileEarmark,\n");
+            writer.append("    translateLabel: true\n");
+            writer.append("  },\n");
+            writer.append("  ...detailItemFn('").append(tableNameKebabCase).append("')\n");
+            writer.append("];\n");
+            writer.append("*/\n");
+            writer.append("\n");
+
+            //router
+            writer.append("/* move this object to /src/router/adminRoutes.ts or /src/router/backendRoutes.ts or /src/router/frontendRoutes.ts \n");
+            writer.append("      {\n");
+            writer.append("        path: 'wi-document-type',\n");
+            writer.append("        children: [\n");
+            writer.append("          {\n");
+            writer.append("            path: '',\n");
+            writer.append("            meta: { pageName: 'model.").append(entityNameLowerFirst).append(".table', permission: [").append(upperTableName).append(".list] },\n");
+            writer.append("            component: () => import('@/pages/").append(tableNameKebabCase).append("/List.vue')\n");
+            writer.append("          },\n");
+            writer.append("          {\n");
+            writer.append("            path: ':crud/:id/',\n");
+            writer.append("            meta: {\n");
+            writer.append("              pageName: 'model.").append(entityNameLowerFirst).append(".table',\n");
+            writer.append("              permission: [").append(upperTableName).append(".view],\n");
+            writer.append("              breadcrumbs: ").append(breadcrumbsName).append("\n");
+            writer.append("            },\n");
+            writer.append("            component: () => import('@/pages/").append(tableNameKebabCase).append("/Form.vue')\n");
+            writer.append("          }\n");
+            writer.append("        ]\n");
+            writer.append("      }\n");
+            writer.append("*/\n");
+            writer.append("\n");
+
+            //Model
+            writer.append("/* move this interface to /src/types/Models.ts \n");
+            writer.append("export interface ").append(entityName).append(" extends Id {\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    String typeScriptType = getTypscriptType(propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String undefinedSign = isNullable ? "?" : "";
+                    String typeScriptTypeFinal = !AppUtil.isEmpty(undefinedSign) ? typeScriptType + " " + TYPESCRIPT_OR_SIGN + " " + TYPESCRIPT_NULL : typeScriptType;
+                    writer.append(" ").append(propertyName).append(undefinedSign).append(": ").append(typeScriptTypeFinal).append(";\n");
+                }
+            }
+            writer.append("}\n");
+            writer.append("*/\n");
+            writer.append("\n");
+
+            //Permission
+            writer.append("/* move this object to /src/utils/AppPermissionList.ts \n");
+            writer.append("export const ").append(upperTableName).append("= {\n");
+            writer.append("  view: '").append(upperTableName).append("_config_view',\n");
+            writer.append("  list: '").append(upperTableName).append("_list',\n");
+            writer.append("  manage: '").append(upperTableName).append("_manage'\n");
+            writer.append("}\n");
+            writer.append("*/\n");
+            writer.append("\n");
+
+            //message
+            writer.append("/* move this message object to /src/i18n/th/model.ts and /src/i18n/en/model.ts under model:{}  \n");
+            writer.append("    ,").append(entityNameLowerFirst).append(": {\n");
+            writer.append("      table: '").append(entityNameLowerFirst).append("'\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                if (!exceptField(propertyName)) {
+                    writer.append("      ").append(propertyName).append(": '").append(propertyName).append("',\n");
+                }
+            }
+            writer.append("    }\n");
+            writer.append("*/\n");
+
+
+            writer.append("import { ref } from 'vue';\n");
+            writer.append("import { useLang } from '@/composables/UseLang';\n");
+            writer.append("import { useCrudList } from '@/composables/UseCrudList';\n");
+            writer.append("import { ").append(entityName).append(" } from '@/types/Models';\n");
+            writer.append("import { CrudListDataType, ICrudListHeader, ICrudListHeaderOptionSearchType } from '@/types/Common';\n");
+            writer.append("import CrudApiList from '@/components/base/CrudApiList.vue';\n");
+            writer.append("import { biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
+            writer.append("import { ").append(upperTableName).append(" } from '@/utils/AppPermissionList';\n");
+            writer.append("import { useAppMeta } from '@/composables/UseAppMeta';\n");
+            writer.append("const { setTitle } = useAppMeta({ manualSet: true });\n");
+            writer.append("const { t } = useLang();\n");
+            writer.append("const headers = ref<ICrudListHeader[]>([\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                if (!exceptField(propertyName)) {
+
+                    String crudListType = getCrudListType(src.getPropertyType());
+                    String crudListSearchType = getCrudListSearchType(src.getPropertyType());
+                    String crudListSearchOperation = getCrudListSearchOperation(src.getPropertyType());
+                    boolean isClassRef = isObjectLink(src.getPropertyType());
+                    if (!isClassRef) {
+
+                        writer.append("  {\n");
+                        writer.append("    label: 'model.").append(entityNameLowerFirst).append(".").append(propertyName).append("',\n");
+                        writer.append("    column: '").append(propertyName).append("',\n");
+                        writer.append("    type: CrudListDataType.").append(crudListType).append(",\n");
+                        writer.append("    options: {\n");
+                        writer.append("      searchable: true,\n");
+                        writer.append("      sortable: true,\n");
+                        writer.append("      fillable: true,\n");
+                        if (crudListSearchType != null) {
+                            writer.append("      searchType: ICrudListHeaderOptionSearchType.").append(crudListSearchType).append(",\n");
+                            writer.append("      searchModel: '',\n");
+                            writer.append("      searchOperation: '").append(crudListSearchOperation).append("'\n");
+                        }
+                        writer.append("    }\n");
+                        writer.append("  },\n");
+                    }
+                }
+            }
+            //base tool
+            writer.append("  {\n");
+            writer.append("    label: 'base.tool',\n");
+            writer.append("    type: CrudListDataType.BASE_TOOL,\n");
+            writer.append("    options: {\n");
+            writer.append("      fillable: true,\n");
+            writer.append("      editButton: true,\n");
+            writer.append("      deleteButton: true,\n");
+            writer.append("      copyButton: true,\n");
+            writer.append("      align: 'center'\n");
+            writer.append("    }\n");
+            writer.append("  },\n");
+
+            writer.append("]);\n");
+            writer.append("const {\n");
+            writer.append("  crudName,\n");
+            writer.append("  loading,\n");
+            writer.append("  sort,\n");
+            writer.append("  filteredList,\n");
+            writer.append("  onItemCopy,\n");
+            writer.append("  onPageNoChange,\n");
+            writer.append("  onItemPerPageChange,\n");
+            writer.append("  onSort,\n");
+            writer.append("  onSortMode,\n");
+            writer.append("  onReload,\n");
+            writer.append("  filterText,\n");
+            writer.append("  onAdvanceSearch,\n");
+            writer.append("  onItemDelete,\n");
+            writer.append("  fristLoad,\n");
+            writer.append("  pages,\n");
+            writer.append("  onItemClick,\n");
+            writer.append("  onNewForm\n");
+            writer.append("} = useCrudList<WiDocumentType>(\n");
+            writer.append("  {\n");
+            writer.append("    crudName: 'wi_document_type',\n");
+            writer.append("    apiEndpoint: '/api',\n");
+            writer.append("    fetchListOnload: true,\n");
+            writer.append("    defaultSort: {\n");
+            writer.append("      column: 'id',\n");
+            writer.append("      mode: 'desc'\n");
+            writer.append("    }\n");
+            writer.append("  },\n");
+            writer.append("  headers\n");
+            writer.append(");\n");
+            writer.append("</script>\n");
+
+//            for (GenerateTableSrcItem src : propertyList) {
+//                String propertyName = src.getPropertyName();
+//                String propertyTypeName = src.getPropertyType();
+//                if (!exceptField(propertyName)) {
+//                    logger.info("Property: {}  of SqlType: {}, isUnique : {}, length : {}, propertyTypeName : {} , isNullable :{}, isTypeTextArea :{}",
+//                            src.getPropertyName(),
+//                            src.getSqlType(),
+//                            src.isUnique(),
+//                            src.getLength(),
+//                            src.getPropertyType(),
+//                            src.isNullable(),
+//                            src.isTypeTextArea()
+//                    );
+//                }
+//            }
+
+            writer.append("\n");
+            writer.close();
+            logger.info("     Created Class : {} ", filePathName);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+    }
+
+    private void generateFrontService(String filePathName, String entityName, String tableName) {
+        String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
+        String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
+        String tableNameKebabCase = tableName.replace("_", "-");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+
+            //api service
+            writer.append("// move this file to /src/api \n");
+
+            writer.append("import { useAxios } from '@/composables/UseAxios';\n");
+            writer.append("import { ").append(entityName).append(", ApiListResponse } from '@/types/Models';\n");
+            writer.append("import { ResponseMessage } from '@/types/Common';\n");
+            writer.append("export default () => {\n");
+            writer.append("  const { callAxiosV2 } = useAxios();\n");
+            writer.append("  const findAll = async (q: string): Promise<ApiListResponse<").append(entityName).append("> | null> => {\n");
+            writer.append("    return await callAxiosV2<ApiListResponse<").append(entityName).append(">>({\n");
+            writer.append("      API: `/api/").append(entityNameLowerFirst).append("${q}`,\n");
+            writer.append("      method: 'GET',\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  const findById = async (id: number): Promise<").append(entityName).append(" | null> => {\n");
+            writer.append("    return await callAxiosV2<").append(entityName).append(">({\n");
+            writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
+            writer.append("      method: 'GET',\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  const crudCreate = async (request: ").append(entityName).append("): Promise<").append(entityName).append(" | null> => {\n");
+            writer.append("    return await callAxiosV2<").append(entityName).append(">({\n");
+            writer.append("      API: '/api/").append(entityNameLowerFirst).append("',\n");
+            writer.append("      method: 'POST',\n");
+            writer.append("      body: {\n");
+            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+            writer.append("      },\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  const crudUpdate = async (request: ").append(entityName).append("): Promise<").append(entityName).append(" | null> => {\n");
+            writer.append("    return await callAxiosV2<").append(entityName).append(">({\n");
+            writer.append("      API: '/api/").append(entityNameLowerFirst).append("',\n");
+            writer.append("      method: 'PUT',\n");
+            writer.append("      body: {\n");
+            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+            writer.append("      },\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  const deleteById = async (id: number): Promise<ResponseMessage | null> => {\n");
+            writer.append("    return await callAxiosV2<ResponseMessage>({\n");
+            writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
+            writer.append("      method: 'DELETE',\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  return {\n");
+            writer.append("    findAll,\n");
+            writer.append("    findById,\n");
+            writer.append("    crudCreate,\n");
+            writer.append("    crudUpdate,\n");
+            writer.append("    deleteById\n");
+            writer.append("  };\n");
+            writer.append("};\n");
+            writer.close();
+            logger.info("     Created Class : {} ", filePathName);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+    }
+
+    private boolean exceptField(String propertyName) {
+        return propertyName.equals("createdDate") || propertyName.equals("createdUser") || propertyName.equals("updatedDate") || propertyName.equals("updatedUser") || propertyName.equals("deleted");
+    }
+
+    private String getTypscriptType(String propertyType) {
+        if (isObjectLink(propertyType)) {
+            return getClassNameFromPackageString(propertyType);
+        } else if (propertyType.equals(TYPE_BOOLEAN)) {
+            return TYPESCRIPT_BOOLEAN;
+        } else if (propertyType.equals(TYPE_STRING) || propertyType.equals(TYPE_LOCAL_DATE) || propertyType.equals(TYPE_LOCAL_DATETIME)) {
+            return TYPESCRIPT_STRING;
+        } else if (propertyType.equals(TYPE_FLOAT) || propertyType.equals(TYPE_BIG_DECIMAL) || propertyType.equals(TYPE_INTEGER)) {
+            return TYPESCRIPT_NUMBER;
+        }
+        return TYPESCRIPT_UNDEFINED;
+    }
+
+    private String getCrudListType(String propertyType) {
+        if (propertyType.equals(TYPE_BOOLEAN)) {
+            return "STATUS";
+        } else if (propertyType.equals(TYPE_STRING) || isObjectLink(propertyType)) {
+            return "TEXT";
+        } else if (propertyType.equals(TYPE_LOCAL_DATE)) {
+            return "DATE";
+        } else if (propertyType.equals(TYPE_LOCAL_DATETIME)) {
+            return "DATE_TIME";
+        } else if (propertyType.equals(TYPE_FLOAT) || propertyType.equals(TYPE_BIG_DECIMAL) || propertyType.equals(TYPE_INTEGER)) {
+            return "NUMBER_FORMAT";
+        }
+        return "TEXT";
+    }
+
+    private String getCrudListSearchType(String propertyType) {
+        if (propertyType.equals(TYPE_BOOLEAN)) {
+            return "BOOLEAN";
+        } else if (propertyType.equals(TYPE_STRING) || isObjectLink(propertyType)) {
+            return "TEXT";
+        } else if (propertyType.equals(TYPE_LOCAL_DATE)) {
+            return "DATE";
+        } else if (propertyType.equals(TYPE_LOCAL_DATETIME)) {
+            return "DATE_TIME";
+        } else if (propertyType.equals(TYPE_FLOAT) || propertyType.equals(TYPE_BIG_DECIMAL) || propertyType.equals(TYPE_INTEGER)) {
+            return "NUMBER";
+        }
+        return null;
+    }
+
+    private String getCrudListSearchOperation(String propertyType) {
+        if (propertyType.equals(TYPE_BOOLEAN)) {
+            return "=";
+        } else if (propertyType.equals(TYPE_STRING) || isObjectLink(propertyType)) {
+            return ":";
+        } else if (propertyType.equals(TYPE_LOCAL_DATE) || propertyType.equals(TYPE_LOCAL_DATETIME)) {
+            return ">=";
+        } else if (propertyType.equals(TYPE_FLOAT) || propertyType.equals(TYPE_BIG_DECIMAL) || propertyType.equals(TYPE_INTEGER)) {
+            return ">=";
+        }
+        return "=";
+    }
+
+    private String getJavaType(String propertyType) {
+        if (isObjectLink(propertyType)) {
+            return getClassNameFromPackageString(propertyType);
+        } else if (propertyType.equals(TYPE_BOOLEAN)) {
+            return TYPE_BOOLEAN;
+        } else if (propertyType.equals(TYPE_STRING)) {
+            return AppUtil.capitalizeFirstLetter(TYPE_STRING, false);
+        } else if (propertyType.equals(TYPE_LOCAL_DATE)) {
+            return TYPE_LOCAL_DATE;
+        } else if (propertyType.equals(TYPE_LOCAL_DATETIME)) {
+            return TYPE_LOCAL_DATETIME;
+        } else if (propertyType.equals(TYPE_FLOAT)) {
+            return AppUtil.capitalizeFirstLetter(TYPE_FLOAT, false);
+        } else if (propertyType.equals(TYPE_BIG_DECIMAL)) {
+            return "BigDecimal";
+        } else if (propertyType.equals(TYPE_INTEGER)) {
+            return "int";
+        }
+        return null;
+    }
+    private String getTypscriptTypeDefaultValue(String propertyType) {
+        if (isObjectLink(propertyType)) {
+            return TYPESCRIPT_NULL;
+        } else if (propertyType.equals(TYPE_BOOLEAN)) {
+            return "true";
+        } else if (propertyType.equals(TYPE_STRING) || propertyType.equals(TYPE_LOCAL_DATETIME)) {
+            return "''";
+        } else if (propertyType.equals(TYPE_LOCAL_DATE)) {
+            return "getCurrentDateByFormat()";
+        } else if (propertyType.equals(TYPE_FLOAT) || propertyType.equals(TYPE_BIG_DECIMAL) || propertyType.equals(TYPE_INTEGER)) {
+            return "0";
+        }
+        return TYPESCRIPT_NULL;
+    }
+    private boolean isTypeTextArea(String getSqlType, String propertyType) {
+        return getSqlType != null && propertyType.equals(TYPE_STRING) && AppUtil.findStringInString(getSqlType, TYPE_TEXT);
+    }
+
+    private boolean isObjectLink(String propertyType) {
+        return AppUtil.findStringInString(propertyType, DOT);
+    }
+
+    private String getClassNameFromPackageString(String fullClassName) {
+        if (!isObjectLink(fullClassName)) {
+            return null;
+        }
+        // Split the full class name by the dot (.)
+        String[] parts = fullClassName.split("\\.");
+        return parts[parts.length - 1];
+    }
 
     private Class<?> getClassFromName(String className) {
         try {
