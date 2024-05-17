@@ -272,7 +272,7 @@ public class UserController extends BaseApiController {
         }
         //validate pwd strong
         boolean isStrong = AppUtil.validatePasswordStrong(dto.getNewPassword());
-        if(!isStrong){
+        if (!isStrong) {
             return this.responseServerMessage(i18n.getMessage("error.pwd.policy.alert"), HttpStatus.BAD_REQUEST);
         }
         if (!encryptService.check(dto.getPassword(), user.get().getPassword()) || !user.get().isActive()) {
@@ -315,5 +315,26 @@ public class UserController extends BaseApiController {
         return this.responseServerMessage(i18n.getMessage("success"), HttpStatus.OK);
     }
 
+    @PutMapping("/refreshFcmToken")
+    public ResponseEntity<Object> refreshFcmToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken());
+        if (accessToken.isPresent() && refreshTokenRequest.getFcmToken() != null) {
+            //update null to other device in the same fcm token
+            accessTokenService.updateNullFcmToken(refreshTokenRequest.getFcmToken());
+            accessToken.get().setFcmToken(refreshTokenRequest.getFcmToken());
+            accessTokenService.update(accessToken.get());
+        }
+        return this.responseEntity(HttpStatus.OK);
+    }
+
+    @PutMapping("/updateFcmSetting")
+    public ResponseEntity<Object> updateFcmSetting(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken());
+        if (accessToken.isPresent() && refreshTokenRequest.getFcmToken() != null) {
+            accessToken.get().setFcmEnable(refreshTokenRequest.isFcmEnable());
+            accessTokenService.update(accessToken.get());
+        }
+        return this.responseEntity(HttpStatus.OK);
+    }
 
 }
