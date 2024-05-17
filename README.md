@@ -615,7 +615,7 @@ The system will generate the following files.
 4. `RoleServiceImpl` serviceImpl Package
 5. `RoleController` api.controller Package
 
-If use use my [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app) You can create frontend List.vue and Form.vue by adding additional annotaion 'createFrontend = true' Call `/dev/development/generateSrc` to auto generate source 
+If you use my [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app) You can create frontend List.vue and Form.vue by adding additional annotaion 'createFrontend = true' Call `/dev/development/generateSrc` to auto generate source 
 
 It will be created at `build\generated\frontend`
 ```java
