@@ -106,6 +106,7 @@ public class ConstantData {
     public static final String NOTIFY_DATA_NOTIFY_ID_ATT = "notificatoinId";
     public static final List<Integer> MANAGEMENT_ORG_LEVEL = List.of(0, 1);
     public static final String AT_SIGN = "@";
+    public static final String OR_SEPARATED = "||";
 
     public static String CONTENT_TYPE_EXCEL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     public static final int ONLINE_MINUTES_CLAIM = 5;

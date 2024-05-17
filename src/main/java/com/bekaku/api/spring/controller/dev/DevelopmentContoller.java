@@ -935,7 +935,7 @@ public class DevelopmentContoller extends BaseApiController {
                     Long limitText = src.getLength();
                     boolean isRefClass = isObjectLink(propertyTypeName);
                     //start col
-                    writer.append("          <div class=\"col-12 col-md-4 q-pa-sm\">\n");
+                    writer.append("          <div class=\"col-12 col-md-4 q-pa-md\">\n");
                     if (isRefClass) {
                         //if reference to other Object class
                         writer.append("          <!-- type ").append(propertyTypeName).append(" -->\n");
@@ -982,7 +982,7 @@ public class DevelopmentContoller extends BaseApiController {
                         writer.append("            </q-input>\n");
                     } else if (propertyTypeName.equals(TYPE_BOOLEAN)) {
                         writer.append("             <form-togle v-model=\"crudEntity.").append(propertyName).append("\"\n");
-                        writer.append("              :title=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
+                        writer.append("              :title=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
                         writer.append("              />\n");
                     } else if (propertyTypeName.equals(TYPE_LOCAL_DATE)) {
                         writer.append("            <date-picker\n");
@@ -1052,7 +1052,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("  crudEntity\n");
             writer.append("} = useCrudForm<").append(entityName).append(">(\n");
             writer.append("  {\n");
-            writer.append("    crudName: 'wi_document_type',\n");
+            writer.append("    crudName: '").append(tableName).append("',\n");
             writer.append("    backLink: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
 //            writer.append("    backLink: ").append(tableNameKebabCase).append(",\n");
             writer.append("    backToPreviousPath: true,\n");
@@ -1115,16 +1115,9 @@ public class DevelopmentContoller extends BaseApiController {
 
             writer.append("<script setup lang=\"ts\">\n");
 
-            //api service
-            writer.append("/* move this api service to /src/breadcrumbs/AdminBreadcrumbs.ts or /src/BackendBreadcrumbs/backendRoutes.ts \n");
-
-            writer.append("\n");
-            writer.append("*/\n");
-            writer.append("\n");
-
             String breadcrumbsName = "Bc" + entityName + "Form";
             //breadcrumbs
-            writer.append("/* move this variable to /src/breadcrumbs/AdminBreadcrumbs.ts or /src/BackendBreadcrumbs/backendRoutes.ts \n");
+            writer.append("/* move this variable to /src/breadcrumbs/AdminBreadcrumbs.ts or /src/BackendBreadcrumbs/BackendBreadcrumbs.ts \n");
             writer.append("export const ").append(breadcrumbsName).append(": Breadcrumb[] = [\n");
             writer.append("  {\n");
             writer.append("    label: 'model.").append(entityNameLowerFirst).append(".table',\n");
@@ -1141,7 +1134,7 @@ public class DevelopmentContoller extends BaseApiController {
             //router
             writer.append("/* move this object to /src/router/adminRoutes.ts or /src/router/backendRoutes.ts or /src/router/frontendRoutes.ts \n");
             writer.append("      {\n");
-            writer.append("        path: 'wi-document-type',\n");
+            writer.append("        path: '").append(tableNameKebabCase).append("',\n");
             writer.append("        children: [\n");
             writer.append("          {\n");
             writer.append("            path: '',\n");
@@ -1276,9 +1269,9 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("  pages,\n");
             writer.append("  onItemClick,\n");
             writer.append("  onNewForm\n");
-            writer.append("} = useCrudList<WiDocumentType>(\n");
+            writer.append("} = useCrudList<").append(entityName).append(">(\n");
             writer.append("  {\n");
-            writer.append("    crudName: 'wi_document_type',\n");
+            writer.append("    crudName: '").append(tableName).append("',\n");
             writer.append("    apiEndpoint: '/api',\n");
             writer.append("    fetchListOnload: true,\n");
             writer.append("    defaultSort: {\n");

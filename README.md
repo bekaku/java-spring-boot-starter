@@ -499,7 +499,7 @@ Json root name : userRegister
 
 **Access control list example usage**
 
-Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method in controller.
+Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}||{PERMISSION_NAME2}||{PERMISSION_NAME3}')")` to method in controller.
 
 ```java
 package com.bekaku.api.spring.controller.api;
@@ -526,7 +526,7 @@ public class RoleController extends BaseApiController {
                 PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Role.getSort())), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('role_add')")
+    @PreAuthorize("isHasPermission('role_add||user_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
         Role role = roleService.convertDtoToEntity(dto);
@@ -614,4 +614,16 @@ The system will generate the following files.
 3. `RoleService` service Package
 4. `RoleServiceImpl` serviceImpl Package
 5. `RoleController` api.controller Package
+
+If use use my [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app) You can create frontend List.vue and Form.vue by adding additional annotaion 'createFrontend = true' Call `/dev/development/generateSrc` to auto generate source 
+
+It will be created at `build\generated\frontend`
+```java
+@GenSourceableTable(createFrontend = true)
+public class Role extends BaseEntity {
+
+}
+```
 ---
+
+
