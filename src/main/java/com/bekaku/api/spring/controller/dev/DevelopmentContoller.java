@@ -455,6 +455,7 @@ public class DevelopmentContoller extends BaseApiController {
                         String type = getJavaType(src.getPropertyType());
                         boolean isNullable = src.isNullable();
                         Long size = src.getLength();
+                        boolean isRefClass = isObjectLink(src.getPropertyType());
                         if (type != null) {
                             if (src.getPropertyType().equals(TYPE_LOCAL_DATETIME)) {
                                 writer.append("    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyy-MM-dd HH:mm:ss\")\n");
@@ -463,7 +464,12 @@ public class DevelopmentContoller extends BaseApiController {
                             }
 
                             if (!isNullable) {
-                                writer.append("    @NotEmpty(message = \"{error.NotEmpty}\")\n");
+                                if(!isRefClass){
+                                    writer.append("    @NotEmpty(message = \"{error.NotEmpty}\")\n");
+                                }else{
+                                    writer.append("    //@NotEmpty(message = \"{error.NotEmpty}\")\n");
+                                }
+
                             }
                             if (size != null && !src.getPropertyType().equals(TYPE_BIG_DECIMAL)) {
                                 if (src.getPropertyType().equals(TYPE_LOCAL_DATE)) {
@@ -477,7 +483,8 @@ public class DevelopmentContoller extends BaseApiController {
                                 writer.append("    @DecimalMax(value = \"999999999999.0\", message = \"{error.DecimalMax.message}\")\n");
                                 writer.append("    @DecimalMin(value = \"0.0\", message = \"{error.DecimalMin.message}\")\n");
                             }
-                            if (isObjectLink(src.getPropertyType())) {
+
+                            if (isRefClass) {
                                 writer.append("    //private ").append(type).append(" ").append(propertyName).append(";\n");
                             } else {
                                 writer.append("    private ").append(type).append(" ").append(propertyName).append(";\n");

@@ -1,31 +1,23 @@
 package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
-import com.bekaku.api.spring.model.superclass.SoftDeletedAuditable;
+import com.bekaku.api.spring.model.superclass.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.domain.Sort;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@GenSourceableTable(createPermission = false )
+@GenSourceableTable(createPermission = false)
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor
-@Table(name = "permission", indexes = {
-        @Index(columnList = "deleted"),
-        @Index(columnList = "updated_user"),
-        @Index(columnList = "created_user"),
-})
-@SQLDelete(sql = "UPDATE permission SET deleted = true WHERE id=?")
-@SQLRestriction("deleted=false")
-public class Permission extends SoftDeletedAuditable<Long> {
+@Table(name = "permission")
+public class Permission extends Id {
     public Permission(String code, Boolean frontEnd) {
         this.code = code;
         this.frontEnd = frontEnd;

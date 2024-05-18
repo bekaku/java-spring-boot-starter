@@ -20,7 +20,7 @@ public class CORSConfig implements WebMvcConfigurer {
                         ConstantData.ACCEPT_APIC_LIENT
                 )
                 .exposedHeaders(ConstantData.CONTENT_DISPOSITION)
-                .allowCredentials(true)
+                .allowCredentials(false)
                 .allowedOriginPatterns("*");
 //                .allowedOrigins("http://localhost:9100");
     }
