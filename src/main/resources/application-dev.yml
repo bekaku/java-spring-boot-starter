@@ -7,7 +7,7 @@ spring:
     restart:
       poll-interval: 10s
       #      quiet-period: 1s
-      enabled: true
+      enabled: false
       exclude: static/**
       additional-paths: i18n/**,mapper/**
     livereload:
