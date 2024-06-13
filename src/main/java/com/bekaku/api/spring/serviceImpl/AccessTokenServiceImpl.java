@@ -96,7 +96,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 //        Date expires = new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_YEAR));
         AccessToken accessToken = new AccessToken(
                 user,
-                jwtService.expireTimeFromNow(),
+                jwtService.expireRefreshTokenTimeFromNow(),
                 false,
                 apiClient,
                 loginLog,

@@ -17,8 +17,6 @@ public interface AuthService {
 
     RefreshTokenResponse login(User user, LoginRequest loginRequest, ApiClient apiClient, String userAgent, IpAddress ipAddress);
 
-    RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest, ApiClient apiClient, String userAgent);
-
     RefreshTokenResponse refreshToken(AccessToken accessToken, ApiClient apiClient, String userAgent);
 
     void verifyAccount(String token);

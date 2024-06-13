@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserService extends BaseService<User, UserDto> {
-
+    Optional<User> findByUUID(String salt);
     void updatePasswordBy(User user, String password);
     //Repository
     Optional<User> findByEmail(String email);

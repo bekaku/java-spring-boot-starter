@@ -46,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthServiceImpl(@Lazy UserAgentService userAgentService) {
         this.userAgentService = userAgentService;
     }
+
     @Override
     @Transactional(readOnly = true)
     public User getCurrentUser() {
@@ -71,49 +72,28 @@ public class AuthServiceImpl implements AuthService {
         AccessToken token = accessTokenService.generateRefreshToken(user, apiClient, loginLog, loginRequest.getFcmToken());
         return RefreshTokenResponse.builder()
                 .userId(user.getId())
-                .authenticationToken(jwtService.toToken(token.getToken(), apiClient))
+                .authenticationToken(jwtService.toToken(user, token.getToken(), apiClient))
                 .refreshToken(token.getToken())
                 .expiresAt(jwtService.expireJwtTimeFromNow())
                 .build();
     }
 
-    @Override
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest, ApiClient apiClient, String userAgent) {
-        AccessToken accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken()).orElseThrow(
-                () -> new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
-                        i18n.getMessage("error.tokenNOtFound", refreshTokenRequest.getRefreshToken()))));
 
-//        User user = userService.findByEmail(refreshTokenRequest.getEmail()).orElseThrow(
-//                () -> new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"),
-//                        i18n.getMessage("error.userNotFoundWithEmail", refreshTokenRequest.getEmail()))));
-
-        //update refresh token
-        Date dateExpired = jwtService.expireTimeFromNow();
-        String token = UUID.randomUUID() + "-" + DateUtil.getCurrentMilliTimeStamp();
-        accessToken.setToken(token);
-        accessToken.setExpiresAt(dateExpired);
-        accessTokenService.save(accessToken);
-
-        return RefreshTokenResponse.builder()
-                .authenticationToken(jwtService.toToken(token, apiClient))
-                .refreshToken(token)
-                .expiresAt(dateExpired)
-                .build();
-    }
     @Override
     public RefreshTokenResponse refreshToken(AccessToken accessToken, ApiClient apiClient, String userAgent) {
         //update refresh token
         String token = UUID.randomUUID() + "-" + DateUtil.getCurrentMilliTimeStamp();
         accessToken.setToken(token);
-        accessToken.setExpiresAt(jwtService.expireTimeFromNow());
+        accessToken.setExpiresAt(jwtService.expireRefreshTokenTimeFromNow());
         accessTokenService.update(accessToken);
 
         return RefreshTokenResponse.builder()
-                .authenticationToken(jwtService.toToken(token, apiClient))
+                .authenticationToken(jwtService.toToken(accessToken.getUser(), token, apiClient))
                 .refreshToken(token)
                 .expiresAt(jwtService.expireJwtTimeFromNow())
                 .build();
     }
+
     @Override
     public void verifyAccount(String token) {
         Optional<AccessToken> verificationToken = accessTokenService.findByToken(token);

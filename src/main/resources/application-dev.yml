@@ -94,9 +94,9 @@ app:
   cdn-port: 8080
 
   jwt:
-    #    secret: d3db548b2325f7aa199da97cb48b55535839f9972f696293369d291ee4e8c9ced9e005c7c4333961f13fa65b129e0918d08a9516adbba9c5a537f43ae7a1be10
-    #default is 0 , if default set to 0 it automatic set exprires date in 365 day , you can set eg. 1 day to 86400, 2592000 = 30days
-    session-time: 0
+    secret: 1c88aa90d3ca655724a0c78db6a02987720f8dccbb7165609a0f6fc1b031523cf24135365856e5372cb0586abbd14a3cbf82644793d4065df16b0295be3dde6e
+    #millisecond default is 86400 = 1 days, 900=15 minutes, 600=10 minutes
+    session-time: 600
     session-day: 365
     refresh-token-name: _test_myappkey_device_jid
 

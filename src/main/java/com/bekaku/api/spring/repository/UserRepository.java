@@ -15,6 +15,8 @@ public interface UserRepository extends BaseRepository<User, Long>, JpaSpecifica
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findBySalt(String salt);
+
     @Modifying
     @Query("UPDATE User e SET e.password = ?2 WHERE e = ?1")
     void updatePasswordBy(User user, String password);

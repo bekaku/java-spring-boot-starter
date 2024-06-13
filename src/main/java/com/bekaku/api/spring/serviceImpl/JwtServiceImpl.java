@@ -1,10 +1,12 @@
 package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.dto.UserDto;
+import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.service.AccessTokenService;
 import com.bekaku.api.spring.service.ApiClientService;
 import com.bekaku.api.spring.service.JwtService;
+import com.bekaku.api.spring.service.UserService;
 import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.model.User;
 import io.jsonwebtoken.*;
@@ -19,6 +21,8 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,10 +31,11 @@ public class JwtServiceImpl implements JwtService {
     private final SecretKey signatureAlgorithm;
     private String secret;
     private final int sessionTime;
-
+    private final String UUID = "uuid";
     @Autowired
     private ApiClientService apiClientService;
-
+    @Autowired
+    private UserService userService;
     @Autowired
     private AccessTokenService accessTokenService;
 
@@ -52,16 +57,22 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String toToken(String token, ApiClient apiClient) {
-        return toTokenBy(token, apiClient, expireJwtTimeFromNow());
-        //test
-//        return toTokenBy(token, apiClient, new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_MINUTE * 10));
+        return toTokenBy(token, apiClient, expireJwtTimeFromNow(), new HashMap<>());
     }
 
-    private String toTokenBy(String token, ApiClient apiClient, Date expireTime) {
+    @Override
+    public String toToken(User user, String token, ApiClient apiClient) {
+        Map<String, String> claims = new HashMap<>();
+        claims.put(UUID, user.getSalt());
+        return toTokenBy(token, apiClient, expireJwtTimeFromNow(), claims);
+    }
+
+    private String toTokenBy(String token, ApiClient apiClient, Date expireTime, Map<String, ?> claims) {
         return Jwts.builder()
                 .subject(token)
                 .issuedAt(new Date())
 //                .claim("hello", "world")
+                .claims(claims)
                 .expiration(expireTime)
                 .signWith(getKey(apiClient))
                 .compact();
@@ -69,7 +80,7 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String toToken(String token, ApiClient apiClient, Date expireTime) {
-        return toTokenBy(token, apiClient, expireTime);
+        return toTokenBy(token, apiClient, expireTime, new HashMap<>());
     }
 
     @Override
@@ -77,6 +88,15 @@ public class JwtServiceImpl implements JwtService {
         try {
             Jws<Claims> claimsJws = Jwts.parser().verifyWith(getKey(apiClient)).build().parseSignedClaims(token);
             return Optional.ofNullable(claimsJws.getPayload().getSubject());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Claims> getClaimsFromToken(String token, ApiClient apiClient) {
+        try {
+            Jws<Claims> claimsJws = Jwts.parser().verifyWith(getKey(apiClient)).build().parseSignedClaims(token);
+            return Optional.ofNullable(claimsJws.getPayload());
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -98,6 +118,58 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Optional<UserDto> jwtVerify(String apiclientName, String authorization) {
+        AtomicReference<Optional<UserDto>> dto = new AtomicReference<>(Optional.empty());
+        Optional<ApiClient> apiClient = verifyApiClient(apiclientName);
+        if (apiClient.isPresent()) {
+            Optional<String> authToken = getTokenString(authorization);
+            if (authToken.isPresent()) {
+//                Optional<String> sub = getSubFromToken(authToken.get(), apiClient.get());
+                Optional<Claims> claims = getClaimsFromToken(authToken.get(), apiClient.get());
+                if (claims.isPresent()) {
+                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                        String sub = claims.get().getSubject();
+                        String userUuid = (String) claims.get().get(UUID);
+                        if (sub != null) {
+                            UserDto userDto;
+                            Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(sub, false);
+                            if (accessToken.isPresent()) {
+                                userDto = setUserDto(accessToken.get().getUser());
+                                if (userDto != null) {
+                                    accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), accessToken.get().getId());
+                                    userDto.setToken(sub);
+                                    userDto.setAccessTokenId(accessToken.get().getId());
+                                    dto.set(Optional.of(userDto));
+                                }
+                            } else if (userUuid != null) {
+                                Optional<User> userByUUID = userService.findByUUID(userUuid);
+                                if (userByUUID.isPresent()) {
+                                    userDto = setUserDto(userByUUID.get());
+                                    dto.set(Optional.of(userDto));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return dto.get();
+    }
+
+    private UserDto setUserDto(User user) {
+        if (user != null && user.isActive()) {
+            UserDto userData = new UserDto();
+            userData.setId(user.getId());
+            userData.setUsername(user.getUsername());
+            userData.setEmail(user.getEmail());
+            userData.setActive(user.isActive());
+            return userData;
+        }
+        return null;
+    }
+
+    @Deprecated
+    public Optional<UserDto> jwtVerifyBy(String apiclientName, String authorization) {
         AtomicReference<Optional<UserDto>> dto = new AtomicReference<>(Optional.empty());
         verifyApiClient(apiclientName).flatMap(apiClient ->
                 getTokenString(authorization).flatMap(token ->
@@ -151,14 +223,13 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Date expireTimeFromNow() {
-        return new Date(System.currentTimeMillis() + (DateUtil.MILLS_IN_MONTH * 2));//2 months
-//        return new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_MONTH * 2));//2 months
+    public Date expireRefreshTokenTimeFromNow() {
+        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_MONTH);
     }
 
     @Override
     public Date expireJwtTimeFromNow() {
-        return new Date(System.currentTimeMillis() + (DateUtil.MILLS_IN_DAY * 7));
+        return new Date(System.currentTimeMillis() + expireMillisec());
     }
 
     @Override
@@ -182,7 +253,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public int expireMillisec() {
-        return sessionTime * 1000;
+    public Long expireMillisec() {
+        return sessionTime * 1000L;
     }
 }

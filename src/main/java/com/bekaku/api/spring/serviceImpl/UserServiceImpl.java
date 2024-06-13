@@ -140,6 +140,12 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
         return modelMapper.map(userData, User.class);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<User> findByUUID(String salt) {
+        return userRepository.findBySalt(salt);
+    }
+
     @Override
     public void updatePasswordBy(User user, String password) {
         userRepository.updatePasswordBy(user, password);
