@@ -96,7 +96,7 @@ app:
   jwt:
     secret: 1c88aa90d3ca655724a0c78db6a02987720f8dccbb7165609a0f6fc1b031523cf24135365856e5372cb0586abbd14a3cbf82644793d4065df16b0295be3dde6e
     #millisecond default is 86400 = 1 days, 900=15 minutes, 600=10 minutes
-    session-time: 60
+    session-time: 86400
     session-day: 365
     refresh-token-name: _test_myappkey_device_jid
 
