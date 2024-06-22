@@ -796,7 +796,7 @@ public class DevelopmentContoller extends BaseApiController {
 //                writer.append("        if (roleExist.isPresent()) {\n");
 //                writer.append("            throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage(\"error.validateDuplicate\", dto.getName()));\n");
 //                writer.append("        }\n");
-
+                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.save(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 if (haveDto) {
                     writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 } else {
