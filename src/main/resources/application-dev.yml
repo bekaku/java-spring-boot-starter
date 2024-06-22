@@ -9,7 +9,7 @@ spring:
       #      quiet-period: 1s
       enabled: false
       exclude: static/**
-      additional-paths: i18n/**,mapper/**
+#      additional-paths: i18n/**,mapper/**
     livereload:
       enabled: false
   jpa:
