@@ -1,5 +1,7 @@
 package com.bekaku.api.spring.util;
 
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.exif.ExifIFD0Directory;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MimeType;
@@ -149,7 +151,38 @@ public class FileUtil {
         }*/
         return fileName.replace(".jpg", thumPostFixName + ".jpg");
     }
+    public static BufferedImage correctOrientation(BufferedImage image, File file) throws IOException {
+        int orientation = 1;
+        try {
+            com.drew.metadata.Metadata metadata = ImageMetadataReader.readMetadata(file);
+            ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
 
+            if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
+                orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        switch (orientation) {
+            case 1:
+                // No rotation needed
+                break;
+            case 3:
+                image = Thumbnails.of(image).size(image.getWidth(), image.getHeight()).rotate(180).asBufferedImage();
+                break;
+            case 6:
+                image = Thumbnails.of(image).size(image.getWidth(), image.getHeight()).rotate(90).asBufferedImage();
+                break;
+            case 8:
+                image = Thumbnails.of(image).size(image.getWidth(), image.getHeight()).rotate(-90).asBufferedImage();
+                break;
+            default:
+                break;
+        }
+
+        return image;
+    }
     public static boolean fileExists(String sFileName) {
         if (sFileName.startsWith("classpath:")) {
             String path = sFileName.substring("classpath:".length());

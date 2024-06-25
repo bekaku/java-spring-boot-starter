@@ -295,19 +295,22 @@ public class FileManagerController extends BaseApiController {
 
 
     private void thumbnailatorResize(String uploadFile, String fileName) {
-
-        if (FileUtil.fileExists(uploadFile + fileName)) {
+        String filePath = uploadFile + fileName;
+        if (FileUtil.fileExists(filePath)) {
             try {
                 int limitWidth = appProperties.getUploadImage().getLimitWidth();
                 int limitHeight = appProperties.getUploadImage().getLimitHeight();
-                BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
+
+                File inputFile = new File(filePath);
+                BufferedImage originalImage = ImageIO.read(inputFile);
+                originalImage = FileUtil.correctOrientation(originalImage, inputFile);
 
                 //get width and height of image
                 int imageWidth = originalImage.getWidth();
                 int imageHeight = originalImage.getHeight();
                 if (imageWidth > limitWidth || imageHeight > limitHeight) {
                     BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 1);
-                    ImageIO.write(outputImage, "jpg", new File(uploadFile + fileName));
+                    ImageIO.write(outputImage, "jpg", new File(filePath));
                 }
             } catch (IOException e) {
                 throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
@@ -316,12 +319,18 @@ public class FileManagerController extends BaseApiController {
     }
 
     private void thumbnailatorCreateThumnail(String uploadFile, String fileName) {
-        if (FileUtil.fileExists(uploadFile + fileName)) {
+        String filePath = uploadFile + fileName;
+        if (FileUtil.fileExists(filePath)) {
             try {
                 String thumbName = FileUtil.generateThumbnailName(fileName, appProperties.getUploadImage().getThumbnailExname());
-                BufferedImage originalImage = ImageIO.read(new File(uploadFile + fileName));
+                String fileThumnailPath = uploadFile + thumbName;
+
+                File inputFile = new File(filePath);
+                BufferedImage originalImage = ImageIO.read(inputFile);
+                originalImage = FileUtil.correctOrientation(originalImage, inputFile);
+
                 BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 1);
-                ImageIO.write(outputImage, "jpg", new File(uploadFile + thumbName));
+                ImageIO.write(outputImage, "jpg", new File(fileThumnailPath));
             } catch (IOException e) {
                 throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
             }
