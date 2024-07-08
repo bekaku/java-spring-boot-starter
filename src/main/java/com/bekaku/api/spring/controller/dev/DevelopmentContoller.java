@@ -643,7 +643,7 @@ public class DevelopmentContoller extends BaseApiController {
                     writer.append("                .map(this::convertEntityToDto)\n");
                     writer.append("                .collect(Collectors.toList())\n");
                 }
-                writer.append("                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());\n");
+                writer.append("                , result.getTotalPages(), result.getTotalElements(), result.isLast());\n");
                 writer.append("    }\n");
                 //findAll
                 writer.append("\n");

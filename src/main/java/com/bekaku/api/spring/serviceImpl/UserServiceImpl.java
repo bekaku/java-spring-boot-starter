@@ -76,7 +76,7 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
 
     private ResponseListDto<UserDto> getListFromResult(Page<User> result) {
         return new ResponseListDto<>(result.getContent().stream().map(this::convertEntityToDto).collect(Collectors.toList())
-                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
+                , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
     @Transactional(readOnly = true)

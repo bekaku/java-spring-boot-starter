@@ -56,7 +56,7 @@ public class UserLoginLogsServiceImpl implements UserLoginLogsService {
 
     private ResponseListDto<UserLoginLogs> getListFromResult(Page<UserLoginLogs> result) {
         return new ResponseListDto<>(result.getContent()
-                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
+                , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
     @Transactional(readOnly = true)

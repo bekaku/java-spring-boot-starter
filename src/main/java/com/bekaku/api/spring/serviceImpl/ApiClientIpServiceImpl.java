@@ -108,7 +108,7 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
                 .stream()
                 .map(this::convertEntityToDto)
                 .collect(Collectors.toList())
-                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
+                , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
     @Override
     public ResponseListDto<ApiClientIpDto> findPageByApiClient(Long apiCilentId, Pageable pageable) {

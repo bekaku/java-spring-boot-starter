@@ -54,7 +54,7 @@ public class FileMimeServiceImpl implements FileMimeService {
 
     private ResponseListDto<FileMime> getListFromResult(Page<FileMime> result) {
         return new ResponseListDto<>(result.getContent()
-                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
+                , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
     @Transactional(readOnly = true)

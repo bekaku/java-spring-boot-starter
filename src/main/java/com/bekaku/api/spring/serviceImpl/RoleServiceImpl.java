@@ -58,7 +58,7 @@ public class RoleServiceImpl implements RoleService {
                 .stream()
                 .map(this::convertEntityToDto)
                 .collect(Collectors.toList())
-                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
+                , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
     @Transactional(readOnly = true)

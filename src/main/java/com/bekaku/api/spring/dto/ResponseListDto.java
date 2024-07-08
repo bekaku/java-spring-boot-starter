@@ -8,10 +8,10 @@ import java.util.List;
 public class ResponseListDto<T> {
     private List<T> dataList;
     private int totalPages;
-    private int totalElements;
+    private long totalElements;
     private boolean isLast;
 
-    public ResponseListDto(List<T> dataList, int totalPages, int totalElements, boolean isLast) {
+    public ResponseListDto(List<T> dataList, int totalPages, long totalElements, boolean isLast) {
         this.dataList = dataList;
         this.totalPages = totalPages;
         this.totalElements = totalElements;

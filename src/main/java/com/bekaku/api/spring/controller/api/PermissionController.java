@@ -60,7 +60,7 @@ public class PermissionController extends BaseApiController {
                 .stream()
                 .map(t-> permissonService.convertEntityToDto(t))
                 .collect(Collectors.toList())
-                , result.getTotalPages(), result.getNumberOfElements(), result.isLast());
+                , result.getTotalPages(), result.getTotalElements(), result.isLast());
          */
 
 //        ResponseListDto<PermissionDto> dto = permissonService.findAllWithSearch(specification, pageable);
