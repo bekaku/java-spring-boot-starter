@@ -32,7 +32,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 //        logger.info("JwtTokenFilter > doFilterInternal");
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            Optional<UserDto> userData = jwtService.jwtVerify(request.getHeader(ConstantData.ACCEPT_APIC_LIENT), request.getHeader(ConstantData.AUTHORIZATION));
+            Optional<UserDto> userData = jwtService.jwtVerify(request.getHeader(ConstantData.ACCEPT_APIC_LIENT), request.getHeader(ConstantData.AUTHORIZATION), request.getHeader(ConstantData.X_SYNC_ACTIVE));
 //            logger.info("JwtVerify User data : {}", userData.<Object>map(UserDto::getEmail).orElse(null));
             if (userData.isPresent()) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(

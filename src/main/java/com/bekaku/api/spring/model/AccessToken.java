@@ -46,6 +46,7 @@ public class AccessToken extends Id {
         this.fcmToken = fcmToken;
         this.fcmEnable = true;
         this.service = AccessTokenServiceType.LOGIN;
+        this.lastestActive = DateUtil.getLocalDateTimeNow();
     }
     public void onCreateToken(User user, Date expiresAt, String token, AccessTokenServiceType service) {
         this.token = token;

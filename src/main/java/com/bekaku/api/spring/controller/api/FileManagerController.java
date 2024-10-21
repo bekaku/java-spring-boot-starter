@@ -303,14 +303,16 @@ public class FileManagerController extends BaseApiController {
 
                 File inputFile = new File(filePath);
                 BufferedImage originalImage = ImageIO.read(inputFile);
-                originalImage = FileUtil.correctOrientation(originalImage, inputFile);
+                if (originalImage != null) {
+                    originalImage = FileUtil.correctOrientation(originalImage, inputFile);
 
-                //get width and height of image
-                int imageWidth = originalImage.getWidth();
-                int imageHeight = originalImage.getHeight();
-                if (imageWidth > limitWidth || imageHeight > limitHeight) {
-                    BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 1);
-                    ImageIO.write(outputImage, "jpg", new File(filePath));
+                    //get width and height of image
+                    int imageWidth = originalImage.getWidth();
+                    int imageHeight = originalImage.getHeight();
+                    if (imageWidth > limitWidth || imageHeight > limitHeight) {
+                        BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 1);
+                        ImageIO.write(outputImage, "jpg", new File(filePath));
+                    }
                 }
             } catch (IOException e) {
                 throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
@@ -327,10 +329,13 @@ public class FileManagerController extends BaseApiController {
 
                 File inputFile = new File(filePath);
                 BufferedImage originalImage = ImageIO.read(inputFile);
-                originalImage = FileUtil.correctOrientation(originalImage, inputFile);
+                if (originalImage != null) {
+                    originalImage = FileUtil.correctOrientation(originalImage, inputFile);
 
-                BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 1);
-                ImageIO.write(outputImage, "jpg", new File(fileThumnailPath));
+                    BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 1);
+                    ImageIO.write(outputImage, "jpg", new File(fileThumnailPath));
+                }
+
             } catch (IOException e) {
                 throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
             }

@@ -1183,9 +1183,9 @@ public class DevelopmentContoller extends BaseApiController {
             //Permission
             writer.append("/* move this object to /src/utils/AppPermissionList.ts \n");
             writer.append("export const ").append(upperTableName).append("= {\n");
-            writer.append("  view: '").append(upperTableName).append("_config_view',\n");
-            writer.append("  list: '").append(upperTableName).append("_list',\n");
-            writer.append("  manage: '").append(upperTableName).append("_manage'\n");
+            writer.append("  view: '").append(entityNameLowerFirst).append("_config_view',\n");
+            writer.append("  list: '").append(entityNameLowerFirst).append("_list',\n");
+            writer.append("  manage: '").append(entityNameLowerFirst).append("_manage'\n");
             writer.append("}\n");
             writer.append("*/\n");
             writer.append("\n");
@@ -1193,7 +1193,7 @@ public class DevelopmentContoller extends BaseApiController {
             //message
             writer.append("/* move this message object to /src/i18n/th/model.ts and /src/i18n/en/model.ts under model:{}  \n");
             writer.append("    ,").append(entityNameLowerFirst).append(": {\n");
-            writer.append("      table: '").append(entityNameLowerFirst).append("'\n");
+            writer.append("      table: '").append(entityNameLowerFirst).append("',\n");
             for (GenerateTableSrcItem src : propertyList) {
                 String propertyName = src.getPropertyName();
                 if (!exceptField(propertyName)) {

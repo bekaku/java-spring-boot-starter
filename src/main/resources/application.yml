@@ -240,13 +240,21 @@ app:
       name: About
       path: /about
   allow-mimes:
+    - application/msword
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/vnd.ms-excel
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    - application/vnd.ms-powerpoint
+    - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    - application/pdf
+    - application/vnd.rar
+    - application/zip
     - image/jpeg
     - image/png
     - image/gif
-    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
-    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-    - application/vnd.openxmlformats-officedocument.presentationml.presentation
-    - application/pdf
+    - image/webp
+    - text/plain
+    - text/csv
   cron:
     test-expression: 0 */2 * * * *
 

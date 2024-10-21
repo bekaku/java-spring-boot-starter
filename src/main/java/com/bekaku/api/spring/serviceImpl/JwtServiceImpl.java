@@ -117,7 +117,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Optional<UserDto> jwtVerify(String apiclientName, String authorization) {
+    public Optional<UserDto> jwtVerify(String apiclientName, String authorization , String syncActiveHeader) {
         AtomicReference<Optional<UserDto>> dto = new AtomicReference<>(Optional.empty());
         Optional<ApiClient> apiClient = verifyApiClient(apiclientName);
         if (apiClient.isPresent()) {
@@ -135,7 +135,10 @@ public class JwtServiceImpl implements JwtService {
                             if (accessToken.isPresent()) {
                                 userDto = setUserDto(accessToken.get().getUser());
                                 if (userDto != null) {
-                                    accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), accessToken.get().getId());
+                                    //sync online status if required TODO you can implement with Message Queue eg. RabbitMQ
+                                    if(syncActiveHeader!=null && syncActiveHeader.equals("1")) {
+                                        accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), accessToken.get().getId());
+                                    }
                                     userDto.setToken(sub);
                                     userDto.setAccessTokenId(accessToken.get().getId());
                                     dto.set(Optional.of(userDto));

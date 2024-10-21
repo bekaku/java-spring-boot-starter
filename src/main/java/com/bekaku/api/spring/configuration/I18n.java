@@ -33,7 +33,11 @@ public class I18n {
     }
 
     public String getMessage(String code, Object... args) {
-        return accessor.getMessage(code, args, LocaleContextHolder.getLocale());
+        try {
+            return accessor.getMessage(code, args, LocaleContextHolder.getLocale());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String getMessage(String code) {

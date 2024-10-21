@@ -70,9 +70,13 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
+    //Image
     implementation 'net.coobird:thumbnailator:0.4.20'
     implementation 'com.drewnoakes:metadata-extractor:2.19.0'
     implementation 'org.apache.tika:tika-core:2.9.2'
+    implementation 'org.apache.tika:tika-parsers-standard:2.9.2'
+    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.11.0'
+
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
 
 //    caching

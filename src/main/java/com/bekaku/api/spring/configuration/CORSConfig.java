@@ -17,7 +17,8 @@ public class CORSConfig implements WebMvcConfigurer {
                         ConstantData.CONTENT_TYPE,
                         ConstantData.AUTHORIZATION,
                         ConstantData.ACCEPT_LANGUGE,
-                        ConstantData.ACCEPT_APIC_LIENT
+                        ConstantData.ACCEPT_APIC_LIENT,
+                        ConstantData.X_SYNC_ACTIVE
                 )
                 .exposedHeaders(ConstantData.CONTENT_DISPOSITION)
                 .allowCredentials(false)
