@@ -188,8 +188,8 @@ app:
   cdn-url: ${app.url}
   cdn-port: ${app.port}
   upload-image:
-    limit-width: 1280
-    limit-height: 1280
+    limit-width: 1776
+    limit-height: 1776
     create-thumbnail: true
     thumbnail-width: 196
     thumbnail-exname: '_thumb'
