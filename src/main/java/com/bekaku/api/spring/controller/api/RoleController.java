@@ -92,9 +92,9 @@ public class RoleController extends BaseApiController {
     }
 
     @PreAuthorize("isHasPermission('role_manage')")
-    @PutMapping
-    public ResponseEntity<Object> update(@Valid @RequestBody RoleDto dto) {
-        Optional<Role> role = roleService.findById(dto.getId());
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> update(@Valid @RequestBody RoleDto dto, @PathVariable("id") long id) {
+        Optional<Role> role = roleService.findById(id);
         if (role.isEmpty()) {
             throw this.responseErrorNotfound();
         }

@@ -144,9 +144,9 @@ public class UserController extends BaseApiController {
     }
 
     @PreAuthorize("isHasPermission('user_manage')")
-    @PutMapping
-    public ResponseEntity<Object> updateUser(@Valid @RequestBody UserUpdateRequest dto) {
-        Optional<User> user = userService.findById(dto.getId());
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> updateUser(@Valid @RequestBody UserUpdateRequest dto, @PathVariable("id") Long id) {
+        Optional<User> user = userService.findById(id);
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();
         }

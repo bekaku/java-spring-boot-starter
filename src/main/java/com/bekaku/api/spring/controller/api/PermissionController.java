@@ -114,10 +114,10 @@ public class PermissionController extends BaseApiController {
     }
 
     @PreAuthorize("isHasPermission('permission_manage')")
-    @PutMapping
-    public ResponseEntity<Object> update(@Valid @RequestBody PermissionDto dto) {
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> update(@Valid @RequestBody PermissionDto dto, @PathVariable("id") long id) {
         Permission permission = permissionService.convertDtoToEntity(dto);
-        Optional<Permission> oldData = permissionService.findById(dto.getId());
+        Optional<Permission> oldData = permissionService.findById(id);
         if (oldData.isEmpty()) {
             throw this.responseErrorNotfound();
         }
