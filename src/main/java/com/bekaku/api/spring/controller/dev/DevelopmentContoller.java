@@ -882,8 +882,8 @@ public class DevelopmentContoller extends BaseApiController {
         String tableName = table.getName();
         String tableNameKebabCase = tableName.replace("_", "-");
         String dirName = ConstantData.DEFAULT_FRONTEND_GENERATE_DIRECTORY + "/" + tableNameKebabCase;
-        String listName = dirName + "/List.vue";
-        String formName = dirName + "/Form.vue";
+        String listName = dirName + "/index.vue";
+        String formName = dirName + "/view.vue";
         String apiName = dirName + "/"+entityName + "Service.ts";
         logger.info("generateFrontend > TableName :{},  listName :{}, formName :{}, apiName :{}", tableName, listName, formName, apiName);
 
@@ -911,6 +911,66 @@ public class DevelopmentContoller extends BaseApiController {
         String tableNameKebabCase = tableName.replace("_", "-");
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+
+            writer.append("<script setup lang=\"ts\">\n");
+            writer.append("import { useLang } from '@/composables/useLang';\n");
+            writer.append("import { useCrudForm } from '@/composables/useCrudForm';\n");
+            writer.append("import { ").append(entityName).append(" } from '@/types/models';\n");
+            writer.append("import { useAppMeta } from '@/composables/useAppMeta';\n");
+            writer.append("import CrudApiForm from '@/components/base/CrudApiForm.vue';\n");
+            writer.append("import { useValidation } from '@/composables/useValidation';\n");
+            writer.append("import { biPencil, biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
+            writer.append("import { ").append(tableName).append("Permission } from '@/utils/appPermissionList';\n");
+            writer.append("import FormTogle from '@/components/quasar/Togle.vue';\n");
+            writer.append("import DatePicker from '@/components/quasar/DatePicker.vue';\n");
+            writer.append("import { getCurrentDateByFormat } from '@/utils/dateUtil';\n");
+//            writer.append("import { AdminRootPath } from '@/utils/Constant';\n");
+            writer.append("\n");
+
+            writer.append("const { t } = useLang();\n");
+            writer.append("const { required, requiredNotMinusNumberOrFloat } = useValidation();\n");
+
+            //initial entity
+            writer.append("const entity: ").append(entityName).append(" = Object.freeze({\n");
+            writer.append("  id: null,\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    boolean typeScriptType = isTypeTextArea(src.getSqlType(), propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
+                    writer.append("  ").append(propertyName).append(": ").append(defaultValue).append(",\n");
+                }
+            }
+            writer.append("});\n");
+
+            writer.append("const {\n");
+            writer.append("  crudName,\n");
+            writer.append("  crudAction,\n");
+            writer.append("  loading,\n");
+            writer.append("  onBack,\n");
+            writer.append("  onSubmit,\n");
+            writer.append("  onDelete,\n");
+            writer.append("  crudEntity\n");
+            writer.append("} = useCrudForm<").append(entityName).append(">(\n");
+            writer.append("  {\n");
+            writer.append("    crudName: '").append(tableName).append("',\n");
+//            writer.append("    backLink: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
+            writer.append("    backLink: '/").append(tableNameKebabCase).append("',\n");
+            writer.append("    backToPreviousPath: true,\n");
+            writer.append("    apiEndpoint: '/api',\n");
+            writer.append("    fectchDataOnLoad: true,\n");
+            writer.append("    methodPutIncludeId: true\n");
+            writer.append("  },\n");
+            writer.append("  entity\n");
+            writer.append(");\n");
+            writer.append("\n");
+            writer.append("useAppMeta({\n");
+            writer.append("  additionalTitle: t('crudAction.' + crudAction.value)\n");
+            writer.append("});\n");
+            writer.append("</script>\n");
+            writer.append("\n");
             writer.append("<template>\n");
             writer.append("  <q-page padding>\n");
             writer.append("    <crud-api-form\n");
@@ -1015,66 +1075,6 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("  </q-page>\n");//end page
             writer.append("</template>\n");
             writer.append("\n");
-
-            writer.append("<script setup lang=\"ts\">\n");
-            writer.append("import { useLang } from '@/composables/UseLang';\n");
-            writer.append("import { useCrudForm } from '@/composables/UseCrudForm';\n");
-            writer.append("import { ").append(entityName).append(" } from '@/types/Models';\n");
-            writer.append("import { useAppMeta } from '@/composables/UseAppMeta';\n");
-            writer.append("import CrudApiForm from '@/components/base/CrudApiForm.vue';\n");
-            writer.append("import { useValidation } from '@/composables/UseValidation';\n");
-            writer.append("import { biPencil, biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
-            writer.append("import { ").append(upperTableName).append(" } from '@/utils/AppPermissionList';\n");
-            writer.append("import FormTogle from '@/components/form/FormTogle.vue';\n");
-            writer.append("import DatePicker from '@/components/form/DatePicker.vue';\n");
-            writer.append("import { getCurrentDateByFormat } from '@/utils/DateUtil';\n");
-            writer.append("import { AdminRootPath } from '@/utils/Constant';\n");
-            writer.append("\n");
-
-            writer.append("const { t } = useLang();\n");
-            writer.append("const { required, requiredNotMinusNumberOrFloat } = useValidation();\n");
-
-            //initial entity
-            writer.append("const entity: ").append(entityName).append(" = Object.freeze({\n");
-            writer.append("  id: null,\n");
-            for (GenerateTableSrcItem src : propertyList) {
-                String propertyName = src.getPropertyName();
-                String propertyTypeName = src.getPropertyType();
-                if (!exceptField(propertyName)) {
-                    boolean typeScriptType = isTypeTextArea(src.getSqlType(), propertyTypeName);
-                    boolean isNullable = src.isNullable();
-                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
-                    writer.append("  ").append(propertyName).append(": ").append(defaultValue).append(",\n");
-                }
-            }
-            writer.append("});\n");
-
-            writer.append("const {\n");
-            writer.append("  crudName,\n");
-            writer.append("  crudAction,\n");
-            writer.append("  loading,\n");
-            writer.append("  onBack,\n");
-            writer.append("  onSubmit,\n");
-            writer.append("  onDelete,\n");
-            writer.append("  crudEntity\n");
-            writer.append("} = useCrudForm<").append(entityName).append(">(\n");
-            writer.append("  {\n");
-            writer.append("    crudName: '").append(tableName).append("',\n");
-            writer.append("    backLink: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
-//            writer.append("    backLink: ").append(tableNameKebabCase).append(",\n");
-            writer.append("    backToPreviousPath: true,\n");
-            writer.append("    apiEndpoint: '/api',\n");
-            writer.append("    fectchDataOnLoad: true,\n");
-            writer.append("    methodPutIncludeId: true\n");
-            writer.append("  },\n");
-            writer.append("  entity\n");
-            writer.append(");\n");
-            writer.append("\n");
-            writer.append("useAppMeta({\n");
-            writer.append("  additionalTitle: t('crudAction.' + crudAction.value)\n");
-            writer.append("});\n");
-            writer.append("</script>\n");
-            writer.append("\n");
             writer.close();
             logger.info("     Created Class : {} ", filePathName);
         } catch (Exception e) {
@@ -1088,48 +1088,17 @@ public class DevelopmentContoller extends BaseApiController {
         String tableNameKebabCase = tableName.replace("_", "-");
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
-            writer.append("<template>\n");
-            writer.append("  <q-page padding>\n");
-            writer.append("    <crud-api-list\n");
-            writer.append("      :icon=\"biFileEarmark\"\n");
-            writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
-            writer.append("      :crud-name=\"crudName\"\n");
-            writer.append("      :loading=\"loading\"\n");
-            writer.append("      :frist-load=\"fristLoad\"\n");
-            writer.append("      :pages=\"pages\"\n");
-            writer.append("      :headers=\"headers\"\n");
-            writer.append("      :sort=\"sort\"\n");
-            writer.append("      :list=\"filteredList\"\n");
-            writer.append("      :is-frontend=\"true\"\n");
-            writer.append("      :view-permission=\"").append(upperTableName).append(".view\"\n");
-            writer.append("      :manage-permission=\"").append(upperTableName).append(".manage\"\n");
-            writer.append("      @on-item-click=\"onItemClick\"\n");
-            writer.append("      @on-item-copy=\"onItemCopy\"\n");
-            writer.append("      @on-page-no-change=\"onPageNoChange\"\n");
-            writer.append("      @on-items-perpage-change=\"onItemPerPageChange\"\n");
-            writer.append("      @on-sort=\"onSort\"\n");
-            writer.append("      @on-sort-mode=\"onSortMode\"\n");
-            writer.append("      @on-reload=\"onReload\"\n");
-            writer.append("      @update-search=\"filterText = $event\"\n");
-            writer.append("      @on-advance-search=\"onAdvanceSearch\"\n");
-            writer.append("      @on-item-delete=\"onItemDelete\"\n");
-            writer.append("      @on-new-form=\"onNewForm\"\n");
-            writer.append("    >\n");
-            writer.append("    </crud-api-list>\n");
-            writer.append("  </q-page>\n");
-            writer.append("</template>\n");
-            writer.append("\n");
-
             writer.append("<script setup lang=\"ts\">\n");
 
-            String breadcrumbsName = "Bc" + entityName + "Form";
+            String breadcrumbsName =entityName + "Breadcrumb";
             //breadcrumbs
-            writer.append("/* move this variable to /src/breadcrumbs/AdminBreadcrumbs.ts or /src/BackendBreadcrumbs/BackendBreadcrumbs.ts \n");
+            writer.append("/* move this variable to /src/breadcrumbs/AppBreadcrumbs.ts or /src/breadcrumbs/AdminBreadcrumbs.ts or /src/BackendBreadcrumbs/BackendBreadcrumbs.ts \n");
             writer.append("export const ").append(breadcrumbsName).append(": Breadcrumb[] = [\n");
             writer.append("  {\n");
             writer.append("    label: 'model.").append(entityNameLowerFirst).append(".table',\n");
 //            writer.append("    to: '/").append(tableNameKebabCase).append("',\n");
-            writer.append("    to: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
+            writer.append("    to: '/").append(tableNameKebabCase).append("',\n");
+//            writer.append("    to: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
             writer.append("    icon: biFileEarmark,\n");
             writer.append("    translateLabel: true\n");
             writer.append("  },\n");
@@ -1139,23 +1108,23 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("\n");
 
             //router
-            writer.append("/* move this object to /src/router/adminRoutes.ts or /src/router/backendRoutes.ts or /src/router/frontendRoutes.ts \n");
+            writer.append("/* move this object to /src/router/routes.ts, /src/router/adminRoutes.ts or /src/router/backendRoutes.ts or /src/router/frontendRoutes.ts \n");
             writer.append("      {\n");
             writer.append("        path: '").append(tableNameKebabCase).append("',\n");
             writer.append("        children: [\n");
             writer.append("          {\n");
             writer.append("            path: '',\n");
-            writer.append("            meta: { pageName: 'model.").append(entityNameLowerFirst).append(".table', permission: [").append(upperTableName).append(".list] },\n");
-            writer.append("            component: () => import('@/pages/").append(tableNameKebabCase).append("/List.vue')\n");
+            writer.append("            meta: { pageName: 'model.").append(entityNameLowerFirst).append(".table', permission: [").append(entityName).append("Permission.list] },\n");
+            writer.append("            component: () => import('@/pages/").append(tableNameKebabCase).append("/index.vue')\n");
             writer.append("          },\n");
             writer.append("          {\n");
             writer.append("            path: ':crud/:id/',\n");
             writer.append("            meta: {\n");
             writer.append("              pageName: 'model.").append(entityNameLowerFirst).append(".table',\n");
-            writer.append("              permission: [").append(upperTableName).append(".view],\n");
-            writer.append("              breadcrumbs: ").append(breadcrumbsName).append("\n");
+            writer.append("              permission: [").append(entityName).append("Permission.view],\n");
+            writer.append("              breadcrumbs: ").append(entityName).append("\n");
             writer.append("            },\n");
-            writer.append("            component: () => import('@/pages/").append(tableNameKebabCase).append("/Form.vue')\n");
+            writer.append("            component: () => import('@/pages/").append(tableNameKebabCase).append("/view.vue')\n");
             writer.append("          }\n");
             writer.append("        ]\n");
             writer.append("      }\n");
@@ -1163,7 +1132,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("\n");
 
             //Model
-            writer.append("/* move this interface to /src/types/Models.ts \n");
+            writer.append("/* move this interface to /src/types/models.ts \n");
             writer.append("export interface ").append(entityName).append(" extends Id {\n");
             for (GenerateTableSrcItem src : propertyList) {
                 String propertyName = src.getPropertyName();
@@ -1181,11 +1150,11 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("\n");
 
             //Permission
-            writer.append("/* move this object to /src/utils/AppPermissionList.ts \n");
-            writer.append("export const ").append(upperTableName).append("= {\n");
-            writer.append("  view: '").append(entityNameLowerFirst).append("_config_view',\n");
-            writer.append("  list: '").append(entityNameLowerFirst).append("_list',\n");
-            writer.append("  manage: '").append(entityNameLowerFirst).append("_manage'\n");
+            writer.append("/* move this object to /src/utils/appPermissionList.ts \n");
+            writer.append("export const ").append(entityName).append("Permission= {\n");
+            writer.append("  view: '").append(tableName).append("_view',\n");
+            writer.append("  list: '").append(tableName).append("_list',\n");
+            writer.append("  manage: '").append(tableName).append("_manage'\n");
             writer.append("}\n");
             writer.append("*/\n");
             writer.append("\n");
@@ -1205,14 +1174,14 @@ public class DevelopmentContoller extends BaseApiController {
 
 
             writer.append("import { ref } from 'vue';\n");
-            writer.append("import { useLang } from '@/composables/UseLang';\n");
-            writer.append("import { useCrudList } from '@/composables/UseCrudList';\n");
-            writer.append("import { ").append(entityName).append(" } from '@/types/Models';\n");
-            writer.append("import { CrudListDataType, ICrudListHeader, ICrudListHeaderOptionSearchType } from '@/types/Common';\n");
+            writer.append("import { useLang } from '@/composables/useLang';\n");
+            writer.append("import { useCrudList } from '@/composables/useCrudList';\n");
+            writer.append("import { ").append(entityName).append(" } from '@/types/models';\n");
+            writer.append("import { CrudListDataType, ICrudListHeader, ICrudListHeaderOptionSearchType } from '@/types/common';\n");
             writer.append("import CrudApiList from '@/components/base/CrudApiList.vue';\n");
             writer.append("import { biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
-            writer.append("import { ").append(upperTableName).append(" } from '@/utils/AppPermissionList';\n");
-            writer.append("import { useAppMeta } from '@/composables/UseAppMeta';\n");
+            writer.append("import { ").append(entityName).append("Permission } from '@/utils/appPermissionList';\n");
+            writer.append("import { useAppMeta } from '@/composables/useAppMeta';\n");
             writer.append("const { setTitle } = useAppMeta({ manualSet: true });\n");
             writer.append("const { t } = useLang();\n");
             writer.append("const headers = ref<ICrudListHeader[]>([\n");
@@ -1275,7 +1244,8 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("  fristLoad,\n");
             writer.append("  pages,\n");
             writer.append("  onItemClick,\n");
-            writer.append("  onNewForm\n");
+            writer.append("  onNewForm,\n");
+            writer.append("  onKeywordSearch\n");
             writer.append("} = useCrudList<").append(entityName).append(">(\n");
             writer.append("  {\n");
             writer.append("    crudName: '").append(tableName).append("',\n");
@@ -1307,6 +1277,39 @@ public class DevelopmentContoller extends BaseApiController {
 //            }
 
             writer.append("\n");
+            writer.append("<template>\n");
+            writer.append("  <q-page padding>\n");
+            writer.append("    <crud-api-list\n");
+            writer.append("      :icon=\"biFileEarmark\"\n");
+            writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
+            writer.append("      :crud-name=\"crudName\"\n");
+            writer.append("      :loading=\"loading\"\n");
+            writer.append("      :frist-load=\"fristLoad\"\n");
+            writer.append("      :pages=\"pages\"\n");
+            writer.append("      :headers=\"headers\"\n");
+            writer.append("      :sort=\"sort\"\n");
+            writer.append("      :list=\"filteredList\"\n");
+            writer.append("      :show-search-text-box=\"false\"\n");
+//            writer.append("      :is-frontend=\"true\"\n");
+            writer.append("      :view-permission=\"").append(entityName).append("Permission.view\"\n");
+            writer.append("      :manage-permission=\"").append(entityName).append("Permission.manage\"\n");
+            writer.append("      @on-item-click=\"onItemClick\"\n");
+            writer.append("      @on-item-copy=\"onItemCopy\"\n");
+            writer.append("      @on-page-no-change=\"onPageNoChange\"\n");
+            writer.append("      @on-items-perpage-change=\"onItemPerPageChange\"\n");
+            writer.append("      @on-sort=\"onSort\"\n");
+            writer.append("      @on-sort-mode=\"onSortMode\"\n");
+            writer.append("      @on-reload=\"onReload\"\n");
+            writer.append("      @update-search=\"filterText = $event\"\n");
+            writer.append("      @on-advance-search=\"onAdvanceSearch\"\n");
+            writer.append("      @on-keyword-search=\"onKeywordSearch\"\n");
+            writer.append("      @on-item-delete=\"onItemDelete\"\n");
+            writer.append("      @on-new-form=\"onNewForm\"\n");
+            writer.append("    >\n");
+            writer.append("    </crud-api-list>\n");
+            writer.append("  </q-page>\n");
+            writer.append("</template>\n");
+            writer.append("\n");
             writer.close();
             logger.info("     Created Class : {} ", filePathName);
         } catch (Exception e) {
@@ -1324,25 +1327,25 @@ public class DevelopmentContoller extends BaseApiController {
             //api service
             writer.append("// move this file to /src/api \n");
 
-            writer.append("import { useAxios } from '@/composables/UseAxios';\n");
-            writer.append("import { ").append(entityName).append(", ApiListResponse } from '@/types/Models';\n");
-            writer.append("import { ResponseMessage } from '@/types/Common';\n");
+            writer.append("import { useAxios } from '@/composables/useAxios';\n");
+            writer.append("import { ").append(entityName).append(", IApiListResponse } from '@/types/models';\n");
+            writer.append("import { ResponseMessage } from '@/types/common';\n");
             writer.append("export default () => {\n");
-            writer.append("  const { callAxiosV2 } = useAxios();\n");
-            writer.append("  const findAll = async (q: string): Promise<ApiListResponse<").append(entityName).append("> | null> => {\n");
-            writer.append("    return await callAxiosV2<ApiListResponse<").append(entityName).append(">>({\n");
+            writer.append("  const { callAxios } = useAxios();\n");
+            writer.append("  const findAll = async (q: string): Promise<IApiListResponse<").append(entityName).append("> | null> => {\n");
+            writer.append("    return await callAxios<ApiListResponse<").append(entityName).append(">>({\n");
             writer.append("      API: `/api/").append(entityNameLowerFirst).append("${q}`,\n");
             writer.append("      method: 'GET',\n");
             writer.append("    });\n");
             writer.append("  };\n");
             writer.append("  const findById = async (id: number): Promise<").append(entityName).append(" | null> => {\n");
-            writer.append("    return await callAxiosV2<").append(entityName).append(">({\n");
+            writer.append("    return await callAxios<").append(entityName).append(">({\n");
             writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
             writer.append("      method: 'GET',\n");
             writer.append("    });\n");
             writer.append("  };\n");
             writer.append("  const crudCreate = async (request: ").append(entityName).append("): Promise<").append(entityName).append(" | null> => {\n");
-            writer.append("    return await callAxiosV2<").append(entityName).append(">({\n");
+            writer.append("    return await callAxios<").append(entityName).append(">({\n");
             writer.append("      API: '/api/").append(entityNameLowerFirst).append("',\n");
             writer.append("      method: 'POST',\n");
             writer.append("      body: {\n");
@@ -1350,9 +1353,9 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      },\n");
             writer.append("    });\n");
             writer.append("  };\n");
-            writer.append("  const crudUpdate = async (request: ").append(entityName).append("): Promise<").append(entityName).append(" | null> => {\n");
-            writer.append("    return await callAxiosV2<").append(entityName).append(">({\n");
-            writer.append("      API: '/api/").append(entityNameLowerFirst).append("',\n");
+            writer.append("  const crudUpdate = async (id: number, request: ").append(entityName).append("): Promise<").append(entityName).append(" | null> => {\n");
+            writer.append("    return await callAxios<").append(entityName).append(">({\n");
+            writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
             writer.append("      method: 'PUT',\n");
             writer.append("      body: {\n");
             writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
@@ -1360,7 +1363,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("    });\n");
             writer.append("  };\n");
             writer.append("  const deleteById = async (id: number): Promise<ResponseMessage | null> => {\n");
-            writer.append("    return await callAxiosV2<ResponseMessage>({\n");
+            writer.append("    return await callAxios<ResponseMessage>({\n");
             writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
             writer.append("      method: 'DELETE',\n");
             writer.append("    });\n");
