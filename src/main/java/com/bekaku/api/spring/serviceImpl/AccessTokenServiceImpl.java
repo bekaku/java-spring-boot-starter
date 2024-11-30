@@ -3,10 +3,12 @@ package com.bekaku.api.spring.serviceImpl;
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.AccessTokenDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
+import com.bekaku.api.spring.dto.UserDto;
 import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.mapper.AccessTokenMapper;
+import com.bekaku.api.spring.mapper.UserMapper;
 import com.bekaku.api.spring.model.*;
 import com.bekaku.api.spring.repository.AccessTokenRepository;
 import com.bekaku.api.spring.service.AccessTokenService;
@@ -45,6 +47,10 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     private UserAgentService userAgentService;
     @Autowired
     private AccessTokenMapper accessTokenMapper;
+
+    @Autowired
+    private UserMapper userMapper;
+
     private JwtService jwtService;
 
     Logger logger = LoggerFactory.getLogger(AccessTokenServiceImpl.class);
@@ -164,6 +170,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Override
     public Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked) {
         return accessTokenRepository.findByTokenAndRevoked(token, revoked);
+    }
+
+    @Override
+    public Optional<UserDto> findByAccessTokenKey(String token) {
+        return userMapper.findByAccessTokenKey(token);
     }
 
     @Override

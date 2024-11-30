@@ -31,7 +31,23 @@
         where U.deleted is false AND U.id = #{id}
     </select>
 
+    <select id="findByAccessTokenKey" resultMap="accessTokenUserDataResult">
+        SELECT
+        act.id accessTokenId,
+        u.id id,
+        u.salt,
+        u.active,
+        u.email email,
+        u.username username,
+        u.avatar_file_id avatarFileId
 
+        FROM
+        access_token act
+        LEFT JOIN `user` u ON act.`user` = u.id
+        WHERE
+        act.token =#{token}
+        AND act.revoked is false
+    </select>
 
 
     <!--Result Map-->
@@ -45,5 +61,13 @@
             <result column="roleId"/>
         </collection>
     </resultMap>
-
+    <resultMap id="accessTokenUserDataResult" type="com.bekaku.api.spring.dto.UserDto">
+        <id column="id" property="id"/>
+        <result column="salt" property="uuid"/>
+        <result column="email" property="email"/>
+        <result column="username" property="username"/>
+        <result column="avatarFileId" property="avatarFileId"/>
+        <result column="active" property="active"/>
+        <result column="accessTokenId" property="accessTokenId"/>
+    </resultMap>
 </mapper>

@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.service;
 
 import com.bekaku.api.spring.dto.AccessTokenDto;
+import com.bekaku.api.spring.dto.UserDto;
 import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
@@ -37,6 +38,7 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
     void updateNullFcmToken(String fcmToken);
 
     Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked);
+    Optional<UserDto> findByAccessTokenKey(String token);
 
     void updateLastestActive(LocalDateTime lastestActive, Long id);
     boolean isTokenExpired(AccessToken accessToken);

@@ -9,6 +9,7 @@ import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.PermissionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -201,17 +202,7 @@ public class PermissionController extends BaseApiController {
                                 if (p.containsKey("items")) {
                                     JSONArray pageItems = (JSONArray) p.get("items");
                                     if (!pageItems.isEmpty()) {
-                                        JSONArray childs = new JSONArray();
-                                        for (Object pageItem : pageItems) {
-                                            JSONObject item = (JSONObject) pageItem;
-                                            if (item != null) {
-                                                String permission = item.containsKey("permission") ? (String) item.get("permission") : null;
-                                                boolean isPermised = permission == null || userPermissions.contains(permission);
-                                                if (isPermised) {
-                                                    childs.add(item);
-                                                }
-                                            }
-                                        }
+                                        JSONArray childs = getJsonArray(userPermissions, pageItems);
                                         if (!childs.isEmpty()) {
                                             JSONObject menuHaveChild = new JSONObject();
                                             if (p.containsKey("title")) {
@@ -261,6 +252,21 @@ public class PermissionController extends BaseApiController {
         }
 
         return aclFinal;
+    }
+
+    private static @NotNull JSONArray getJsonArray(List<String> userPermissions, JSONArray pageItems) {
+        JSONArray childs = new JSONArray();
+        for (Object pageItem : pageItems) {
+            JSONObject item = (JSONObject) pageItem;
+            if (item != null) {
+                String permission = item.containsKey("permission") ? (String) item.get("permission") : null;
+                boolean isPermised = permission == null || userPermissions.contains(permission);
+                if (isPermised) {
+                    childs.add(item);
+                }
+            }
+        }
+        return childs;
     }
 
     private JSONArray getJsonFromResource(Resource resource) {

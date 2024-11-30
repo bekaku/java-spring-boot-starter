@@ -15,4 +15,5 @@ public interface UserMapper {
     Optional<UserDto> findById(@Param("id") Long id);
     Optional<UserDto> findByUsername(@Param("username") String username);
     Optional<UserDto> findByEmail(@Param("email") String email);
+    Optional<UserDto> findByAccessTokenKey(@Param("token") String token);
 }

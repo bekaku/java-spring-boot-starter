@@ -17,6 +17,7 @@ import java.util.List;
 @Accessors(chain = true)
 public class UserDto {
     private Long id;
+    private String uuid;
     private String email;
     private String username;
     private String token;

@@ -130,6 +130,17 @@ public class JwtServiceImpl implements JwtService {
                         String sub = claims.get().getSubject();
                         String userUuid = (String) claims.get().get(UUID);
                         if (sub != null) {
+                            Optional<UserDto> userDto = accessTokenService.findByAccessTokenKey(sub);
+                            if(userDto.isPresent()){
+
+                                //sync online status if required TODO you can implement with Message Queue eg. RabbitMQ
+                                if(syncActiveHeader!=null && syncActiveHeader.equals("1")){
+                                    accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), userDto.get().getAccessTokenId());
+                                }
+                                userDto.get().setToken(sub);
+                                dto.set(userDto);
+                            }
+                            /*
                             UserDto userDto;
                             Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(sub, false);
                             if (accessToken.isPresent()) {
@@ -150,6 +161,9 @@ public class JwtServiceImpl implements JwtService {
                                     dto.set(Optional.of(userDto));
                                 }
                             }
+                            */
+
+
                         }
                     }
                 }
