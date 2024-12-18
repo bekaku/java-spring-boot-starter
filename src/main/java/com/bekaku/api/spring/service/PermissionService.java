@@ -17,6 +17,8 @@ import java.util.Optional;
 @Service
 public interface PermissionService extends BaseService<Permission, PermissionDto> {
 
+    List<PermissionDto> findAllLikeByCode(String code,Pageable pageable);
+
     List<Permission> findAllViaMapper(Paging page);
 
     boolean isHasPermission(long userId, String permissionCode);

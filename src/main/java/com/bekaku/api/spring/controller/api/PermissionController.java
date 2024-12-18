@@ -2,6 +2,7 @@ package com.bekaku.api.spring.controller.api;
 
 
 import com.bekaku.api.spring.configuration.I18n;
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.PermissionDto;
 import com.bekaku.api.spring.dto.UserDto;
@@ -9,6 +10,7 @@ import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.PermissionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -33,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping(path = "/api/permission")
 @RequiredArgsConstructor
@@ -40,15 +43,20 @@ public class PermissionController extends BaseApiController {
 
     private final PermissionService permissionService;
     private final I18n i18n;
-    Logger logger = LoggerFactory.getLogger(PermissionController.class);
 
     @Value("classpath:/acl.json")
     private Resource jsonAcl;
 
+    @PreAuthorize("isHasPermission('permission_list')")
+    @GetMapping("/findAllLikeByCode")
+    public List<PermissionDto> findAllLikeByCode(@RequestParam("_q") String code, Pageable pageable) {
+        return permissionService.findAllLikeByCode(code, getPageable(pageable, Permission.getSort()));
+    }
+
     //http://localhost:8084/api/permission?page=0&size=10&sort=code,asc&_q=code:permission_list,name:user_list,id>10,id>=20,id!=10,id<10,id<=10,id=1
     @PreAuthorize("isHasPermission('permission_list')")
     @GetMapping
-    public ResponseEntity<Object> findAll(Pageable pageable) {
+    public ResponseListDto<PermissionDto> findAll(Pageable pageable) {
 //        if(pageable.getSort().isEmpty()){
 //            Pageable pageable1 = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Permission.getSort());
 //        }
@@ -69,7 +77,7 @@ public class PermissionController extends BaseApiController {
 
 //        return this.responseEntity(permissonService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
 //               PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Permission.getSort())), HttpStatus.OK);
-        return this.responseEntity(permissionService.findAllWithSearch(specification, getPageable(pageable, Permission.getSort())), HttpStatus.OK);
+        return permissionService.findAllWithSearch(specification, getPageable(pageable, Permission.getSort()));
 
 
 //        return this.responseEntity(new HashMap<String, Object>() {{

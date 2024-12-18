@@ -46,8 +46,6 @@ public class PermissionServiceImpl implements PermissionService {
 
     private static final String I18N_PREFIX = "permission.";
 
-    Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
-
     @Transactional(readOnly = true)
     @Override
     public ResponseListDto<PermissionDto> findAllWithPaging(Pageable pageable) {
@@ -130,6 +128,12 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Permission convertDtoToEntity(PermissionDto permissionDto) {
         return modelMapper.map(permissionDto, Permission.class);
+    }
+
+    @Override
+    public List<PermissionDto> findAllLikeByCode(String code, Pageable pageable) {
+        return permissionRepository.findAllLikeByCode(code, pageable)
+                .stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
     //My Batis

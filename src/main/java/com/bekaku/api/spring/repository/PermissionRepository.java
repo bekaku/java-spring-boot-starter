@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.repository;
 
 import com.bekaku.api.spring.model.Permission;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,9 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-
-
-/**
+/*
  * //https://www.baeldung.com/spring-data-jpa-query
  * //https://docs.spring.io/spring-data/jpa/docs/current/reference/html/
  * //https://www.bezkoder.com/spring-jpa-query/
@@ -26,6 +25,9 @@ public interface PermissionRepository extends BaseRepository<Permission, Long>, 
 
 //    @Query(value = "SELECT * FROM permission p WHERE p.module like ?1%", nativeQuery = true)
 //    List<Permission> findAllNativeQuesruByLikeModule(String module);
+
+    @Query("SELECT e FROM Permission e WHERE e.code LIKE %?1%")
+    List<Permission> findAllLikeByCode(String code, Pageable pageable);
 
     List<Permission> findAllByfrontEnd(boolean frontEnd, Sort sort);
 

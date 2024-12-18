@@ -31,16 +31,18 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       #maximum number of milliseconds that a client will wait for a connection
-      connection-timeout: 30000
+      connection-timeout: 20000
       #minimum number of idle connections maintained by HikariCP in a connection pool
-      minimum-idle: 10
-      maximum-pool-size: 50
+      minimum-idle: 5
+      maximum-pool-size: 20
       #idleTimeout: 600000
-      idle-timeout: 600000
+      idle-timeout: 30000
       # maximum lifetime in milliseconds of a connection in the pool after it is closed.
       max-lifetime: 1800000
       keepalive-time: 30000
       autoCommit: true
+      leak-detection-threshold: 2000
+      connection-test-query: SELECT 1
     pool-prepared-statements: true
     max-open-prepared-statements: 250
   thymeleaf:
