@@ -49,6 +49,8 @@ public class UserController extends BaseApiController {
     private UserValidator userValidator;
     @Autowired
     private I18n i18n;
+    @Autowired
+    private PermissionService permissionService;
 
     @Value("${app.defaults.userpwd}")
     String defaultUserPwd;
@@ -70,7 +72,7 @@ public class UserController extends BaseApiController {
             Optional<AccessToken> accessToken = accessTokenService.findById(userAuthen.getAccessTokenId());
             accessToken.ifPresent(token -> dto.setFcmToken(token.getFcmToken()));
         }
-
+        dto.setPermissions(permissionService.findAllPermissionCodeByUserId(userAuthen.getId(), false));
         return dto;
     }
 

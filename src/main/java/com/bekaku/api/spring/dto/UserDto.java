@@ -30,4 +30,5 @@ public class UserDto {
     private Boolean active;
     private List<Long> selectedRoles = new ArrayList<>();
     private AppLocale defaultLocale;
+    private List<String> permissions=new ArrayList<>();
 }
