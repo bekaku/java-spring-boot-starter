@@ -2,12 +2,12 @@ package com.bekaku.api.spring.controller.api;
 
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.dto.ResponseListDto;
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.PermissionDto;
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.dto.UserDto;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.PermissionService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +16,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;

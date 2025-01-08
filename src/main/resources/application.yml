@@ -41,7 +41,7 @@ spring:
       max-lifetime: 1800000
       keepalive-time: 30000
       autoCommit: true
-      leak-detection-threshold: 2000
+      #leak-detection-threshold: 2000
       connection-test-query: SELECT 1
     pool-prepared-statements: true
     max-open-prepared-statements: 250

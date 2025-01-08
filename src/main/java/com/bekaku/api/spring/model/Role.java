@@ -13,7 +13,7 @@ import org.springframework.data.domain.Sort;
 import java.util.HashSet;
 import java.util.Set;
 
-@GenSourceableTable(createPermission = false)
+@GenSourceableTable(createPermission = false, createFrontend = true)
 @NoArgsConstructor
 @Getter
 @Setter

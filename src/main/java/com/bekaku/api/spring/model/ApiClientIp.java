@@ -18,7 +18,7 @@ import java.util.Objects;
 import static jakarta.persistence.FetchType.LAZY;
 
 
-@GenSourceableTable(createDto = false, createPermission = false, createFrontend = true)
+@GenSourceableTable(createDto = false, createPermission = false)
 @Data
 @JsonRootName("apiClientIp")
 @Entity

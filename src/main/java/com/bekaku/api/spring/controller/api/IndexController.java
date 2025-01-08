@@ -19,4 +19,12 @@ public class IndexController extends BaseApiController {
             put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
         }}, HttpStatus.OK);
     }
+
+    @GetMapping(value = "/robots.txt", produces = "text/plain")
+    public String getRobotsTxt() {
+        return """
+            User-agent: *
+            Disallow: /
+            """;
+    }
 }

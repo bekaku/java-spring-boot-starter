@@ -4,6 +4,7 @@ import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.configuration.MetadataExtractorIntegrator;
 import com.bekaku.api.spring.controller.api.BaseApiController;
 import com.bekaku.api.spring.annotation.GenSourceableTable;
+import com.bekaku.api.spring.enumtype.DevFrontendTheme;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.model.Role;
@@ -15,6 +16,7 @@ import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.FileUtil;
 import com.bekaku.api.spring.vo.GenerateTableSrcItem;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -27,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedWriter;
@@ -36,6 +39,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+@Slf4j
 @RequestMapping(path = "/dev/development")
 @RestController
 @RequiredArgsConstructor
@@ -45,7 +49,6 @@ public class DevelopmentContoller extends BaseApiController {
     private final ApiClientService apiClientService;
     private final RoleService roleService;
 
-    Logger logger = LoggerFactory.getLogger(DevelopmentContoller.class);
 
     @Value("${environments.production}")
     boolean isProduction;
@@ -65,11 +68,11 @@ public class DevelopmentContoller extends BaseApiController {
     private static final String TYPESCRIPT_UNDEFINED = "undefined";
     private static final String TYPESCRIPT_NULL = "null";
     private static final String TYPESCRIPT_OR_SIGN = "|";
-
+    
     @RequestMapping(value = "/migrateData", method = RequestMethod.POST)
     public ResponseEntity<Object> migrateData() {
         if (!isProduction) {
-            logger.info("migrateData");
+            log.info("migrateData");
 //            migrateDefaultPermission();
 //            migrateApiClient();
 //            migrateDevRole();
@@ -244,13 +247,13 @@ public class DevelopmentContoller extends BaseApiController {
 
     @RequestMapping(value = "/generateSrcV2", method = RequestMethod.GET)
     public ResponseEntity<Object> generateSrcMethodGet() {
-        generateProcess();
+        generateProcess(DevFrontendTheme.DEFAULT);
         return this.responseEntity(HttpStatus.OK);
     }
 
     @RequestMapping(value = "/generateSrc", method = RequestMethod.POST)
-    public ResponseEntity<Object> generateSrc() {
-        generateProcess();
+    public ResponseEntity<Object> generateSrc(@RequestParam(value = "theme", required = false, defaultValue = "DEFAULT") DevFrontendTheme theme) {
+        generateProcess(theme);
         return this.responseEntity(HttpStatus.OK);
     }
 
@@ -273,7 +276,7 @@ public class DevelopmentContoller extends BaseApiController {
                         .nullable(column.isNullable())
                         .typeTextArea(isTypeTextArea(column.getSqlType(), property.getType().getName()))
                         .build());
-//                logger.info("Property: {} is mapped on table column: {} of type: {} uniqe : {}, length : {}, propertyTypeName : {} , isNullable :{}",
+//                log.info("Property: {} is mapped on table column: {} of type: {} uniqe : {}, length : {}, propertyTypeName : {} , isNullable :{}",
 //                        property.getName(),
 //                        column.getName(),
 //                        column.getSqlType(),
@@ -286,8 +289,8 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateProcess() {
-        logger.warn("Production : {}", isProduction);
+    private void generateProcess(DevFrontendTheme theme) {
+        log.warn("Production : {}, theme: {}", isProduction, theme);
         if (isProduction) {
             throw this.responseError(HttpStatus.UNAUTHORIZED, null, i18n.getMessage("error.productionModeDetect"));
         }
@@ -298,7 +301,7 @@ public class DevelopmentContoller extends BaseApiController {
                 .getNamespaces()) {
 
             for (Table table : namespace.getTables()) {
-                logger.info("Table {} has the following columns: {}",
+                log.info("Table {} has the following columns: {}",
                         table,
                         StreamSupport.stream(
                                 Spliterators.spliteratorUnknownSize(
@@ -322,15 +325,15 @@ public class DevelopmentContoller extends BaseApiController {
             Table table = persistentClass.getTable();
             setPropertyList(table, persistentClass);
             System.out.println("--------------------------");
-            logger.info("capitalizeFirstLetter {} => {}", className, AppUtil.capitalizeFirstLetter(className, true));
-            logger.info("-Entity: {} is mapped to table: {}", packageClassName, table.getName());
+            log.info("capitalizeFirstLetter {} => {}", className, AppUtil.capitalizeFirstLetter(className, true));
+            log.info("-Entity: {} is mapped to table: {}", packageClassName, table.getName());
             Class<?> aClass = getClassFromName(packageClassName);
             if (aClass != null) {
                 GenSourceableTable genSourceableTable = aClass.getAnnotation(GenSourceableTable.class);
                 if (genSourceableTable != null) {
 
                     if (genSourceableTable.createDto()) {
-                        logger.error("  createDto : {} ", className);
+                        log.error("  createDto : {} ", className);
                         generateDto(className, persistentClass);
                     }
                     if (genSourceableTable.createRepository()) {
@@ -346,13 +349,21 @@ public class DevelopmentContoller extends BaseApiController {
                         generateController(className, genSourceableTable.createDto());
                     }
                     if (genSourceableTable.createMapper()) {
-                        logger.error("  createMapper : {} ", className);
+                        log.error("  createMapper : {} ", className);
                     }
                     if (genSourceableTable.createValidator()) {
-                        logger.error("  createValidator : {} ", className);
+                        log.error("  createValidator : {} ", className);
                     }
                     if (genSourceableTable.createFrontend()) {
-                        generateFrontend(className, persistentClass);
+
+                        if(theme==DevFrontendTheme.DEFAULT){
+                            generateFrontend(className, persistentClass);
+                        }
+                        switch (theme) {
+                            case DEFAULT ->  generateFrontend(className, persistentClass);
+                            case NUXT3_QUASAR -> generateFrontendNuxt3Quasar(className, persistentClass);
+                        }
+
                     }
                     if (genSourceableTable.createPermission()) {
                         if (permissonService.findByCode(table.getName() + "_list").isEmpty()) {
@@ -372,7 +383,7 @@ public class DevelopmentContoller extends BaseApiController {
                     }
                 }
             } else {
-                logger.error("  className : {} NULL", className);
+                log.error("  className : {} NULL", className);
             }
 //            for (Iterator propertyIterator = persistentClass.getPropertyIterator();
 //                 propertyIterator.hasNext(); ) {
@@ -382,7 +393,7 @@ public class DevelopmentContoller extends BaseApiController {
 //                     columnIterator.hasNext(); ) {
 //                    Column column = (Column) columnIterator.next();
 //
-//                    logger.info("Property: {} is mapped on table column: {} of type: {} uniqe : {}, length : {}, propertyTypeName : {} , isNullable :{}",
+//                    log.info("Property: {} is mapped on table column: {} of type: {} uniqe : {}, length : {}, propertyTypeName : {} , isNullable :{}",
 //                            property.getName(),
 //                            column.getName(),
 //                            column.getSqlType(),
@@ -397,7 +408,7 @@ public class DevelopmentContoller extends BaseApiController {
 
 
 //        TableSerializable tableSerializable = LoginLog.class.getAnnotation(TableSerializable.class);
-//        logger.info("CreateController : {}", tableSerializable.createController());
+//        log.info("CreateController : {}", tableSerializable.createController());
 
 //
 //        for (Field field : LoginLog.class.getAnnotation(TableSerializable.class)) {
@@ -416,7 +427,7 @@ public class DevelopmentContoller extends BaseApiController {
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
-            logger.info("---generateDto : {} ", fileName);
+            log.info("---generateDto : {} ", fileName);
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/dto/" + fileName + ".java", false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto").append(";\n");
@@ -464,9 +475,9 @@ public class DevelopmentContoller extends BaseApiController {
                             }
 
                             if (!isNullable) {
-                                if(!isRefClass){
+                                if (!isRefClass) {
                                     writer.append("    @NotEmpty(message = \"{error.NotEmpty}\")\n");
-                                }else{
+                                } else {
                                     writer.append("    //@NotEmpty(message = \"{error.NotEmpty}\")\n");
                                 }
 
@@ -495,9 +506,9 @@ public class DevelopmentContoller extends BaseApiController {
                 }
                 writer.append("}\n");
                 writer.close();
-                logger.info("     Created Class : {} ", className);
+                logCretedFile(className);
             } catch (Exception e) {
-                logger.error(e.getMessage());
+                log.error(e.getMessage());
             }
         }
     }
@@ -521,9 +532,9 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("public interface ").append(fileName).append(" extends BaseRepository<").append(entityName).append(",Long>, JpaSpecificationExecutor<").append(entityName).append("> {\n");
                 writer.append("}\n");
                 writer.close();
-                logger.info("Created Class : {} ", className);
+                logCretedFile(className);
             } catch (Exception e) {
-                logger.error(e.getMessage());
+                log.error(e.getMessage());
             }
         }
     }
@@ -546,11 +557,15 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("public interface ").append(entityName).append("Service extends BaseService<").append(entityName).append(", ").append(haveDto ? entityName + "Dto" : entityName).append("> {\n");
                 writer.append("}\n");
                 writer.close();
-                logger.info("Created Class : {} ", className);
+                logCretedFile(className);
             } catch (Exception e) {
-                logger.error(e.getMessage());
+                log.error(e.getMessage());
             }
         }
+    }
+
+    private void logCretedFile(String name) {
+        log.info("Created Class : {} ", name);
     }
 
     private void generateServiceImpl(String entityName, boolean haveDto) {
@@ -707,9 +722,9 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("\n");
                 writer.append("}\n");
                 writer.close();
-                logger.info("Created Class : {} ", className);
+                logCretedFile(className);
             } catch (Exception e) {
-                logger.error(e.getMessage());
+                log.error(e.getMessage());
             }
         }
     }
@@ -870,37 +885,531 @@ public class DevelopmentContoller extends BaseApiController {
 
                 writer.append("}\n");
                 writer.close();
-                logger.info("Created Class : {} ", className);
+                logCretedFile(className);
             } catch (Exception e) {
-                logger.error(e.getMessage());
+                log.error(e.getMessage());
             }
         }
     }
 
+    //Start nuxt3+quasar
+    private void generateFrontendNuxt3Quasar(String entityName, PersistentClass persistentClass) {
+        Table table = persistentClass.getTable();
+        String tableName = table.getName();
+        String tableNameKebabCase = tableName.replace("_", "-");
+        String dirName = ConstantData.DEFAULT_FRONTEND_GENERATE_DIRECTORY + "/nuxt3-quasar/" + tableNameKebabCase;
+        String listName = dirName + "/index.vue";
+        String dirFormName = dirName + "/[crud]";
+        String formName = dirFormName + "/[id].vue";
+        String apiName = dirName + "/" + entityName + "Service.ts";
+        log.info("generateFrontendNuxt3Quasar > TableName :{},  listName :{}, formName :{}, apiName :{}", tableName, listName, formName, apiName);
+
+        if (!FileUtil.folderExist(dirName)) {
+            FileUtil.folderCreate(dirName);
+            log.info("generateFrontendNuxt3Quasar > created folder :{} ", dirName);
+        }
+        if (!FileUtil.folderExist(dirFormName)) {
+            FileUtil.folderCreate(dirFormName);
+            log.info("generateFrontendNuxt3Quasar > created folder :{} ", dirFormName);
+        }
+        if (!FileUtil.fileExists(listName)) {
+            log.info("generateFrontendNuxt3Quasar > file :{}, created", listName);
+            generateNux3QuasarFrontList(listName, entityName, tableName);
+        }
+        if (!FileUtil.fileExists(formName)) {
+            log.info("generateFrontendNuxt3Quasar > file :{}, created", formName);
+            generateNux3QuasarFrontForm(formName, entityName, tableName);
+        }
+        if (!FileUtil.fileExists(apiName)) {
+            log.info("generateFrontendNuxt3Quasar > file :{}, created", apiName);
+            generateNux3QuasarFrontService(apiName, entityName, tableName);
+        }
+    }
+    private void generateNux3QuasarFrontList(String filePathName, String entityName, String tableName) {
+        String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
+        String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
+        String tableNameKebabCase = tableName.replace("_", "-");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+            writer.append("<script setup lang=\"ts\">\n");
+
+            String breadcrumbsName = entityName + "FormBreadcrumb";
+            //breadcrumbs
+            writer.append("/* move this variable to /app/libs/appBreadcrumbs.ts \n");
+            writer.append("export const ").append(breadcrumbsName).append(": Breadcrumb[] = [\n");
+            writer.append("  {\n");
+            writer.append("    label: 'model.").append(entityNameLowerFirst).append(".table',\n");
+//            writer.append("    to: '/").append(tableNameKebabCase).append("',\n");
+            writer.append("    to: '/").append(tableNameKebabCase).append("',\n");
+//            writer.append("    to: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
+            writer.append("    icon: biFileEarmark,\n");
+            writer.append("    translateLabel: true\n");
+            writer.append("  },\n");
+            writer.append("  ...crudDetailFn('").append(tableNameKebabCase).append("')\n");
+            writer.append("];\n");
+            writer.append("*/\n");
+            writer.append("\n");
+
+
+            //Model
+            writer.append("/* move this interface to /app/types/models.ts \n");
+            writer.append("export interface ").append(entityName).append(" extends Id {\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    String typeScriptType = getTypscriptType(propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String undefinedSign = isNullable ? "?" : "";
+                    String typeScriptTypeFinal = !AppUtil.isEmpty(undefinedSign) ? typeScriptType + " " + TYPESCRIPT_OR_SIGN + " " + TYPESCRIPT_NULL : typeScriptType;
+                    writer.append(" ").append(propertyName).append(undefinedSign).append(": ").append(typeScriptTypeFinal).append("\n");
+                }
+            }
+            writer.append("}\n");
+            writer.append("*/\n");
+            writer.append("\n");
+
+            //Permission
+            writer.append("/* move this object to /app/libs/appPermissions.ts \n");
+            writer.append("export const ").append(entityName).append("Permission= {\n");
+            writer.append("  view: '").append(tableName).append("_view',\n");
+            writer.append("  list: '").append(tableName).append("_list',\n");
+            writer.append("  manage: '").append(tableName).append("_manage'\n");
+            writer.append("}\n");
+            writer.append("*/\n");
+            writer.append("\n");
+
+            //message
+            writer.append("/* move this message object to /app/i18n/th/model.ts and /app/i18n/en/model.ts under model:{}  \n");
+            writer.append("    ,").append(entityNameLowerFirst).append(": {\n");
+            writer.append("      table: '").append(entityNameLowerFirst).append("',\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                if (!exceptField(propertyName)) {
+                    writer.append("      ").append(propertyName).append(": '").append(propertyName).append("',\n");
+                }
+            }
+            writer.append("    }\n");
+            writer.append("*/\n");
+            writer.append("import { biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
+            writer.append("import { CrudListDataType, ICrudListHeaderOptionSearchType, type ICrudListHeader } from '~/types/common';\n");
+            writer.append("import type { ").append(entityName).append(" } from '~/types/models';\n");
+            writer.append("import { ").append(entityName).append("Permission } from '~/libs/appPermissions';\n");
+
+            writer.append("definePageMeta({ \n");
+            writer.append("  pageName: 'model.").append(entityNameLowerFirst).append(".table', \n");
+            writer.append("  requiresPermission: [").append(entityName).append("Permission.list], \n");
+            writer.append("}) \n");
+            writer.append("useInitPage(); \n");
+            writer.append("const { t }=useLang(); \n");
+            writer.append("const headerItems: ICrudListHeader[] = [\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                if (!exceptField(propertyName)) {
+
+                    String crudListType = getCrudListType(src.getPropertyType());
+                    String crudListSearchType = getCrudListSearchType(src.getPropertyType());
+                    String crudListSearchOperation = getCrudListSearchOperation(src.getPropertyType());
+                    boolean isClassRef = isObjectLink(src.getPropertyType());
+                    if (!isClassRef) {
+
+                        writer.append("  {\n");
+                        writer.append("    label: 'model.").append(entityNameLowerFirst).append(".").append(propertyName).append("',\n");
+                        writer.append("    column: '").append(propertyName).append("',\n");
+                        writer.append("    type: CrudListDataType.").append(crudListType).append(",\n");
+                        writer.append("    options: {\n");
+                        writer.append("      searchable: true,\n");
+                        writer.append("      sortable: true,\n");
+                        writer.append("      fillable: true,\n");
+                        if (crudListSearchType != null) {
+                            writer.append("      searchType: ICrudListHeaderOptionSearchType.").append(crudListSearchType).append(",\n");
+                            writer.append("      searchModel: '',\n");
+                            writer.append("      searchOperation: '").append(crudListSearchOperation).append("'\n");
+                        }
+                        writer.append("    }\n");
+                        writer.append("  },\n");
+                    }
+                }
+            }
+            //base tool
+            writer.append("  {\n");
+            writer.append("    label: 'base.tool',\n");
+            writer.append("    type: CrudListDataType.BASE_TOOL,\n");
+            writer.append("    options: {\n");
+            writer.append("      fillable: true,\n");
+            writer.append("      editButton: true,\n");
+            writer.append("      deleteButton: true,\n");
+            writer.append("      copyButton: true,\n");
+            writer.append("      viewButton: true,\n");
+            writer.append("      align: 'center'\n");
+            writer.append("    }\n");
+            writer.append("  },\n");
+
+            writer.append("];\n");
+            writer.append("const {\n");
+            writer.append("  dataList,\n");
+            writer.append("  loading,\n");
+            writer.append("  firstLoaded,\n");
+            writer.append("  pages,\n");
+            writer.append("  sort,\n");
+            writer.append("  onPageNoChange,\n");
+            writer.append("  onItemPerPageChange,\n");
+            writer.append("  onSort,\n");
+            writer.append("  onSortMode,\n");
+            writer.append("  onReload,\n");
+            writer.append("  onAdvanceSearch,\n");
+            writer.append("  onItemDelete,\n");
+            writer.append("  onNewForm,\n");
+            writer.append("  onItemClick,\n");
+            writer.append("  onItemCopy,\n");
+            writer.append("  crudName,\n");
+            writer.append("  onKeywordSearch,\n");
+            writer.append("  headers\n");
+            writer.append("} = useCrudList<").append(entityName).append(">(\n");
+            writer.append("  {\n");
+            writer.append("    crudName: '").append(tableName).append("',\n");
+            writer.append("    apiEndpoint: '/api',\n");
+            writer.append("    headers: headerItems,\n");
+            writer.append("    defaultSort: {\n");
+            writer.append("      column: 'id',\n");
+            writer.append("      mode: 'desc'\n");
+            writer.append("    }\n");
+            writer.append("  },\n");
+            writer.append(");\n");
+            writer.append("</script>\n");
+
+//            for (GenerateTableSrcItem src : propertyList) {
+//                String propertyName = src.getPropertyName();
+//                String propertyTypeName = src.getPropertyType();
+//                if (!exceptField(propertyName)) {
+//                    log.info("Property: {}  of SqlType: {}, isUnique : {}, length : {}, propertyTypeName : {} , isNullable :{}, isTypeTextArea :{}",
+//                            src.getPropertyName(),
+//                            src.getSqlType(),
+//                            src.isUnique(),
+//                            src.getLength(),
+//                            src.getPropertyType(),
+//                            src.isNullable(),
+//                            src.isTypeTextArea()
+//                    );
+//                }
+//            }
+
+            writer.append("<template>\n");
+            writer.append("  <q-page padding>\n");
+            writer.append("    <BaseCrudList\n");
+            writer.append("      :icon=\"biFileEarmark\" \n");
+            writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
+            writer.append("      :crud-name=\"crudName\" \n");
+            writer.append("      :loading=\"loading\" \n");
+            writer.append("      :first-loaded=\"firstLoaded\" \n");
+            writer.append("      :pages=\"pages\" \n");
+            writer.append("      :headers=\"headers\" \n");
+            writer.append("      :sort=\"sort\" \n");
+            writer.append("      :list=\"dataList\" \n");
+            writer.append("      show-search-text-box \n");
+            writer.append("      :view-permission=\"[").append(entityName).append("Permission.view]\"\n");
+            writer.append("      :manage-permission=\"[").append(entityName).append("Permission.manage]\"\n");
+            writer.append("      @on-item-click=\"onItemClick\" \n");
+            writer.append("      @on-item-copy=\"onItemCopy\" \n");
+            writer.append("      @on-page-no-change=\"onPageNoChange\" \n");
+            writer.append("      @on-items-perpage-change=\"onItemPerPageChange\" \n");
+            writer.append("      @on-sort=\"onSort\" \n");
+            writer.append("      @on-sort-mode=\"onSortMode\" \n");
+            writer.append("      @on-reload=\"onReload\" \n");
+            writer.append("      @on-advance-search=\"onAdvanceSearch\" \n");
+            writer.append("      @on-keyword-search=\"onKeywordSearch\" \n");
+            writer.append("      @on-item-delete=\"onItemDelete\" \n");
+            writer.append("      @on-new-form=\"onNewForm\" \n");
+            writer.append("    >\n");
+            writer.append("    <!-- Slot \n");
+            writer.append("    <template #additionalBaseTool/> \n");
+            writer.append("    <template #baseTool=\"{index, item}\"/> \n");
+            writer.append("    <template #belowInnerSearchExtra/> \n");
+            writer.append("    <template #belowSearchExtra/> \n");
+            writer.append("    <template #extraBeforeInnerToolbar/> \n");
+            writer.append("    <template #extraInnerToolbar/> \n");
+            writer.append("    <template #extraToolbar/> \n");
+            writer.append("    <template #headerCard/> \n");
+            writer.append("    <template #paging/> \n");
+            writer.append("    <template #table/> \n");
+            writer.append("    <template #tbody=\"{fillableHeaders, list}\"/> \n");
+            writer.append("    --> \n");
+            writer.append("    </BaseCrudList>\n");
+            writer.append("  </q-page>\n");
+            writer.append("</template>\n");
+            writer.close();
+            logCretedFile(filePathName);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+    private void generateNux3QuasarFrontForm(String filePathName, String entityName, String tableName) {
+        String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
+        String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
+        String tableNameKebabCase = tableName.replace("_", "-");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+
+            writer.append("<script setup lang=\"ts\">\n");
+            writer.append("import { biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
+            writer.append("import { ").append(entityName).append("FormBreadcrumb } from '~/libs/appBreadcrumbs';\n");
+            writer.append("import { ").append(entityName).append("Permission } from '~/libs/appPermissions';\n");
+            writer.append("import type { ").append(entityName).append(" } from '~/types/models';\n");
+
+            writer.append("const { t } = useLang();\n");
+            writer.append("const { required, requiredNotMinusNumberOrFloat } = useValidation();\n");
+
+            writer.append("definePageMeta({ \n");
+            writer.append("  pageName: 'model.").append(entityNameLowerFirst).append(".table', \n");
+            writer.append("  requiresPermission: [").append(entityName).append("Permission.view], \n");
+            writer.append("  breadcrumbs: ").append(entityName).append("FormBreadcrumb,\n");
+            writer.append("}) \n");
+            writer.append("useInitPage(); \n");
+
+            //initial entity
+            writer.append("const entity: ").append(entityName).append(" =  Object.freeze<").append(entityName).append(">({\n");
+            writer.append("  id: null,\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    boolean typeScriptType = isTypeTextArea(src.getSqlType(), propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
+                    writer.append("  ").append(propertyName).append(": ").append(defaultValue).append(",\n");
+                }
+            }
+            writer.append("});\n");
+
+            writer.append("const {\n");
+            writer.append("  crudAction,\n");
+            writer.append("  crudEntity,\n");
+            writer.append("  crudName,\n");
+            writer.append("  isEditMode,\n");
+            writer.append("  loading,\n");
+            writer.append("  onBack,\n");
+            writer.append("  onDelete,\n");
+            writer.append("  onEnableEditForm,\n");
+            writer.append("  onSubmit,\n");
+            writer.append("} = useCrudForm<").append(entityName).append(">(\n");
+            writer.append("  {\n");
+            writer.append("    crudName: '").append(tableName).append("',\n");
+//            writer.append("    backLink: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
+//            writer.append("    backLink: '/").append(tableNameKebabCase).append("',\n");
+            writer.append("    apiEndpoint: '/api',\n");
+            writer.append("  },\n");
+            writer.append("  entity\n");
+            writer.append(");\n");
+            writer.append("\n");
+
+            writer.append("</script>\n");
+            writer.append("\n");
+
+            writer.append("<template>\n");
+            writer.append("  <q-page padding>\n");
+            writer.append("    <BaseCrudForm\n");
+            writer.append("      :icon=\"biFileEarmark\"\n");
+            writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
+            writer.append("      :crud-name=\"crudName\"\n");
+            writer.append("      :crud-action=\"crudAction\"\n");
+            writer.append("      :crud-entity=\"crudEntity\"\n");
+            writer.append("      :full-width=\"false\"\n");
+            writer.append("      :list-permission=\"[").append(entityName).append("Permission.list]\"\n");
+            writer.append("      :manage-permission=\"[").append(entityName).append("Permission.manage]\"\n");
+            writer.append("      :loading=\"loading\"\n");
+            writer.append("      @on-back=\"onBack\"\n");
+            writer.append("      @on-submit=\"onSubmit\"\n");
+            writer.append("      @on-delete=\"onDelete\"\n");
+            writer.append("      @on-edit-enable=\"onEnableEditForm\"\n");
+            writer.append("    >\n");
+            //start crudFromContent slot
+            writer.append("      <template #crudFromContent>\n");
+            //start row
+            writer.append("        <div class=\"row\">\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    String typeScriptType = getTypscriptType(propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
+                    boolean isTextAreaType = isTypeTextArea(src.getSqlType(), propertyTypeName);
+                    boolean isNumberType = propertyTypeName.equals(TYPE_FLOAT) || propertyTypeName.equals(TYPE_BIG_DECIMAL) || propertyTypeName.equals(TYPE_INTEGER);
+                    Long limitText = src.getLength();
+                    boolean isRefClass = isObjectLink(propertyTypeName);
+                    //start col
+                    writer.append("          <div class=\"col-12 col-md-4 q-pa-md\">\n");
+                    if (isRefClass) {
+                        //if reference to other Object class
+                        writer.append("          <!-- type ").append(propertyTypeName).append(" -->\n");
+                        writer.append("          <!-- TODO implement object link -->\n");
+                    } else if (propertyTypeName.equals(TYPE_STRING) || isNumberType) {
+                        writer.append("              <QuasarInput\n");
+                        writer.append("                v-model=\"crudEntity.").append(propertyName).append("\" :edit-mode=\"isEditMode\" :readonly=\"loading\" \n");
+                        writer.append("                :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
+                        if (isTextAreaType) {
+                            writer.append("                type=\"textarea\"\n");
+                            if (!isNullable) {
+                                writer.append("                :rules=\"[required]\"\n");
+                            }
+                        } else if (propertyTypeName.equals(TYPE_STRING)) {
+                            writer.append("                type=\"text\"\n");
+                            if (!isNullable) {
+                                writer.append("                :rules=\"[required]\"\n");
+                            }
+                        } else {
+                            writer.append("                type=\"number\"\n");
+                            writer.append("                :min=\"0\"\n");
+                            if (!isNullable) {
+                                writer.append("                :rules=\"[requiredNotMinusNumberOrFloat]\"\n");
+                            }
+                        }
+
+
+                        if (!isTextAreaType && limitText != null) {
+                            writer.append("                 :maxlength=\"").append(String.valueOf(limitText)).append("\"\n");
+                            writer.append("                 counter\n");
+                        }
+                        writer.append("                >\n");
+                        if (!isNullable) {
+                            writer.append("                <template #hint>\n");
+//                        writer.append("                          {{ t('helper.requireMinimumLetter', { no: 4 }) }}\n");
+                            writer.append("                  <span class=\"text-negative\">*</span>\n");
+                            writer.append("                </template>\n");
+                        }
+
+                        writer.append("            </QuasarInput>\n");
+                    } else if (propertyTypeName.equals(TYPE_BOOLEAN)) {
+                        writer.append("             <QuasarToggle v-model=\"crudEntity.").append(propertyName).append("\" :edit-mode=\"isEditMode\" \n");
+                        writer.append("              :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
+                        writer.append("              />\n");
+                    } else if (propertyTypeName.equals(TYPE_LOCAL_DATE)) {
+                        writer.append("            <QuasarDatePicker\n");
+                        writer.append("              v-model=\"crudEntity.").append(propertyName).append("\"\n");
+                        writer.append("              :edit-mode=\"editMode\" \n");
+                        writer.append("              :label=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
+                        if (!isNullable) {
+                            writer.append("             required\n");
+                        }
+                        writer.append("            />\n");
+                    } else if (propertyTypeName.equals(TYPE_LOCAL_DATETIME)) {
+                        writer.append("            <QuasarTimePicker\n");
+                        writer.append("              v-model=\"crudEntity.").append(propertyName).append("\"\n");
+                        writer.append("              :edit-mode=\"editMode\" \n");
+                        writer.append("              :label=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
+                        if (!isNullable) {
+                            writer.append("             required\n");
+                        }
+                        writer.append("            />\n");
+                    }
+
+
+                    writer.append("          </div>\n");//end col
+                }
+            }
+            writer.append("\n");
+            writer.append("        </div>\n");//end row
+            writer.append("      </template>\n");//end crudFromContent slot
+            writer.append("    </BaseCrudForm>\n");//end crud-api-form
+            writer.append("  </q-page>\n");//end page
+            writer.append("</template>\n");
+            writer.append("\n");
+            writer.close();
+            logCretedFile(filePathName);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+    private void generateNux3QuasarFrontService(String filePathName, String entityName, String tableName) {
+        String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
+        String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
+        String tableNameKebabCase = tableName.replace("_", "-");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+
+            //api service
+            writer.append("// move this file to /app/api \n");
+            writer.append("import type { ").append(entityName).append(" } from '~/types/models';\n");
+            writer.append("import type { ResponseMessage, IApiListResponse } from '~/types/common';\n");
+            writer.append("export default () => {\n");
+            writer.append("  const { callAxios } = useAxios();\n");
+            writer.append("  const findAll = async (q: string): Promise<IApiListResponse<").append(entityName).append("> | null> => {\n");
+            writer.append("    return await callAxios<IApiListResponse<").append(entityName).append(">>({\n");
+            writer.append("      API: `/api/").append(entityNameLowerFirst).append("${q}`,\n");
+            writer.append("      method: 'GET',\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  const findById = async (id: number): Promise<").append(entityName).append(" | null> => {\n");
+            writer.append("    return await callAxios<").append(entityName).append(">({\n");
+            writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
+            writer.append("      method: 'GET',\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  const crudCreate = async (request: ").append(entityName).append("): Promise<").append(entityName).append(" | null> => {\n");
+            writer.append("    return await callAxios<").append(entityName).append(">({\n");
+            writer.append("      API: '/api/").append(entityNameLowerFirst).append("',\n");
+            writer.append("      method: 'POST',\n");
+            writer.append("      body: {\n");
+            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+            writer.append("      },\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  const crudUpdate = async (id: number, request: ").append(entityName).append("): Promise<").append(entityName).append(" | null> => {\n");
+            writer.append("    return await callAxios<").append(entityName).append(">({\n");
+            writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
+            writer.append("      method: 'PUT',\n");
+            writer.append("      body: {\n");
+            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+            writer.append("      },\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  const deleteById = async (id: number): Promise<ResponseMessage | null> => {\n");
+            writer.append("    return await callAxios<ResponseMessage>({\n");
+            writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
+            writer.append("      method: 'DELETE',\n");
+            writer.append("    });\n");
+            writer.append("  };\n");
+            writer.append("  return {\n");
+            writer.append("    findAll,\n");
+            writer.append("    findById,\n");
+            writer.append("    crudCreate,\n");
+            writer.append("    crudUpdate,\n");
+            writer.append("    deleteById\n");
+            writer.append("  };\n");
+            writer.append("};\n");
+            writer.close();
+            logCretedFile(filePathName);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+    //End nuxt3+quasar
+
+    //Start Default theme Quasar SSR
     private void generateFrontend(String entityName, PersistentClass persistentClass) {
         Table table = persistentClass.getTable();
         String tableName = table.getName();
         String tableNameKebabCase = tableName.replace("_", "-");
-        String dirName = ConstantData.DEFAULT_FRONTEND_GENERATE_DIRECTORY + "/" + tableNameKebabCase;
+        String dirName = ConstantData.DEFAULT_FRONTEND_GENERATE_DIRECTORY + "/default/" + tableNameKebabCase;
         String listName = dirName + "/index.vue";
         String formName = dirName + "/view.vue";
-        String apiName = dirName + "/"+entityName + "Service.ts";
-        logger.info("generateFrontend > TableName :{},  listName :{}, formName :{}, apiName :{}", tableName, listName, formName, apiName);
+        String apiName = dirName + "/" + entityName + "Service.ts";
+        log.info("generateFrontend > TableName :{},  listName :{}, formName :{}, apiName :{}", tableName, listName, formName, apiName);
 
         if (!FileUtil.folderExist(dirName)) {
             FileUtil.folderCreate(dirName);
-            logger.info("generateFrontend > created folder :{} ", dirName);
+            log.info("generateFrontend > created folder :{} ", dirName);
         }
         if (!FileUtil.fileExists(listName)) {
-            logger.info("generateFrontend > file :{}, created", listName);
+            log.info("generateFrontend > file :{}, created", listName);
             generateFrontList(listName, entityName, tableName);
         }
         if (!FileUtil.fileExists(formName)) {
-            logger.info("generateFrontend > file :{}, created", formName);
+            log.info("generateFrontend > file :{}, created", formName);
             generateFrontForm(formName, entityName, tableName);
         }
         if (!FileUtil.fileExists(apiName)) {
-            logger.info("generateFrontend > file :{}, created", apiName);
+            log.info("generateFrontend > file :{}, created", apiName);
             generateFrontService(apiName, entityName, tableName);
         }
     }
@@ -1076,9 +1585,9 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("</template>\n");
             writer.append("\n");
             writer.close();
-            logger.info("     Created Class : {} ", filePathName);
+            logCretedFile(filePathName);
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
     }
 
@@ -1090,7 +1599,7 @@ public class DevelopmentContoller extends BaseApiController {
             BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
             writer.append("<script setup lang=\"ts\">\n");
 
-            String breadcrumbsName =entityName + "Breadcrumb";
+            String breadcrumbsName = entityName + "Breadcrumb";
             //breadcrumbs
             writer.append("/* move this variable to /src/breadcrumbs/AppBreadcrumbs.ts or /src/breadcrumbs/AdminBreadcrumbs.ts or /src/BackendBreadcrumbs/BackendBreadcrumbs.ts \n");
             writer.append("export const ").append(breadcrumbsName).append(": Breadcrumb[] = [\n");
@@ -1264,7 +1773,7 @@ public class DevelopmentContoller extends BaseApiController {
 //                String propertyName = src.getPropertyName();
 //                String propertyTypeName = src.getPropertyType();
 //                if (!exceptField(propertyName)) {
-//                    logger.info("Property: {}  of SqlType: {}, isUnique : {}, length : {}, propertyTypeName : {} , isNullable :{}, isTypeTextArea :{}",
+//                    log.info("Property: {}  of SqlType: {}, isUnique : {}, length : {}, propertyTypeName : {} , isNullable :{}, isTypeTextArea :{}",
 //                            src.getPropertyName(),
 //                            src.getSqlType(),
 //                            src.isUnique(),
@@ -1311,9 +1820,9 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("</template>\n");
             writer.append("\n");
             writer.close();
-            logger.info("     Created Class : {} ", filePathName);
+            logCretedFile(filePathName);
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
     }
 
@@ -1377,11 +1886,12 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("  };\n");
             writer.append("};\n");
             writer.close();
-            logger.info("     Created Class : {} ", filePathName);
+            logCretedFile(filePathName);
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
     }
+    //End Default theme Quasar SSR
 
     private boolean exceptField(String propertyName) {
         return propertyName.equals("createdDate") || propertyName.equals("createdUser") || propertyName.equals("updatedDate") || propertyName.equals("updatedUser") || propertyName.equals("deleted");
@@ -1463,6 +1973,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
         return null;
     }
+
     private String getTypscriptTypeDefaultValue(String propertyType) {
         if (isObjectLink(propertyType)) {
             return TYPESCRIPT_NULL;
@@ -1477,6 +1988,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
         return TYPESCRIPT_NULL;
     }
+
     private boolean isTypeTextArea(String getSqlType, String propertyType) {
         return getSqlType != null && propertyType.equals(TYPE_STRING) && AppUtil.findStringInString(getSqlType, TYPE_TEXT);
     }
@@ -1502,3 +2014,4 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 }
+

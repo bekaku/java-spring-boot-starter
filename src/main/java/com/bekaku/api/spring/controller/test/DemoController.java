@@ -12,28 +12,20 @@ import com.bekaku.api.spring.service.UserService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
-import com.bekaku.api.spring.vo.LinkPreview;
-import com.google.common.net.InternetDomainName;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,18 +46,14 @@ public class DemoController extends BaseApiController {
     private final QueueSender queueSender;
 //    private final RabbitTemplate queueSender;
 
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private AccessTokenService accessTokenService;
+    private final UserService userService;
+    private final AccessTokenService accessTokenService;
 
     @Value("${logging.file.path}")
     String logingFilePath;
 
     @Value("${custom.config.file}")
     String testConfigFile;
-    @Value("classpath:/acl.json")
-    private Resource jsonAcl;
 
     private String getMetaTagContent(Document document, String cssQuery) {
         Element elm = document.select(cssQuery).first();
@@ -91,42 +79,6 @@ public class DemoController extends BaseApiController {
             put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
         }}, HttpStatus.OK);
     }
-
-    @GetMapping("/testGetOgMeta")
-    public ResponseEntity<Object> testGetOgMeta(@RequestParam(value = "url") String url) {
-        if (!url.startsWith("http")) {
-            url = "http://" + url;
-        }
-        Document document;
-        LinkPreview preview;
-        try {
-            document = Jsoup.connect(url).get();
-            String title = getMetaTagContent(document, "meta[name=title]");
-            String desc = getMetaTagContent(document, "meta[name=description]");
-            String ogUrl = getMetaTagContent(document, "meta[property=og:url]");
-            String ogTitle = getMetaTagContent(document, "meta[property=og:title]");
-            String ogDesc = getMetaTagContent(document, "meta[property=og:description]");
-            String ogImage = getMetaTagContent(document, "meta[property=og:image]");
-            String ogImageAlt = getMetaTagContent(document, "meta[property=og:image:alt]");
-            String domain = ogUrl;
-            try {
-                domain = InternetDomainName.from(new URL(ogUrl).getHost()).topPrivateDomain().toString();
-            } catch (Exception e) {
-                log.warn("Unable to connect to extract domain name from : {}", url);
-            }
-            preview = new LinkPreview(domain, url,
-                    !ObjectUtils.isEmpty(ogTitle) ? ogTitle : title,
-                    !ObjectUtils.isEmpty(ogDesc) ? ogDesc : desc,
-                    ogImage,
-                    ogImageAlt);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-
-        return this.responseEntity(preview, HttpStatus.OK);
-    }
-
 
 
     @GetMapping
