@@ -238,7 +238,7 @@ public class AuthController extends BaseApiController {
 //            deleteCookie(response);
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
-        logger.info("refreshToken ,userId:{},  oldRefreshToken :{}",accessToken.get().getUser().getId(), dto.getRefreshToken());
+        logger.info("refreshToken ,userId:{},  oldRefreshToken :{}", accessToken.get().getUser().getId(), dto.getRefreshToken());
 
         //validate expred token
         boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
@@ -253,6 +253,7 @@ public class AuthController extends BaseApiController {
 //        setRefreshTokenCookie(response, tokenResponse);
         return authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
     }
+
     @PostMapping("/requestVerifyCodeToResetPwd")
     public ResponseEntity<Object> requestVerifyCodeToResetPwd(@Valid @RequestBody ForgotPasswordRequest reqBody,
                                                               @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
@@ -266,11 +267,13 @@ public class AuthController extends BaseApiController {
 
         String token = AppUtil.generateRandomNumber(6);
         AccessToken accessToken = accessTokenService.generateTokenBy(user.get(), accessTokenService.getExpireDateBy(AccessTokenServiceType.FORGOT_PASSWORD), token, AccessTokenServiceType.FORGOT_PASSWORD);
-        if(accessToken.isNewToken()){
-            emailService.sendEmailRecoveryToken(accessToken);
+        if (accessToken.isNewToken()) {
+            //TODO
+//            emailService.sendEmailRecoveryToken(accessToken);
         }
         return this.responseServerMessage(i18n.getMessage("authen.token_not_expire", reqBody.getEmail()));
     }
+
     @PostMapping("/sendVerifyCodeToResetPwd")
     public ResponseEntity<Object> sendVerifyCodeToResetPwd(@Valid @RequestBody ForgotPasswordRequest reqBody,
                                                            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
@@ -289,7 +292,8 @@ public class AuthController extends BaseApiController {
         }
         Optional<AccessToken> accessToken = accessTokenService.findAccessTokenByTokenAndUser(user.get(), reqBody.getToken());
         if (accessToken.isEmpty()) {
-            throw this.responseErrorBadRequest();
+            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"),
+                    i18n.getMessage("error.verify.code.wrong")));
         }
         boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
         if (isExpired) {
@@ -308,7 +312,7 @@ public class AuthController extends BaseApiController {
         }
         //validate pwd strong
         boolean isStrong = AppUtil.validatePasswordStrong(reqBody.getNewPassword());
-        if(!isStrong){
+        if (!isStrong) {
             return this.responseServerMessage(i18n.getMessage("error.pwd.policy.alert", reqBody.getEmail()), HttpStatus.BAD_REQUEST);
         }
 
@@ -318,6 +322,7 @@ public class AuthController extends BaseApiController {
         accessTokenService.delete(accessToken);
         return this.responseServerMessage(i18n.getMessage("helper.reset_pwd_ok", reqBody.getEmail()));
     }
+
     @PostMapping("/logout")
     public ResponseEntity<ResponseMessage> logout(HttpServletResponse response,
                                                   @Valid @RequestBody RefreshTokenRequest refreshTokenRequest,

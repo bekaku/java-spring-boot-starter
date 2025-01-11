@@ -4,6 +4,8 @@ services:
     container_name: api-service-1
     build: .
     #image: "spring-api-service:latest"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: always
     ports:
       - '8080:8080'

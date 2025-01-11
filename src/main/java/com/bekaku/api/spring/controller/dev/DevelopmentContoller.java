@@ -1280,7 +1280,7 @@ public class DevelopmentContoller extends BaseApiController {
 
                         writer.append("            </QuasarInput>\n");
                     } else if (propertyTypeName.equals(TYPE_BOOLEAN)) {
-                        writer.append("             <QuasarToggle v-model=\"crudEntity.").append(propertyName).append("\" :edit-mode=\"isEditMode\" \n");
+                        writer.append("             <QuasarChekbox v-model=\"crudEntity.").append(propertyName).append("\" :edit-mode=\"isEditMode\" \n");
                         writer.append("              :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
                         writer.append("              />\n");
                     } else if (propertyTypeName.equals(TYPE_LOCAL_DATE)) {
