@@ -15,9 +15,7 @@ import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.validator.UserValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -34,29 +32,21 @@ import java.util.Optional;
 
 @RequestMapping(path = "/api/user")
 @RestController
+@RequiredArgsConstructor
 public class UserController extends BaseApiController {
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private RoleService roleService;
-    @Autowired
-    private EncryptService encryptService;
-    @Autowired
-    private FileManagerService fileManagerService;
-    @Autowired
-    private AccessTokenService accessTokenService;
-    @Autowired
-    private UserValidator userValidator;
-    @Autowired
-    private I18n i18n;
-    @Autowired
-    private PermissionService permissionService;
+    private final UserService userService;
+    private final RoleService roleService;
+    private final EncryptService encryptService;
+    private final FileManagerService fileManagerService;
+    private final AccessTokenService accessTokenService;
+    private final UserValidator userValidator;
+    private final I18n i18n;
+    private final PermissionService permissionService;
 
     @Value("${app.defaults.userpwd}")
     String defaultUserPwd;
 
     private final String SHEET_NAME = "users";
-    Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @GetMapping("/currentUserData")
     public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen) {

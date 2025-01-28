@@ -8,8 +8,7 @@ import com.bekaku.api.spring.util.ControllerUtil;
 import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.vo.Paging;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,9 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public class BaseApiController extends BaseResponseException {
 
-    Logger logger = LoggerFactory.getLogger(BaseApiController.class);
     @Autowired
     private HttpServletRequest request;
 
@@ -78,7 +77,8 @@ public class BaseApiController extends BaseResponseException {
     }
 
     public void initSearchParam() {
-        logger.info("initSearchParam Params {}", request.getParameter("search"));
+
+        log.info("initSearchParam Params {}", request.getParameter("search"));
     }
 
     public Optional<String> getParameter(String parameterName) {

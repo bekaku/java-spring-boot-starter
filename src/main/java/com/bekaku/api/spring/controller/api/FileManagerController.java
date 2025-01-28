@@ -21,6 +21,7 @@ import com.bekaku.api.spring.util.FileUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Optional;
 
+@Slf4j
 @RequestMapping(path = "/api/fileManager")
 @RestController
 @RequiredArgsConstructor
@@ -52,7 +54,6 @@ public class FileManagerController extends BaseApiController {
     private final FileMimeService fileMimeService;
     private final I18n i18n;
     private final AppProperties appProperties;
-    Logger logger = LoggerFactory.getLogger(FileManagerController.class);
     @Autowired
     private UserService userService;
 
@@ -140,7 +141,7 @@ public class FileManagerController extends BaseApiController {
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        logger.info("internalDeleteFileApi > id:{}", id);
+        log.info("internalDeleteFileApi > id:{}", id);
         fileManagerService.deleteFileBy(fileManager.get());
         return responseEntity(new HashMap<String, Object>() {{
             put("id", id);

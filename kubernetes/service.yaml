@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-api-service
+spec:
+  selector:
+    app: spring-api
+  ports:
+    - protocol: TCP
+      nodePort: 32000
+      port: 8080     # Exposed port
+      targetPort: 8080  # Port on the container
+  type: NodePort  # Use NodePort or ClusterIP if LoadBalancer isn't supported

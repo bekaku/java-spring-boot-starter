@@ -12,15 +12,13 @@ import com.bekaku.api.spring.model.User;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
-import com.bekaku.api.spring.util.DateUtil;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,43 +26,37 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 
+@Slf4j
 @RequestMapping(path = "/api/auth")
 @RestController
+@RequiredArgsConstructor
 public class AuthController extends BaseApiController {
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private AuthService authService;
-    @Autowired
-    private AccessTokenService accessTokenService;
-    @Autowired
-    private EncryptService encryptService;
-    @Autowired
-    private RoleService roleService;
-    @Autowired
-    private ApiClientService apiClientService;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private EmailService emailService;
-    @Autowired
-    private I18n i18n;
+
+    private final UserService userService;
+    private final AuthService authService;
+    private final AccessTokenService accessTokenService;
+    private final EncryptService encryptService;
+    private final RoleService roleService;
+    private final ApiClientService apiClientService;
+    private final JwtService jwtService;
+    private final EmailService emailService;
+    private final I18n i18n;
 
     @Value("${app.defaults.image}")
     String defaultImage;
 
     @Value("${app.defaults.role}")
     Long defaultRole;
+
     @Value("${environments.production}")
     boolean isProduction;
+
     @Value("${app.domain}")
     String appDomain;
 
-    Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Value("${app.jwt.refresh-token-name}")
     String cookieJwtRefreshTokenName;
@@ -154,7 +146,7 @@ public class AuthController extends BaseApiController {
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
-        logger.info("setRefreshTokenCookie {}", tokenResponse.getRefreshToken());
+        log.info("setRefreshTokenCookie {}", tokenResponse.getRefreshToken());
         Cookie cookie = new Cookie(cookieJwtRefreshTokenName, tokenResponse.getRefreshToken());
         cookie.setMaxAge(AppUtil.getCookieMaxAgeDays(90));//cookie expired in 3 months
         cookie.setSecure(true);
@@ -206,44 +198,44 @@ public class AuthController extends BaseApiController {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
 //        Optional<String> jwtKey = jwtService.getAuthorizatoinTokenString(authorization);
         if (apiClient.isEmpty()) {
-            logger.error("refreshToken > apiClient.isEmpty()");
+            log.error("refreshToken > apiClient.isEmpty()");
 //            deleteCookie(response);
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
         if (AppUtil.isEmpty(dto.getRefreshToken())) {
-            logger.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken())");
+            log.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken())");
 //            deleteCookie(response);
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
-        logger.info("dto.getRefreshToken() :{}", dto.getRefreshToken());
+        log.info("dto.getRefreshToken() :{}", dto.getRefreshToken());
         /*
         if (AppUtil.isEmpty(dto.getRefreshToken()) || jwtKey.isEmpty()) {
-            logger.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken()) || jwtKey.isEmpty()");
+            log.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken()) || jwtKey.isEmpty()");
             deleteCookie(response);
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
 
         Optional<String> subFromJwt = jwtService.getExpiredSubFromToken(jwtKey.get(), apiClient.get());
-        logger.info("subFromJwt :{}, dto.getRefreshToken :{} ",subFromJwt.orElse(null), dto.getRefreshToken());
+        log.info("subFromJwt :{}, dto.getRefreshToken :{} ",subFromJwt.orElse(null), dto.getRefreshToken());
 
         if (subFromJwt.isEmpty() || !subFromJwt.get().equals(dto.getRefreshToken())) {
-            logger.error("refreshToken > subFromJwt.isEmpty() || !subFromJwt.get().equals(dto.getRefreshToken())");
+            log.error("refreshToken > subFromJwt.isEmpty() || !subFromJwt.get().equals(dto.getRefreshToken())");
             deleteCookie(response);
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
          */
         Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(dto.getRefreshToken(), false);
         if (accessToken.isEmpty()) {
-            logger.error("refreshToken > accessToken.isEmpty()");
+            log.error("refreshToken > accessToken.isEmpty()");
 //            deleteCookie(response);
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
-        logger.info("refreshToken ,userId:{},  oldRefreshToken :{}", accessToken.get().getUser().getId(), dto.getRefreshToken());
+        log.info("refreshToken ,userId:{},  oldRefreshToken :{}", accessToken.get().getUser().getId(), dto.getRefreshToken());
 
         //validate expred token
         boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
         if (isExpired) {
-            logger.error("refreshToken > accessToken isExpired");
+            log.error("refreshToken > accessToken isExpired");
             throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
         }
 

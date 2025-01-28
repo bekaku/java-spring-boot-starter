@@ -482,7 +482,7 @@ public class DevelopmentContoller extends BaseApiController {
                                 }
 
                             }
-                            if (size != null && !src.getPropertyType().equals(TYPE_BIG_DECIMAL)) {
+                            if (size != null && !src.getPropertyType().equals(TYPE_BIG_DECIMAL) && !src.getPropertyType().equals(TYPE_TEXT) && !src.getPropertyType().equals(TYPE_BOOLEAN)) {
                                 if (src.getPropertyType().equals(TYPE_LOCAL_DATE)) {
                                     writer.append("    @Size(max = 10, message = \"{error.SizeLimitMaxFormat}\")\n");
                                 } else if (src.getPropertyType().equals(TYPE_LOCAL_DATETIME)) {
@@ -588,7 +588,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository.").append(entityName).append("Repository;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.").append(entityName).append("Service;\n");
 //                writer.append("import lombok.AllArgsConstructor;\n");
-//                writer.append("import lombok.RequiredArgsConstructor;\n");
+                writer.append("import lombok.RequiredArgsConstructor;\n");
                 writer.append("import org.modelmapper.ModelMapper;\n");
                 writer.append("import org.springframework.data.domain.Pageable;\n");
                 writer.append("import org.springframework.data.domain.Page;\n");
@@ -606,13 +606,13 @@ public class DevelopmentContoller extends BaseApiController {
 
                 writer.append("\n");
                 writer.append("@Transactional\n");
-//                writer.append("@RequiredArgsConstructor\n");
+                writer.append("@RequiredArgsConstructor\n");
                 writer.append("@Service\n");
                 writer.append("public class ").append(entityName).append("ServiceImpl implements ").append(entityName).append("Service {\n");
-                writer.append("    @Autowired\n");
-                writer.append("    private ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository;\n");
-                writer.append("    @Autowired\n");
-                writer.append("    private ModelMapper modelMapper;\n");
+//                writer.append("    @Autowired\n");
+                writer.append("    private final ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository;\n");
+//                writer.append("    @Autowired\n");
+                writer.append("    private final ModelMapper modelMapper;\n");
                 //findAllWithPaging
                 writer.append("\n");
                 writer.append("    @Transactional(readOnly = true)\n");
@@ -749,8 +749,9 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.").append(entityName).append("Service;\n");
 //                writer.append("import lombok.RequiredArgsConstructor;\n");
-                writer.append("import org.slf4j.Logger;\n");
-                writer.append("import org.slf4j.LoggerFactory;\n");
+//                writer.append("import org.slf4j.Logger;\n");
+//                writer.append("import org.slf4j.LoggerFactory;\n");
+                writer.append("import lombok.extern.slf4j.Slf4j;\n");
 //                writer.append("import jakarta.servlet.http.HttpServletRequest;\n");
                 writer.append("import com.bekaku.api.spring.specification.SearchSpecification;\n");
                 writer.append("import org.springframework.beans.factory.annotation.Autowired;\n");
@@ -764,15 +765,16 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import jakarta.validation.Valid;\n");
                 writer.append("import java.util.Optional;\n");
                 writer.append("\n");
+                writer.append("@Slf4j\n");
                 writer.append("@RequestMapping(path = \"/api/").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
                 writer.append("@RestController\n");
-//                writer.append("@RequiredArgsConstructor\n");
+                writer.append("@RequiredArgsConstructor\n");
                 writer.append("public class ").append(fileName).append(" extends BaseApiController{\n");
                 writer.append("\n");
-                writer.append("    @Autowired\n");
-                writer.append("    private ").append(entityName).append("Service ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service;\n");
-                writer.append("    @Autowired\n");
-                writer.append("    private I18n i18n;\n");
+//                writer.append("    @Autowired\n");
+                writer.append("    private final ").append(entityName).append("Service ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service;\n");
+//                writer.append("    @Autowired\n");
+                writer.append("    private final I18n i18n;\n");
                 writer.append(" //   Logger logger = LoggerFactory.getLogger(").append(entityName).append("Controller.class);\n");
                 writer.append("\n");
                 //findall

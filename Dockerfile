@@ -1,8 +1,10 @@
-FROM openjdk:17-jdk-alpine3.14
+FROM eclipse-temurin:21-jdk-alpine
+RUN apk update && apk add curl
 RUN date
 RUN apk add tzdata
 RUN cp /usr/share/zoneinfo/Asia/Bangkok /etc/localtime
 RUN date
+
 VOLUME /tmp
 EXPOSE 8080
 ADD /build/libs/api-service-1.0.0.jar app.jar

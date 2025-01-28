@@ -1,4 +1,5 @@
 package com.bekaku.api.spring.controller.api;
+
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.model.SystemActivityLogs;
@@ -11,16 +12,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.data.domain.Pageable;
 
 import jakarta.validation.Valid;
+
 import java.util.Optional;
 
 @RequestMapping(path = "/api/systemActivityLogs")
 @RestController
 @RequiredArgsConstructor
-public class SystemActivityLogsController extends BaseApiController{
+public class SystemActivityLogsController extends BaseApiController {
 
     private final SystemActivityLogsService systemActivityLogsService;
     private final I18n i18n;
- //   Logger logger = LoggerFactory.getLogger(SystemActivityLogsController.class);
 
     @PreAuthorize("isHasPermission('system_activity_logs_list')")
     @GetMapping

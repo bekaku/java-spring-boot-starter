@@ -2,19 +2,15 @@ package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.RoleDto;
+import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.service.RoleService;
 import com.bekaku.api.spring.service.UserService;
-import com.bekaku.api.spring.specification.SearchCriteria;
-import com.bekaku.api.spring.specification.SearchOperation;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.validator.RoleValidator;
-import com.bekaku.api.spring.model.Permission;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -38,7 +34,6 @@ public class RoleController extends BaseApiController {
     private final I18n i18n;
     private final RoleValidator roleValidator;
 
-    Logger logger = LoggerFactory.getLogger(RoleController.class);
 
     @Value("${app.loging.enable}")
     boolean logEnable;

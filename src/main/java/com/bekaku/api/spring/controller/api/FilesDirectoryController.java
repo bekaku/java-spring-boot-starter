@@ -34,7 +34,6 @@ public class FilesDirectoryController extends BaseApiController {
     private final FilesDirectoryPathService filesDirectoryPathService;
     private final FileManagerService fileManagerService;
     private final I18n i18n;
-    Logger logger = LoggerFactory.getLogger(FilesDirectoryController.class);
 
     @PreAuthorize("isHasPermission('files_directory_list')")
     @GetMapping

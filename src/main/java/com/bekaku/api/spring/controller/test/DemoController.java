@@ -12,6 +12,7 @@ import com.bekaku.api.spring.service.UserService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,8 @@ public class DemoController extends BaseApiController {
     private final QueueSender queueSender;
 //    private final RabbitTemplate queueSender;
 
+    private final ServletContext servletContext;
+
     private final UserService userService;
     private final AccessTokenService accessTokenService;
 
@@ -79,7 +82,32 @@ public class DemoController extends BaseApiController {
             put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
         }}, HttpStatus.OK);
     }
+    @GetMapping("/server-info")
+    public String getServerInfo() {
+        StringBuilder info = new StringBuilder();
 
+        // Get server info
+        info.append("Server Info: ").append(servletContext.getServerInfo()).append("\n");
+
+        // Check if Undertow classes are available
+        boolean isUndertow = false;
+        try {
+            Class.forName("io.undertow.Undertow");
+            isUndertow = true;
+        } catch (ClassNotFoundException e) {
+            isUndertow = false;
+        }
+
+        info.append("Undertow Available: ").append(isUndertow).append("\n");
+
+        // Get JVM arguments
+        info.append("JVM Arguments: ").append(System.getProperty("java.vm.args", "Not Available")).append("\n");
+
+        // Get available processors
+        info.append("Available Processors: ").append(Runtime.getRuntime().availableProcessors()).append("\n");
+
+        return info.toString();
+    }
 
     @GetMapping
     public ResponseEntity<Object> testGet(HttpServletRequest request,

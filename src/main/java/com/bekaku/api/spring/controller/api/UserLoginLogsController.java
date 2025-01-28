@@ -34,7 +34,6 @@ public class UserLoginLogsController extends BaseApiController {
     private final UserLoginLogsService userLoginLogsService;
     private final UserService userService;
     private final I18n i18n;
-    Logger logger = LoggerFactory.getLogger(UserLoginLogsController.class);
 
     @PreAuthorize("isHasPermission('user_login_logs_list')")
     @GetMapping

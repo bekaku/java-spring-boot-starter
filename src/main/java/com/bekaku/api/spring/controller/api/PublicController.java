@@ -5,6 +5,7 @@ import com.google.common.net.InternetDomainName;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.vo.LinkPreview;
+import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,10 +24,9 @@ import java.util.HashMap;
 
 @RequestMapping(path = "/api/public")
 @RestController
+@RequiredArgsConstructor
 public class PublicController extends BaseApiController {
-    @Autowired
-    private I18n i18n;
-
+    private final I18n i18n;
 
     @GetMapping("/")
     public ResponseEntity<Object> index() {

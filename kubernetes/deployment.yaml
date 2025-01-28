@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spring-api
+  template:
+    metadata:
+      labels:
+        app: spring-api
+    spec:
+      containers:
+        - name: spring-api-container
+          image: baekaku/spring-api-service:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: JAVA_OPTS
+              value: "-Xmx512m -Xms512m"
+          volumeMounts:
+            - name: data
+              mountPath: /usr/spring-data
+            - name: logs
+              mountPath: /usr/spring-data/logs
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: data
+          hostPath:
+            path: "/d/code/spring-data"
+            type: DirectoryOrCreate
+        - name: logs
+          hostPath:
+            path: "/d/code/spring-data/logs"
+            type: DirectoryOrCreate

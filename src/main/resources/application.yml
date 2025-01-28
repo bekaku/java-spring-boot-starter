@@ -128,6 +128,15 @@ server:
   connection-timeout: 5s
   max-http-header-size: 8KB
   port: 8080
+  undertow:
+    threads:
+      io: 4
+      worker: 32 #threads.worker = threads.io * 8
+    buffer-size: 1024
+    no-request-timeout: 60000
+    connection-timeout: 60000
+    direct-buffers: true
+    max-http-post-size: 0
   error:
     include-message: always
     include-binding-errors: always

@@ -60,6 +60,8 @@ logging:
     root: WARN
     web: DEBUG
     com.bekaku.api.spring: DEBUG
+    org.springframework.boot.web.embedded.undertow: DEBUG
+    io.undertow: DEBUG
     org:
       springframework: ERROR
       hibernate:
@@ -73,6 +75,8 @@ logging:
     clean-history-on-start: true
 server:
   port: 8080
+  http2:
+    enabled: true
   error:
     whitelabel:
       enabled: false
