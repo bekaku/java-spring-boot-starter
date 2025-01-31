@@ -181,7 +181,7 @@ public class PermissionController extends BaseApiController {
         }}, HttpStatus.OK);
     }
 
-    @SuppressWarnings("unchecked")
+//    @SuppressWarnings("unchecked")
     private JSONArray checkAclPermisison(JSONArray aclList, List<String> userPermissions) {
         JSONArray aclFinal = new JSONArray();
         JSONObject menu;
