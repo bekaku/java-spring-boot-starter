@@ -1097,7 +1097,7 @@ public class DevelopmentContoller extends BaseApiController {
 //            }
 
             writer.append("<template>\n");
-            writer.append("  <q-page padding>\n");
+            writer.append("  <BasePage>\n");
             writer.append("    <BaseCrudList\n");
             writer.append("      :icon=\"biFileEarmark\" \n");
             writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
@@ -1137,7 +1137,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("    <template #tbody=\"{fillableHeaders, list}\"/> \n");
             writer.append("    --> \n");
             writer.append("    </BaseCrudList>\n");
-            writer.append("  </q-page>\n");
+            writer.append("  </BasePage>\n");
             writer.append("</template>\n");
             writer.close();
             logCretedFile(filePathName);
@@ -1208,7 +1208,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("\n");
 
             writer.append("<template>\n");
-            writer.append("  <q-page padding>\n");
+            writer.append("  <BasePage>\n");
             writer.append("    <BaseCrudForm\n");
             writer.append("      :icon=\"biFileEarmark\"\n");
             writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
@@ -1246,7 +1246,7 @@ public class DevelopmentContoller extends BaseApiController {
                         writer.append("          <!-- type ").append(propertyTypeName).append(" -->\n");
                         writer.append("          <!-- TODO implement object link -->\n");
                     } else if (propertyTypeName.equals(TYPE_STRING) || isNumberType) {
-                        writer.append("              <QuasarInput\n");
+                        writer.append("              <BaseInput\n");
                         writer.append("                v-model=\"crudEntity.").append(propertyName).append("\" :edit-mode=\"isEditMode\" :readonly=\"loading\" \n");
                         writer.append("                :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
                         if (isTextAreaType) {
@@ -1280,13 +1280,13 @@ public class DevelopmentContoller extends BaseApiController {
                             writer.append("                </template>\n");
                         }
 
-                        writer.append("            </QuasarInput>\n");
+                        writer.append("            </BaseInput>\n");
                     } else if (propertyTypeName.equals(TYPE_BOOLEAN)) {
-                        writer.append("             <QuasarChekbox v-model=\"crudEntity.").append(propertyName).append("\" :edit-mode=\"isEditMode\" \n");
+                        writer.append("             <BaseChekbox v-model=\"crudEntity.").append(propertyName).append("\" :edit-mode=\"isEditMode\" \n");
                         writer.append("              :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
                         writer.append("              />\n");
                     } else if (propertyTypeName.equals(TYPE_LOCAL_DATE)) {
-                        writer.append("            <QuasarDatePicker\n");
+                        writer.append("            <BaseDatePicker\n");
                         writer.append("              v-model=\"crudEntity.").append(propertyName).append("\"\n");
                         writer.append("              :edit-mode=\"editMode\" \n");
                         writer.append("              :label=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
@@ -1295,7 +1295,7 @@ public class DevelopmentContoller extends BaseApiController {
                         }
                         writer.append("            />\n");
                     } else if (propertyTypeName.equals(TYPE_LOCAL_DATETIME)) {
-                        writer.append("            <QuasarTimePicker\n");
+                        writer.append("            <BaseTimePicker\n");
                         writer.append("              v-model=\"crudEntity.").append(propertyName).append("\"\n");
                         writer.append("              :edit-mode=\"editMode\" \n");
                         writer.append("              :label=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
@@ -1313,7 +1313,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("        </div>\n");//end row
             writer.append("      </template>\n");//end crudFromContent slot
             writer.append("    </BaseCrudForm>\n");//end crud-api-form
-            writer.append("  </q-page>\n");//end page
+            writer.append("  </BasePage>\n");//end page
             writer.append("</template>\n");
             writer.append("\n");
             writer.close();

@@ -80,6 +80,8 @@ spring:
   #          starttls:
   #            enable: true
   mvc:
+    async:
+      request-timeout: 30000  # 30 seconds timeout for async requests
     #setting to default locale th_TH, en_US
     locale: th_TH
     #force locale resolver to spring boot reconized your settings
@@ -131,18 +133,26 @@ server:
   http2:
     enabled: true
   undertow:
-    threads:
-      io: 4
-      worker: 32 #threads.worker = threads.io * 8
-    # Configure buffer pool for WebSockets and general I/O
-    buffer-cache:
-      buffer-size: 1024       # Size of each buffer in bytes (default: 1024)
-      buffers-per-region: 1024 # Number of buffers per memory region (default: 1024)
-    buffer-size: 1024
-    no-request-timeout: 60000
-    connection-timeout: 60000
+    # I/O Threads (CPU cores * 2)
+    io-threads: 8
+
+    # Worker Threads (I/O Threads * 8)
+    worker-threads: 64
+
+    # Buffer Configuration 16 KB
+    buffer-size: 16384
     direct-buffers: true
-    max-http-post-size: 0
+
+    # Connection Settings
+    max-http-post-size: 50MB
+    always-set-keep-alive: true
+
+    # Connection Pool Configuration
+    max-connections: 2000
+    max-persistent-connections: 500
+    no-request-timeout: 60s  # Time before dropping idle connections
+    options:
+      ENABLE_HTTP2: true  # Enable HTTP/2 for better performance
   error:
     include-message: always
     include-binding-errors: always

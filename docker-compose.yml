@@ -15,6 +15,14 @@ services:
       - my-docker-network
     environment:
       - JAVA_OPTS=-Xmx512m -Xms512m
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"  # Max 2 CPU cores
+          memory: "2G"  # Max 2GB RAM
+        reservations:
+          cpus: "1.0"  # Reserve at least 1 CPU
+          memory: "1G"  # Reserve at least 1GB RAM
     volumes:
       - d:\code\spring-data:/usr/spring-data
       - d:\code\spring-data\logs:/usr/spring-data/logs
