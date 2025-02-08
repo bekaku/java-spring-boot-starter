@@ -1272,7 +1272,11 @@ public class DevelopmentContoller extends BaseApiController {
                             writer.append("                 :maxlength=\"").append(String.valueOf(limitText)).append("\"\n");
                             writer.append("                 counter\n");
                         }
-                        writer.append("                >\n");
+                        if (!isNullable) {
+                            writer.append("                 required\n");
+                        }
+                        writer.append("                />\n");
+                        /*
                         if (!isNullable) {
                             writer.append("                <template #hint>\n");
 //                        writer.append("                          {{ t('helper.requireMinimumLetter', { no: 4 }) }}\n");
@@ -1281,6 +1285,7 @@ public class DevelopmentContoller extends BaseApiController {
                         }
 
                         writer.append("            </BaseInput>\n");
+                         */
                     } else if (propertyTypeName.equals(TYPE_BOOLEAN)) {
                         writer.append("             <BaseChekbox v-model=\"crudEntity.").append(propertyName).append("\" :edit-mode=\"isEditMode\" \n");
                         writer.append("              :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
