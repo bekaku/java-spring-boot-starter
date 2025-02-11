@@ -1,17 +1,13 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.google.common.net.InternetDomainName;
-import com.bekaku.api.spring.util.ConstantData;
-import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.vo.LinkPreview;
+import com.google.common.net.InternetDomainName;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,21 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
 
+@Slf4j
 @RequestMapping(path = "/api/public")
 @RestController
 @RequiredArgsConstructor
 public class PublicController extends BaseApiController {
     private final I18n i18n;
-
-    @GetMapping("/")
-    public ResponseEntity<Object> index() {
-        return responseEntity(new HashMap<String, Object>() {{
-            put(ConstantData.SERVER_STATUS, true);
-            put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
-        }}, HttpStatus.OK);
-    }
 
 
     private String getMetaTagContent(Document document, String cssQuery) {
@@ -78,4 +66,7 @@ public class PublicController extends BaseApiController {
 
         return preview;
     }
+
+
+
 }

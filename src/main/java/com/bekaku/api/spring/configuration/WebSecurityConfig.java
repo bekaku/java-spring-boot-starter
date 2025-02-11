@@ -75,8 +75,10 @@ public class WebSecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
                                 //test
-                                .requestMatchers(HttpMethod.POST, "dev/development/**").permitAll().requestMatchers(HttpMethod.GET, "/dev/development/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/test/**").permitAll().requestMatchers(HttpMethod.POST, "/test/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "dev/development/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/dev/development/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/test/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/test/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/welcome", "/theymeleaf").permitAll()
                                 .anyRequest().authenticated()
                 )

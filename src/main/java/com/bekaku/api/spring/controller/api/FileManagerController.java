@@ -25,18 +25,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -396,5 +404,210 @@ public class FileManagerController extends BaseApiController {
         user.get().setCoverFile(fileManager.get());
         userService.update(user.get());
         return new ResponseMessage(HttpStatus.OK, null);
+    }
+
+    @GetMapping("/images")
+    public ResponseEntity<Resource> getImage(@RequestParam("path") String filename) {
+        try {
+            Path filePath = Paths.get(appProperties.getUploadPath()).resolve(filename);
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists()) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_JPEG)
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MalformedURLException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    //TODO best solution
+    @GetMapping("/files/download")
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam("path") String fileName) {
+        /*
+        // Construct the file object
+        File file = new File(appProperties.getUploadPath(), fileName);
+
+        // Check if the file exists and is within the allowed directory
+        try {
+            // Get the canonical path of the file and the base directory
+            String canonicalFilePath = file.getCanonicalPath();
+            String canonicalDirPath = new File(appProperties.getUploadPath()).getCanonicalPath();
+
+            // Ensure the file is within the allowed directory
+            if (!canonicalFilePath.startsWith(canonicalDirPath)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+
+            // Check if the file exists
+            if (!file.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+
+        } catch (Exception e) {
+            // Log the error or handle it as needed
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        // Create an InputStream from the file
+        FileInputStream fileInputStream = new FileInputStream(file);
+
+        // Determine the content type based on the file extension
+        String mimeType = null;
+        try {
+            mimeType = FileUtil.getMimeType(file);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        log.info("name:{}, mimeType:{}", file.getName(), mimeType);
+        // Validate the MIME type
+        try {
+            validateAllowMemeType(mimeType);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).build();
+        }
+        // Set headers for the response
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName());
+
+        // Return the file as a ResponseEntity
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(new InputStreamResource(fileInputStream));
+
+        */
+        try {
+            // Validate file path before any operations
+            if (!isValidFilePath(fileName)) {
+                return ResponseEntity.badRequest().build();
+            }
+            File file = new File(appProperties.getUploadPath(), fileName);
+
+            // Validate file location and existence
+            if (!isFileAccessAllowed(file)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            if (!file.exists() || !file.isFile()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Get and validate MIME type
+            String mimeType = FileUtil.getMimeType(file);
+            if (!isAllowedMimeType(mimeType)) {
+                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).build();
+            }
+            // Set headers for the response
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName());
+            HttpHeaders headers = prepareHeaders(file);
+            // Create an InputStream from the file
+            FileInputStream fileInputStream = new FileInputStream(file);
+            // Return the file as a ResponseEntity
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(file.length())
+                    .contentType(MediaType.parseMediaType(mimeType))
+                    .body(new InputStreamResource(fileInputStream));
+
+        } catch (IOException e) {
+            log.error("Error processing file request: {}", fileName, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            log.error("Unexpected error while processing file request: {}", fileName, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    //TODO not woring as aspect
+    @GetMapping("/files/stream")
+    public ResponseEntity<StreamingResponseBody> streamFile(@RequestParam("path") String fileName) {
+        try {
+            // Validate file path before any operations
+            if (!isValidFilePath(fileName)) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            File file = new File(appProperties.getUploadPath(), fileName);
+
+            // Validate file location and existence
+            if (!isFileAccessAllowed(file)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            if (!file.exists() || !file.isFile()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Get and validate MIME type
+            String mimeType = FileUtil.getMimeType(file);
+            if (!isAllowedMimeType(mimeType)) {
+                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).build();
+            }
+
+            // Prepare response headers
+            HttpHeaders headers = prepareHeaders(file);
+
+            // Create streaming response
+            StreamingResponseBody responseBody = new StreamingResponseBody() {
+                @Override
+                public void writeTo(OutputStream outputStream) throws IOException {
+                    try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file))) {
+                        byte[] buffer = new byte[8192]; // Larger buffer for better performance
+                        int bytesRead;
+                        while ((bytesRead = inputStream.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, bytesRead);
+                            outputStream.flush(); // Ensure data is written
+                        }
+                    }
+                }
+            };
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(file.length())
+                    .contentType(MediaType.parseMediaType(mimeType))
+                    .body(responseBody);
+
+        } catch (IOException e) {
+            log.error("Error processing file request: {}", fileName, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            log.error("Unexpected error while processing file request: {}", fileName, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Helper methods to improve code organization and readability
+    private boolean isValidFilePath(String fileName) {
+        return fileName != null && !fileName.isEmpty() && !fileName.contains("..");
+    }
+
+    private boolean isFileAccessAllowed(File file) throws IOException {
+        String canonicalFilePath = file.getCanonicalPath();
+        String canonicalDirPath = new File(appProperties.getUploadPath()).getCanonicalPath();
+        return canonicalFilePath.startsWith(canonicalDirPath);
+    }
+
+    private boolean isAllowedMimeType(String mimeType) {
+        try {
+            validateAllowMemeType(mimeType);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private HttpHeaders prepareHeaders(File file) {
+        HttpHeaders headers = new HttpHeaders();
+        String encodedFileName = URLEncoder.encode(file.getName(), StandardCharsets.UTF_8)
+                .replaceAll("\\+", "%20");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + encodedFileName);
+//        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName());
+        return headers;
     }
 }

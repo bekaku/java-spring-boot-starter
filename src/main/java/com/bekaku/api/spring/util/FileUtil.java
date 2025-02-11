@@ -151,6 +151,7 @@ public class FileUtil {
         }*/
         return fileName.replace(".jpg", thumPostFixName + ".jpg");
     }
+
     public static BufferedImage correctOrientation(BufferedImage image, File file) throws IOException {
         int orientation = 1;
         try {
@@ -183,6 +184,7 @@ public class FileUtil {
 
         return image;
     }
+
     public static boolean fileExists(String sFileName) {
         if (sFileName.startsWith("classpath:")) {
             String path = sFileName.substring("classpath:".length());
@@ -218,6 +220,18 @@ public class FileUtil {
     public static String getMimeType(MultipartFile file) {
         return file != null ? getFileType(file) : null;
 //        return file != null ? file.getContentType() : null;
+    }
+
+    public static String getMimeType(String fileName) {
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+            return "image/jpeg";
+        } else if (fileName.endsWith(".png")) {
+            return "image/png";
+        } else if (fileName.endsWith(".gif")) {
+            return "image/gif";
+        } else {
+            return "application/octet-stream"; // Default to binary data
+        }
     }
 
     public static String getFileType(MultipartFile file) {
@@ -312,6 +326,7 @@ public class FileUtil {
 
         return ConstantData.CONTENT_TYPE_EXCEL.equals(file.getContentType());
     }
+
     public static boolean folderExist(String folderPath) {
         File folder = new File(folderPath);
         return folder.exists() && folder.isDirectory();
@@ -322,4 +337,6 @@ public class FileUtil {
         // Use mkdirs() to create parent directories if they don't exist
         return folder.mkdirs();
     }
+
+
 }
