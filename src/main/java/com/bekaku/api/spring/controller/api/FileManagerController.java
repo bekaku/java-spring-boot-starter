@@ -523,7 +523,7 @@ public class FileManagerController extends BaseApiController {
         }
     }
 
-    //TODO not woring as aspect
+    //TODO not working as aspect
     @GetMapping("/files/stream")
     public ResponseEntity<StreamingResponseBody> streamFile(@RequestParam("path") String fileName) {
         try {
@@ -553,16 +553,13 @@ public class FileManagerController extends BaseApiController {
             HttpHeaders headers = prepareHeaders(file);
 
             // Create streaming response
-            StreamingResponseBody responseBody = new StreamingResponseBody() {
-                @Override
-                public void writeTo(OutputStream outputStream) throws IOException {
-                    try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file))) {
-                        byte[] buffer = new byte[8192]; // Larger buffer for better performance
-                        int bytesRead;
-                        while ((bytesRead = inputStream.read(buffer)) != -1) {
-                            outputStream.write(buffer, 0, bytesRead);
-                            outputStream.flush(); // Ensure data is written
-                        }
+            StreamingResponseBody responseBody = outputStream -> {
+                try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file))) {
+                    byte[] buffer = new byte[8192]; // Larger buffer for better performance
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                        outputStream.flush(); // Ensure data is written
                     }
                 }
             };
