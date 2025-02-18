@@ -5,6 +5,56 @@
 - Vue Js 3 + Quasar 2+ [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app)
 - Vue Js 3 + Ionic 8 [vue-ionic-example-app](https://github.com/bekaku/vue-ionic-example-app)
 
+```mermaid
+flowchart TD
+    subgraph Client
+        A[Client/Browser]
+    end
+
+    subgraph Spring Boot Application
+        subgraph Security Layer
+            B[JWT Filter]
+            C[PreAuthorize]
+        end
+
+        subgraph Application Layer
+            D[Controller]
+            E[Service Interface]
+            F[Service Implementation]
+        end
+
+        subgraph Data Layer
+            G[Repository]
+            H[Entity]
+        end
+    end
+
+    subgraph Database
+        I[(Database)]
+    end
+
+    A -->|1. HTTP Request with JWT| B
+    B -->|2. Validate JWT| C
+    C -->|3. Check Authorization| D
+    D -->|4. Call Service| E
+    E -->|5. Implementation| F
+    F -->|6. Data Access| G
+    G -->|7. Map| H
+    H <-->|8. Persist/Retrieve| I
+
+    classDef client fill:#e6f3ff,stroke:#333,stroke-width:2px
+    classDef security fill:#ffe6e6,stroke:#333,stroke-width:2px
+    classDef application fill:#e6ffe6,stroke:#333,stroke-width:2px
+    classDef data fill:#fff2e6,stroke:#333,stroke-width:2px
+    classDef database fill:#f2e6ff,stroke:#333,stroke-width:2px
+
+    class A client
+    class B,C security
+    class D,E,F application
+    class G,H data
+    class I database
+```
+
 Requirements
 ------------
 
