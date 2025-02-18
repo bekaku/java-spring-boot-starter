@@ -5,7 +5,7 @@
 - Vue Js 3 + Quasar 2+ [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app)
 - Vue Js 3 + Ionic 8 [vue-ionic-example-app](https://github.com/bekaku/vue-ionic-example-app)
 
-mm("""
+```mermaid
 flowchart TD
     subgraph Client
         A[Client/Browser]
@@ -53,7 +53,7 @@ flowchart TD
     class D,E,F application
     class G,H data
     class I database
-""")
+```
 
 Requirements
 ------------
