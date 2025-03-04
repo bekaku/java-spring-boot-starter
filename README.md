@@ -1,7 +1,7 @@
 # Springboot rest api
 
 # Front end
-- Nuxt js 3 + Quasar  [nuxt3-quasar-example-app](https://github.com/bekaku/nuxt3-quasar-example-app)
+- Nuxt js + Quasar  [nuxt-quasar-example-app](https://github.com/bekaku/nuxt-quasar-example-app)
 - Vue Js 3 + Quasar 2+ [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app)
 - Vue Js 3 + Ionic 8 [vue-ionic-example-app](https://github.com/bekaku/vue-ionic-example-app)
 

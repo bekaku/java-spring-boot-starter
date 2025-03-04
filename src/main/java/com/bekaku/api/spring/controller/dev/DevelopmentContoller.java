@@ -324,7 +324,7 @@ public class DevelopmentContoller extends BaseApiController {
             packageClassName = persistentClass.getClassName();
             Table table = persistentClass.getTable();
             setPropertyList(table, persistentClass);
-            System.out.println("--------------------------");
+            log.info("--------------------------");
             log.info("capitalizeFirstLetter {} => {}", className, AppUtil.capitalizeFirstLetter(className, true));
             log.info("-Entity: {} is mapped to table: {}", packageClassName, table.getName());
             Class<?> aClass = getClassFromName(packageClassName);
@@ -333,7 +333,6 @@ public class DevelopmentContoller extends BaseApiController {
                 if (genSourceableTable != null) {
 
                     if (genSourceableTable.createDto()) {
-                        log.error("  createDto : {} ", className);
                         generateDto(className, persistentClass);
                     }
                     if (genSourceableTable.createRepository()) {
@@ -348,17 +347,17 @@ public class DevelopmentContoller extends BaseApiController {
                     if (genSourceableTable.createController()) {
                         generateController(className, genSourceableTable.createDto());
                     }
-                    if (genSourceableTable.createMapper()) {
-                        log.error("  createMapper : {} ", className);
-                    }
-                    if (genSourceableTable.createValidator()) {
-                        log.error("  createValidator : {} ", className);
-                    }
+//                    if (genSourceableTable.createMapper()) {
+//                        log.error("  createMapper : {} ", className);
+//                    }
+//                    if (genSourceableTable.createValidator()) {
+//                        log.error("  createValidator : {} ", className);
+//                    }
                     if (genSourceableTable.createFrontend()) {
 
-                        if(theme==DevFrontendTheme.DEFAULT){
-                            generateFrontend(className, persistentClass);
-                        }
+//                        if(theme==DevFrontendTheme.DEFAULT){
+//                            generateFrontend(className, persistentClass);
+//                        }
                         switch (theme) {
                             case DEFAULT ->  generateFrontend(className, persistentClass);
                             case NUXT3_QUASAR -> generateFrontendNuxt3Quasar(className, persistentClass);
@@ -427,7 +426,7 @@ public class DevelopmentContoller extends BaseApiController {
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
-            log.info("---generateDto : {} ", fileName);
+            log.warn("---generateDto : {} ", fileName);
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/dto/" + fileName + ".java", false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto").append(";\n");
@@ -520,6 +519,7 @@ public class DevelopmentContoller extends BaseApiController {
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
+            log.warn("---generateRepository : {} ", fileName);
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/repository/" + fileName + ".java", false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository").append(";\n");
@@ -545,6 +545,7 @@ public class DevelopmentContoller extends BaseApiController {
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service." + fileName;
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
+            log.warn("---generateService : {} ", fileName);
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/service/" + fileName + ".java", false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service").append(";\n");
@@ -575,6 +576,7 @@ public class DevelopmentContoller extends BaseApiController {
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
+            log.warn("---generateServiceImpl : {} ", fileName);
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/serviceImpl/" + fileName + ".java", false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".serviceImpl").append(";\n");
@@ -736,6 +738,7 @@ public class DevelopmentContoller extends BaseApiController {
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
+            log.warn("---generateController : {} ", fileName);
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/controller/api/" + fileName + ".java", false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api").append(";\n");
@@ -908,22 +911,22 @@ public class DevelopmentContoller extends BaseApiController {
 
         if (!FileUtil.folderExist(dirName)) {
             FileUtil.folderCreate(dirName);
-            log.info("generateFrontendNuxt3Quasar > created folder :{} ", dirName);
+            log.warn("created folder :{} ", dirName);
         }
         if (!FileUtil.folderExist(dirFormName)) {
             FileUtil.folderCreate(dirFormName);
-            log.info("generateFrontendNuxt3Quasar > created folder :{} ", dirFormName);
+            log.warn("dirFormName :{} ", dirFormName);
         }
         if (!FileUtil.fileExists(listName)) {
-            log.info("generateFrontendNuxt3Quasar > file :{}, created", listName);
+            log.warn("listName :{}, created", listName);
             generateNux3QuasarFrontList(listName, entityName, tableName);
         }
         if (!FileUtil.fileExists(formName)) {
-            log.info("generateFrontendNuxt3Quasar > file :{}, created", formName);
+            log.warn("formName :{}, created", formName);
             generateNux3QuasarFrontForm(formName, entityName, tableName);
         }
         if (!FileUtil.fileExists(apiName)) {
-            log.info("generateFrontendNuxt3Quasar > file :{}, created", apiName);
+            log.warn("apiName :{}, created", apiName);
             generateNux3QuasarFrontService(apiName, entityName, tableName);
         }
     }
@@ -1150,6 +1153,7 @@ public class DevelopmentContoller extends BaseApiController {
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
         try {
+
             BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
 
             writer.append("<script setup lang=\"ts\">\n");
@@ -1405,18 +1409,18 @@ public class DevelopmentContoller extends BaseApiController {
 
         if (!FileUtil.folderExist(dirName)) {
             FileUtil.folderCreate(dirName);
-            log.info("generateFrontend > created folder :{} ", dirName);
+            log.warn("created folder :{} ", dirName);
         }
         if (!FileUtil.fileExists(listName)) {
-            log.info("generateFrontend > file :{}, created", listName);
+            log.warn("listName :{}, created", listName);
             generateFrontList(listName, entityName, tableName);
         }
         if (!FileUtil.fileExists(formName)) {
-            log.info("generateFrontend > file :{}, created", formName);
+            log.warn("formName :{}, created", formName);
             generateFrontForm(formName, entityName, tableName);
         }
         if (!FileUtil.fileExists(apiName)) {
-            log.info("generateFrontend > file :{}, created", apiName);
+            log.warn("apiName :{}, created", apiName);
             generateFrontService(apiName, entityName, tableName);
         }
     }
