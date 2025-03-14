@@ -1,0 +1,30 @@
+[mysqld]
+max_allowed_packet=32M
+init_connect='SET collation_connection = utf8mb4_unicode_ci'
+init_connect='SET NAMES utf8mb4'
+character_set_server=utf8mb4
+collation_server=utf8mb4_unicode_ci
+
+default-storage-engine=InnoDB
+innodb_file_per_table=1
+sql-mode = "STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+max_connections         = 250
+#max_user_connections    = 1000
+innodb_buffer_pool_size = 6G
+innodb_buffer_pool_instances = 6
+innodb_log_buffer_size = 256M
+innodb_stats_on_metadata = OFF
+innodb_thread_concurrency = 8
+#For example, you can change the Redo Log capacity to 200MB by using the following SQL statement 200*1024*1024:
+innodb_redo_log_capacity=209715200
+join_buffer_size = 256K
+lower_case_table_names = 2
+
+log_error       =/var/log/mysql/mysql_error.log
+#general_log_file=/var/log/mysql/mysql.log
+#general_log     =1
+slow_query_log  =1
+slow_query_log_file=/var/log/mysql/mysql_slow.log
+long_query_time =10
+log_queries_not_using_indexes = 0
+default-time-zone = "+07:00"

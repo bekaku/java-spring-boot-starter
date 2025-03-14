@@ -1,0 +1,24 @@
+services:
+  mysql:
+    container_name: mysql8
+    image: mysql:8.3.0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./conf/custom.cnf:/etc/mysql/conf.d/custom.cnf
+      - ./log:/var/log/mysql
+      - ./datadir:/var/lib/mysql
+
+    restart: always
+    ports:
+      - 3306:3306
+    networks:
+      - mysql-net
+    environment:
+      MYSQL_ROOT_PASSWORD: strong_pwd
+    security_opt:
+      - seccomp:unconfined
+
+networks:
+  mysql-net:
+    driver: bridge

@@ -1,11 +1,14 @@
 package com.bekaku.api.spring.repository;
 
+import com.bekaku.api.spring.model.Permission;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.io.Serializable;
+import java.util.List;
 
 @NoRepositoryBean
 public interface BaseRepository<T, ID extends Serializable> extends JpaRepository<T, ID> {
@@ -33,6 +36,7 @@ public interface BaseRepository<T, ID extends Serializable> extends JpaRepositor
 //
 //    @Override
 //    @Query(value = "select e from #{#entityName} e where e.deleted=0")
+//    @NotNull
 //    List<T> findAll();
 //
 //    @Query("select e from #{#entityName} e where e.deleted=1")

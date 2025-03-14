@@ -134,7 +134,7 @@ public class PermissionController extends BaseApiController {
                 throw this.responseErrorDuplicate(dto.getCode());
             }
         }
-        permissionService.update(permission);
+        permissionService.save(permission);
         return this.responseEntity(permissionService.convertEntityToDto(permission), HttpStatus.OK);
     }
 

@@ -3,11 +3,13 @@ package com.bekaku.api.spring.controller.test;
 import com.bekaku.api.spring.configuration.AppLogger;
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.controller.api.BaseApiController;
+import com.bekaku.api.spring.dto.ResponseMessage;
 import com.bekaku.api.spring.dto.UserRegisterRequest;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.properties.LoggingFileProperties;
 import com.bekaku.api.spring.queue.QueueSender;
 import com.bekaku.api.spring.service.AccessTokenService;
+//import com.bekaku.api.spring.service.KafkaProducerService;
 import com.bekaku.api.spring.service.UserService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
@@ -58,6 +60,8 @@ public class DemoController extends BaseApiController {
     @Value("${custom.config.file}")
     String testConfigFile;
 
+//    private final KafkaProducerService kafkaProducerService;
+
     private String getMetaTagContent(Document document, String cssQuery) {
         Element elm = document.select(cssQuery).first();
         if (elm != null) {
@@ -65,6 +69,18 @@ public class DemoController extends BaseApiController {
         }
         return "";
     }
+
+//    @GetMapping("/kafkaSend")
+//    public ResponseEntity<Object> kafkaSend() {
+//        log.info("kafkaSend");
+//        kafkaProducerService.send("response-message", new ResponseMessage(HttpStatus.OK, "Test send KafKa"));
+//
+//        for (int i = 0; i < 15; i++) {
+//            log.info("kafkaSend NO.:{}", i);
+//            kafkaProducerService.send("test-thread", "Test send NO. " + i);
+//        }
+//        return this.responseEntity(HttpStatus.OK);
+//    }
 
     @PostMapping("/testRequestBody")
     public void testRequestBody(@RequestBody() Map<String, String> body) {
@@ -82,6 +98,7 @@ public class DemoController extends BaseApiController {
             put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
         }}, HttpStatus.OK);
     }
+
     @GetMapping("/server-info")
     public String getServerInfo() {
         StringBuilder info = new StringBuilder();
@@ -141,7 +158,6 @@ public class DemoController extends BaseApiController {
             put("object-list-properties", appProperties != null ? appProperties.getMenus() : null);
         }}, HttpStatus.OK);
     }
-
 
 
 }

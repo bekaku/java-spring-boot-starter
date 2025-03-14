@@ -7,7 +7,7 @@ spring:
   main:
     allow-circular-references: true
   profiles:
-#    active: prod
+    #    active: prod
     active: dev
   jackson:
     deserialization:
@@ -121,7 +121,23 @@ spring:
           max-attempts: 10
           max-interval: 30000
           multiplier: 3.0
-
+  kafka:
+    bootstrap-servers: localhost:9092
+    properties:
+      client.telemetry.enabled: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: user-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: '*'
 server:
   servlet:
     encoding:
@@ -199,6 +215,19 @@ mybatis:
     default-statement-timeout: 3000
     map-underscore-to-camel-case: true
     use-generated-keys: true
+
+management:
+  endpoints:
+    prometheus:
+      enabled: true
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
 app:
   group: com.bekaku.api.spring
   domain: givedeefive.com
@@ -208,7 +237,7 @@ app:
   version: 1.0.0
   cdn-directory: /usr/spring-data/
   cdn-path: file:///${app.cdn-directory}
-#  cdn-path: file:////usr/spring-data/
+  #  cdn-path: file:////usr/spring-data/
   cdn-path-alias: cdn
   #  cdn-url: https://api.your-domain.com
   #  cdn-port: 443

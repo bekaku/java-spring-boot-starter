@@ -92,6 +92,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public Permission save(Permission permission) {
         return permissionRepository.save(permission);
+//        return permissionRepository.saveWithLogging(permission);
     }
 
     @Override

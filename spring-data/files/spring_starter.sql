@@ -128,6 +128,22 @@ LOCK TABLES `api_client_ip` WRITE;
 /*!40000 ALTER TABLE `api_client_ip` ENABLE KEYS */;
 UNLOCK TABLES;
 
+-- ----------------------------
+-- Table structure for audit_log
+-- ----------------------------
+DROP TABLE IF EXISTS `audit_log`;
+CREATE TABLE `audit_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `action` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `details` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `entity_id` bigint NULL DEFAULT NULL,
+  `entity_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `ip_address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `timestamp` datetime(6) NULL DEFAULT NULL,
+  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
 --
 -- Table structure for table `file_manager`
 --

@@ -54,6 +54,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'commons-validator:commons-validator:1.9.0'
 
+//    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
     // bug whith springboot version 3.2.0 to be develop by mybatis dev
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
 

@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
+import com.bekaku.api.spring.configuration.AuditListener;
 import com.bekaku.api.spring.model.superclass.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -15,6 +16,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@EntityListeners(AuditListener.class)
 @NoArgsConstructor
 @Table(name = "permission")
 public class Permission extends Id {
@@ -42,6 +44,18 @@ public class Permission extends Id {
 
     @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
     Set<Role> roles = new HashSet<>();
+
+    @Override
+    public String toString() {
+        return "Permission{" +
+                "code='" + code + '\'' +
+                ", remark='" + remark + '\'' +
+                ", frontEnd=" + frontEnd +
+                ", operationType=" + operationType +
+                ", roles=" + roles +
+                ", id=" + getId() +
+                '}';
+    }
 
     public static Sort getSort() {
         return Sort.by(Sort.Direction.ASC, "code");

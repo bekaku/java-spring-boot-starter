@@ -52,6 +52,10 @@ public class DevelopmentContoller extends BaseApiController {
 
     @Value("${environments.production}")
     boolean isProduction;
+
+    @Value("${app.front-end.theme}")
+    String frontendTheme;
+
     private List<GenerateTableSrcItem> propertyList;
     private static final String TYPE_BOOLEAN = "boolean";
     private static final String TYPE_STRING = "string";
@@ -68,7 +72,7 @@ public class DevelopmentContoller extends BaseApiController {
     private static final String TYPESCRIPT_UNDEFINED = "undefined";
     private static final String TYPESCRIPT_NULL = "null";
     private static final String TYPESCRIPT_OR_SIGN = "|";
-    
+
     @RequestMapping(value = "/migrateData", method = RequestMethod.POST)
     public ResponseEntity<Object> migrateData() {
         if (!isProduction) {
@@ -247,12 +251,16 @@ public class DevelopmentContoller extends BaseApiController {
 
     @RequestMapping(value = "/generateSrcV2", method = RequestMethod.GET)
     public ResponseEntity<Object> generateSrcMethodGet() {
-        generateProcess(DevFrontendTheme.DEFAULT);
+        generateProcess(DevFrontendTheme.QUASAR);
         return this.responseEntity(HttpStatus.OK);
     }
 
     @RequestMapping(value = "/generateSrc", method = RequestMethod.POST)
-    public ResponseEntity<Object> generateSrc(@RequestParam(value = "theme", required = false, defaultValue = "DEFAULT") DevFrontendTheme theme) {
+    public ResponseEntity<Object> generateSrc() {
+        DevFrontendTheme theme = DevFrontendTheme.QUASAR;
+        if (frontendTheme != null) {
+            theme = DevFrontendTheme.valueOf(frontendTheme);
+        }
         generateProcess(theme);
         return this.responseEntity(HttpStatus.OK);
     }
@@ -359,8 +367,8 @@ public class DevelopmentContoller extends BaseApiController {
 //                            generateFrontend(className, persistentClass);
 //                        }
                         switch (theme) {
-                            case DEFAULT ->  generateFrontend(className, persistentClass);
-                            case NUXT3_QUASAR -> generateFrontendNuxt3Quasar(className, persistentClass);
+                            case QUASAR -> generateFrontend(className, persistentClass);
+                            case NUXT_QUASAR -> generateFrontendNuxt3Quasar(className, persistentClass);
                         }
 
                     }
@@ -930,6 +938,7 @@ public class DevelopmentContoller extends BaseApiController {
             generateNux3QuasarFrontService(apiName, entityName, tableName);
         }
     }
+
     private void generateNux3QuasarFrontList(String filePathName, String entityName, String tableName) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
@@ -1148,6 +1157,7 @@ public class DevelopmentContoller extends BaseApiController {
             log.error(e.getMessage());
         }
     }
+
     private void generateNux3QuasarFrontForm(String filePathName, String entityName, String tableName) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
@@ -1331,6 +1341,7 @@ public class DevelopmentContoller extends BaseApiController {
             log.error(e.getMessage());
         }
     }
+
     private void generateNux3QuasarFrontService(String filePathName, String entityName, String tableName) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
@@ -1441,8 +1452,11 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("import { useValidation } from '@/composables/useValidation';\n");
             writer.append("import { biPencil, biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
             writer.append("import { ").append(tableName).append("Permission } from '@/utils/appPermissionList';\n");
-            writer.append("import FormTogle from '@/components/quasar/Togle.vue';\n");
-            writer.append("import DatePicker from '@/components/quasar/DatePicker.vue';\n");
+            writer.append("import BasePage from '@/components/base/BasePage.vue';\n");
+            writer.append("import BaseCheckbox from '@/components/base/BaseCheckbox.vue';\n");
+            writer.append("import BaseInput from '@/components/base/BaseInput.vue';\n");
+            writer.append("import BaseDatePicker from '@/components/base/BaseDatePicker.vue';\n");
+            writer.append("import BaseTimePicker from '@/components/base/BaseTimePicker.vue';\n");
             writer.append("import { getCurrentDateByFormat } from '@/utils/dateUtil';\n");
 //            writer.append("import { AdminRootPath } from '@/utils/Constant';\n");
             writer.append("\n");
@@ -1492,7 +1506,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("</script>\n");
             writer.append("\n");
             writer.append("<template>\n");
-            writer.append("  <q-page padding>\n");
+            writer.append("  <BasePage>\n");
             writer.append("    <crud-api-form\n");
             writer.append("      :icon=\"biFileEarmark\"\n");
             writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
@@ -1528,14 +1542,10 @@ public class DevelopmentContoller extends BaseApiController {
                         writer.append("          <!-- type ").append(propertyTypeName).append(" -->\n");
                         writer.append("          <!-- TODO implement object link -->\n");
                     } else if (propertyTypeName.equals(TYPE_STRING) || isNumberType) {
-                        writer.append("              <q-input\n");
-                        writer.append("                outlined\n");
+                        writer.append("              <BaseInput\n");
                         writer.append("                v-model=\"crudEntity.").append(propertyName).append("\"\n");
-                        writer.append("                bottom-slots\n");
                         writer.append("                :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
                         if (isTextAreaType) {
-                            writer.append("                autogrow\n");
-                            writer.append("                class=\"limited-autogrow\"\n");
                             writer.append("                type=\"textarea\"\n");
                             if (!isNullable) {
                                 writer.append("                :rules=\"[required]\"\n");
@@ -1566,25 +1576,29 @@ public class DevelopmentContoller extends BaseApiController {
                             writer.append("                </template>\n");
                         }
 
-                        writer.append("            </q-input>\n");
+                        writer.append("            </BaseInput>\n");
                     } else if (propertyTypeName.equals(TYPE_BOOLEAN)) {
-                        writer.append("             <form-togle v-model=\"crudEntity.").append(propertyName).append("\"\n");
-                        writer.append("              :title=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
+                        writer.append("             <BaseChekbox v-model=\"crudEntity.").append(propertyName).append("\"\n");
+                        writer.append("              :label=\"t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\"\n");
                         writer.append("              />\n");
                     } else if (propertyTypeName.equals(TYPE_LOCAL_DATE)) {
-                        writer.append("            <date-picker\n");
+                        writer.append("            <BaseDatePicker\n");
                         writer.append("              v-model=\"crudEntity.").append(propertyName).append("\"\n");
-                        writer.append("              :title=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
+                        writer.append("              :label=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
                         if (!isNullable) {
-                            writer.append("             date-required\n");
+                            writer.append("             required\n");
                         }
                         writer.append("            />\n");
                     } else if (propertyTypeName.equals(TYPE_LOCAL_DATETIME)) {
-                        writer.append("          <!-- type ").append(propertyTypeName).append(" -->\n");
-                        writer.append("          <!-- TODO implement Datetime -->\n");
+                        writer.append("            <BaseTimePicker\n");
+                        writer.append("              v-model=\"crudEntity.").append(propertyName).append("\"\n");
+                        writer.append("              :edit-mode=\"editMode\" \n");
+                        writer.append("              :label=\"t(model.").append(entityNameLowerFirst).append(".").append(propertyName).append(")\"\n");
+                        if (!isNullable) {
+                            writer.append("             required\n");
+                        }
+                        writer.append("            />\n");
                     }
-
-
                     writer.append("          </div>\n");//end col
                 }
             }
@@ -1592,7 +1606,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("        </div>\n");//end row
             writer.append("      </template>\n");//end crudFromContent slot
             writer.append("    </crud-api-form>\n");//end crud-api-form
-            writer.append("  </q-page>\n");//end page
+            writer.append("  </BasePage>\n");//end page
             writer.append("</template>\n");
             writer.append("\n");
             writer.close();
@@ -1699,6 +1713,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("import { ").append(entityName).append(" } from '@/types/models';\n");
             writer.append("import { CrudListDataType, ICrudListHeader, ICrudListHeaderOptionSearchType } from '@/types/common';\n");
             writer.append("import CrudApiList from '@/components/base/CrudApiList.vue';\n");
+            writer.append("import BasePage from '@/components/base/BasePage.vue';\n");
             writer.append("import { biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
             writer.append("import { ").append(entityName).append("Permission } from '@/utils/appPermissionList';\n");
             writer.append("import { useAppMeta } from '@/composables/useAppMeta';\n");
@@ -1798,7 +1813,7 @@ public class DevelopmentContoller extends BaseApiController {
 
             writer.append("\n");
             writer.append("<template>\n");
-            writer.append("  <q-page padding>\n");
+            writer.append("  <BasePage>\n");
             writer.append("    <crud-api-list\n");
             writer.append("      :icon=\"biFileEarmark\"\n");
             writer.append("      :title=\"t('model.").append(entityNameLowerFirst).append(".table')\"\n");
@@ -1827,7 +1842,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      @on-new-form=\"onNewForm\"\n");
             writer.append("    >\n");
             writer.append("    </crud-api-list>\n");
-            writer.append("  </q-page>\n");
+            writer.append("  </BasePage>\n");
             writer.append("</template>\n");
             writer.append("\n");
             writer.close();
