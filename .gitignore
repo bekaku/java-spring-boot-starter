@@ -29,7 +29,6 @@ build/
 
 ### NetBeans ###
 nbproject/private/
-build/
 nbbuild/
 dist/
 nbdist/
@@ -50,7 +49,7 @@ nbdist/
 ehthumbs.db
 Thumbs.db
 
-.DS_Store
 *.zip
 *.gz
 spring-data/images
+spring-data/logs
