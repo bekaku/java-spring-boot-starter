@@ -24,8 +24,8 @@ services:
           cpus: "1.0"  # Reserve at least 1 CPU
           memory: "1G"  # Reserve at least 1GB RAM
     volumes:
-      - d:\code\spring-data:/usr/spring-data
-      - d:\code\spring-data\logs:/usr/spring-data/logs
+      - C:\dev2025\spring-data:/usr/spring-data
+      - C:\dev2025\spring-data:/usr/spring-data/logs
       #linux
   #      - /mnt/cdn/spring-data:/usr/spring-data
   #      - /mnt/cdn/spring-data/logs:/usr/spring-data/logs
@@ -41,8 +41,8 @@ services:
     networks:
       - my-docker-network
     volumes:
-      - d:\code\spring-data:/usr/spring-data
-      - d:\code\spring-data\logs:/usr/spring-data/logs
+      - C:\dev2025\spring-data:/usr/spring-data
+      - C:\dev2025\spring-data:/usr/spring-data/logs
     environment:
       - JAVA_OPTS=-Xmx512m -Xms512m
 networks:
