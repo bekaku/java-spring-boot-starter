@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.bekaku.api.spring.mapper.UserMapper">
+    <!--    Query ffff-->
+    <sql id="selectUserData">
+        select
+        U.id,
+        U.email,
+        U.username,
+        U.avatar_file_id avatarFileId,
+        U.active,
+        UR.role roleId
+        from
+        user U
+        left join user_role UR on UR.user = U.id
+    </sql>
+
+    <select id="findAll" resultMap="userDataResult">
+        <include refid="selectUserData"/>
+        where U.deleted is false
+        limit #{page.offset}, #{page.limit}
+    </select>
+    <select id="findByUsername" resultType="com.bekaku.api.spring.dto.UserDto">
+        select * from user where deleted is false AND username = #{username}
+    </select>
+    <select id="findByEmail" resultType="com.bekaku.api.spring.dto.UserDto">
+        select * from user where deleted is false AND email = #{email}
+    </select>
+    <select id="findById" resultMap="userDataResult">
+        <include refid="selectUserData"/>
+        where U.deleted is false AND U.id = #{id}
+    </select>
+
+    <select id="findByAccessTokenKey" resultMap="accessTokenUserDataResult">
+        SELECT
+        act.id accessTokenId,
+        u.id id,
+        u.salt,
+        u.active,
+        u.email email,
+        u.username username,
+        u.avatar_file_id avatarFileId
+
+        FROM
+        access_token act
+        LEFT JOIN `user` u ON act.`user` = u.id
+        WHERE
+        act.token =#{token}
+        AND act.revoked is false
+    </select>
+
+
+    <!--Result Map-->
+    <resultMap id="userDataResult" type="com.bekaku.api.spring.dto.UserDto">
+        <id column="id" property="id"/>
+        <result column="email" property="email"/>
+        <result column="username" property="username"/>
+        <result column="avatarFileId" property="avatarFileId"/>
+        <result column="status" property="status"/>
+        <collection property="selectedRoles" javaType="list" ofType="string">
+            <result column="roleId"/>
+        </collection>
+    </resultMap>
+    <resultMap id="accessTokenUserDataResult" type="com.bekaku.api.spring.dto.UserDto">
+        <id column="id" property="id"/>
+        <result column="salt" property="uuid"/>
+        <result column="email" property="email"/>
+        <result column="username" property="username"/>
+        <result column="avatarFileId" property="avatarFileId"/>
+        <result column="active" property="active"/>
+        <result column="accessTokenId" property="accessTokenId"/>
+    </resultMap>
+</mapper>

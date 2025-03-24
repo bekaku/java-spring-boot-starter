@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="th">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>theymeleaf</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<p>Get attribute from controller</p>
+<h1 th:text="${testHello}"></h1>
+<p>Get from I18n Util</p>
+<h1 th:text="${testMessageI18nUtil}"></h1>
+---------
+<p>Get Message From i18n prop</p>
+
+<p th:text="#{welcome}">Title ...</p>
+-----
+<p>Object Access</p>
+<!--<p th:text="${permission.code}"></p>-->
+<!--<h2 th:text="${permission.code}">List of Seed Starters</h2>-->
+
+</body>
+</html>

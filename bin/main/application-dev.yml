@@ -1,0 +1,111 @@
+environments:
+  production: false
+spring:
+  main:
+    allow-circular-references: false
+  devtools:
+    restart:
+      poll-interval: 10s
+      #      quiet-period: 1s
+      enabled: false
+      exclude: static/**
+#      additional-paths: i18n/**,mapper/**
+    livereload:
+      enabled: false
+  jpa:
+    #    open-in-view: false
+    hibernate:
+      ddl-auto: none  #update, none  validate Hibernate ddl auto (none, create, create-drop, validate, update)
+
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    # normal connection to mysql server
+    #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/super_synapse?allowPublicKeyRetrieval=true&useSSL=false
+    # link to docker config from docker-compose.yml
+    #    url: jdbc:mysql://${MYSQL_HOST:mysql_db}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
+    # link mysql to docker   $ docker run -d --restart unless-stopped -p 3308:3306 --name=docker-mysql --env="MYSQL_ROOT_PASSWORD=CH789162be" --env="MYSQL_PASSWORD=CH789162be" --env="MYSQL_USER=bekaku" --env="MYSQL_DATABASE=springboot" mysql:5.6
+    #    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
+    # connect to mysql form local docker via port 3308
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: CH789162be
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  mvc:
+    static-path-pattern: /content/**
+  thymeleaf:
+    cache: false
+    #spring.freemarker.suffix=.html
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    prefix: classpath:/templates/
+  resources:
+    cache:
+      period: 0
+  rabbitmq:
+    dynamic : true
+    #host: 192.168.7.31
+    host: 127.0.0.1
+    port: 5672
+    username: local_jobs
+    password: 'pwd'
+
+logging:
+  config: classpath:log4j2-dev.xml
+  pattern:
+    rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
+  level:
+    root: WARN
+    web: DEBUG
+    com.bekaku.api.spring: DEBUG
+    org.springframework.boot.web.embedded.undertow: DEBUG
+    io.undertow: DEBUG
+    org:
+      springframework: ERROR
+      hibernate:
+        SQL: TRACE
+        type: ERROR
+  file:
+    path: ${app.cdn-directory}logs
+#    path: D:/code/tutorial/spring-data/logs
+    max-history: 30
+    total-size-cap: 10MB
+    clean-history-on-start: true
+server:
+  port: 8080
+  http2:
+    enabled: true
+  error:
+    whitelabel:
+      enabled: false
+springdoc:
+  api-docs:
+    path: /api-docs
+app:
+  url: http://127.0.0.1
+  port: 8080
+  test-prop: develop mode
+  version: 1.0.1
+  cdn-directory: D:/code/github/java-spring-starter/spring-data/
+  cdn-path: file:///${app.cdn-directory}
+#  cdn-path: file:///D:/code/tutorial/spring-data/
+
+  #Dev
+#  cdn-url: http://127.0.0.1
+  cdn-url: ${app.url}
+  cdn-port: 8080
+
+  jwt:
+    secret: 1c88aa90d3ca655724a0c78db6a02987720f8dccbb7165609a0f6fc1b031523cf24135365856e5372cb0586abbd14a3cbf82644793d4065df16b0295be3dde6e
+    #millisecond default is 86400 = 1 days, 3600= 1 hr, 900=15 minutes, 600=10 minutes
+    session-time: 900
+    session-day: 365
+    refresh-token-name: _test_myappkey_device_jid
+  front-end:
+    theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
+
+custom:
+  config:
+    file: Config Spring Startertemplate From DEVELOPMENT MODE (resources/application-dev.yml)

@@ -1,0 +1,71 @@
+[
+  {
+    "header": "",
+    "pages": [
+      {
+        "icon": "bi-house-door",
+        "color": "info",
+        "iconText": "",
+        "title": "nav.dashboard",
+        "to": "/",
+        "permission": "backend_login",
+        "noActiveLink": true
+      }
+    ]
+  },
+  {
+    "header": "nav.developers",
+    "pages": [
+      {
+        "color": "red",
+        "title": "nav.systemData",
+        "icon": "bi-gear",
+        "iconText": "",
+        "items": [
+          {
+            "title": "model_permission",
+            "icon": "bi-shield-check",
+            "to": "/permission",
+            "permission": "permission_list"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "header": "nav.forAdmin",
+    "pages": [
+      {
+        "title": "nav.userData",
+        "icon": "bi-person-badge",
+        "color": "yellow darken-4",
+        "items": [
+          {
+            "title": "nav.userRole",
+            "icon": "bi-people",
+            "to": "/role",
+            "permission": "role_list"
+          },
+          {
+            "title": "nav.appUser",
+            "icon": "bi-person",
+            "to": "/user",
+            "permission": "user_list"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "border": false,
+    "header": "nav.more",
+    "pages": [
+      {
+        "title": "model_files_manager",
+        "icon": "bi-folder",
+        "to": "/myFiles?_id=root",
+        "permission": "file_manager_manage"
+      }
+    ]
+  }
+]
