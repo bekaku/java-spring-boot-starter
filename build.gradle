@@ -8,9 +8,9 @@ plugins {
 group = 'com.bekaku.api.spring'
 version = '1.0.0'
 java {
-    sourceCompatibility = '21'
+    sourceCompatibility = '17'
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
