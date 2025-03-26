@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>404 Page Not Found</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css">
+
+</head>
+<body>
+
+<section class="hero">
+    <div class="hero-head">
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a class="navbar-item has-text-weight-semibold nav-bar-menu-bg-color" href="#">
+                        <p class="is-size-4">Spring boot <i class="mdi mdi-airballoon-outline has-text-primary" aria-hidden="true"></i> Template</p>
+                    </a>
+                    <span class="navbar-burger burger nav-bar-burger-color" data-target="navbarMenu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </div>
+            </div>
+        </nav>
+    </div>
+</section>
+
+<section class="section is-medium">
+    <div class="container">
+        <div class="columns is-vcentered">
+            <div class="column has-text-centered">
+                <h1 class="title">404 Page Not Found</h1>
+                <p class="subtitle">An unexpected error has occurred. Please contact the site owner.</p>
+                <a class="button">Home</a>
+                <a class="button">Contact</a>
+            </div>
+            <div class="column has-text-centered">
+                <img src="../static/img/error-img.png" width="250" th:src="@{/content/img/error-img.png}"/>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="footer is-large">
+    <div class="container">
+        <div class="content has-text-centered">
+            <div class="control level-item">
+                <a href="https://bulma.io">
+                    <img src="https://bulma.io/images/made-with-bulma.png" alt="Made with Bulma" width="128" height="24">
+                </a>
+            </div>
+            <p class="is-size-7">Copyright &copy; 2021</p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
