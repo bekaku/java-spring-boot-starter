@@ -12,7 +12,7 @@ services:
     expose:
       - 8080
     networks:
-      - my-docker-network
+      - docker-network
     environment:
       - JAVA_OPTS=-Xmx512m -Xms512m
     deploy:
@@ -39,12 +39,13 @@ services:
 #    expose:
 #      - 8081
 #    networks:
-#      - my-docker-network
+#      - docker-network
 #    volumes:
 #      - d:\code\spring-data:/usr/spring-data
 #      - d:\code\spring-data\logs:/usr/spring-data/logs
 #    environment:
 #      - JAVA_OPTS=-Xmx512m -Xms512m
 networks:
-  my-docker-network:
+  docker-network:
     driver: bridge
+#   external: true

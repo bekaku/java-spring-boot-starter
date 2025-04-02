@@ -231,7 +231,7 @@ management:
 
 app:
   group: com.bekaku.api.spring
-  domain: givedeefive.com
+  domain: your-domain.com
   url: https://api.your-domain.com
   port: 443
   test-prop: production mode

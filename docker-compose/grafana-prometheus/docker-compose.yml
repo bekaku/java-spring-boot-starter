@@ -25,3 +25,4 @@ services:
 networks:
   grafana-net:
     driver: bridge
+#    external: true

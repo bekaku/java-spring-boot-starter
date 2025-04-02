@@ -1,6 +1,6 @@
 services:
   mysql:
-    container_name: mysql8
+    container_name: mysql
     image: mysql:8.3.0
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -22,3 +22,4 @@ services:
 networks:
   mysql-net:
     driver: bridge
+#    external: true

@@ -1,0 +1,44 @@
+services:
+  redis:
+    image: redis:7.4.1-alpine
+    container_name: redis
+    command: redis-server --requirepass your_strong_Password
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/:/data
+    #restart: unless-stopped
+    restart: always
+    environment:
+      - REDIS_PASSWORD=your_strong_Password
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "your_strong_Password", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - docker-network
+
+  redisinsights:
+    image: redis/redisinsight:latest
+    container_name: redisinsights
+    ports:
+      - "5540:5540"  # Expose Redis Insights on port 8001
+    volumes:
+      - ./redisinsight/:/data
+    networks:
+      - docker-network
+    depends_on:
+      - redis
+    environment:
+      - INSIGHT_HOST=0.0.0.0  # Listen on all interfaces
+      - REDIS_1_NAME=Local_Redis       # Name for the Redis database in RedisInsight
+      - REDIS_1_HOST=redis             # Redis service name in Docker network
+      - REDIS_1_PORT=6379              # Redis port
+      - REDIS_1_PASSWORD=your_strong_Password  # Redis password
+    #restart: always
+
+networks:
+  docker-network:
+    external: true
+    #driver: bridge

@@ -24,8 +24,6 @@ spring:
     # normal connection to mysql server
     #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/super_synapse?allowPublicKeyRetrieval=true&useSSL=false
     # link to docker config from docker-compose.yml
-    #    url: jdbc:mysql://${MYSQL_HOST:mysql_db}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
-    # link mysql to docker   $ docker run -d --restart unless-stopped -p 3308:3306 --name=docker-mysql --env="MYSQL_ROOT_PASSWORD=CH789162be" --env="MYSQL_PASSWORD=CH789162be" --env="MYSQL_USER=bekaku" --env="MYSQL_DATABASE=springboot" mysql:5.6
     #    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
     # connect to mysql form local docker via port 3308
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
