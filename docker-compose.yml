@@ -2,8 +2,8 @@ version: '3.9'
 services:
   api-service-1:
     container_name: api-service-1
-    build: .
-    #image: "spring-api-service:latest"
+#    build: .
+    image: spring-api-service:latest
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: always
@@ -29,22 +29,22 @@ services:
       #linux
   #      - /mnt/cdn/spring-data:/usr/spring-data
   #      - /mnt/cdn/spring-data/logs:/usr/spring-data/logs
-  api-service-2:
-    container_name: api-service-2
-    build: .
-    #image: "spring-api-service:latest"
-    restart: always
-    ports:
-      - '8081:8080'
-    expose:
-      - 8081
-    networks:
-      - my-docker-network
-    volumes:
-      - d:\code\spring-data:/usr/spring-data
-      - d:\code\spring-data\logs:/usr/spring-data/logs
-    environment:
-      - JAVA_OPTS=-Xmx512m -Xms512m
+#  api-service-2:
+#    container_name: api-service-2
+#    build: .
+#    image: spring-api-service:latest
+#    restart: always
+#    ports:
+#      - '8081:8080'
+#    expose:
+#      - 8081
+#    networks:
+#      - my-docker-network
+#    volumes:
+#      - d:\code\spring-data:/usr/spring-data
+#      - d:\code\spring-data\logs:/usr/spring-data/logs
+#    environment:
+#      - JAVA_OPTS=-Xmx512m -Xms512m
 networks:
   my-docker-network:
     driver: bridge

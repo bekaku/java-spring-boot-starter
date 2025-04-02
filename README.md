@@ -91,6 +91,13 @@ Config your database connection at `my-app`/src/main/resources/`application.yml`
     username: `db_username`
     password: `your_db_password`
 ```
+
+Config your frontend generate template at `my-app`/src/main/resources/`application-dev.yml`
+```yml
+app:
+  front-end:
+    theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
+```
 ---
 ## Getting started
 

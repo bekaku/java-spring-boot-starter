@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:host.docker.internal}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: CH789162be
+  kafka:
+    bootstrap-servers: host.docker.internal:9092
+
+app:
+  url: http://127.0.0.1
+  port: 8080
+  cdn-directory: /usr/spring-data/
+  cdn-path: file:///${app.cdn-directory}
+  cdn-path-alias: cdn
+  cdn-url: ${app.url}
+  cdn-port: ${app.port}

@@ -9,6 +9,7 @@ spring:
   profiles:
     #    active: prod
     active: dev
+  #    active: localdocker
   jackson:
     deserialization:
       UNWRAP_ROOT_VALUE: true
@@ -265,6 +266,8 @@ app:
     session-time: 604800
     session-day: 30
     refresh-token-name: _myappkey_device_jid
+  front-end:
+    theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
   defaults:
     image: https://static.productionready.io/images/smiley-cyrus.jpg
     role: 2

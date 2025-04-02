@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-@EnableRabbit
+//@EnableRabbit
 @SpringBootApplication
 @EnableJpaAuditing
 //@EnableScheduling
