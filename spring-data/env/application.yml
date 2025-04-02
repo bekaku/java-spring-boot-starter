@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:122.155.208.143}:13537/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
+    username: mysql_user
+    password: mysql_pwd
+  mail:
+    host: your-mail-server.com
+    port: 465
+    username: admin@your-mail-server.com
+    password: mail_pwd
+  rabbitmq:
+    host: host.docker.internal
+    port: 5672
+    username: local_jobs
+    password: rabbit_pwd
+  kafka:
+    bootstrap-servers: host.docker.internal:9092
+  data:
+    redis:
+      host: host.docker.internal
+      port: 6379
+      password: redis_pwd
+app:
+  secret: jwt_secret
+  cron:
+    enable: true
