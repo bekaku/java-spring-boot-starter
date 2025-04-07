@@ -149,6 +149,9 @@ server:
   port: 8080
   http2:
     enabled: true
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,application/json
   undertow:
     # I/O Threads (CPU cores * 2)
     io-threads: 8
