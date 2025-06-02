@@ -1,4 +1,4 @@
-package com.bekaku.api.spring.configuration;
+package com.bekaku.api.spring.logger;
 
 
 import com.bekaku.api.spring.util.DateUtil;

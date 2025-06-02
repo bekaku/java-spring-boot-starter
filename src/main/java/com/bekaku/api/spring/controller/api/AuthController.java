@@ -200,19 +200,19 @@ public class AuthController extends BaseApiController {
         if (apiClient.isEmpty()) {
             log.error("refreshToken > apiClient.isEmpty()");
 //            deleteCookie(response);
-            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
+            throwUnauthorizes();
         }
         if (AppUtil.isEmpty(dto.getRefreshToken())) {
             log.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken())");
 //            deleteCookie(response);
-            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
+            throwUnauthorizes();
         }
         log.info("dto.getRefreshToken() :{}", dto.getRefreshToken());
         /*
         if (AppUtil.isEmpty(dto.getRefreshToken()) || jwtKey.isEmpty()) {
             log.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken()) || jwtKey.isEmpty()");
             deleteCookie(response);
-            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
+             throwUnauthorizes();
         }
 
         Optional<String> subFromJwt = jwtService.getExpiredSubFromToken(jwtKey.get(), apiClient.get());
@@ -221,22 +221,29 @@ public class AuthController extends BaseApiController {
         if (subFromJwt.isEmpty() || !subFromJwt.get().equals(dto.getRefreshToken())) {
             log.error("refreshToken > subFromJwt.isEmpty() || !subFromJwt.get().equals(dto.getRefreshToken())");
             deleteCookie(response);
-            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
+             throwUnauthorizes();
         }
          */
-        Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(dto.getRefreshToken(), false);
+        Optional<String> tokenKey = jwtService.getSubFromToken(dto.getRefreshToken(), apiClient.get());
+        log.info("subFromJwt :{} ", tokenKey.orElse("sub null"));
+        if (tokenKey.isEmpty()) {
+            log.error("refreshToken > subFromJwt.isEmpty()");
+//            deleteCookie(response);
+            throwUnauthorizes();
+        }
+        Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(tokenKey.get(), false);
         if (accessToken.isEmpty()) {
             log.error("refreshToken > accessToken.isEmpty()");
 //            deleteCookie(response);
-            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
+            throwUnauthorizes();
         }
-        log.info("refreshToken ,userId:{},  oldRefreshToken :{}", accessToken.get().getUser().getId(), dto.getRefreshToken());
+        log.info("refreshToken ,userId:{},  oldRefreshToken :{}", accessToken.get().getUser().getId(), tokenKey.get());
 
         //validate expred token
         boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
         if (isExpired) {
             log.error("refreshToken > accessToken isExpired");
-            throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
+            throwUnauthorizes();
         }
 
 //        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
@@ -244,6 +251,10 @@ public class AuthController extends BaseApiController {
         //        RefreshTokenResponse tokenResponse = authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
 //        setRefreshTokenCookie(response, tokenResponse);
         return authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
+    }
+
+    private void throwUnauthorizes() {
+        throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
     }
 
     @PostMapping("/requestVerifyCodeToResetPwd")

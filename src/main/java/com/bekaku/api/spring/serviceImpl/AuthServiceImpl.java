@@ -72,8 +72,8 @@ public class AuthServiceImpl implements AuthService {
         AccessToken token = accessTokenService.generateRefreshToken(user, apiClient, loginLog, loginRequest.getFcmToken());
         return RefreshTokenResponse.builder()
                 .userId(user.getId())
-                .authenticationToken(jwtService.toToken(user, token.getToken(), apiClient))
-                .refreshToken(token.getToken())
+                .authenticationToken(jwtService.toToken(user, token.getToken(), apiClient, jwtService.expireJwtTimeFromNow()))
+                .refreshToken(jwtService.toToken(user, token.getToken(), apiClient, jwtService.expireRefreshTokenTimeFromNow()))
                 .expiresAt(jwtService.expireJwtTimeFromNow())
                 .build();
     }
@@ -88,8 +88,8 @@ public class AuthServiceImpl implements AuthService {
         accessTokenService.update(accessToken);
 
         return RefreshTokenResponse.builder()
-                .authenticationToken(jwtService.toToken(accessToken.getUser(), token, apiClient))
-                .refreshToken(token)
+                .authenticationToken(jwtService.toToken(accessToken.getUser(), token, apiClient, jwtService.expireJwtTimeFromNow()))
+                .refreshToken(jwtService.toToken(accessToken.getUser(), token, apiClient, jwtService.expireRefreshTokenTimeFromNow()))
                 .expiresAt(jwtService.expireJwtTimeFromNow())
                 .build();
     }

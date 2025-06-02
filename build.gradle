@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '3.4.2'
+    id 'org.springframework.boot' version '3.5.0'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
 //    id 'war'
@@ -63,42 +63,43 @@ dependencies {
 
     implementation 'org.jetbrains:annotations:26.0.2'
 //    Databases
-    implementation 'com.mysql:mysql-connector-j:9.2.0'
-    implementation 'com.zaxxer:HikariCP:6.2.1'
+    implementation 'com.mysql:mysql-connector-j:9.3.0'
+    implementation 'com.zaxxer:HikariCP:6.3.0'
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6',
             'io.jsonwebtoken:jjwt-orgjson:0.12.6'
 
-    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'com.google.code.gson:gson:2.13.1'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
-    implementation 'joda-time:joda-time:2.13.0'
-    implementation 'org.modelmapper:modelmapper:3.2.2'
+    implementation 'joda-time:joda-time:2.14.0'
+    implementation 'org.modelmapper:modelmapper:3.2.3'
 
-    compileOnly 'org.projectlombok:lombok:1.18.36'
-    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+    compileOnly 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
     //Image
     implementation 'net.coobird:thumbnailator:0.4.20'
     implementation 'com.drewnoakes:metadata-extractor:2.19.0'
-    implementation 'org.apache.tika:tika-core:3.0.0'
-    implementation 'org.apache.tika:tika-parsers-standard:3.0.0'
+    implementation 'org.apache.tika:tika-core:3.1.0'
+    implementation 'org.apache.tika:tika-parsers-standard:3.1.0'
     implementation 'com.twelvemonkeys.imageio:imageio-webp:3.12.0'
 
-    implementation 'org.apache.poi:poi-ooxml:5.4.0'
+    implementation 'org.apache.poi:poi-ooxml:5.4.1'
 
 //    caching
 //    implementation group: 'javax.cache', name: 'cache-api', version: '1.1.1'
 //    implementation group: 'org.ehcache', name: 'ehcache', version: '3.10.8'
     implementation 'javax.cache:cache-api:1.1.1'
     implementation 'org.ehcache:ehcache:3.10.8'
-    implementation 'org.jsoup:jsoup:1.18.3'
+    implementation 'org.jsoup:jsoup:1.20.1'
     implementation 'com.google.guava:guava:33.4.0-jre'
     implementation 'com.google.firebase:firebase-admin:9.4.3'
 
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
+    // comment due not yet compatible with springboot 3.5
+//    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
@@ -107,7 +108,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.projectlombok:lombok:1.18.30'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.12.2'
 }
 
 tasks.named('test') {

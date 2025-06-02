@@ -31,6 +31,7 @@ public class JwtServiceImpl implements JwtService {
     private final SecretKey signatureAlgorithm;
     private String secret;
     private final int sessionTime;
+    private final int sessionRefershTime;
     private final String UUID = "uuid";
     @Autowired
     private ApiClientService apiClientService;
@@ -43,9 +44,11 @@ public class JwtServiceImpl implements JwtService {
 
     @Autowired
     public JwtServiceImpl(@Value("${app.jwt.secret}") String secret,
-                          @Value("${app.jwt.session-time}") int sessionTime) {
+                          @Value("${app.jwt.session-time}") int sessionTime,
+                          @Value("${app.jwt.session-refresh-time}") int sessionRefershTime) {
         this.secret = secret;
         this.sessionTime = sessionTime;
+        this.sessionRefershTime = sessionRefershTime;
         signatureAlgorithm = Jwts.SIG.HS512.key().build();
     }
 
@@ -65,6 +68,11 @@ public class JwtServiceImpl implements JwtService {
         Map<String, String> claims = new HashMap<>();
         claims.put(UUID, user.getSalt());
         return toTokenBy(token, apiClient, expireJwtTimeFromNow(), claims);
+    }
+
+    @Override
+    public String toToken(User user, String token, ApiClient apiClient, Date expired) {
+        return toTokenBy(token, apiClient, expired, new HashMap<>());
     }
 
     private String toTokenBy(String token, ApiClient apiClient, Date expireTime, Map<String, ?> claims) {
@@ -162,8 +170,6 @@ public class JwtServiceImpl implements JwtService {
                                 }
                             }
                             */
-
-
                         }
                     }
                 }
@@ -241,7 +247,7 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Date expireRefreshTokenTimeFromNow() {
-        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_MONTH);
+        return new Date(System.currentTimeMillis() + expireRefreshMillisec());
     }
 
     @Override
@@ -272,5 +278,10 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public Long expireMillisec() {
         return sessionTime * 1000L;
+    }
+
+    @Override
+    public Long expireRefreshMillisec() {
+        return sessionRefershTime * 1000L;
     }
 }

@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface JwtService {
     String toToken(String token, ApiClient apiClient);
     String toToken(User user, String token, ApiClient apiClient);
+    String toToken(User user, String token, ApiClient apiClient, Date expired);
     String toToken(String token, ApiClient apiClient, Date expireTime);
 
     Optional<String> getSubFromToken(String token, ApiClient apiClient);
@@ -31,4 +32,5 @@ public interface JwtService {
     Date ExpireTimeOneYear();
 
     Long expireMillisec();
+    Long expireRefreshMillisec();
 }

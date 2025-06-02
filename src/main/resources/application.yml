@@ -13,13 +13,25 @@ spring:
   jackson:
     deserialization:
       UNWRAP_ROOT_VALUE: true
+  transaction:
+    default-timeout: 30
   jpa:
     #    open-in-view: false
     hibernate:
       ddl-auto: none # Hibernate ddl auto (create, create-drop, validate, update)
       use-new-id-generator-mappings: false
-  #    properties:
-  #      hibernate:
+      properties:
+        hibernate:
+          query:
+            in_clause_parameter_padding: true
+            fail_on_pagination_over_collection_fetch: true
+            optimizer:
+              enabled: true
+          default_batch_fetch_size: 30
+          connection:
+            provider_disables_autocommit: true
+            handling_mode: DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION
+
   #        dialect: org.hibernate.dialect.MySQLDialect
 
   datasource:
@@ -32,7 +44,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       #maximum number of milliseconds that a client will wait for a connection
-      connection-timeout: 20000
+      connection-timeout: 2000
       #minimum number of idle connections maintained by HikariCP in a connection pool
       minimum-idle: 5
       maximum-pool-size: 20
@@ -42,8 +54,13 @@ spring:
       max-lifetime: 1800000
       keepalive-time: 30000
       autoCommit: true
-      #leak-detection-threshold: 2000
+      #leak-detection-threshold: 60000
       connection-test-query: SELECT 1
+      data-source-properties:
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        cachePrepStmts: true
+        useServerPrepStmts: true
     pool-prepared-statements: true
     max-open-prepared-statements: 250
   thymeleaf:
@@ -100,9 +117,10 @@ spring:
       #upload files configurations
       enabled: true
       #It specifies the maximum size permitted for uploaded files. The default is 1MB.
-      max-file-size: 100MB
+      max-file-size: 250MB
       # It specifies the maximum size allowed for multipart/form-data requests. The default is 10MB.
-      max-request-size: 100MB
+      max-request-size: 250MB
+      file-size-threshold: 2MB
   http:
     multipart:
       max-file-size: 100MB
@@ -183,11 +201,12 @@ server:
     max-http-post-size: 1MB
     accesslog:
       enabled: true
-    accept-count: 500
-    max-connections: 10000
+    accept-count: 100
+    max-connections: 8192
+    connection-timeout: 2000
     threads:
-      max: 500
-      min-spare: 10
+      max: 200
+      min-spare: 20
 logging:
   include-application-name: false
   config: classpath:log4j2-prod.xml
@@ -224,9 +243,11 @@ management:
   endpoints:
     prometheus:
       enabled: true
+    health:
+      show-details: always
     web:
       exposure:
-        include: health,metrics,prometheus
+        include: health,metrics,prometheus,info,startup
   metrics:
     export:
       prometheus:
@@ -265,8 +286,9 @@ app:
   jwt:
     # SHA 512-bit Key
     secret: 962a5d50f2ee9f987e8d45d0687a1ead3315f8255b65e914709952a5606a304f5a5a651e3cf4dc6d759b956081cc1c8cf85cd4606287e443ea11f3a555f33c0a
-    #millisecond default is 86400 = 1 days,604800=7 days,  900=15 minutes
-    session-time: 604800
+    #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes
+    session-time: 3600
+    session-refresh-time: 604800
     session-day: 30
     refresh-token-name: _myappkey_device_jid
   front-end:

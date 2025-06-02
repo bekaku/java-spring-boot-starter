@@ -13,8 +13,8 @@ services:
       - 8080
     networks:
       - docker-network
-    environment:
-      - JAVA_OPTS=-Xmx512m -Xms512m
+#    environment:
+#      - JAVA_OPTS=-Xmx512m -Xms512m
     deploy:
       resources:
         limits:

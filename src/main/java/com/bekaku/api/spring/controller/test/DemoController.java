@@ -1,9 +1,8 @@
 package com.bekaku.api.spring.controller.test;
 
-import com.bekaku.api.spring.configuration.AppLogger;
+import com.bekaku.api.spring.logger.AppLogger;
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.controller.api.BaseApiController;
-import com.bekaku.api.spring.dto.ResponseMessage;
 import com.bekaku.api.spring.dto.UserRegisterRequest;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.properties.LoggingFileProperties;
@@ -31,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RequestMapping(path = "/test")
@@ -82,6 +82,18 @@ public class DemoController extends BaseApiController {
 //        return this.responseEntity(HttpStatus.OK);
 //    }
 
+    @GetMapping("/check-virtual-thread")
+    public CompletableFuture<String> getData() {
+        return CompletableFuture.supplyAsync(() -> {
+            // Simulate long-running task
+            try {
+                Thread.sleep(3000L);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return "Processed with virtual threads!";
+        });
+    }
     @PostMapping("/testRequestBody")
     public void testRequestBody(@RequestBody() Map<String, String> body) {
         String name = body.get("name");
