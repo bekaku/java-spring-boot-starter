@@ -10,7 +10,7 @@ spring:
       #      quiet-period: 1s
       enabled: false
       exclude: static/**
-#      additional-paths: i18n/**,mapper/**
+    #      additional-paths: i18n/**,mapper/**
     livereload:
       enabled: true
   jpa:
@@ -31,7 +31,7 @@ spring:
     username: root
     password: CH789162be
     driver-class-name: com.mysql.cj.jdbc.Driver
-#    type: com.zaxxer.hikari.HikariDataSource
+    #    type: com.zaxxer.hikari.HikariDataSource
     hikari:
       maximum-pool-size: 5
       minimum-idle: 1
@@ -49,7 +49,7 @@ spring:
     cache:
       period: 0
   rabbitmq:
-    dynamic : true
+    dynamic: true
     #host: 192.168.7.31
     host: 127.0.0.1
     port: 5672
@@ -73,7 +73,7 @@ logging:
         type: ERROR
   file:
     path: ${app.cdn-directory}logs
-#    path: D:/code/tutorial/spring-data/logs
+    #    path: D:/code/tutorial/spring-data/logs
     max-history: 30
     total-size-cap: 10MB
     clean-history-on-start: true
@@ -88,16 +88,25 @@ springdoc:
   api-docs:
     path: /api-docs
 app:
+  cors:
+    allowed-origins:
+      - http://localhost:3004 # Ionic dev (Development Web)
+      - http://localhost:3003 # Frontend dev server
+      - http://localhost      # Android Hybrid App (Dev/Prod)
+      - https://localhost
+      - capacitor://localhost # iOS Hybrid App (Dev/Prod)
+      - ionic://localhost
+
   url: http://127.0.0.1
   port: 8080
   test-prop: develop mode
   version: 1.0.1
   cdn-directory: D:/code/github/java-spring-starter/spring-data/
   cdn-path: file:///${app.cdn-directory}
-#  cdn-path: file:///D:/code/tutorial/spring-data/
+  #  cdn-path: file:///D:/code/tutorial/spring-data/
 
   #Dev
-#  cdn-url: http://127.0.0.1
+  #  cdn-url: http://127.0.0.1
   cdn-url: ${app.url}
   cdn-port: 8080
 

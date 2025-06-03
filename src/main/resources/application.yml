@@ -254,6 +254,13 @@ management:
         enabled: true
 
 app:
+  cors:
+    allowed-origins:
+      - https://your-production-webapp.com
+      - http://localhost      # Android Hybrid App (Prod)
+      - https://localhost
+      - capacitor://localhost # iOS Hybrid App (Prod)
+      - ionic://localhost
   group: com.bekaku.api.spring
   domain: your-domain.com
   url: https://api.your-domain.com
