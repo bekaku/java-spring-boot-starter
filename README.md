@@ -4,6 +4,79 @@
 - Nuxt js + Quasar  [nuxt-quasar-example-app](https://github.com/bekaku/nuxt-quasar-example-app)
 - Vue Js 3 + Quasar 2+ [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app)
 - Vue Js 3 + Ionic 8 [vue-ionic-example-app](https://github.com/bekaku/vue-ionic-example-app)
+# 🚀 Java Spring Boot Starter
+
+A modern and modular starter template for building robust REST APIs using Spring Boot and Gradle. Designed for quick bootstrapping of secure, production-ready Java backends.
+
+---
+
+## ✨ Features
+
+- ✅ Spring Boot (latest supported version)
+- ✅ Spring Data JPA with Hibernate
+- ✅ Support for H2 / MySQL / PostgreSQL
+- ✅ RESTful API architecture
+- ✅ Input validation with `javax.validation`
+- ✅ Global exception handling
+- ✅ Swagger (OpenAPI 3) documentation
+- ✅ Environment-based configuration (`.yml`)
+- ✅ Easy database switching
+- ✅ Docker-ready (optional Dockerfile support)
+
+---
+
+## 📦 Tech Stack
+
+- **Framework**: Spring Boot
+- **Build Tool**: Gradle
+- **Database**: H2 (in-memory), MySQL, PostgreSQL
+- **ORM**: Hibernate (via Spring Data JPA)
+- **API Docs**: Swagger UI (OpenAPI)
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Bekaku/java-spring-boot-starter.git
+cd java-spring-boot-starter
+```
+## Environment Configuration
+- Application configuration: `src/main/resources/application.yml`
+- Local config: `src/main/resources/application-dev.yml`
+
+## 🗃️ Project Structure
+```
+src
+├── main
+│   ├── java
+│   │   └── com.bekaku.api.spring
+│   │       ├── annotation
+│   │       ├── configuration
+│   │       ├── controller
+│   │       ├── dto
+│   │       └── exception
+│   │       ├── mapper
+│   │       ├── model
+│   │       ├── repository
+│   │       ├── service
+│   │       ├── serviceImpl
+│   │       ├── util
+│   │       ├── validator
+│   │       ├── vo
+│   │       ├── util
+│   └── resources
+│       ├── files
+│       ├── i18n
+│       ├── mapper
+│       ├── static
+│       ├── application.yml
+│       └── application-local.yml
+├── test
+│   └── java
+```
 
 ```mermaid
 flowchart TD
