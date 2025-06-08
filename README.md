@@ -18,6 +18,7 @@ A modern and modular starter template for building robust REST APIs using Spring
 - ✅ RESTful API architecture
 - ✅ Input validation with `javax.validation`
 - ✅ Global exception handling
+- ✅ JWT-based authentication and authorization
 - ✅ Swagger (OpenAPI 3) documentation
 - ✅ Environment-based configuration (`.yml`)
 - ✅ Easy database switching
