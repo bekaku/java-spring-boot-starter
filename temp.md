@@ -6,13 +6,6 @@ A modern, production-ready Spring Boot starter template for building secure REST
 
 This starter template provides a robust foundation for Java-based REST API development using Spring Boot and Gradle. It includes enterprise-level features such as JWT authentication, role-based access control, comprehensive API documentation, and automated code generation tools.
 
-## 🔗 Front-End Integrations
-
-- **Nuxt.js + Quasar** — [nuxt-quasar-example-app](https://github.com/bekaku/nuxt-quasar-example-app)  
-- **Vue 3 + Quasar 2+** — [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app)  
-- **Vue 3 + Ionic 8** — [vue-ionic-example-app](https://github.com/bekaku/vue-ionic-example-app)  
-
----
 
 ## 📋 Table of Contents
 
@@ -28,7 +21,6 @@ This starter template provides a robust foundation for Java-based REST API devel
 - [Auto Code Generation](#-auto-code-generation)
 - [Docker Support](#-docker-support)
 - [Production Deployment](#-production-deployment)
-- [Contributing](#-contributing)
 
 ## ✨ Features
 
@@ -78,7 +70,7 @@ This starter template provides a robust foundation for Java-based REST API devel
 This API is designed to work seamlessly with modern frontend frameworks:
 
 - **[Nuxt.js + Quasar](https://github.com/bekaku/nuxt-quasar-example-app)** - Server-side rendered Vue.js application
-- **[Vue.js 3 + Quasar 2+](https://github.com/bekaku/vue-quasar-example-app)** - Modern Vue.js SPA
+- **[Vue.js 3 + Quasar 2+](https://github.com/bekaku/vue-quasar-example-app)** - Modern Vue.js SPA & SSR
 - **[Vue.js 3 + Ionic 8](https://github.com/bekaku/vue-ionic-example-app)** - Mobile-first application
 
 ## 🏗 System Architecture
