@@ -294,7 +294,7 @@ app:
     # SHA 512-bit Key
     secret: 962a5d50f2ee9f987e8d45d0687a1ead3315f8255b65e914709952a5606a304f5a5a651e3cf4dc6d759b956081cc1c8cf85cd4606287e443ea11f3a555f33c0a
     #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes
-    session-time: 3600
+    session-time: 86400
     session-refresh-time: 604800
     session-day: 30
     refresh-token-name: _myappkey_device_jid
