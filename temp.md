@@ -179,7 +179,7 @@ src/
     └── java/                    # Test classes
 ```
 
-## ⚙️ Configuration
+## ✨ Configuration
 
 ### Environment Configuration
 
@@ -226,7 +226,7 @@ spring:
         format_sql: true
 ```
 
-## 🗄️ Database Setup
+## ✨ Database Setup
 
 ### Database Installation
 
