@@ -275,6 +275,7 @@ app:
   #  cdn-port: 443
   cdn-url: ${app.url}
   cdn-port: ${app.port}
+  encrypt-key: jOwyyXyTbN/16DI5iIT0FMg==
   upload-image:
     limit-width: 1776
     limit-height: 1776
