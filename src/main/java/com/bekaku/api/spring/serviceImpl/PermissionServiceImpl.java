@@ -145,12 +145,14 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
 
+    @Transactional(readOnly = true)
     @Override
     public boolean isHasPermission(long userId, String permissionCode) {
         List<String> permissionList = permissionRepository.findPermissionsByUserIdAndPermissionCode(userId, permissionCode);
         return !permissionList.isEmpty();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<String> findAllPermissionCodeByUserId(Long userId, boolean frontend) {
         if (frontend) {
@@ -160,6 +162,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<Permission> findByCode(String code) {
         return permissionRepository.findByCode(code);
@@ -170,27 +173,32 @@ public class PermissionServiceImpl implements PermissionService {
         permissionRepository.saveAll(permissionList);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<Permission> findAllWithSearchSpecification(SearchSpecification<Permission> specification, Pageable pageable) {
         return permissionRepository.findAll(specification, pageable);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Long> findAllPermissionIdByRoleId(Long roleId) {
         return permissionRepository.findAllPermissionIdByRoleId(roleId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<PermissionDto> findAllBy(boolean frontEnd, Sort sort) {
         List<Permission> list = permissionRepository.findAllByfrontEnd(frontEnd, sort);
         return list.stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Object[] findCustomById(Long id) {
         return permissionRepositoryCustom.findById(id);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Object[]> findAllCustom() {
         return permissionRepositoryCustom.findAll();

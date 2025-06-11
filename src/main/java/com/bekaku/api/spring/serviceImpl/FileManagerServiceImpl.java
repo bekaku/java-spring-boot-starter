@@ -54,6 +54,7 @@ public class FileManagerServiceImpl implements FileManagerService {
         return getListFromResult(result);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<FileManagerDto> findAllBy(Specification<FileManager> specification, Pageable pageable) {
         return null;
@@ -130,22 +131,18 @@ public class FileManagerServiceImpl implements FileManagerService {
         return modelMapper.map(fileManagerDto, FileManager.class);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<FileManagerDto> findForPublicById(Long id) {
         Optional<FileManagerPublicVo> vo = fileManagerMapper.findForPublicById(id);
-        if (vo.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(setVoToDto(vo.get()));
+        return vo.map(this::setVoToDto);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<ImageDto> findImageDtoBy(Long id) {
         Optional<FileManagerPublicVo> vo = fileManagerMapper.findForPublicById(id);
-        if (vo.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(getImageDtoBy(vo.get().getFileMime(), vo.get().getFilePath()));
+        return vo.map(fileManagerPublicVo -> getImageDtoBy(fileManagerPublicVo.getFileMime(), fileManagerPublicVo.getFilePath()));
     }
 
     public ImageDto getDefaultAvatar() {
@@ -218,6 +215,7 @@ public class FileManagerServiceImpl implements FileManagerService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<FileManager> findAllByFilesDirectory(FilesDirectory filesDirectory) {
         return fileManagerRepository.findAllByFilesDirectory(filesDirectory);

@@ -32,12 +32,14 @@ public class RoleServiceImpl implements RoleService {
         return getListFromResult(result);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<RoleDto> findAllWithSearch(SearchSpecification<Role> specification, Pageable pageable) {
         Page<Role> result = roleRepository.findAll(specification, pageable);
         return getListFromResult(result);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<RoleDto> findAllBy(Specification<Role> specification, Pageable pageable) {
         return null;

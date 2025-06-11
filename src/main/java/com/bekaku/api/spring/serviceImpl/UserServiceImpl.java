@@ -53,12 +53,14 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
         return getListFromResult(result);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<UserDto> findAllWithSearch(SearchSpecification<User> specification, Pageable pageable) {
         Page<User> result = userRepository.findAll(specification, pageable);
         return getListFromResult(result);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<UserDto> findAllBy(Specification<User> specification, Pageable pageable) {
         return null;

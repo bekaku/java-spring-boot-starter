@@ -53,7 +53,6 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     private JwtService jwtService;
 
-    Logger logger = LoggerFactory.getLogger(AccessTokenServiceImpl.class);
     @Value("${app.jwt.session-time}")
     int sessionTime;
 
@@ -86,11 +85,13 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return accessTokenRepository.findByToken(token);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<AccessToken> findAccessTokenByTokenAndUser(User user, String token) {
         return accessTokenRepository.findAccessTokenByTokenAndUser(user, token);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<AccessToken> findAccessTokenByToken(String token, boolean revoked) {
         return accessTokenRepository.findAccessTokenByToken(token, revoked);
@@ -112,6 +113,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return save(accessToken);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked) {
         List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, AccessTokenServiceType.LOGIN, revoked);
@@ -120,6 +122,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked, Pageable pageable) {
         List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, AccessTokenServiceType.LOGIN, revoked, pageable);
@@ -152,6 +155,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 .orElseThrow(() -> new ApiException(new ApiError(HttpStatus.NOT_FOUND, "Invalid refresh Token", "")));
     }
 
+
     @Override
     public void deleteRefreshToken(String token) {
         accessTokenRepository.deleteByToken(token);
@@ -167,11 +171,13 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         accessTokenRepository.updateNullFcmToken(fcmToken);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked) {
         return accessTokenRepository.findByTokenAndRevoked(token, revoked);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<UserDto> findByAccessTokenKey(String token) {
         return userMapper.findByAccessTokenKey(token);
@@ -219,6 +225,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return false;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AccessToken> findAllWithPaging(Pageable pageable) {
         return null;

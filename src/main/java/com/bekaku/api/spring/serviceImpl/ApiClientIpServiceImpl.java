@@ -52,6 +52,7 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
         return null;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<ApiClientIp> findAll() {
         return apiClientIpRepository.findAll();
@@ -67,6 +68,7 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
         return apiClientIpRepository.save(apiClientIp);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<ApiClientIp> findById(Long id) {
         return apiClientIpRepository.findById(id);
@@ -93,11 +95,13 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
     }
 
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<ApiClientIp> findByIdAndApiClientId(Long id, Long apiClientId) {
         return apiClientIpRepository.findByIdAndApiClientId(id, apiClientId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<ApiClientIp> findAllByApiClient(ApiClient apiClient) {
         return apiClientIpRepository.findByApiClient(apiClient);
@@ -110,6 +114,8 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
                 .collect(Collectors.toList())
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
+
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<ApiClientIpDto> findPageByApiClient(Long apiCilentId, Pageable pageable) {
         Page<ApiClientIp> result = apiClientIpRepository.findPageByApiClient(apiCilentId, pageable);
@@ -121,6 +127,7 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
         return null;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<ApiClientIp> findByApiClientIdAndIpAddress(Long apiClientId, String ipAddress) {
         return apiClientIpRepository.findByApiClientIdAndIpAddress(apiClientId, ipAddress);

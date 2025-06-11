@@ -50,6 +50,7 @@ public class ApiClientServiceImpl implements ApiClientService {
         return getListFromResult(result);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<ApiClientDto> findAllWithSearch(SearchSpecification<ApiClient> specification, Pageable pageable) {
         Page<ApiClient> result = apiClientRepository.findAll(specification, pageable);
