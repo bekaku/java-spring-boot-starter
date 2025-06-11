@@ -56,7 +56,7 @@ dependencies {
 
 //    implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.15.1'
 
     // bug whith springboot version 3.2.0 to be develop by mybatis dev
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
@@ -83,8 +83,8 @@ dependencies {
     //Image
     implementation 'net.coobird:thumbnailator:0.4.20'
     implementation 'com.drewnoakes:metadata-extractor:2.19.0'
-    implementation 'org.apache.tika:tika-core:3.1.0'
-    implementation 'org.apache.tika:tika-parsers-standard:3.1.0'
+    implementation 'org.apache.tika:tika-core:3.2.0'
+    implementation 'org.apache.tika:tika-parsers-standard:3.2.0'
     implementation 'com.twelvemonkeys.imageio:imageio-webp:3.12.0'
 
     implementation 'org.apache.poi:poi-ooxml:5.4.1'
@@ -96,10 +96,9 @@ dependencies {
     implementation 'org.ehcache:ehcache:3.10.8'
     implementation 'org.jsoup:jsoup:1.20.1'
     implementation 'com.google.guava:guava:33.4.0-jre'
-    implementation 'com.google.firebase:firebase-admin:9.4.3'
+    implementation 'com.google.firebase:firebase-admin:9.5.0'
 
-    // comment due not yet compatible with springboot 3.5
-//    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
@@ -108,7 +107,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.projectlombok:lombok:1.18.30'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.12.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.2'
 }
 
 tasks.named('test') {

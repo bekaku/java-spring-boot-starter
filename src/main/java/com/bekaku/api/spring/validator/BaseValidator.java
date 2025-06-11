@@ -46,7 +46,7 @@ public class BaseValidator extends BaseResponseException {
     }
 
     public void checkValidate() {
-        if (this.errors.size() > 0) {
+        if (!this.errors.isEmpty()) {
             List<String> err = this.errors;
             this.errors = new ArrayList<>();
             throw this.responseError(HttpStatus.BAD_REQUEST, null, err);
