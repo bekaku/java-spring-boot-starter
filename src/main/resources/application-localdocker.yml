@@ -7,6 +7,14 @@ spring:
     bootstrap-servers: host.docker.internal:9092
 
 app:
+  cors:
+    allowed-origins:
+      - http://localhost:3004 # Ionic dev (Development Web)
+      - http://localhost:3003 # Frontend dev server
+      - http://localhost      # Android Hybrid App (Dev/Prod)
+      - https://localhost
+      - capacitor://localhost # iOS Hybrid App (Dev/Prod)
+      - ionic://localhost
   url: http://127.0.0.1
   port: 8080
   cdn-directory: /usr/spring-data/

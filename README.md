@@ -193,6 +193,13 @@ server:
 spring:
   profiles:
     active: dev  # Change to 'prod' for production
+app:
+   url: https://api.your-domain.com
+   port: 443
+   cdn-directory: /usr/spring-data/
+   cors:
+      allowed-origins:
+         - https://your-production-webapp.com #  Frontend dev server
 ```
 
 **Development Configuration** (`application-dev.yml`)
@@ -200,9 +207,13 @@ spring:
 app:
   url: http://127.0.0.1
   port: 8080
-  cdn-directory: /path/to/your/files
+  cdn-directory: /path/to/your/spring-data/
   front-end:
     theme: NUXT_QUASAR  # Options: NUXT_QUASAR, QUASAR
+  cors:
+     allowed-origins:
+        - http://localhost:3004 # Ionic dev (Development Web)
+        - http://localhost:3003 # Frontend dev server
 ```
 
 ### Database Configuration
