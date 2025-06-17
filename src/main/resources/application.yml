@@ -17,6 +17,12 @@ spring:
     default-timeout: 30
   jpa:
     #    open-in-view: false
+    properties:
+      hibernate:
+        order_inserts: true
+        order_updates: true
+        jdbc:
+          batch_size: 50
     hibernate:
       ddl-auto: none # Hibernate ddl auto (create, create-drop, validate, update)
       use-new-id-generator-mappings: false
@@ -73,12 +79,6 @@ spring:
   h2:
     console:
       enabled:true
-  #  devtools:
-  #    add-properties: false
-  #    restart:
-  #      enabled: false
-  #    livereload:
-  #      enabled: true
   mail:
     default-encoding: UTF-8
     host: mail.cloud.com
@@ -249,6 +249,8 @@ management:
       exposure:
         include: health,metrics,prometheus,info,startup
   metrics:
+    enable:
+      hikari: true
     export:
       prometheus:
         enabled: true
