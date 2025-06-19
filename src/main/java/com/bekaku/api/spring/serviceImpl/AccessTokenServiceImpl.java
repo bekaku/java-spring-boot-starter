@@ -8,8 +8,12 @@ import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.mapper.AccessTokenMapper;
-import com.bekaku.api.spring.mapper.UserMapper;
-import com.bekaku.api.spring.model.*;
+import com.bekaku.api.spring.model.AccessToken;
+import com.bekaku.api.spring.model.ApiClient;
+import com.bekaku.api.spring.model.LoginLog;
+import com.bekaku.api.spring.model.User;
+import com.bekaku.api.spring.mybatis.AccessTokenMybatis;
+import com.bekaku.api.spring.mybatis.UserMybatis;
 import com.bekaku.api.spring.repository.AccessTokenRepository;
 import com.bekaku.api.spring.service.AccessTokenService;
 import com.bekaku.api.spring.service.JwtService;
@@ -18,8 +22,6 @@ import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -46,10 +48,13 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Autowired
     private UserAgentService userAgentService;
     @Autowired
-    private AccessTokenMapper accessTokenMapper;
+    private AccessTokenMybatis accessTokenMybatis;
 
     @Autowired
-    private UserMapper userMapper;
+    private AccessTokenMapper mapper;
+
+    @Autowired
+    private UserMybatis userMybatis;
 
     private JwtService jwtService;
 
@@ -180,13 +185,13 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Transactional(readOnly = true)
     @Override
     public Optional<UserDto> findByAccessTokenKey(String token) {
-        return userMapper.findByAccessTokenKey(token);
+        return userMybatis.findByAccessTokenKey(token);
     }
 
     @Override
     public void updateLastestActive(LocalDateTime lastestActive, Long id) {
 //        accessTokenRepository.updateLastestActive(lastestActive, id);
-        accessTokenMapper.updateLastestActive(lastestActive, id);
+        accessTokenMybatis.updateLastestActive(lastestActive, id);
     }
     @Override
     public AccessToken generateTokenBy(User user, Date expiresAt, String token, AccessTokenServiceType service) {

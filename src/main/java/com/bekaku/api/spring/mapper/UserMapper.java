@@ -1,19 +1,12 @@
 package com.bekaku.api.spring.mapper;
 
 import com.bekaku.api.spring.dto.UserDto;
-import com.bekaku.api.spring.vo.Paging;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import com.bekaku.api.spring.model.User;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 
-import java.util.List;
-import java.util.Optional;
-
-@Mapper
+@Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
-
-    List<UserDto> findAll(@Param("page") Paging page);
-    Optional<UserDto> findById(@Param("id") Long id);
-    Optional<UserDto> findByUsername(@Param("username") String username);
-    Optional<UserDto> findByEmail(@Param("email") String email);
-    Optional<UserDto> findByAccessTokenKey(@Param("token") String token);
+    UserDto toDto(User entity);
+    User toEntity(UserDto dto);
 }

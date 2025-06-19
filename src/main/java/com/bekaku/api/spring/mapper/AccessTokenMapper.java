@@ -1,13 +1,28 @@
 package com.bekaku.api.spring.mapper;
 
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import com.bekaku.api.spring.dto.AccessTokenDto;
+import com.bekaku.api.spring.model.AccessToken;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 
-import java.time.LocalDateTime;
-
-@Mapper
+@Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface AccessTokenMapper {
-    void updateLastestActive(@Param("lastestActive") LocalDateTime lastestActive,@Param("id") Long id);
 
-
+    //    @Mappings({
+//            @Mapping(source = "id", target = "id"),
+//            @Mapping(source = "docNo", target = "docNo"),
+//            @Mapping(source = "referenceNo", target = "referenceNo"),
+//            @Mapping(source = "docName", target = "docName"),
+//            @Mapping(source = "latestApproved", target = "latestApproved"),
+//            @Mapping(source = "keywordSearch", target = "keywordSearch"),
+//            @Mapping(source = "createLocked", target = "createLocked"),
+//            @Mapping(target = "wiDocumentTypeDto", ignore = true),
+//            @Mapping(target = "organizationOwner", ignore = true),
+//            @Mapping(target = "wiDataTaggingItems", ignore = true),
+//            @Mapping(target = "wiVersion", ignore = true),
+//            @Mapping(target = "fileSelectedIds", ignore = true),
+//            @Mapping(target = "newVersionBy", ignore = true),
+//    })
+    AccessTokenDto toDto(AccessToken entity);
+    AccessToken toEntity(AccessTokenDto dto);
 }

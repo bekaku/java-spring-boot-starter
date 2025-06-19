@@ -1,22 +1,20 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.FileManagerDto;
-import com.bekaku.api.spring.dto.ResponseListDto;
-import com.bekaku.api.spring.vo.FileManagerPublicVo;
-import com.bekaku.api.spring.vo.Paging;
 import com.bekaku.api.spring.dto.ImageDto;
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.mapper.FileManagerMapper;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FilesDirectory;
+import com.bekaku.api.spring.mybatis.FileManagerMybatis;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.repository.FileManagerRepository;
 import com.bekaku.api.spring.service.FileManagerService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.FileUtil;
+import com.bekaku.api.spring.vo.FileManagerPublicVo;
+import com.bekaku.api.spring.vo.Paging;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -35,10 +33,9 @@ import java.util.stream.Collectors;
 @Service
 public class FileManagerServiceImpl implements FileManagerService {
     private final FileManagerRepository fileManagerRepository;
-    private final FileManagerMapper fileManagerMapper;
-    private final ModelMapper modelMapper;
+    private final FileManagerMybatis fileManagerMybatis;
+    private final FileManagerMapper modelMapper;
     private final AppProperties appProperties;
-    Logger logger = LoggerFactory.getLogger(FileManagerServiceImpl.class);
 
     @Transactional(readOnly = true)
     @Override
@@ -112,7 +109,6 @@ public class FileManagerServiceImpl implements FileManagerService {
 
     @Override
     public FileManagerDto convertEntityToDto(FileManager fileManager) {
-//        return modelMapper.map(fileManager, FileManagerDto.class);
         boolean isImage = FileUtil.isImage(fileManager.getFileMime().getName());
         FileManagerDto dto = new FileManagerDto();
         dto.assign(fileManager.getId(),
@@ -128,20 +124,20 @@ public class FileManagerServiceImpl implements FileManagerService {
 
     @Override
     public FileManager convertDtoToEntity(FileManagerDto fileManagerDto) {
-        return modelMapper.map(fileManagerDto, FileManager.class);
+        return modelMapper.toEntity(fileManagerDto);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Optional<FileManagerDto> findForPublicById(Long id) {
-        Optional<FileManagerPublicVo> vo = fileManagerMapper.findForPublicById(id);
+        Optional<FileManagerPublicVo> vo = fileManagerMybatis.findForPublicById(id);
         return vo.map(this::setVoToDto);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Optional<ImageDto> findImageDtoBy(Long id) {
-        Optional<FileManagerPublicVo> vo = fileManagerMapper.findForPublicById(id);
+        Optional<FileManagerPublicVo> vo = fileManagerMybatis.findForPublicById(id);
         return vo.map(fileManagerPublicVo -> getImageDtoBy(fileManagerPublicVo.getFileMime(), fileManagerPublicVo.getFilePath()));
     }
 
@@ -208,7 +204,7 @@ public class FileManagerServiceImpl implements FileManagerService {
 
     @Override
     public List<FileManagerDto> findAllFolderAndFileByParentFolder(Paging page, Long parentDirectoryId) {
-        List<FileManagerPublicVo> voList = fileManagerMapper.findAllFolderAndFileByParentFolder(page, parentDirectoryId);
+        List<FileManagerPublicVo> voList = fileManagerMybatis.findAllFolderAndFileByParentFolder(page, parentDirectoryId);
         return voList
                 .stream()
                 .map(this::setVoToDto)

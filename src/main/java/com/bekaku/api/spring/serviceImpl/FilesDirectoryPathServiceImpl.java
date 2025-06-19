@@ -1,15 +1,15 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.FilesDirectoryPathDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
+import com.bekaku.api.spring.mapper.FilesDirectoryPathMapper;
 import com.bekaku.api.spring.model.FilesDirectoryPath;
 import com.bekaku.api.spring.repository.FilesDirectoryPathRepository;
 import com.bekaku.api.spring.service.FilesDirectoryPathService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class FilesDirectoryPathServiceImpl implements FilesDirectoryPathService {
     private final FilesDirectoryPathRepository filesDirectoryPathRepository;
-    private final ModelMapper modelMapper;
+    private final FilesDirectoryPathMapper modelMapper;
 
     @Transactional(readOnly = true)
     @Override
@@ -94,12 +94,12 @@ public class FilesDirectoryPathServiceImpl implements FilesDirectoryPathService 
 
     @Override
     public FilesDirectoryPathDto convertEntityToDto(FilesDirectoryPath filesDirectoryPath) {
-        return modelMapper.map(filesDirectoryPath, FilesDirectoryPathDto.class);
+        return modelMapper.toDto(filesDirectoryPath);
     }
 
     @Override
     public FilesDirectoryPath convertDtoToEntity(FilesDirectoryPathDto filesDirectoryPathDto) {
-        return modelMapper.map(filesDirectoryPathDto, FilesDirectoryPath.class);
+        return modelMapper.toEntity(filesDirectoryPathDto);
     }
 
     @Transactional(readOnly = true)

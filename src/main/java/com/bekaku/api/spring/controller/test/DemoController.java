@@ -1,14 +1,13 @@
 package com.bekaku.api.spring.controller.test;
 
-import com.bekaku.api.spring.logger.AppLogger;
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.controller.api.BaseApiController;
 import com.bekaku.api.spring.dto.UserRegisterRequest;
+import com.bekaku.api.spring.logger.AppLogger;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.properties.LoggingFileProperties;
 import com.bekaku.api.spring.queue.QueueSender;
 import com.bekaku.api.spring.service.AccessTokenService;
-//import com.bekaku.api.spring.service.KafkaProducerService;
 import com.bekaku.api.spring.service.UserService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
@@ -20,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +40,6 @@ public class DemoController extends BaseApiController {
     //    private final MailProperties mailProperties;
     private final AppProperties appProperties;
     private final LoggingFileProperties loggingFileProperties;
-    private final ModelMapper modelMapper;
     private final AppLogger appLogger;
     private final I18n i18n;
     //    private final SimpMessagingTemplate simpMessagingTemplate;
@@ -113,6 +110,7 @@ public class DemoController extends BaseApiController {
 
     @GetMapping("/server-info")
     public String getServerInfo() {
+
         StringBuilder info = new StringBuilder();
 
         // Get server info

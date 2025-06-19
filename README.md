@@ -161,6 +161,7 @@ src/
 │   │   ├── dto/                 # Data Transfer Objects
 │   │   ├── exception/           # Exception handling
 │   │   ├── mapper/              # Entity-DTO mappers
+│   │   ├── mybatis/             # MyBatis
 │   │   ├── model/               # JPA entities
 │   │   ├── repository/          # Data repositories
 │   │   ├── service/             # Business logic interfaces
@@ -171,7 +172,7 @@ src/
 │   └── resources/
 │       ├── files/               # Static files
 │       ├── i18n/                # Internationalization
-│       ├── mapper/              # MyBatis mappers (if used)
+│       ├── mybatis/              # MyBatis mappers (if used)
 │       ├── static/              # Web static resources
 │       ├── application.yml      # Main configuration
 │       └── application-dev.yml  # Development configuration

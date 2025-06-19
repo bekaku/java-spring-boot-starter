@@ -8,12 +8,12 @@ import com.bekaku.api.spring.exception.BaseResponseException;
 import com.bekaku.api.spring.mapper.UserMapper;
 import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.model.User;
+import com.bekaku.api.spring.mybatis.UserMybatis;
 import com.bekaku.api.spring.repository.UserRepository;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.service.UserService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.vo.Paging;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private UserMapper userMapper;
+    private UserMybatis userMybatis;
     @Autowired
     private FileManagerService fileManagerService;
 
@@ -43,7 +43,7 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
     private I18n i18n;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private UserMapper modelMapper;
     Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Transactional(readOnly = true)
@@ -115,7 +115,7 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
 
     @Override
     public UserDto convertEntityToDto(User user) {
-        UserDto dto = modelMapper.map(user, UserDto.class);
+        UserDto dto = modelMapper.toDto(user);
         if (user.getAvatarFile() != null) {
             Optional<ImageDto> imageDto = fileManagerService.findImageDtoBy(user.getAvatarFile());
             imageDto.ifPresent(dto::setAvatar);
@@ -139,7 +139,7 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
 
     @Override
     public User convertDtoToEntity(UserDto userData) {
-        return modelMapper.map(userData, User.class);
+        return modelMapper.toEntity(userData);
     }
 
     @Transactional(readOnly = true)
@@ -169,25 +169,25 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
     @Transactional(readOnly = true)
     @Override
     public List<UserDto> findAllUserData(Paging page) {
-        return userMapper.findAll(page);
+        return userMybatis.findAll(page);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Optional<UserDto> findUserDataById(Long id) {
-        return userMapper.findById(id);
+        return userMybatis.findById(id);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Optional<UserDto> findUserDataByUsername(String username) {
-        return userMapper.findByUsername(username);
+        return userMybatis.findByUsername(username);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Optional<UserDto> findUserDataByEmail(String email) {
-        return userMapper.findByEmail(email);
+        return userMybatis.findByEmail(email);
     }
 
     @Override

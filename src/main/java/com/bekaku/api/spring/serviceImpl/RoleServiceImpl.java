@@ -2,12 +2,12 @@ package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.dto.RoleDto;
+import com.bekaku.api.spring.mapper.RoleMapper;
 import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.repository.RoleRepository;
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.service.RoleService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class RoleServiceImpl implements RoleService {
     private final RoleRepository roleRepository;
-    private final ModelMapper modelMapper;
+    private final RoleMapper modelMapper;
 
     @Transactional(readOnly = true)
     @Override
@@ -97,12 +97,12 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleDto convertEntityToDto(Role role) {
-        return modelMapper.map(role, RoleDto.class);
+        return modelMapper.toDto(role);
     }
 
     @Override
     public Role convertDtoToEntity(RoleDto roleDto) {
-        return modelMapper.map(roleDto, Role.class);
+        return modelMapper.toEntity(roleDto);
     }
 
     @Override

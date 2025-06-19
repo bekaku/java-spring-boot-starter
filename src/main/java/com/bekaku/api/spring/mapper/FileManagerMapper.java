@@ -1,17 +1,22 @@
 package com.bekaku.api.spring.mapper;
 
-import com.bekaku.api.spring.vo.FileManagerPublicVo;
-import com.bekaku.api.spring.vo.Paging;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import com.bekaku.api.spring.dto.FileManagerDto;
+import com.bekaku.api.spring.model.FileManager;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+import org.mapstruct.ReportingPolicy;
 
-import java.util.List;
-import java.util.Optional;
-
-@Mapper
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface FileManagerMapper {
 
-    Optional<FileManagerPublicVo> findForPublicById(@Param("id") Long id);
+    @Mappings({
+            @Mapping(target = "fileMime", ignore = true),
+    })
+    FileManagerDto toDto(FileManager entity);
 
-    List<FileManagerPublicVo> findAllFolderAndFileByParentFolder(@Param("page") Paging page, Long parentDirectoryId);
+    @Mappings({
+            @Mapping(target = "fileMime", ignore = true),
+    })
+    FileManager toEntity(FileManagerDto dto);
 }

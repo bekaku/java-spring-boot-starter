@@ -1,15 +1,12 @@
 package com.bekaku.api.spring.mapper;
 
 import com.bekaku.api.spring.dto.FilesDirectoryDto;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import com.bekaku.api.spring.model.FilesDirectory;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 
-import java.util.Optional;
-
-@Mapper
+@Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface FilesDirectoryMapper {
-
-    Optional<FilesDirectoryDto> findById(@Param("id") Long id);
-
-    Optional<FilesDirectoryDto> findByIdAndCrestedUserId(@Param("id") Long id, @Param("createdUserId") Long createdUserId);
+    FilesDirectoryDto toDto(FilesDirectory entity);
+    FilesDirectory toEntity(FilesDirectoryDto dto);
 }

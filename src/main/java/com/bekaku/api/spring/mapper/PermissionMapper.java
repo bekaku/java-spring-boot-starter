@@ -1,18 +1,12 @@
 package com.bekaku.api.spring.mapper;
 
-import com.bekaku.api.spring.vo.Paging;
+import com.bekaku.api.spring.dto.PermissionDto;
 import com.bekaku.api.spring.model.Permission;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 
-import java.util.List;
-
-@Mapper
+@Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PermissionMapper {
-    /**
-     *
-     * @param page
-     * Pa
-     */
-    List<Permission> findAllWithPaging(@Param("page") Paging page);
+    PermissionDto toDto(Permission entity);
+    Permission toEntity(PermissionDto dto);
 }

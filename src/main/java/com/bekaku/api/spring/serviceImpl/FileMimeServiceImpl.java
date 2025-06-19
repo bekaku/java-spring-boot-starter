@@ -1,12 +1,11 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.FileMime;
 import com.bekaku.api.spring.repository.FileMimeRepository;
 import com.bekaku.api.spring.service.FileMimeService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,7 +20,6 @@ import java.util.Optional;
 @Service
 public class FileMimeServiceImpl implements FileMimeService {
     private final FileMimeRepository fileMimeRepository;
-    private final ModelMapper modelMapper;
 
     @Transactional(readOnly = true)
     @Override

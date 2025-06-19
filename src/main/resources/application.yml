@@ -49,26 +49,22 @@ spring:
     password: 'pwd'
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      #maximum number of milliseconds that a client will wait for a connection
-      connection-timeout: 2000
-      #minimum number of idle connections maintained by HikariCP in a connection pool
-      minimum-idle: 5
-      maximum-pool-size: 20
-      #idleTimeout: 600000
-      idle-timeout: 30000
-      # maximum lifetime in milliseconds of a connection in the pool after it is closed.
-      max-lifetime: 1800000
-      keepalive-time: 30000
+      connection-timeout: 30000 # slightly reduced for faster failure detection
+      minimum-idle: 5 # more idle connections, helps under consistent load
+      maximum-pool-size: 20 # scaled with 4 CPU cores, allows high concurrency 1cpu=8 ,4cores*8=32
+      idle-timeout: 300000 # 5 mins, typical for keeping useful idle conns
+      max-lifetime: 1800000 # 30 mins, matches MySQL default
+      keepalive-time: 120000 #120000 keep connection alive every 2 mins
       autoCommit: true
-      #leak-detection-threshold: 60000
+      leak-detection-threshold: 30000 # warn if a connection is held >30s
       connection-test-query: SELECT 1
       data-source-properties:
-        prepStmtCacheSize: 250
-        prepStmtCacheSqlLimit: 2048
+        prepStmtCacheSize: 500 #doubled for high-load scenarios
+        prepStmtCacheSqlLimit: 4096
         cachePrepStmts: true
         useServerPrepStmts: true
     pool-prepared-statements: true
-    max-open-prepared-statements: 250
+    max-open-prepared-statements: 500
   thymeleaf:
     cache: false
     #spring.freemarker.suffix=.html
@@ -231,8 +227,8 @@ logging:
 mybatis:
   typeAliasesPackage: com.bekaku.api.spring.model
   # type-handlers-package: io.spring.infrastructure.mybatis
-  # mybatis.mapper-locations=mapper/*.xml
-  mapperLocations: classpath:mapper/*.xml
+  # mybatis.mapper-locations=mybatis/*.xml
+  mapperLocations: classpath:mybatis/*.xml
   configuration:
     cache-enabled: true
     default-statement-timeout: 3000

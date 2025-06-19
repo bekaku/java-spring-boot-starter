@@ -1,14 +1,13 @@
 package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.dto.ResponseListDto;
-import com.bekaku.api.spring.repository.UserLoginLogsRepository;
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.model.UserLoginLogs;
+import com.bekaku.api.spring.repository.UserLoginLogsRepository;
 import com.bekaku.api.spring.service.UserLoginLogsService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +20,6 @@ import java.util.Optional;
 @Service
 public class UserLoginLogsServiceImpl implements UserLoginLogsService {
     private final UserLoginLogsRepository userLoginLogsRepository;
-    private final ModelMapper modelMapper;
 
     @Transactional(readOnly = true)
     @Override

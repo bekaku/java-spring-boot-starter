@@ -1,6 +1,5 @@
 package com.bekaku.api.spring;
 
-import org.modelmapper.ModelMapper;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @SpringBootApplication
 @EnableJpaAuditing
 //@EnableScheduling
-@MapperScan("com.bekaku.api.spring.mapper") // mybatis scan path for interface Mapper class
+@MapperScan("com.bekaku.api.spring.mybatis") // mybatis scan path for interface Mapper class
 public class SpringApiApplication {
 
     @Value("${environments.production}")
@@ -24,8 +23,4 @@ public class SpringApiApplication {
         SpringApplication.run(SpringApiApplication.class, args);
     }
 
-    @Bean
-    public ModelMapper modelMapper() {
-        return new ModelMapper();
-    }
 }

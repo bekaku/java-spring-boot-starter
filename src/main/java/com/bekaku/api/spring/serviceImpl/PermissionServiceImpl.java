@@ -1,23 +1,19 @@
 package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.PermissionDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
-import com.bekaku.api.spring.vo.Paging;
 import com.bekaku.api.spring.mapper.PermissionMapper;
 import com.bekaku.api.spring.model.Permission;
+import com.bekaku.api.spring.mybatis.PermissionMybatis;
 import com.bekaku.api.spring.repository.PermissionRepository;
 import com.bekaku.api.spring.repository.PermissionRepositoryCustom;
 import com.bekaku.api.spring.service.PermissionService;
-
+import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.vo.Paging;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,8 +34,8 @@ public class PermissionServiceImpl implements PermissionService {
     private EntityManager entityManager;
 
     private final PermissionRepository permissionRepository;
-    private final PermissionMapper permissionMapper;
-    private final ModelMapper modelMapper;
+    private final PermissionMybatis permissionMybatis;
+    private final PermissionMapper modelMapper;
     private final I18n i18n;
 
     private final PermissionRepositoryCustom permissionRepositoryCustom;
@@ -118,7 +114,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public PermissionDto convertEntityToDto(Permission permission) {
-        PermissionDto dto = modelMapper.map(permission, PermissionDto.class);
+        PermissionDto dto = modelMapper.toDto(permission);
         String message = i18n.getMessage(I18N_PREFIX + permission.getCode());
         if (message != null) {
             dto.setDescription(message);
@@ -128,7 +124,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public Permission convertDtoToEntity(PermissionDto permissionDto) {
-        return modelMapper.map(permissionDto, Permission.class);
+        return modelMapper.toEntity(permissionDto);
     }
 
     @Override
@@ -141,7 +137,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Transactional(readOnly = true)
     @Override
     public List<Permission> findAllViaMapper(Paging page) {
-        return permissionMapper.findAllWithPaging(page);
+        return permissionMybatis.findAllWithPaging(page);
     }
 
 

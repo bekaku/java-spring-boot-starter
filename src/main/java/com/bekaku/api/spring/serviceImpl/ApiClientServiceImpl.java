@@ -1,14 +1,14 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.ApiClientDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
+import com.bekaku.api.spring.mapper.ApiClientMapper;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.repository.AccessTokenRepository;
 import com.bekaku.api.spring.repository.ApiClientRepository;
 import com.bekaku.api.spring.service.ApiClientService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -28,7 +28,7 @@ public class ApiClientServiceImpl implements ApiClientService {
 
     private final ApiClientRepository apiClientRepository;
     private final AccessTokenRepository accessTokenRepository;
-    private final ModelMapper modelMapper;
+    private final ApiClientMapper modelMapper;
 
     Logger logger = LoggerFactory.getLogger(ApiClientServiceImpl.class);
 
@@ -116,11 +116,11 @@ public class ApiClientServiceImpl implements ApiClientService {
 
     @Override
     public ApiClientDto convertEntityToDto(ApiClient apiClient) {
-        return modelMapper.map(apiClient, ApiClientDto.class);
+        return modelMapper.toDto(apiClient);
     }
 
     @Override
     public ApiClient convertDtoToEntity(ApiClientDto apiClientDto) {
-        return modelMapper.map(apiClientDto, ApiClient.class);
+        return modelMapper.toEntity(apiClientDto);
     }
 }

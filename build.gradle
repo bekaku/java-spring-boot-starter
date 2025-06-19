@@ -75,10 +75,13 @@ dependencies {
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
     implementation 'joda-time:joda-time:2.14.0'
-    implementation 'org.modelmapper:modelmapper:3.2.3'
 
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
+
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
     //Image
     implementation 'net.coobird:thumbnailator:0.4.20'

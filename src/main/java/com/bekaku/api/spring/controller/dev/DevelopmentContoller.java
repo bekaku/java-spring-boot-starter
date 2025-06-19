@@ -593,13 +593,14 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.ResponseListDto;\n");
                 if (haveDto) {
                     writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
+                    writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".mapper.").append(entityName).append("Mapper;\n");
                 }
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository.").append(entityName).append("Repository;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.").append(entityName).append("Service;\n");
 //                writer.append("import lombok.AllArgsConstructor;\n");
                 writer.append("import lombok.RequiredArgsConstructor;\n");
-                writer.append("import org.modelmapper.ModelMapper;\n");
+//                writer.append("import org.modelmapper.ModelMapper;\n");
                 writer.append("import org.springframework.data.domain.Pageable;\n");
                 writer.append("import org.springframework.data.domain.Page;\n");
                 writer.append("import com.bekaku.api.spring.specification.SearchSpecification;\n");
@@ -622,7 +623,7 @@ public class DevelopmentContoller extends BaseApiController {
 //                writer.append("    @Autowired\n");
                 writer.append("    private final ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository;\n");
 //                writer.append("    @Autowired\n");
-                writer.append("    private final ModelMapper modelMapper;\n");
+                writer.append("    private final ").append(AppUtil.capitalizeFirstLetter(entityName, false)).append("Mapper modelMapper;\n");
                 //findAllWithPaging
                 writer.append("\n");
                 writer.append("    @Transactional(readOnly = true)\n");
@@ -713,7 +714,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    @Override\n");
                 writer.append("    public ").append(haveDto ? entityName + "Dto" : entityName).append(" convertEntityToDto(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 if (haveDto) {
-                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(", ").append(entityName).append("Dto.class);\n");
+//                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(", ").append(entityName).append("Dto.class);\n");
+                    writer.append("        return modelMapper.toDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 } else {
                     writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
                 }
@@ -724,7 +726,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    @Override\n");
                 writer.append("    public ").append(entityName).append(" convertDtoToEntity(").append(haveDto ? entityName + "Dto " + AppUtil.capitalizeFirstLetter(entityName, true) + "Dto" : entityName + " " + AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 if (haveDto) {
-                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Dto, ").append(entityName).append(".class);\n");
+//                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Dto, ").append(entityName).append(".class);\n");
+                    writer.append("        return modelMapper.toEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Dto);\n");
                 } else {
                     writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
                 }

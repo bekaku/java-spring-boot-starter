@@ -5,26 +5,22 @@ import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.AuditLog;
 import com.bekaku.api.spring.repository.AuditLogRepository;
 import com.bekaku.api.spring.service.AuditLogService;
-import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Page;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Transactional
 @RequiredArgsConstructor
 @Service
 public class AuditLogServiceImpl implements AuditLogService {
     private final AuditLogRepository auditLogRepository;
-    private final ModelMapper modelMapper;
     private final AuthenticationHelper authHelper;
 
     @Transactional(readOnly = true)

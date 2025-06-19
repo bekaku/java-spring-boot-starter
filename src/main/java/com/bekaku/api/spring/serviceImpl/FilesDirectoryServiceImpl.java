@@ -1,15 +1,15 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.specification.SearchSpecification;
-import com.bekaku.api.spring.dto.ResponseListDto;
-import com.bekaku.api.spring.vo.DirectoryPathVo;
 import com.bekaku.api.spring.dto.FilesDirectoryDto;
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.mapper.FilesDirectoryMapper;
 import com.bekaku.api.spring.model.FilesDirectory;
+import com.bekaku.api.spring.mybatis.FilesDirectoryMybatis;
 import com.bekaku.api.spring.repository.FilesDirectoryRepository;
 import com.bekaku.api.spring.service.FilesDirectoryService;
+import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.vo.DirectoryPathVo;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 @Service
 public class FilesDirectoryServiceImpl implements FilesDirectoryService {
     private final FilesDirectoryRepository filesDirectoryRepository;
-    private final ModelMapper modelMapper;
-    private final FilesDirectoryMapper filesDirectoryMapper;
+    private final FilesDirectoryMapper modelMapper;
+    private final FilesDirectoryMybatis filesDirectoryMybatis;
 
 
     @Transactional(readOnly = true)
@@ -100,12 +100,12 @@ public class FilesDirectoryServiceImpl implements FilesDirectoryService {
 
     @Override
     public FilesDirectoryDto convertEntityToDto(FilesDirectory filesDirectory) {
-        return modelMapper.map(filesDirectory, FilesDirectoryDto.class);
+        return modelMapper.toDto(filesDirectory);
     }
 
     @Override
     public FilesDirectory convertDtoToEntity(FilesDirectoryDto filesDirectoryDto) {
-        return modelMapper.map(filesDirectoryDto, FilesDirectory.class);
+        return modelMapper.toEntity(filesDirectoryDto);
     }
 
     @Override
@@ -115,7 +115,7 @@ public class FilesDirectoryServiceImpl implements FilesDirectoryService {
 
     @Override
     public Optional<FilesDirectoryDto> findDirectoryById(Long id) {
-        Optional<FilesDirectoryDto> dto = filesDirectoryMapper.findById(id);
+        Optional<FilesDirectoryDto> dto = filesDirectoryMybatis.findById(id);
         List<DirectoryPathVo> paths = new ArrayList<>();
         if (dto.isPresent()) {
             paths.add(new DirectoryPathVo(null, null, dto.get().getDirectoryPathIds().isEmpty(), true));
