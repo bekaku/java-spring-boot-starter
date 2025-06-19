@@ -539,7 +539,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
                 writer.append("\n");
                 writer.append("@Mapper(componentModel = \"spring\",unmappedTargetPolicy = ReportingPolicy.IGNORE)\n");
-                writer.append("public class ").append(fileName).append(" {\n");
+                writer.append("public interface ").append(fileName).append(" {\n");
                 writer.append("    ").append(entityName).append("Dto toDto(").append(entityName).append(" entity);\n");
                 writer.append("    ").append(entityName).append(" toEntity(").append(entityName).append("Dto dto);\n");
                 writer.append("}\n");
