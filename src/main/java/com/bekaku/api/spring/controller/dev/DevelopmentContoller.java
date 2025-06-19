@@ -342,6 +342,7 @@ public class DevelopmentContoller extends BaseApiController {
 
                     if (genSourceableTable.createDto()) {
                         generateDto(className, persistentClass);
+                        generateDtoMapper(className, persistentClass);
                     }
                     if (genSourceableTable.createRepository()) {
                         generateRepository(className);
@@ -519,6 +520,36 @@ public class DevelopmentContoller extends BaseApiController {
             }
         }
     }
+    private void generateDtoMapper(String entityName, PersistentClass persistentClass) {
+        String fileName = entityName + "Mapper";
+        String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".mapper." + fileName;
+
+        boolean isExist = getClassFromName(className) != null;
+        if (!isExist) {
+            log.warn("---generateDtoMapper : {} ", fileName);
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/mapper/" + fileName + ".java", false));
+                writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".mapper").append(";\n");
+                writer.append("\n");
+                writer.append("import org.mapstruct.Mapper;\n");
+                writer.append("import org.mapstruct.Mapping;\n");
+                writer.append("import org.mapstruct.Mappings;\n");
+                writer.append("import org.mapstruct.ReportingPolicy;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
+                writer.append("\n");
+                writer.append("@Mapper(componentModel = \"spring\",unmappedTargetPolicy = ReportingPolicy.IGNORE)\n");
+                writer.append("public class ").append(fileName).append(" {\n");
+                writer.append("    ").append(entityName).append("Dto toDto(").append(entityName).append(" entity);\n");
+                writer.append("    ").append(entityName).append(" toEntity(").append(entityName).append("Dto dto);\n");
+                writer.append("}\n");
+                writer.close();
+                logCretedFile(className);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+            }
+        }
+    }
 
     private void generateRepository(String entityName) {
         //package io.beka.repository
@@ -622,8 +653,10 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("public class ").append(entityName).append("ServiceImpl implements ").append(entityName).append("Service {\n");
 //                writer.append("    @Autowired\n");
                 writer.append("    private final ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository;\n");
-//                writer.append("    @Autowired\n");
-                writer.append("    private final ").append(AppUtil.capitalizeFirstLetter(entityName, false)).append("Mapper modelMapper;\n");
+                if (haveDto) {
+//                  writer.append("    @Autowired\n");
+                    writer.append("    private final ").append(AppUtil.capitalizeFirstLetter(entityName, false)).append("Mapper modelMapper;\n");
+                }
                 //findAllWithPaging
                 writer.append("\n");
                 writer.append("    @Transactional(readOnly = true)\n");
