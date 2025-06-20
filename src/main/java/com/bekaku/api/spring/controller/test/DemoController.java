@@ -114,7 +114,7 @@ public class DemoController extends BaseApiController {
         StringBuilder info = new StringBuilder();
 
         // Get server info
-        info.append("Server Info: ").append(servletContext.getServerInfo()).append("\n");
+        info.append("Server Info:").append(servletContext.getServerInfo()).append("\n");
 
         // Check if Undertow classes are available
         boolean isUndertow = false;

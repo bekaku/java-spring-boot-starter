@@ -532,8 +532,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".mapper").append(";\n");
                 writer.append("\n");
                 writer.append("import org.mapstruct.Mapper;\n");
-                writer.append("import org.mapstruct.Mapping;\n");
-                writer.append("import org.mapstruct.Mappings;\n");
+//                writer.append("import org.mapstruct.Mapping;\n");
+//                writer.append("import org.mapstruct.Mappings;\n");
                 writer.append("import org.mapstruct.ReportingPolicy;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
