@@ -5,7 +5,9 @@ spring:
     virtual:
       enabled: true
   main:
+    lazy-initialization: true
     allow-circular-references: true
+    keep-alive: true
   profiles:
     #    active: prod
     active: dev

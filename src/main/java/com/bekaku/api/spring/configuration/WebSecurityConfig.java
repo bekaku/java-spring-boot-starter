@@ -58,30 +58,41 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/api/**", "/schedule/**", "/test/**", "/" + cdnPathAlias + "/**")
-                .authorizeHttpRequests(requests -> requests
-                                .requestMatchers(HttpMethod.OPTIONS).permitAll()
+//                .securityMatcher("/api/**", "/schedule/**", "/test/**", "/" + cdnPathAlias + "/**")
+                .securityMatcher("/**") // apply this chain to ALL requests
+                .authorizeHttpRequests(requests -> {
+                    requests
+                            .requestMatchers(HttpMethod.OPTIONS).permitAll()
 //                                .requestMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
 //                                .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
-                                .requestMatchers(HttpMethod.POST,
-                                        "/api/auth/login",
-                                        "/api/auth/logout",
-                                        "/api/auth/refreshToken",
-                                        "/api/auth/requestVerifyCodeToResetPwd",
-                                        "/api/auth/sendVerifyCodeToResetPwd",
-                                        "/api/auth/resetPassword"
-                                ).permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
-                                //test
-                                .requestMatchers(HttpMethod.POST, "dev/development/**").permitAll()
+                            // Allow static CDN resources
+                            .requestMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
+                            // Public auth endpoints
+                            .requestMatchers(HttpMethod.POST,
+                                    "/api/auth/login",
+                                    "/api/auth/logout",
+                                    "/api/auth/refreshToken",
+                                    "/api/auth/requestVerifyCodeToResetPwd",
+                                    "/api/auth/sendVerifyCodeToResetPwd",
+                                    "/api/auth/resetPassword"
+                            ).permitAll()
+                            // Public open APIs
+                            .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
+                            // Public schedule routes
+                            .requestMatchers(HttpMethod.GET, "/schedule/**").permitAll()
+                            // API routes require authentication
+                            .requestMatchers("/api/**").authenticated();
+                    if (!isProduction) {
+                        requests
+                                .requestMatchers(HttpMethod.POST, "/dev/development/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/dev/development/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/test/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/test/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/welcome", "/theymeleaf").permitAll()
-                                .anyRequest().authenticated()
-                )
+                                .requestMatchers(HttpMethod.GET, "/welcome", "/theymeleaf").permitAll();
+                    }
+//                    requests.anyRequest().authenticated();
+                    requests.anyRequest().denyAll();
+                })
                 .headers(headers ->
                         headers.xssProtection(
                                 xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
