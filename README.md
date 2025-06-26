@@ -238,6 +238,11 @@ spring:
         format_sql: true
 ```
 
+Configure your log4j in `log4j2-prod.xml` or `log4j2-dev.xml`:
+```
+<Property name="APP_LOG_ROOT">/path/to/your/spring-data/logs</Property>
+```
+
 ## ✨ Database Setup
 
 ### Database Installation
@@ -299,7 +304,7 @@ Access interactive API documentation at:
    {
      "userId": 1,
      "authenticationToken": "eyJhbGciOiJIUzUxMiJ9...",
-     "refreshToken": "f4d18def-ae0c-4622-8189-b71195b5904f",
+     "refreshToken": "eyJhbGciOiJIUzUxMiJ9...",
      "expiresAt": "2024-10-29T01:24:46.019+00:00"
    }
    ```

@@ -47,6 +47,7 @@
         WHERE
         act.token =#{token}
         AND act.revoked is false
+        AND u.active is true
     </select>
 
 
