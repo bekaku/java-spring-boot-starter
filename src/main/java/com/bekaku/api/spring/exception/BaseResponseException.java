@@ -16,6 +16,11 @@ public class BaseResponseException {
     public ApiException responseErrorUnauthorized() {
         return this.responseError(HttpStatus.UNAUTHORIZED, null, i18n.getMessage("error.401"));
     }
+
+    public ApiException responseErrorForbidden() {
+        return this.responseError(HttpStatus.FORBIDDEN, null, i18n.getMessage("error.403"));
+    }
+
     public ApiException responseErrorBadRequest() {
         return this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.error"));
     }

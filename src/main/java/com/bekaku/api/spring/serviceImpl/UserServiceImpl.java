@@ -193,14 +193,14 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
     @Override
     public void requireTheSameUser(Long leftUserId, Long rightUserId) {
         if (!Objects.equals(leftUserId, rightUserId)) {
-            throw this.responseErrorUnauthorized();
+            throw this.responseErrorForbidden();
         }
     }
 
     @Override
     public void requireTheSameUser(User leftUser, User rightUser) {
         if (!Objects.equals(leftUser.getId(), rightUser.getId())) {
-            throw this.responseErrorUnauthorized();
+            throw this.responseErrorForbidden();
         }
     }
 }

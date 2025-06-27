@@ -254,7 +254,7 @@ public class AuthController extends BaseApiController {
     }
 
     private void throwUnauthorizes() {
-        throw new ApiException(new ApiError(HttpStatus.UNAUTHORIZED, i18n.getMessage("error.error"), "Session Expired"));
+        throw new ApiException(new ApiError(HttpStatus.FORBIDDEN, i18n.getMessage("error.error"), "Session Expired"));
     }
 
     @PostMapping("/requestVerifyCodeToResetPwd")

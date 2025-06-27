@@ -300,7 +300,7 @@ public class DevelopmentContoller extends BaseApiController {
     private void generateProcess(DevFrontendTheme theme) {
         log.warn("Production : {}, theme: {}", isProduction, theme);
         if (isProduction) {
-            throw this.responseError(HttpStatus.UNAUTHORIZED, null, i18n.getMessage("error.productionModeDetect"));
+            throw this.responseError(HttpStatus.FORBIDDEN, null, i18n.getMessage("error.productionModeDetect"));
         }
 
         /*
