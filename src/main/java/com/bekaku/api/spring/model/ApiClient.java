@@ -2,6 +2,7 @@ package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.model.superclass.Auditable;
+import com.bekaku.api.spring.util.UuidUtils;
 import jakarta.persistence.*;
 
 import lombok.Getter;
@@ -28,7 +29,7 @@ import java.util.UUID;
 public class ApiClient extends Auditable<Long> {
 
     public ApiClient(String apiName, Boolean byPass, Boolean status) {
-        this.apiToken = UUID.randomUUID().toString();
+        this.apiToken = UuidUtils.generateUUID().toString();
         this.apiName = apiName;
         this.byPass = byPass;
         this.status = status;

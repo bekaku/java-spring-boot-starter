@@ -53,3 +53,4 @@ Thumbs.db
 *.gz
 spring-data/images
 spring-data/logs
+out/

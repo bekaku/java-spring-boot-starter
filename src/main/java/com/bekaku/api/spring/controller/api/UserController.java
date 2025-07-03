@@ -329,4 +329,13 @@ public class UserController extends BaseApiController {
         return this.responseEntity(HttpStatus.OK);
     }
 
+    @DeleteMapping("/removeAccessTokenSession")
+    public ResponseEntity<Object> removeAccessTokenSession(@AuthenticationPrincipal UserDto userAuthen, @RequestParam(value = "id") Long id
+    ) {
+        Optional<AccessToken> accessToken = accessTokenService.findById(id);
+        if (accessToken.isPresent() && Objects.equals(accessToken.get().getUser().getId(), userAuthen.getId())) {
+            accessTokenService.logoutProcess(accessToken.get());
+        }
+        return this.responseServerMessage(i18n.getMessage("success.logoutSuccess"), HttpStatus.OK);
+    }
 }

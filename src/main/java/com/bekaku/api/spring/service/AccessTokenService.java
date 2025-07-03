@@ -46,4 +46,6 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
     AccessToken generateTokenBy(User user, Date expiresAt, String token, AccessTokenServiceType service);
 
     Date getExpireDateBy(AccessTokenServiceType service);
+
+    void logoutProcess(AccessToken token);
 }

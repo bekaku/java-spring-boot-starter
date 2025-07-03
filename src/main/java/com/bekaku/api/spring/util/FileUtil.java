@@ -37,7 +37,7 @@ public class FileUtil {
         }
         Optional<String> extension = getExtensionByStringHandling(orginalName);
         return extension.map(s -> DateUtil.getCurrentMilliTimeStamp() + ConstantData.UNDER_SCORE +
-                UUID.randomUUID().toString().replace(ConstantData.MIDDLE_SCORE, "") +
+                UuidUtils.generateUUID().toString().replace(ConstantData.MIDDLE_SCORE, "") +
                 ConstantData.DOT + s).orElse(null);
     }
 
@@ -47,7 +47,7 @@ public class FileUtil {
         }
         Optional<String> extension = getExtensionByStringHandling(orginalName);
         return extension.map(s -> (prefixName != null ? prefixName + ConstantData.UNDER_SCORE : "") + DateUtil.getCurrentMilliTimeStamp() + ConstantData.UNDER_SCORE +
-                UUID.randomUUID().toString().replace(ConstantData.MIDDLE_SCORE, "") +
+                UuidUtils.generateUUID().toString().replace(ConstantData.MIDDLE_SCORE, "") +
                 ConstantData.DOT + s).orElse(null);
     }
 
@@ -57,7 +57,7 @@ public class FileUtil {
             return null;
         }
         return (prefixName != null ? prefixName + ConstantData.UNDER_SCORE : "") + DateUtil.getCurrentMilliTimeStamp() + ConstantData.UNDER_SCORE +
-                UUID.randomUUID().toString().replace(ConstantData.MIDDLE_SCORE, "") + extension;
+                UuidUtils.generateUUID().toString().replace(ConstantData.MIDDLE_SCORE, "") + extension;
     }
 
     public static String generateJpgFileNameByMemeType(String prefixName, String mimeTypeString) {

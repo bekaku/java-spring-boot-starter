@@ -9,6 +9,7 @@ import com.bekaku.api.spring.model.ApiClientIp;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.ApiClientIpService;
 import com.bekaku.api.spring.service.ApiClientService;
+import com.bekaku.api.spring.util.UuidUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -71,7 +72,7 @@ public class ApiClientController extends BaseApiController {
         if (apiClient.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        apiClient.get().setApiToken(UUID.randomUUID().toString());
+        apiClient.get().setApiToken(UuidUtils.generateUUID().toString());
         apiClientService.update(apiClient.get());
         return this.responseEntity(HttpStatus.OK);
     }

@@ -225,24 +225,24 @@ public class AuthController extends BaseApiController {
         }
          */
         Optional<String> tokenKey = jwtService.getSubFromToken(dto.getRefreshToken(), apiClient.get());
-        log.info("subFromJwt :{} ", tokenKey.orElse("sub null"));
+//        log.info("subFromJwt :{} ", tokenKey.orElse("sub null"));
         if (tokenKey.isEmpty()) {
-            log.error("refreshToken > subFromJwt.isEmpty()");
+//            log.error("refreshToken > subFromJwt.isEmpty()");
 //            deleteCookie(response);
             throwUnauthorizes();
         }
         Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(tokenKey.get(), false);
         if (accessToken.isEmpty()) {
-            log.error("refreshToken > accessToken.isEmpty()");
+//            log.error("refreshToken > accessToken.isEmpty()");
 //            deleteCookie(response);
             throwUnauthorizes();
         }
-        log.info("refreshToken ,userId:{},  oldRefreshToken :{}", accessToken.get().getUser().getId(), tokenKey.get());
+//        log.info("refreshToken ,userId:{},  oldRefreshToken :{}", accessToken.get().getUser().getId(), tokenKey.get());
 
         //validate expred token
         boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
         if (isExpired) {
-            log.error("refreshToken > accessToken isExpired");
+//            log.error("refreshToken > accessToken isExpired");
             throwUnauthorizes();
         }
 
@@ -332,24 +332,21 @@ public class AuthController extends BaseApiController {
                                                   @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isPresent() && !ObjectUtils.isEmpty(refreshTokenRequest.getRefreshToken())) {
-            Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken().trim());
-            accessToken.ifPresent(this::logoutProcess);
+            Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenRequest.getRefreshToken(), apiClient.get());
+            if (tokenKey.isPresent()) {
+                Optional<AccessToken> accessToken = accessTokenService.findByToken(tokenKey.get());
+                accessToken.ifPresent(this::logoutProcess);
+            }
         }
 //        deleteCookie(response);
         return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }
 
     private void logoutProcess(AccessToken token) {
-        if (token.getFcmToken() != null) {
-            List<AccessToken> allTokenByDevice = accessTokenService.findAllByFcmToken(token.getFcmToken());
-            for (AccessToken t : allTokenByDevice) {
-                accessTokenService.delete(t);
-            }
-        } else {
-            accessTokenService.delete(token);
-        }
+        accessTokenService.logoutProcess(token);
     }
 
+    @Deprecated
     @DeleteMapping("/removeAccessTokenSession")
     public ResponseEntity<Object> removeAccessTokenSession(@AuthenticationPrincipal UserDto userAuthen, @RequestParam(value = "id") Long id
     ) {

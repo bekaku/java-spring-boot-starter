@@ -10,6 +10,7 @@ import com.bekaku.api.spring.exception.AppException;
 import com.bekaku.api.spring.model.*;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.util.DateUtil;
+import com.bekaku.api.spring.util.UuidUtils;
 import com.bekaku.api.spring.vo.IpAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -82,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public RefreshTokenResponse refreshToken(AccessToken accessToken, ApiClient apiClient, String userAgent) {
         //update refresh token
-        String token = UUID.randomUUID() + "-" + DateUtil.getCurrentMilliTimeStamp();
+        String token = UuidUtils.generateUUID().toString();
         accessToken.setToken(token);
         accessToken.setExpiresAt(jwtService.expireRefreshTokenTimeFromNow());
         accessTokenService.update(accessToken);

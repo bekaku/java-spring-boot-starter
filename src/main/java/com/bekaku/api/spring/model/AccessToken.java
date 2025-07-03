@@ -4,6 +4,7 @@ import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.model.superclass.Id;
 import com.bekaku.api.spring.util.DateUtil;
+import com.bekaku.api.spring.util.UuidUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -36,7 +37,7 @@ public class AccessToken extends Id {
 
     public AccessToken(User user, Date expiresAt, boolean revoked, ApiClient apiClient,
                        LoginLog loginLog, LocalDateTime createdDate, String fcmToken) {
-        this.token = UUID.randomUUID() +"-"+ DateUtil.getCurrentMilliTimeStamp();
+        this.token = UuidUtils.generateUUID().toString();
         this.user = user;
         this.expiresAt = expiresAt;
         this.revoked = revoked;
@@ -58,6 +59,18 @@ public class AccessToken extends Id {
         this.service = service;
         this.newToken = true;
     }
+
+    //    @PrePersist
+    //    public void prePersist() {
+    //        if (uniqeId == null) {
+    //            uniqeId = UuidUtils.generateUUID();
+    //        }
+    //    }
+//    @Column(columnDefinition = "BINARY(16)")
+//    @GeneratedUuidV7
+//    @Convert(converter = UUIDBinaryConverter.class)
+//    private UUID uniqeId;
+
     @Column(name = "token", length = 100, unique = true)
     private String token;
 
@@ -97,6 +110,10 @@ public class AccessToken extends Id {
 
     @Column(name = "lastest_active")
     private LocalDateTime lastestActive;
+
+    //    @GeneratedUuidV7
+//    private UUID uniqeId;
+
     @Transient
     private boolean newToken;
     @Override

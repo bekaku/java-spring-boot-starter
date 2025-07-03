@@ -3,6 +3,7 @@ package com.bekaku.api.spring.model;
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.enumtype.AppLocale;
 import com.bekaku.api.spring.model.superclass.SoftDeletedAuditable;
+import com.bekaku.api.spring.util.UuidUtils;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,7 +34,7 @@ import java.util.UUID;
 public class User extends SoftDeletedAuditable<Long> {
 
     public void addNew(String username, String password, String email, Boolean active) {
-        this.salt = UUID.randomUUID().toString();
+        this.salt = UuidUtils.generateUUID().toString();
         this.username = username;
         this.password = password;
         this.email = email;

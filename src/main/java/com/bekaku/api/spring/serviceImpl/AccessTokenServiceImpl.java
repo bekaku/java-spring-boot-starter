@@ -148,6 +148,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 .activeNow(isActiveNow(accessToken))
                 .build();
     }
+
     private boolean isActiveNow(AccessToken accessToken) {
         return accessToken.getLastestActive() != null &&
                 DateUtil.datetimeDiffMinutes(accessToken.getLastestActive(), DateUtil.getLocalDateTimeNow()) <= ConstantData.ONLINE_MINUTES_CLAIM;
@@ -193,6 +194,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 //        accessTokenRepository.updateLastestActive(lastestActive, id);
         accessTokenMybatis.updateLastestActive(lastestActive, id);
     }
+
     @Override
     public AccessToken generateTokenBy(User user, Date expiresAt, String token, AccessTokenServiceType service) {
         Optional<AccessToken> accessToken = accessTokenRepository.findLatestAccessTokenByUser(user, service);
@@ -211,6 +213,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         }
         return accessTokenResponse;
     }
+
     @Override
     public Date getExpireDateBy(AccessTokenServiceType service) {
         Date expire = null;
@@ -219,6 +222,19 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         }
         return expire;
     }
+
+    @Override
+    public void logoutProcess(AccessToken token) {
+        if (token.getFcmToken() != null) {
+            List<AccessToken> allTokenByDevice = findAllByFcmToken(token.getFcmToken());
+            if (!allTokenByDevice.isEmpty()) {
+                accessTokenRepository.deleteAll(allTokenByDevice);
+            }
+        } else {
+            delete(token);
+        }
+    }
+
     @Override
     public boolean isTokenExpired(AccessToken accessToken) {
         LocalDateTime now = DateUtil.getLocalDateTimeNow();
