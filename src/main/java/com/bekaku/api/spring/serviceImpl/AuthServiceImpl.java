@@ -87,11 +87,12 @@ public class AuthServiceImpl implements AuthService {
         accessToken.setToken(token);
         accessToken.setExpiresAt(jwtService.expireRefreshTokenTimeFromNow());
         accessTokenService.update(accessToken);
-
+        User user = accessToken.getUser();
         return RefreshTokenResponse.builder()
-                .authenticationToken(jwtService.toToken(accessToken.getUser(), token, apiClient, jwtService.expireJwtTimeFromNow()))
-                .refreshToken(jwtService.toToken(accessToken.getUser(), token, apiClient, jwtService.expireRefreshTokenTimeFromNow()))
+                .authenticationToken(jwtService.toToken(user, token, apiClient, jwtService.expireJwtTimeFromNow()))
+                .refreshToken(jwtService.toToken(user, token, apiClient, jwtService.expireRefreshTokenTimeFromNow()))
                 .expiresAt(jwtService.expireJwtTimeFromNow())
+                .userId(user.getId())
                 .build();
     }
 
