@@ -16,6 +16,7 @@ import com.bekaku.api.spring.mybatis.AccessTokenMybatis;
 import com.bekaku.api.spring.mybatis.UserMybatis;
 import com.bekaku.api.spring.repository.AccessTokenRepository;
 import com.bekaku.api.spring.service.AccessTokenService;
+import com.bekaku.api.spring.service.ApiClientService;
 import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.service.UserAgentService;
 import com.bekaku.api.spring.specification.SearchSpecification;
@@ -43,20 +44,13 @@ import java.util.stream.Collectors;
 @Service
 public class AccessTokenServiceImpl implements AccessTokenService {
 
-    @Autowired
-    private AccessTokenRepository accessTokenRepository;
-    @Autowired
-    private UserAgentService userAgentService;
-    @Autowired
-    private AccessTokenMybatis accessTokenMybatis;
-
-    @Autowired
-    private AccessTokenMapper mapper;
-
-    @Autowired
-    private UserMybatis userMybatis;
-
-    private JwtService jwtService;
+    private final AccessTokenRepository accessTokenRepository;
+    private final UserAgentService userAgentService;
+    private final AccessTokenMybatis accessTokenMybatis;
+    private final AccessTokenMapper mapper;
+    private final UserMybatis userMybatis;
+    private final JwtService jwtService;
+    private final ApiClientService apiClientService;
 
     @Value("${app.jwt.session-time}")
     int sessionTime;
@@ -66,12 +60,26 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     @Value("${app.jwt.session-day}")
     Long sessionDay;
-    @Autowired
-    private I18n i18n;
+
+    private final I18n i18n;
 
     @Autowired
-    public AccessTokenServiceImpl(@Lazy JwtService jwtService) {
+    public AccessTokenServiceImpl(@Lazy JwtService jwtService,
+                                  @Lazy ApiClientService apiClientService,
+                                  AccessTokenRepository accessTokenRepository,
+                                  UserAgentService userAgentService,
+                                  AccessTokenMybatis accessTokenMybatis,
+                                  AccessTokenMapper mapper,
+                                  UserMybatis userMybatis,
+                                  I18n i18n) {
         this.jwtService = jwtService;
+        this.accessTokenRepository = accessTokenRepository;
+        this.userAgentService = userAgentService;
+        this.accessTokenMybatis = accessTokenMybatis;
+        this.mapper = mapper;
+        this.userMybatis = userMybatis;
+        this.i18n = i18n;
+        this.apiClientService = apiClientService;
     }
 
     @Override
@@ -88,6 +96,19 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Transactional(readOnly = true)
     public Optional<AccessToken> findByToken(String token) {
         return accessTokenRepository.findByToken(token);
+    }
+
+    @Override
+    public Optional<AccessToken> findByJwtToken(String jwtToken, String apiClientName) {
+        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
+        if (apiClient.isEmpty()) {
+            return Optional.empty();
+        }
+        Optional<String> sub = jwtService.getSubFromToken(jwtToken, apiClient.get());
+        if (sub.isPresent()) {
+            return findByToken(sub.get());
+        }
+        return Optional.empty();
     }
 
     @Transactional(readOnly = true)

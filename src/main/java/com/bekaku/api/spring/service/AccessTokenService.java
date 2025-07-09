@@ -19,6 +19,7 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
     List<String> findAllFcmTokenByUserId(Long userId);
     List<AccessToken> findAllByFcmToken(String fcmToken);
     Optional<AccessToken> findByToken(String token);
+    Optional<AccessToken> findByJwtToken(String jwtToken, String apiClientName);
 
     Optional<AccessToken> findAccessTokenByTokenAndUser(User user,String token);
 

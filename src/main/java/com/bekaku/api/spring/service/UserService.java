@@ -12,8 +12,9 @@ public interface UserService extends BaseService<User, UserDto> {
     void updatePasswordBy(User user, String password);
     //Repository
     Optional<User> findByEmail(String email);
-
     Optional<User> findByUsername(String username);
+
+    Optional<User> findActiveByEmailOrUserName(String email);
 
     //Mapper
     List<UserDto> findAllUserData(Paging page);
@@ -26,6 +27,7 @@ public interface UserService extends BaseService<User, UserDto> {
 
 
     void requireTheSameUser(Long leftUserId, Long rightUserId);
+
     void requireTheSameUser(User leftUser, User rightUser);
 
 }

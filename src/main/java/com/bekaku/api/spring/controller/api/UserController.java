@@ -5,17 +5,16 @@ import com.bekaku.api.spring.dto.*;
 import com.bekaku.api.spring.enumtype.AppLocale;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
-import com.bekaku.api.spring.model.AccessToken;
-import com.bekaku.api.spring.model.FileManager;
-import com.bekaku.api.spring.model.Role;
-import com.bekaku.api.spring.model.User;
+import com.bekaku.api.spring.model.*;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
+import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.validator.UserValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -30,6 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@Slf4j
 @RequestMapping(path = "/api/user")
 @RestController
 @RequiredArgsConstructor
@@ -42,6 +42,8 @@ public class UserController extends BaseApiController {
     private final UserValidator userValidator;
     private final I18n i18n;
     private final PermissionService permissionService;
+    private final ApiClientService apiClientService;
+    private final JwtService jwtService;
 
     @Value("${app.defaults.userpwd}")
     String defaultUserPwd;
@@ -64,6 +66,28 @@ public class UserController extends BaseApiController {
         }
         dto.setPermissions(permissionService.findAllPermissionCodeByUserId(userAuthen.getId(), false));
         return dto;
+    }
+
+    @PostMapping("/findLoginedProfile")
+    public LoginedProfileItemDto findLoginedProfile(@Valid @RequestBody RefreshTokenRequest dto,
+                                                    @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
+        if (apiClient.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        if (AppUtil.isEmpty(dto.getRefreshToken())) {
+            throw this.responseErrorNotfound();
+        }
+        Optional<String> userUuId = jwtService.getUUIDFromToken(dto.getRefreshToken(), apiClient.get());
+        if (userUuId.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        Optional<User> user = userService.findByUUID(userUuId.get());
+        if (user.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        UserDto userDto = userService.convertEntityToDto(user.get());
+        return new LoginedProfileItemDto(userDto, new NotificationCount());
     }
 
     @PutMapping("/updateDefaultLocale")
@@ -308,8 +332,9 @@ public class UserController extends BaseApiController {
     }
 
     @PutMapping("/refreshFcmToken")
-    public ResponseEntity<Object> refreshFcmToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
-        Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken());
+    public ResponseEntity<Object> refreshFcmToken(@AuthenticationPrincipal UserDto userAuthen,
+                                                  @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        Optional<AccessToken> accessToken = accessTokenService.findByToken(userAuthen.getToken());
         if (accessToken.isPresent() && refreshTokenRequest.getFcmToken() != null) {
             //update null to other device in the same fcm token
             accessTokenService.updateNullFcmToken(refreshTokenRequest.getFcmToken());
@@ -320,8 +345,9 @@ public class UserController extends BaseApiController {
     }
 
     @PutMapping("/updateFcmSetting")
-    public ResponseEntity<Object> updateFcmSetting(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
-        Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenRequest.getRefreshToken());
+    public ResponseEntity<Object> updateFcmSetting(@AuthenticationPrincipal UserDto userAuthen,
+                                                   @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        Optional<AccessToken> accessToken = accessTokenService.findByToken(userAuthen.getToken());
         if (accessToken.isPresent() && refreshTokenRequest.getFcmToken() != null) {
             accessToken.get().setFcmEnable(refreshTokenRequest.isFcmEnable());
             accessTokenService.update(accessToken.get());
@@ -337,5 +363,20 @@ public class UserController extends BaseApiController {
             accessTokenService.logoutProcess(accessToken.get());
         }
         return this.responseServerMessage(i18n.getMessage("success.logoutSuccess"), HttpStatus.OK);
+    }
+
+    @PostMapping("/verifyUserByEmailOrUsername")
+    public RefreshTokenResponse verifyUserByEmailOrUsername(@Valid @RequestBody EmailOrUsernameRequest usernameRequest,
+                                                            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
+
+        if (apiClient.isEmpty()) {
+            throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
+                    i18n.getMessage("error.apiClientNotFound")));
+        }
+        Optional<User> user = userService.findActiveByEmailOrUserName(usernameRequest.getEmailOrUsername());
+        RefreshTokenResponse response = new RefreshTokenResponse();
+        user.ifPresent(value -> response.setUserId(value.getId()));
+        return response;
     }
 }

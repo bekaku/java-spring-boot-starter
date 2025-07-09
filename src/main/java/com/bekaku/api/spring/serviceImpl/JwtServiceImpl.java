@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 public class JwtServiceImpl implements JwtService {
     private final SecretKey signatureAlgorithm;
-    private String secret;
+    private final String secret;
     private final int sessionTime;
     private final int sessionRefershTime;
     private final String UUID = "uuid";
@@ -72,7 +72,9 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String toToken(User user, String token, ApiClient apiClient, Date expired) {
-        return toTokenBy(token, apiClient, expired, new HashMap<>());
+        Map<String, String> claims = new HashMap<>();
+        claims.put(UUID, user.getSalt());
+        return toTokenBy(token, apiClient, expired, claims);
     }
 
     private String toTokenBy(String token, ApiClient apiClient, Date expireTime, Map<String, ?> claims) {
@@ -96,6 +98,16 @@ public class JwtServiceImpl implements JwtService {
         try {
             Jws<Claims> claimsJws = Jwts.parser().verifyWith(getKey(apiClient)).build().parseSignedClaims(token);
             return Optional.ofNullable(claimsJws.getPayload().getSubject());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<String> getUUIDFromToken(String token, ApiClient apiClient) {
+        try {
+            Optional<Claims> claims = getClaimsFromToken(token, apiClient);
+            return claims.map(value -> value.get(UUID).toString());
         } catch (Exception e) {
             return Optional.empty();
         }

@@ -9,21 +9,21 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 
-@Data
+@Getter
+@Setter
 @JsonRootName("user")
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
-public class LoginRequest {
+public class LoginRequest extends EmailOrUsernameRequest {
 
-    private String emailOrUsername;
     @NotBlank(message = "{error.validateRequire}")
     private String password;
     private String fcmToken;
-
     private String deviceId;
     private LoginLogType loginFrom;
 }

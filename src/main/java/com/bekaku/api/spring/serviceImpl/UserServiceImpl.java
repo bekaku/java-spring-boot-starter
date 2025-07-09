@@ -165,6 +165,19 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
         return userRepository.findByUsername(username);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<User> findActiveByEmailOrUserName(String email) {
+        Optional<User> user = userRepository.findByEmailOrUsername(email);
+        if (user.isEmpty()) {
+            return Optional.empty();
+        }
+        if (!user.get().isActive()) {
+            return Optional.empty();
+        }
+        return user;
+    }
+
     //mapper
     @Transactional(readOnly = true)
     @Override

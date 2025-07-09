@@ -125,17 +125,11 @@ public class AuthController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.apiClientNotFound")));
         }
-        Optional<User> user = userService.findByEmail(loginRequest.getEmailOrUsername());
-        if (user.isEmpty()) {
-            user = userService.findByUsername(loginRequest.getEmailOrUsername());
-        }
-
+        Optional<User> user = userService.findActiveByEmailOrUserName(loginRequest.getEmailOrUsername());
         if (user.isEmpty()) {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.userNotFound", loginRequest.getEmailOrUsername())));
         }
-
-
         if (!encryptService.check(loginRequest.getPassword(), user.get().getPassword()) || !user.get().isActive()) {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
