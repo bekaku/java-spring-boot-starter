@@ -6,6 +6,7 @@ import com.bekaku.api.spring.enumtype.AppLocale;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.model.*;
+import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
@@ -24,10 +25,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+
+import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
 
 @Slf4j
 @RequestMapping(path = "/api/user")
@@ -48,13 +48,20 @@ public class UserController extends BaseApiController {
     @Value("${app.defaults.userpwd}")
     String defaultUserPwd;
 
+    private final JwtProperties jwtProperties;
+
     private final String SHEET_NAME = "users";
 
     @GetMapping("/currentUserData")
-    public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen) {
+    public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen,
+                                   HttpServletRequest request,
+                                   @RequestHeader(value = ConstantData.X_USER_ID) String currentUserId) {
+//    public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen, @CookieValue(name = "jwt_token", required = false) String jwtRefreshTokenCookie) {
         if (userAuthen == null) {
             throw this.responseErrorUnauthorized();
         }
+        String jwtRefreshTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.getRefreshTokenName() + UNDER_SCORE + currentUserId);
+        log.info("currentJwtRefreshTokenCookie :{}", jwtRefreshTokenCookie);
         Optional<User> user = userService.findById(userAuthen.getId());
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -68,6 +75,45 @@ public class UserController extends BaseApiController {
         return dto;
     }
 
+    @GetMapping("/findAllLoginedProfile")
+    public List<LoginedProfileItemDto> findAllLoginedProfile(HttpServletRequest request,
+                                                             @RequestHeader(value = ConstantData.X_USER_ID) String currentUserId,
+                                                             @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+
+        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
+        if (apiClient.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<String> allJwtRefreshToken = AppUtil.getCookieRefreshJwtTokenAll(request.getCookies(), jwtProperties.getRefreshTokenName() + UNDER_SCORE);
+        log.info("allJwtRefreshToken :{}", allJwtRefreshToken);
+        if (allJwtRefreshToken.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<String> filterOutSelfItems = allJwtRefreshToken.stream().filter(s -> s.equalsIgnoreCase(currentUserId)).toList();
+        List<LoginedProfileItemDto> items = new ArrayList<>();
+        LoginedProfileItemDto itemDto;
+        for (String token : filterOutSelfItems) {
+            itemDto = getLoginedProfileProcess(token, apiClient.get());
+            if (itemDto != null) {
+                items.add(itemDto);
+            }
+        }
+        return items;
+    }
+
+    private LoginedProfileItemDto getLoginedProfileProcess(String refreshToken, ApiClient apiClient) {
+        Optional<String> userUuId = jwtService.getUUIDFromToken(refreshToken, apiClient);
+        if (userUuId.isEmpty()) {
+            return null;
+        }
+        Optional<User> user = userService.findByUUID(userUuId.get());
+        if (user.isEmpty()) {
+            return null;
+        }
+        UserDto userDto = userService.convertEntityToDto(user.get());
+        return new LoginedProfileItemDto(userDto, new NotificationCount());
+    }
+
     @PostMapping("/findLoginedProfile")
     public LoginedProfileItemDto findLoginedProfile(@Valid @RequestBody RefreshTokenRequest dto,
                                                     @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
@@ -78,16 +124,12 @@ public class UserController extends BaseApiController {
         if (AppUtil.isEmpty(dto.getRefreshToken())) {
             throw this.responseErrorNotfound();
         }
-        Optional<String> userUuId = jwtService.getUUIDFromToken(dto.getRefreshToken(), apiClient.get());
-        if (userUuId.isEmpty()) {
+        LoginedProfileItemDto itemDto = getLoginedProfileProcess(dto.getRefreshToken(), apiClient.get());
+        if (itemDto == null) {
             throw this.responseErrorNotfound();
         }
-        Optional<User> user = userService.findByUUID(userUuId.get());
-        if (user.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-        UserDto userDto = userService.convertEntityToDto(user.get());
-        return new LoginedProfileItemDto(userDto, new NotificationCount());
+
+        return itemDto;
     }
 
     @PutMapping("/updateDefaultLocale")

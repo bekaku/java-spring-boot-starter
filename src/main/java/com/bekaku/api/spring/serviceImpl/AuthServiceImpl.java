@@ -4,6 +4,7 @@ import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.LoginRequest;
 import com.bekaku.api.spring.dto.RefreshTokenRequest;
 import com.bekaku.api.spring.dto.RefreshTokenResponse;
+import com.bekaku.api.spring.enumtype.JwtType;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.exception.AppException;
@@ -73,8 +74,8 @@ public class AuthServiceImpl implements AuthService {
         AccessToken token = accessTokenService.generateRefreshToken(user, apiClient, loginLog, loginRequest.getFcmToken());
         return RefreshTokenResponse.builder()
                 .userId(user.getId())
-                .authenticationToken(jwtService.toToken(user, token.getToken(), apiClient, jwtService.expireJwtTimeFromNow()))
-                .refreshToken(jwtService.toToken(user, token.getToken(), apiClient, jwtService.expireRefreshTokenTimeFromNow()))
+                .authenticationToken(jwtService.toToken(user, token.getToken(), apiClient, jwtService.expireJwtTimeFromNow(), JwtType.Authen))
+                .refreshToken(jwtService.toToken(user, token.getToken(), apiClient, jwtService.expireRefreshTokenTimeFromNow(), JwtType.Refresh))
                 .expiresAt(jwtService.expireJwtTimeFromNow())
                 .build();
     }
@@ -89,8 +90,8 @@ public class AuthServiceImpl implements AuthService {
         accessTokenService.update(accessToken);
         User user = accessToken.getUser();
         return RefreshTokenResponse.builder()
-                .authenticationToken(jwtService.toToken(user, token, apiClient, jwtService.expireJwtTimeFromNow()))
-                .refreshToken(jwtService.toToken(user, token, apiClient, jwtService.expireRefreshTokenTimeFromNow()))
+                .authenticationToken(jwtService.toToken(user, token, apiClient, jwtService.expireJwtTimeFromNow(), JwtType.Authen))
+                .refreshToken(jwtService.toToken(user, token, apiClient, jwtService.expireRefreshTokenTimeFromNow(),JwtType.Refresh))
                 .expiresAt(jwtService.expireJwtTimeFromNow())
                 .userId(user.getId())
                 .build();

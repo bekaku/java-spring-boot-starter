@@ -1,17 +1,21 @@
 package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.dto.UserDto;
+import com.bekaku.api.spring.enumtype.JwtType;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
+import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.service.AccessTokenService;
 import com.bekaku.api.spring.service.ApiClientService;
 import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.service.UserService;
+import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,35 +30,44 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.bekaku.api.spring.util.ConstantData.JWT_TYPE_ATT;
+
+@Slf4j
 @Component
 public class JwtServiceImpl implements JwtService {
     private final SecretKey signatureAlgorithm;
-    private final String secret;
-    private final int sessionTime;
-    private final int sessionRefershTime;
+    //    private final String secret;
+//    private final int sessionTime;
+//    private final int sessionRefershTime;
     private final String UUID = "uuid";
-    @Autowired
-    private ApiClientService apiClientService;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private AccessTokenService accessTokenService;
 
-    Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
+    private final ApiClientService apiClientService;
+    private final UserService userService;
+    private final AccessTokenService accessTokenService;
+    private final JwtProperties jwtProperties;
 
-    @Autowired
-    public JwtServiceImpl(@Value("${app.jwt.secret}") String secret,
-                          @Value("${app.jwt.session-time}") int sessionTime,
-                          @Value("${app.jwt.session-refresh-time}") int sessionRefershTime) {
-        this.secret = secret;
-        this.sessionTime = sessionTime;
-        this.sessionRefershTime = sessionRefershTime;
+
+    public JwtServiceImpl(ApiClientService apiClientService,
+                          UserService userService,
+                          AccessTokenService accessTokenService,
+                          JwtProperties jwtProperties) {
+//    @Autowired
+//    public JwtServiceImpl(@Value("${app.jwt.secret}") String secret,
+//                          @Value("${app.jwt.session-time}") int sessionTime,
+//                          @Value("${app.jwt.session-refresh-time}") int sessionRefershTime) {
+//        this.secret = secret;
+//        this.sessionTime = sessionTime;
+//        this.sessionRefershTime = sessionRefershTime;
+        this.apiClientService = apiClientService;
+        this.userService = userService;
+        this.accessTokenService = accessTokenService;
+        this.jwtProperties = jwtProperties;
         signatureAlgorithm = Jwts.SIG.HS512.key().build();
     }
 
     public SecretKey getKey(ApiClient apiClient) {
 //        byte[] keyByte = Decoders.BASE64.decode(apiClient.getApiToken());
-        byte[] keyByte = Decoders.BASE64.decode(this.secret);
+        byte[] keyByte = Decoders.BASE64.decode(this.jwtProperties.getSecret());
         return Keys.hmacShaKeyFor(keyByte);
     }
 
@@ -74,6 +87,14 @@ public class JwtServiceImpl implements JwtService {
     public String toToken(User user, String token, ApiClient apiClient, Date expired) {
         Map<String, String> claims = new HashMap<>();
         claims.put(UUID, user.getSalt());
+        return toTokenBy(token, apiClient, expired, claims);
+    }
+
+    @Override
+    public String toToken(User user, String token, ApiClient apiClient, Date expired, JwtType jwtType) {
+        Map<String, String> claims = new HashMap<>();
+        claims.put(UUID, user.getSalt());
+        claims.put(JWT_TYPE_ATT, jwtType.name());
         return toTokenBy(token, apiClient, expired, claims);
     }
 
@@ -113,6 +134,16 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
+    @Override
+    public Optional<JwtType> getJwtTypeFromToken(String token, ApiClient apiClient) {
+        try {
+            Optional<Claims> claims = getClaimsFromToken(token, apiClient);
+            return claims.map(value -> JwtType.valueOf(value.get(JWT_TYPE_ATT).toString()));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
     public Optional<Claims> getClaimsFromToken(String token, ApiClient apiClient) {
         try {
             Jws<Claims> claimsJws = Jwts.parser().verifyWith(getKey(apiClient)).build().parseSignedClaims(token);
@@ -130,14 +161,14 @@ public class JwtServiceImpl implements JwtService {
         } catch (ExpiredJwtException e) {
             //don't trust the JWT!
             String subject = e.getClaims().getSubject();
-            logger.info("getUnTrustSubFromToken :{}", e.getClaims().getSubject());
+            log.info("getUnTrustSubFromToken :{}", e.getClaims().getSubject());
             System.out.println("Error: " + subject + "'s jwt failed valiation");
             return Optional.ofNullable(e.getClaims().getSubject());
         }
     }
 
     @Override
-    public Optional<UserDto> jwtVerify(String apiclientName, String authorization , String syncActiveHeader) {
+    public Optional<UserDto> jwtVerify(String apiclientName, String authorization, String syncActiveHeader) {
         AtomicReference<Optional<UserDto>> dto = new AtomicReference<>(Optional.empty());
         Optional<ApiClient> apiClient = verifyApiClient(apiclientName);
         if (apiClient.isPresent()) {
@@ -148,17 +179,21 @@ public class JwtServiceImpl implements JwtService {
                 if (claims.isPresent()) {
                     if (SecurityContextHolder.getContext().getAuthentication() == null) {
                         String sub = claims.get().getSubject();
-                        String userUuid = (String) claims.get().get(UUID);
-                        if (sub != null) {
-                            Optional<UserDto> userDto = accessTokenService.findByAccessTokenKey(sub);
-                            if(userDto.isPresent()){
+//                        String userUuid = (String) claims.get().get(UUID);
+                        String jwtTypeString = (String) claims.get().get(JWT_TYPE_ATT);
+                        if (!AppUtil.isEmpty(sub) && !AppUtil.isEmpty(jwtTypeString)) {
+                            JwtType jwtType = JwtType.valueOf(jwtTypeString);
+                            if (jwtType.equals(JwtType.Authen)) {
+                                Optional<UserDto> userDto = accessTokenService.findByAccessTokenKey(sub);
+                                if (userDto.isPresent()) {
 
-                                //sync online status if required TODO you can implement with Message Queue eg. RabbitMQ
-                                if(syncActiveHeader!=null && syncActiveHeader.equals("1")){
-                                    accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), userDto.get().getAccessTokenId());
+                                    //sync online status if required TODO you can implement with Message Queue eg. RabbitMQ
+                                    if (syncActiveHeader != null && syncActiveHeader.equals("1")) {
+                                        accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), userDto.get().getAccessTokenId());
+                                    }
+                                    userDto.get().setToken(sub);
+                                    dto.set(userDto);
                                 }
-                                userDto.get().setToken(sub);
-                                dto.set(userDto);
                             }
                             /*
                             UserDto userDto;
@@ -289,11 +324,16 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Long expireMillisec() {
-        return sessionTime * 1000L;
+        return this.jwtProperties.getSessionTime() * 1000L;
+    }
+
+    @Override
+    public Long expireRefreshSecond() {
+        return (long) this.jwtProperties.getSessionRefreshTime();
     }
 
     @Override
     public Long expireRefreshMillisec() {
-        return sessionRefershTime * 1000L;
+        return expireRefreshSecond() * 1000L;
     }
 }

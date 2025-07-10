@@ -23,7 +23,7 @@ public class AppProperties {
     private List<String> defaultRecipients;//app.default-recipients
     private Map<String, String> additionalHeaders;//app.additional-headers
     private List<MenuConfig> menus = new ArrayList<>();//app.menus
-    private JwtConfig jwt;
+    private JwtProperties jwt;
     private QueueConfig queue;
     private String cdnPath;
     private String cdnPathAlias;

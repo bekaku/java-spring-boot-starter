@@ -27,10 +27,11 @@ public class CORSConfig implements WebMvcConfigurer {
                         ConstantData.AUTHORIZATION,
                         ConstantData.ACCEPT_LANGUGE,
                         ConstantData.ACCEPT_APIC_LIENT,
-                        ConstantData.X_SYNC_ACTIVE
+                        ConstantData.X_SYNC_ACTIVE,
+                        ConstantData.X_USER_ID
                 )
                 .exposedHeaders(ConstantData.CONTENT_DISPOSITION)
-                .allowCredentials(false)
+                .allowCredentials(true)
                 .allowedOrigins(corsProperties.getAllowedOrigins().toArray(new String[0]))
                 .maxAge(3600);
 //                .allowedOriginPatterns("*");

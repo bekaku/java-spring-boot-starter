@@ -13,6 +13,8 @@ public class ConstantData {
     public static final String X_REAL_IP = "X-Real-IP";
     public static final String HOST_NAME = "Host";
     public static final String X_SYNC_ACTIVE = "X-Sync-Active";
+    public static final String X_USER_ID = "X-User-ID";
+    public static final String JWT_TYPE_ATT = "JwtType";
 
     public static final String SEARCH_SEPARATOR_ATT = ",";
     public static final String SEARCH_PARAMETER_ATT = "_q";

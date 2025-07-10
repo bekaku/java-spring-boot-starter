@@ -9,6 +9,7 @@ import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.model.User;
+import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
@@ -20,13 +21,18 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.*;
+
+import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
 
 
 @Slf4j
@@ -56,10 +62,7 @@ public class AuthController extends BaseApiController {
 
     @Value("${app.domain}")
     String appDomain;
-
-
-    @Value("${app.jwt.refresh-token-name}")
-    String cookieJwtRefreshTokenName;
+    private final JwtProperties jwtProperties;
 
     @PostMapping("/signup")
     public ResponseEntity<ResponseMessage> signup(@Valid @RequestBody UserRegisterRequest registerDto) {
@@ -134,44 +137,60 @@ public class AuthController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
         }
-        //        RefreshTokenResponse tokenResponse = authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
-//        setRefreshTokenCookie(response, tokenResponse);
-        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+        RefreshTokenResponse tokenResponse = authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+        setRefreshTokenCookie(response, tokenResponse);
+//        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+        return tokenResponse;
+    }
+
+    private String getRefreshKeyBy(Long currentUserId) {
+        if (currentUserId == null) {
+            return null;
+        }
+        return jwtProperties.getRefreshTokenName() + UNDER_SCORE + currentUserId;
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
-        log.info("setRefreshTokenCookie {}", tokenResponse.getRefreshToken());
-        Cookie cookie = new Cookie(cookieJwtRefreshTokenName, tokenResponse.getRefreshToken());
-        cookie.setMaxAge(AppUtil.getCookieMaxAgeDays(90));//cookie expired in 3 months
-        cookie.setSecure(true);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/"); // global cookie accessible every where
-        cookie.setAttribute("SameSite", "None");
-//        cookie.setAttribute("SameSite", "Lax");
-        if (isProduction) {
-            cookie.setDomain(appDomain);
-        }
+//        Cookie cookie = new Cookie(cookieJwtRefreshTokenName, tokenResponse.getRefreshToken());
+//        cookie.setMaxAge(AppUtil.getCookieMaxAgeDays(90));//cookie expired in 3 months
+//        cookie.setSecure(true);
+//        cookie.setHttpOnly(true);
+//        cookie.setPath("/"); // global cookie accessible every where
 //        cookie.setAttribute("SameSite", "None");
-        response.addCookie(cookie);
+//        if (isProduction) {
+//            cookie.setDomain(appDomain);
+//        }
+//        response.addCookie(cookie);
 //        if (isProduction) {
 //            response.setHeader("Set-Cookie", ConstantData.COOKIE_JWT_REFRESH_TOKEN + "=" + tokenResponse.getRefreshToken() + "; Max-Age=" + maxAge + ";SameSite=None; Path=/; Secure; HttpOnly");
 //        } else {
 //            response.setHeader("Set-Cookie", ConstantData.COOKIE_JWT_REFRESH_TOKEN + "=" + tokenResponse.getRefreshToken() + "; Max-Age=" + maxAge + "; SameSite=None; Path=/; HttpOnly");
 //        }
 
+        ResponseCookie cookie = ResponseCookie.from(getRefreshKeyBy(tokenResponse.getUserId()), tokenResponse.getRefreshToken())
+                .httpOnly(true)
+                .secure(true) // true in prod (HTTPS), false in dev
+                .path("/")
+                .sameSite("None") // "Lax" for dev; "None" + secure for prod
+//                .maxAge(Duration.ofDays(7))
+                .maxAge(jwtService.expireRefreshSecond())
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
     }
 
-    private void deleteCookie(HttpServletResponse response) {
+    private void deleteCookie(HttpServletResponse response, Long currentUserId) {
         // create a cookie
-        Cookie cookie = new Cookie(cookieJwtRefreshTokenName, null);
-        cookie.setMaxAge(0);
-        cookie.setSecure(true);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        if (isProduction) {
-            cookie.setDomain(appDomain);
-        }
-        response.addCookie(cookie);
+//        Cookie cookie = new Cookie(cookieJwtRefreshTokenName, null);
+//        cookie.setMaxAge(0);
+//        cookie.setSecure(true);
+//        cookie.setHttpOnly(true);
+//        cookie.setPath("/");
+//        if (isProduction) {
+//            cookie.setDomain(appDomain);
+//        }
+//        response.addCookie(cookie);
 //        if (isProduction) {
 //            response.setHeader("Set-Cookie",
 //                    cookieName + "=; Max-Age=" + 0 + ";SameSite=None; Path=/; Secure; HttpOnly");
@@ -179,16 +198,31 @@ public class AuthController extends BaseApiController {
 //            response.setHeader("Set-Cookie",
 //                    cookieName + "=; Max-Age=" + 0 + "; SameSite=None; Path=/; HttpOnly");
 //        }
+        if (currentUserId != null) {
+            ResponseCookie cookie = ResponseCookie.from(getRefreshKeyBy(currentUserId), "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(0) // Deletes cookie
+                    .sameSite("None") // Must match how it was originally set
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        }
     }
 
     @PostMapping("/refreshToken")
     public RefreshTokenResponse refreshToken(@Valid @RequestBody RefreshTokenRequest dto,
+                                             HttpServletRequest request,
+                                             HttpServletResponse response,
                                              @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
-                                             @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
+                                             @RequestHeader(value = ConstantData.USER_AGENT) String userAgent,
+                                             @RequestHeader(value = ConstantData.X_USER_ID, required = false, defaultValue = "0") Long currentUserId) {
 
         //TODO implement with cookie
-//        String refreshTokenCookieManulRead = AppUtil.getCookieByName(request.getCookies(), ConstantData.COOKIE_JWT_REFRESH_TOKEN);
+        String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
+        log.info("currentUserId: {}, refreshTokenCookie: {}, dto.getRefreshToken(): {}", currentUserId, refreshTokenKey, dto.getRefreshToken());
 
+        //        String refreshTokenKey = dto.getRefreshToken();
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
 //        Optional<String> jwtKey = jwtService.getAuthorizatoinTokenString(authorization);
         if (apiClient.isEmpty()) {
@@ -196,14 +230,14 @@ public class AuthController extends BaseApiController {
 //            deleteCookie(response);
             throwUnauthorizes();
         }
-        if (AppUtil.isEmpty(dto.getRefreshToken())) {
-            log.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken())");
+        if (AppUtil.isEmpty(refreshTokenKey)) {
+            log.error("refreshToken > AppUtil.isEmpty(refreshTokenKey)");
 //            deleteCookie(response);
             throwUnauthorizes();
         }
-        log.info("dto.getRefreshToken() :{}", dto.getRefreshToken());
+        log.info("dto.getRefreshToken() :{}", refreshTokenKey);
         /*
-        if (AppUtil.isEmpty(dto.getRefreshToken()) || jwtKey.isEmpty()) {
+        if (AppUtil.isEmpty(refreshTokenKey) || jwtKey.isEmpty()) {
             log.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken()) || jwtKey.isEmpty()");
             deleteCookie(response);
              throwUnauthorizes();
@@ -218,7 +252,7 @@ public class AuthController extends BaseApiController {
              throwUnauthorizes();
         }
          */
-        Optional<String> tokenKey = jwtService.getSubFromToken(dto.getRefreshToken(), apiClient.get());
+        Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
 //        log.info("subFromJwt :{} ", tokenKey.orElse("sub null"));
         if (tokenKey.isEmpty()) {
 //            log.error("refreshToken > subFromJwt.isEmpty()");
@@ -242,9 +276,11 @@ public class AuthController extends BaseApiController {
 
 //        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
 //        refreshTokenRequest.setRefreshToken(dto.getRefreshToken());
-        //        RefreshTokenResponse tokenResponse = authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
-//        setRefreshTokenCookie(response, tokenResponse);
-        return authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
+
+        RefreshTokenResponse tokenResponse = authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
+        setRefreshTokenCookie(response, tokenResponse);
+//        return authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
+        return tokenResponse;
     }
 
     private void throwUnauthorizes() {
@@ -322,17 +358,21 @@ public class AuthController extends BaseApiController {
 
     @PostMapping("/logout")
     public ResponseEntity<ResponseMessage> logout(HttpServletResponse response,
+                                                  HttpServletRequest request,
                                                   @Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
-                                                  @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+                                                  @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+                                                  @RequestHeader(value = ConstantData.X_USER_ID, required = false, defaultValue = "0") Long currentUserId) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
-        if (apiClient.isPresent() && !ObjectUtils.isEmpty(refreshTokenRequest.getRefreshToken())) {
-            Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenRequest.getRefreshToken(), apiClient.get());
+        String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
+//        String refreshTokenKey = refreshTokenRequest.getRefreshToken();
+        if (apiClient.isPresent() && !AppUtil.isEmpty(refreshTokenKey)) {
+            Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
             if (tokenKey.isPresent()) {
                 Optional<AccessToken> accessToken = accessTokenService.findByToken(tokenKey.get());
                 accessToken.ifPresent(this::logoutProcess);
             }
         }
-//        deleteCookie(response);
+        deleteCookie(response, currentUserId);
         return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }
 

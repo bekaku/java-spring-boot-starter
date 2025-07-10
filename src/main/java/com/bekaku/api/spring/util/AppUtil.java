@@ -18,10 +18,7 @@ import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -284,6 +281,17 @@ public class AppUtil {
             }
         }
         return value;
+    }
+
+    public static List<String> getCookieRefreshJwtTokenAll(Cookie[] cookies, String targetCookieName) {
+        return Arrays.stream(cookies)
+                .filter(c -> c.getName().startsWith(targetCookieName))
+                .map(Cookie::getValue)
+                .toList();
+    }
+
+    public static String getCookieByName(HttpServletRequest request, String targetCookieName) {
+        return getCookieByName(request.getCookies(), targetCookieName);
     }
 
     public static Optional<String> readCookie(Cookie[] cookies, String key) {
