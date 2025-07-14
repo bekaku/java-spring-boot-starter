@@ -298,7 +298,8 @@ app:
     session-time: 86400
     session-refresh-time: 604800
     session-day: 30
-    refresh-token-name: _myappkey_device_jid
+    token-name: _server_jwt_key
+    refresh-token-name: _server_refresh_key
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
   defaults:

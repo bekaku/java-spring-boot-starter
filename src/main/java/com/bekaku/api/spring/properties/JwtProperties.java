@@ -14,5 +14,6 @@ public class JwtProperties {
     private String secret;
     private int sessionTime;
     private int sessionRefreshTime;
+    private String tokenName;
     private String refreshTokenName;
 }

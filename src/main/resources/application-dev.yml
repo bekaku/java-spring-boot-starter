@@ -96,6 +96,7 @@ app:
     allowed-origins:
       - http://localhost:3004 # Ionic dev (Development Web)
       - http://localhost:3003 # Frontend dev server
+      - https://localhost:3003 # Frontend dev server
       - http://localhost      # Android Hybrid App (Dev/Prod)
       - https://localhost
       - capacitor://localhost # iOS Hybrid App (Dev/Prod)
@@ -117,10 +118,9 @@ app:
   jwt:
     secret: 1c88aa90d3ca655724a0c78db6a02987720f8dccbb7165609a0f6fc1b031523cf24135365856e5372cb0586abbd14a3cbf82644793d4065df16b0295be3dde6e
     #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes, 600=10 minutes , 60 = 1 minute
-    session-time: 900
+    session-time: 86400
     session-refresh-time: 604800
     session-day: 30
-    refresh-token-name: _test_myappkey_device_jid
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
 

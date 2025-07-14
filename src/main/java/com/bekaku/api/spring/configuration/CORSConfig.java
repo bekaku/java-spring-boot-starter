@@ -30,7 +30,7 @@ public class CORSConfig implements WebMvcConfigurer {
                         ConstantData.X_SYNC_ACTIVE,
                         ConstantData.X_USER_ID
                 )
-                .exposedHeaders(ConstantData.CONTENT_DISPOSITION)
+                .exposedHeaders(ConstantData.CONTENT_DISPOSITION, "Set-Cookie")
                 .allowCredentials(true)
                 .allowedOrigins(corsProperties.getAllowedOrigins().toArray(new String[0]))
                 .maxAge(3600);

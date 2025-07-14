@@ -60,8 +60,10 @@ public class UserController extends BaseApiController {
         if (userAuthen == null) {
             throw this.responseErrorUnauthorized();
         }
+//        log.info("request.getCookies() :{}", (Object) request.getCookies());
         String jwtRefreshTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.getRefreshTokenName() + UNDER_SCORE + currentUserId);
-        log.info("currentJwtRefreshTokenCookie :{}", jwtRefreshTokenCookie);
+        String jwtTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.getTokenName() + UNDER_SCORE + currentUserId);
+        log.info("jwtTokenCookie: {}, currentJwtRefreshTokenCookie :{}",jwtTokenCookie, jwtRefreshTokenCookie);
         Optional<User> user = userService.findById(userAuthen.getId());
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();

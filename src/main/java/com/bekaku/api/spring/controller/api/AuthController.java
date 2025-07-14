@@ -137,10 +137,10 @@ public class AuthController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
         }
-        RefreshTokenResponse tokenResponse = authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
-        setRefreshTokenCookie(response, tokenResponse);
-//        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
-        return tokenResponse;
+//        RefreshTokenResponse tokenResponse = authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+//        setRefreshTokenCookie(response, tokenResponse);
+//        return tokenResponse;
+        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
     }
 
     private String getRefreshKeyBy(Long currentUserId) {
@@ -150,63 +150,53 @@ public class AuthController extends BaseApiController {
         return jwtProperties.getRefreshTokenName() + UNDER_SCORE + currentUserId;
     }
 
-    private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
-//        Cookie cookie = new Cookie(cookieJwtRefreshTokenName, tokenResponse.getRefreshToken());
-//        cookie.setMaxAge(AppUtil.getCookieMaxAgeDays(90));//cookie expired in 3 months
-//        cookie.setSecure(true);
-//        cookie.setHttpOnly(true);
-//        cookie.setPath("/"); // global cookie accessible every where
-//        cookie.setAttribute("SameSite", "None");
-//        if (isProduction) {
-//            cookie.setDomain(appDomain);
-//        }
-//        response.addCookie(cookie);
-//        if (isProduction) {
-//            response.setHeader("Set-Cookie", ConstantData.COOKIE_JWT_REFRESH_TOKEN + "=" + tokenResponse.getRefreshToken() + "; Max-Age=" + maxAge + ";SameSite=None; Path=/; Secure; HttpOnly");
-//        } else {
-//            response.setHeader("Set-Cookie", ConstantData.COOKIE_JWT_REFRESH_TOKEN + "=" + tokenResponse.getRefreshToken() + "; Max-Age=" + maxAge + "; SameSite=None; Path=/; HttpOnly");
-//        }
+    private String getReJwtKeyBy(Long currentUserId) {
+        if (currentUserId == null) {
+            return null;
+        }
+        return jwtProperties.getTokenName() + UNDER_SCORE + currentUserId;
+    }
 
-        ResponseCookie cookie = ResponseCookie.from(getRefreshKeyBy(tokenResponse.getUserId()), tokenResponse.getRefreshToken())
+    private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
+        ResponseCookie jwtCookie = ResponseCookie.from(getReJwtKeyBy(tokenResponse.getUserId()), tokenResponse.getAuthenticationToken())
                 .httpOnly(true)
                 .secure(true) // true in prod (HTTPS), false in dev
                 .path("/")
                 .sameSite("None") // "Lax" for dev; "None" + secure for prod
-//                .maxAge(Duration.ofDays(7))
                 .maxAge(jwtService.expireRefreshSecond())
                 .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        ResponseCookie refreshCookie = ResponseCookie.from(getRefreshKeyBy(tokenResponse.getUserId()), tokenResponse.getRefreshToken())
+                .httpOnly(true)
+                .secure(true) // true in prod (HTTPS), false in dev
+                .path("/")
+                .sameSite("None") // "Lax" for dev; "None" + secure for prod
+                .maxAge(jwtService.expireRefreshSecond())
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
     }
 
     private void deleteCookie(HttpServletResponse response, Long currentUserId) {
-        // create a cookie
-//        Cookie cookie = new Cookie(cookieJwtRefreshTokenName, null);
-//        cookie.setMaxAge(0);
-//        cookie.setSecure(true);
-//        cookie.setHttpOnly(true);
-//        cookie.setPath("/");
-//        if (isProduction) {
-//            cookie.setDomain(appDomain);
-//        }
-//        response.addCookie(cookie);
-//        if (isProduction) {
-//            response.setHeader("Set-Cookie",
-//                    cookieName + "=; Max-Age=" + 0 + ";SameSite=None; Path=/; Secure; HttpOnly");
-//        } else {
-//            response.setHeader("Set-Cookie",
-//                    cookieName + "=; Max-Age=" + 0 + "; SameSite=None; Path=/; HttpOnly");
-//        }
         if (currentUserId != null) {
-            ResponseCookie cookie = ResponseCookie.from(getRefreshKeyBy(currentUserId), "")
+            ResponseCookie jwtCookie = ResponseCookie.from(getReJwtKeyBy(currentUserId), "")
                     .httpOnly(true)
                     .secure(true)
                     .path("/")
                     .maxAge(0) // Deletes cookie
                     .sameSite("None") // Must match how it was originally set
                     .build();
-            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
+
+            ResponseCookie refreshCookie = ResponseCookie.from(getRefreshKeyBy(currentUserId), "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(0) // Deletes cookie
+                    .sameSite("None") // Must match how it was originally set
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
         }
     }
 
@@ -219,12 +209,11 @@ public class AuthController extends BaseApiController {
                                              @RequestHeader(value = ConstantData.X_USER_ID, required = false, defaultValue = "0") Long currentUserId) {
 
         //TODO implement with cookie
-        String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
-        log.info("currentUserId: {}, refreshTokenCookie: {}, dto.getRefreshToken(): {}", currentUserId, refreshTokenKey, dto.getRefreshToken());
-
-        //        String refreshTokenKey = dto.getRefreshToken();
+//        String refreshTokenCookieKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
+//        String refreshTokenKey = refreshTokenCookieKey != null ? refreshTokenCookieKey : dto.getRefreshToken();
+//        log.info("currentUserId: {}, refreshTokenCookie: {}, dto.getRefreshToken(): {}", currentUserId, refreshTokenCookieKey, dto.getRefreshToken());
+        String refreshTokenKey = dto.getRefreshToken();
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
-//        Optional<String> jwtKey = jwtService.getAuthorizatoinTokenString(authorization);
         if (apiClient.isEmpty()) {
             log.error("refreshToken > apiClient.isEmpty()");
 //            deleteCookie(response);
@@ -236,22 +225,6 @@ public class AuthController extends BaseApiController {
             throwUnauthorizes();
         }
         log.info("dto.getRefreshToken() :{}", refreshTokenKey);
-        /*
-        if (AppUtil.isEmpty(refreshTokenKey) || jwtKey.isEmpty()) {
-            log.error("refreshToken > AppUtil.isEmpty(dto.getRefreshToken()) || jwtKey.isEmpty()");
-            deleteCookie(response);
-             throwUnauthorizes();
-        }
-
-        Optional<String> subFromJwt = jwtService.getExpiredSubFromToken(jwtKey.get(), apiClient.get());
-        log.info("subFromJwt :{}, dto.getRefreshToken :{} ",subFromJwt.orElse(null), dto.getRefreshToken());
-
-        if (subFromJwt.isEmpty() || !subFromJwt.get().equals(dto.getRefreshToken())) {
-            log.error("refreshToken > subFromJwt.isEmpty() || !subFromJwt.get().equals(dto.getRefreshToken())");
-            deleteCookie(response);
-             throwUnauthorizes();
-        }
-         */
         Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
 //        log.info("subFromJwt :{} ", tokenKey.orElse("sub null"));
         if (tokenKey.isEmpty()) {
@@ -270,17 +243,12 @@ public class AuthController extends BaseApiController {
         //validate expred token
         boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
         if (isExpired) {
-//            log.error("refreshToken > accessToken isExpired");
             throwUnauthorizes();
         }
-
-//        RefreshTokenRequest refreshTokenRequest = new RefreshTokenRequest();
-//        refreshTokenRequest.setRefreshToken(dto.getRefreshToken());
-
-        RefreshTokenResponse tokenResponse = authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
-        setRefreshTokenCookie(response, tokenResponse);
-//        return authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
-        return tokenResponse;
+//        RefreshTokenResponse tokenResponse = authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
+//        setRefreshTokenCookie(response, tokenResponse);
+//        return tokenResponse;
+        return authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
     }
 
     private void throwUnauthorizes() {

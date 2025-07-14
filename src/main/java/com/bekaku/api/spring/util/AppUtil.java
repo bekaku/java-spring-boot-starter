@@ -268,32 +268,27 @@ public class AppUtil {
         return ObjectUtils.isEmpty(o);
     }
 
-    public static String getCookieByName(Cookie[] cookies, String targetCookieName) {
-        String value = null;
-        if (cookies != null) {
-            // Iterate through the cookies and find the one with the specified name
-            for (Cookie cookie : cookies) {
-                if (targetCookieName.equals(cookie.getName())) {
-                    // Found the desired cookie
-                    value = cookie.getValue();
-                    break;
-                }
-            }
+    public static String getCookieByName(Cookie[] cookies, String name) {
+        if(cookies==null){
+            return null;
         }
-        return value;
+        for (Cookie c : cookies) {
+            if (c.getName().equals(name)) return c.getValue();
+        }
+        return null;
     }
-
+    public static String getCookieByName(HttpServletRequest request, String targetCookieName) {
+        return getCookieByName(request.getCookies(), targetCookieName);
+    }
     public static List<String> getCookieRefreshJwtTokenAll(Cookie[] cookies, String targetCookieName) {
+        if(cookies==null){
+            return new ArrayList<>();
+        }
         return Arrays.stream(cookies)
                 .filter(c -> c.getName().startsWith(targetCookieName))
                 .map(Cookie::getValue)
                 .toList();
     }
-
-    public static String getCookieByName(HttpServletRequest request, String targetCookieName) {
-        return getCookieByName(request.getCookies(), targetCookieName);
-    }
-
     public static Optional<String> readCookie(Cookie[] cookies, String key) {
         if (cookies == null) {
             return Optional.empty();
