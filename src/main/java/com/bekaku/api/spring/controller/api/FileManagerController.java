@@ -276,7 +276,7 @@ public class FileManagerController extends BaseApiController {
             originalName = FileUtil.generateFileNameByMimeType(user.getId() + "", mimeType);
         }
 
-        return originalName;
+        return FileUtil.trimFileName(originalName, 125);
     }
 
     private FileManager uploadProcess(MultipartFile file, UserDto user, boolean resizeImage) {

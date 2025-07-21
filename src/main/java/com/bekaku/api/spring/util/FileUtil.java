@@ -337,6 +337,19 @@ public class FileUtil {
         // Use mkdirs() to create parent directories if they don't exist
         return folder.mkdirs();
     }
+    public static String trimFileName(String originalFileName, int limit) {
+        if (originalFileName == null || limit < 1) return originalFileName;
 
+        int lastDotIndex = originalFileName.lastIndexOf(".");
+        if (lastDotIndex == -1 || lastDotIndex == 0 || lastDotIndex == originalFileName.length() - 1) {
+            // No valid extension
+            return originalFileName.length() > limit ? originalFileName.substring(0, limit) : originalFileName;
+        }
+
+        String namePart = originalFileName.substring(0, lastDotIndex);
+        String extension = originalFileName.substring(lastDotIndex); // includes the dot
+        String trimmedName = namePart.length() > limit ? namePart.substring(0, limit) : namePart;
+        return trimmedName + extension;
+    }
 
 }
