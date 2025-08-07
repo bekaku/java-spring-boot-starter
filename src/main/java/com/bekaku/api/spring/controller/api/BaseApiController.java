@@ -30,24 +30,38 @@ public class BaseApiController extends BaseResponseException {
     @Autowired
     private I18n i18n;
 
+    public <K> ResponseEntity<K> responseEntityBy(@Nullable K o) {
+        return new ResponseEntity<>(o, HttpStatus.OK);
+    }
+
+    public <K> ResponseEntity<K> responseEntityBy(@Nullable K o, HttpStatus status) {
+        return new ResponseEntity<>(o, status);
+    }
+
     public ResponseEntity<Object> responseEntity(@Nullable Object o, HttpStatus status) {
         return new ResponseEntity<>(o, status);
     }
-   public ResponseEntity<Object> responseEntity(@Nullable Object o) {
+
+    public ResponseEntity<Object> responseEntity(@Nullable Object o) {
         return new ResponseEntity<>(o, HttpStatus.OK);
     }
+
     public ResponseEntity<Object> responseDeleteMessage() {
         return this.responseServerMessage(i18n.getMessage("success.deleteSuccesfull"), HttpStatus.OK);
     }
+
     public ResponseEntity<Object> responseCreatedMessage() {
         return this.responseServerMessage(i18n.getMessage("success.insertSuccesfull"), HttpStatus.OK);
     }
+
     public ResponseEntity<Object> responseUpdatedMessage() {
         return this.responseServerMessage(i18n.getMessage("success.updateSuccesfull"), HttpStatus.OK);
     }
+
     public ResponseEntity<Object> responseSuccessMessage() {
         return this.responseServerMessage(i18n.getMessage("success"), HttpStatus.OK);
     }
+
     public ResponseEntity<Object> responseEntity(@Nullable Object o, HttpStatus status, String viewPermission, String managePermission) {
         return new ResponseEntity<>(o, status);
     }
@@ -55,6 +69,7 @@ public class BaseApiController extends BaseResponseException {
     public ResponseEntity<Object> responseServerMessage(@Nullable String o) {
         return responseServerMessage(o, HttpStatus.OK);
     }
+
     public ResponseEntity<Object> responseServerMessage(@Nullable String o, HttpStatus status) {
         return responseEntity(new HashMap<String, Object>() {{
             put(ConstantData.SERVER_MESSAGE, o);
@@ -84,6 +99,7 @@ public class BaseApiController extends BaseResponseException {
     public Optional<String> getParameter(String parameterName) {
         return Optional.ofNullable(request.getParameter(parameterName));
     }
+
     private boolean isValidSortOrder(Pageable pageable) {
         if (pageable.getSort().isSorted()) {
             for (Sort.Order order : pageable.getSort()) {
@@ -96,6 +112,7 @@ public class BaseApiController extends BaseResponseException {
         }
         return true;
     }
+
     private Pageable getPagableWithValidateSort(Pageable pageable, Sort defaultSort) {
         if (!isValidSortOrder(pageable)) {
             getPageableCustomSort(pageable, defaultSort);
@@ -107,9 +124,11 @@ public class BaseApiController extends BaseResponseException {
         return !pageable.getSort().isEmpty() ? getPagableWithValidateSort(pageable, defaultSort) :
                 getPageableCustomSort(pageable, defaultSort);
     }
+
     public Pageable getPageableCustomSort(Pageable pageable, Sort defaultSort) {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), defaultSort);
     }
+
     public Paging getPaging(Pageable pageable) {
         Pageable p = pageable.isPaged() ? pageable : null;
         String sortString = null;

@@ -4,6 +4,7 @@ import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.controller.api.BaseApiController;
 import com.bekaku.api.spring.dto.UserRegisterRequest;
 import com.bekaku.api.spring.logger.AppLogger;
+import com.bekaku.api.spring.model.User;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.properties.LoggingFileProperties;
 import com.bekaku.api.spring.queue.QueueSender;
@@ -22,19 +23,24 @@ import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @RequestMapping(path = "/test")
 @RestController
 @RequiredArgsConstructor
-public class DemoController extends BaseApiController {
+public class TestController extends BaseApiController {
 
     private static final Logger loginLog = LoggerFactory.getLogger("login-log");// config in log4j2.xml
     //    private final MailProperties mailProperties;
@@ -51,6 +57,8 @@ public class DemoController extends BaseApiController {
     private final UserService userService;
     private final AccessTokenService accessTokenService;
 
+    private final Executor asyncExecutor;
+
     @Value("${logging.file.path}")
     String logingFilePath;
 
@@ -65,6 +73,11 @@ public class DemoController extends BaseApiController {
             return elm.attr("content");
         }
         return "";
+    }
+
+    @GetMapping("/ping")
+    public String ping() {
+        return "Pong";
     }
 
 //    @GetMapping("/kafkaSend")
@@ -91,6 +104,7 @@ public class DemoController extends BaseApiController {
             return "Processed with virtual threads!";
         });
     }
+
     @PostMapping("/testRequestBody")
     public void testRequestBody(@RequestBody() Map<String, String> body) {
         String name = body.get("name");
@@ -169,5 +183,60 @@ public class DemoController extends BaseApiController {
         }}, HttpStatus.OK);
     }
 
+    @GetMapping("/test-page-loop")
+    public void testLoopPaging(){
+        Page<User> page;
+        int pageNumber = 0;
+        do {
+            log.info("page:{}", pageNumber);
+            page = userService.findAllPageBy(PageRequest.of(pageNumber++, 20));
+            page.forEach(user -> {
+                log.info("id:{}, email:{}", user.getId(), user.getEmail());
+            });
+        } while(!page.isEmpty());
+    }
+    @GetMapping("/async-process")
+    public CompletableFuture<String> triggerAsync() {
+        return userService.processAsyncTask()
+                .thenApply(result -> "Controller got: " + result);
+    }
 
+    @GetMapping("/get-user-async")
+    public CompletableFuture<List<User>> getAsyncUser() {
+        return CompletableFuture.supplyAsync(userService::findAll, asyncExecutor);
+//        return CompletableFuture.supplyAsync(()->userService.findAll(), asyncExecutor);
+//        return CompletableFuture.supplyAsync(()->{
+//            return userService.findAll();
+//        }, asyncExecutor);
+    }
+
+    @GetMapping("/get-user-async2")
+    public CompletableFuture<List<User>> getAsyncUser2() {
+        return CompletableFuture.supplyAsync(userService::findAll, asyncExecutor)
+                .exceptionally(ex -> {
+                    throw new RuntimeException("Error fetching users", ex);
+                });
+    }
+
+    /*
+    @GetMapping
+    public CompletableFuture<List<User>> getAllUsers() {
+        return CompletableFuture.supplyAsync(userService::findAll, asyncExecutor);
+    }
+
+    @GetMapping("/{id}")
+    public CompletableFuture<User> getUserById(@PathVariable Long id) {
+        return CompletableFuture.supplyAsync(() -> userService.findById(id).orElse(null), asyncExecutor);
+    }
+
+    @PostMapping
+    public CompletableFuture<User> createUser(@RequestBody User user) {
+        return CompletableFuture.supplyAsync(() -> userService.save(user), asyncExecutor);
+    }
+
+    @DeleteMapping("/{id}")
+    public CompletableFuture<Void> deleteUser(@PathVariable Long id) {
+        return CompletableFuture.runAsync(() -> userService.deleteById(id), asyncExecutor);
+    }
+     */
 }

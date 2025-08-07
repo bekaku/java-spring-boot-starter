@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import static com.bekaku.api.spring.util.ConstantData.ASYNC_TASK_NAME;
 
 @Transactional
 @Service
@@ -44,7 +48,6 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
 
     @Autowired
     private UserMapper modelMapper;
-    Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Transactional(readOnly = true)
     @Override
@@ -216,4 +219,22 @@ public class UserServiceImpl extends BaseResponseException implements UserServic
             throw this.responseErrorForbidden();
         }
     }
+
+    @Async(ASYNC_TASK_NAME)
+    @Override
+    public CompletableFuture<String> processAsyncTask() {
+        System.out.println("Running in thread: " + Thread.currentThread().getName());
+        try {
+            Thread.sleep(2000); // simulate delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return CompletableFuture.completedFuture("Processed Async Task");
+    }
+
+    @Override
+    public Page<User> findAllPageBy(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
 }

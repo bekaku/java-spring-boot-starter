@@ -173,12 +173,44 @@ public class ExceptionResolver {
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Resource> handleMissingStaticResource(NoResourceFoundException ex) throws IOException {
-        // Load default image from classpath
-        Resource defaultImage = new ClassPathResource("static/img/default_thumb.jpg");
+        // Extract file extension from the requested path
+        String requestedPath = ex.getMessage(); // Assume this contains the file path, like "img/sample.jpg"
+        String extension = getExtension(requestedPath).toLowerCase();
+
+
+        // Construct the default file name (e.g., "default.jpg", "default.pdf")
+        String defaultFilePath = "static/default." + extension;
+
+//        log.warn("handleMissingStaticResource > requestedPath:{}, extension:{} , defaultFilePath:{}",
+//                requestedPath, extension, defaultFilePath);
+
+        Resource defaultResource = new ClassPathResource(defaultFilePath);
+
+        if (!defaultResource.exists()) {
+            return ResponseEntity.notFound().build(); // Optional: fallback behavior if even default is missing
+        }
+
+        MediaType mediaType = getMediaTypeForExtension(extension);
 
         return ResponseEntity
                 .ok()
-                .contentType(MediaType.IMAGE_JPEG)
-                .body(defaultImage);
+                .contentType(mediaType)
+                .body(defaultResource);
+    }
+
+    private String getExtension(String filename) {
+        if (filename == null) return "";
+        // Remove trailing dots
+        filename = filename.trim().replaceAll("\\.+$", "");
+        int dotIndex = filename.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : filename.substring(dotIndex + 1);
+    }
+
+    private MediaType getMediaTypeForExtension(String extension) {
+        return switch (extension) {
+            case "jpg", "jpeg", "png", "gif" -> MediaType.IMAGE_JPEG;
+            case "pdf" -> MediaType.APPLICATION_PDF;
+            default -> MediaType.APPLICATION_OCTET_STREAM;
+        };
     }
 }

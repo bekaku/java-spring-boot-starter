@@ -16,6 +16,8 @@ public class ConstantData {
     public static final String X_USER_ID = "X-User-ID";
     public static final String JWT_TYPE_ATT = "JwtType";
 
+    public static final String ASYNC_TASK_NAME = "asyncExecutor";
+
     public static final String SEARCH_SEPARATOR_ATT = ",";
     public static final String SEARCH_PARAMETER_ATT = "_q";
     public static final String SEARCH_SIGN_MATCH = ":";

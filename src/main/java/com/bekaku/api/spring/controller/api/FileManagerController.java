@@ -1,10 +1,7 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.dto.FileManagerDto;
-import com.bekaku.api.spring.dto.ResponseMessage;
-import com.bekaku.api.spring.dto.UploadRequest;
-import com.bekaku.api.spring.dto.UserDto;
+import com.bekaku.api.spring.dto.*;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FileMime;
 import com.bekaku.api.spring.model.FilesDirectory;
@@ -45,11 +42,12 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+
+import static com.bekaku.api.spring.util.FileUtil.TEMP_UPLOAD_DIR;
 
 @Slf4j
 @RequestMapping(path = "/api/fileManager")
@@ -62,8 +60,7 @@ public class FileManagerController extends BaseApiController {
     private final FileMimeService fileMimeService;
     private final I18n i18n;
     private final AppProperties appProperties;
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     @PreAuthorize("isHasPermission('file_manager_list')")
     @GetMapping
@@ -157,15 +154,131 @@ public class FileManagerController extends BaseApiController {
         }}, HttpStatus.OK);
     }
 
+    @PostMapping("/uploadChunkApi")
+    public FileUploadChunkResponseDto uploadChunkApi(@RequestParam(ConstantData.FILES_UPLOAD_ATT) MultipartFile file,
+                                                     @RequestParam("chunkNumber") int chunkNumber,
+                                                     @RequestParam("totalChunks") int totalChunks,
+                                                     @RequestParam("originalFilename") String originalFilename,
+                                                     @RequestParam("chunkFilename") String chunkFilename,
+                                                     @AuthenticationPrincipal UserDto user) {
+
+        try {
+            String uploadPathTmp = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR);
+            String mimeType = FileUtil.getMimeType(file).toLowerCase();
+            if (chunkNumber == 1) {
+                this.validateAllowMemeType(mimeType);
+            } else {
+                if (AppUtil.isEmpty(chunkFilename)) {
+                    throw this.responseError(HttpStatus.BAD_REQUEST, null, "File name not found");
+                }
+                String fileLatestPath = uploadPathTmp + chunkFilename + ".part" + (chunkNumber - 1);
+                if (!FileUtil.fileExists(fileLatestPath)) {
+                    throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, "File part " + (chunkNumber - 1) + " not found");
+                }
+            }
+
+//            long fileSize = FileUtil.getFileSize(file);
+            String originalName = generateOriginalFileName(file, user, mimeType);
+            String fileName;
+            FileUploadChunkResponseDto dto = new FileUploadChunkResponseDto();
+            if (AppUtil.isEmpty(chunkFilename)) {
+                fileName = FileUtil.generateFileName(user.getId() + "", originalName);
+                dto.setFilename(fileName);
+                dto.setFileMime(mimeType);
+            } else {
+                fileName = chunkFilename;
+            }
+
+            Path uploadDir = Paths.get(uploadPathTmp);
+            Path tempFile = uploadDir.resolve(fileName + ".part" + chunkNumber);
+            Files.copy(file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+            dto.setLastChunk(chunkNumber == totalChunks);
+            dto.setStatus(true);
+            return dto;
+        } catch (IOException e) {
+            throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, "Failed to upload chunk: " + chunkNumber + " of " + totalChunks + " for " + originalFilename);
+        }
+    }
+
+    @PostMapping("/mergeChunkApi")
+    public FileManagerDto mergeChunkApi(@Valid @RequestBody FileUploadChunkMergeRequestDto dto,
+                                        @AuthenticationPrincipal UserDto user) {
+        log.info("mergeChunkApi > totalChunks:{}, fileMime:{}, originalFilename:{}, chunkFilename:{}, fileDirectoryId:{}",
+                dto.getTotalChunks(), dto.getFileMime(), dto.getOriginalFilename(), dto.getChunkFilename(), dto.getFileDirectoryId());
+        if (AppUtil.isEmpty(dto.getChunkFilename()) || dto.getTotalChunks() == 0) {
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required parameters.");
+        }
+
+        try {
+            // Get directory paths
+            Path tempFileDir = Paths.get(FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR));
+
+            // Merge file into a temporary merged file first
+            Path mergedTempFilePath = tempFileDir.resolve(dto.getChunkFilename() + ".merged");
+
+            try (OutputStream out = Files.newOutputStream(mergedTempFilePath, StandardOpenOption.CREATE)) {
+                for (int i = 1; i <= dto.getTotalChunks(); i++) {
+                    Path chunkFile = tempFileDir.resolve(dto.getChunkFilename() + ".part" + i);
+                    if (!Files.exists(chunkFile)) {
+                        throw this.responseError(HttpStatus.NOT_FOUND, null, "Chunk file not found: " + chunkFile.getFileName());
+                    }
+                    Files.copy(chunkFile, out);
+                    Files.delete(chunkFile); // Cleanup after copying
+                }
+            }
+
+            long fileSize = FileUtil.getFileSize(mergedTempFilePath);
+            String mimeType = FileUtil.getMimeType(mergedTempFilePath);
+            if (AppUtil.isEmpty(mimeType)) {
+                throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required mime type.");
+            }
+            boolean isImage = FileUtil.isImage(mimeType);
+            log.info("mergeChunkApi > isImage:{}, mimeType:{}, fileSize:{}", isImage, mimeType, fileSize);
+            String yearMonthFolder = isImage ? FileUtil.getImagesYearMonthDirectory() : FileUtil.getFilesYearMonthDirectory();
+            String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
+            Path finalUploadDir = Paths.get(uploadPath);
+
+            Path finalFilePath = finalUploadDir.resolve(dto.getChunkFilename());
+            // Move merged file to final upload folder
+            Files.move(mergedTempFilePath, finalFilePath, StandardCopyOption.REPLACE_EXISTING);
+
+            //resize image
+            if (isImage) {
+                if (dto.isResizeImage()) {
+                    thumbnailatorResize(uploadPath, dto.getChunkFilename());
+                }
+                //create thumbnail
+                if (appProperties.getUploadImage().isCreateThumbnail()) {
+                    thumbnailatorCreateThumnail(uploadPath, dto.getChunkFilename());
+                }
+            }
+
+            Optional<FileMime> mime = fileMimeService.findByName(mimeType.toLowerCase());
+            FileMime fileMimeForSave = mime.orElseGet(() -> fileMimeService.save(new FileMime(mimeType.toLowerCase())));
+            FileManager f = new FileManager(null, dto.getOriginalFilename(), fileSize, fileMimeForSave, yearMonthFolder + dto.getChunkFilename());
+            // Create and return FileManagerDto
+            Optional<FilesDirectory> directory = Optional.empty();
+            if (dto.getFileDirectoryId() != null && dto.getFileDirectoryId() > 0) {
+                directory = filesDirectoryService.findById(dto.getFileDirectoryId());
+            }
+            directory.ifPresent(f::setFilesDirectory);
+            fileManagerService.save(f);
+            return fileManagerService.convertEntityToDto(f);
+
+        } catch (IOException e) {
+            throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, "Failed to merge file: " + dto.getOriginalFilename());
+        }
+    }
+
     //    @PreAuthorize("isHasPermission('file_manager_manage')")
     @PostMapping("/uploadApi")
-    public ResponseEntity<Object> uploadApi(@RequestParam(ConstantData.FILES_UPLOAD_ATT) MultipartFile file,
-                                            @RequestParam(name = "fileDirectoryId", required = false, defaultValue = "0") long fileDirectoryId,
-                                            @RequestParam(name = "resizeImage", required = false, defaultValue = "1") boolean resizeImage,
-                                            @AuthenticationPrincipal UserDto user) {
+    public FileManagerDto uploadApi(@RequestParam(ConstantData.FILES_UPLOAD_ATT) MultipartFile file,
+                                    @RequestParam(name = "fileDirectoryId", required = false, defaultValue = "0") long fileDirectoryId,
+                                    @RequestParam(name = "resizeImage", required = false, defaultValue = "1") boolean resizeImage,
+                                    @AuthenticationPrincipal UserDto user) {
 
         if (file.isEmpty()) {
-            throw this.responseError(HttpStatus.OK, null, i18n.getMessage("error.fileUploadNotFound"));
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.fileUploadNotFound"));
         }
 
         FileManager f = uploadProcess(file, user, resizeImage);
@@ -178,7 +291,7 @@ public class FileManagerController extends BaseApiController {
         }
         directory.ifPresent(f::setFilesDirectory);
         fileManagerService.save(f);
-        return this.responseEntity(fileManagerService.convertEntityToDto(f), HttpStatus.OK);
+        return fileManagerService.convertEntityToDto(f);
 
 //        String mimeType = FileUtil.getMimeType(file).toLowerCase();
 //        boolean isImage = FileUtil.isImage(mimeType);

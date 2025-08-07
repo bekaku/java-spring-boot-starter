@@ -30,6 +30,7 @@ import java.util.UUID;
 
 public class FileUtil {
 
+    public static final String TEMP_UPLOAD_DIR = "temp-chunks/";
 
     public static String generateFileName(String orginalName) {
         if (ObjectUtils.isEmpty(orginalName)) {
@@ -216,6 +217,13 @@ public class FileUtil {
         Tika tika = new Tika();
         return tika.detect(file);
     }
+    public static String getMimeType(Path path) throws IOException {
+        if (path == null) {
+            return null;
+        }
+        Tika tika = new Tika();
+        return tika.detect(path);
+    }
 
     public static String getMimeType(MultipartFile file) {
         return file != null ? getFileType(file) : null;
@@ -310,6 +318,14 @@ public class FileUtil {
         return file != null ? file.getSize() : 0;
     }
 
+    public static Long getFileSize(Path path) {
+        try {
+            return path != null ? Files.size(path) : 0;
+        } catch (IOException e) {
+            return (long) '0';
+        }
+    }
+
     public static String humanReadableByteCountSI(long bytes) {
         if (-1000 < bytes && bytes < 1000) {
             return bytes + " B";
@@ -337,6 +353,7 @@ public class FileUtil {
         // Use mkdirs() to create parent directories if they don't exist
         return folder.mkdirs();
     }
+
     public static String trimFileName(String originalFileName, int limit) {
         if (originalFileName == null || limit < 1) return originalFileName;
 

@@ -11,20 +11,23 @@ RUN apk --no-cache add curl tzdata && \
     echo "Asia/Bangkok" > /etc/timezone
 
 # Create non-root user and group
-#RUN addgroup -g 1001 springgroup && \
-#    adduser -D -u 1001 -G springgroup springuser
+# RUN addgroup -S springapigroup && adduser -S springapi -G springapigroup
 
 # Set working directory
 WORKDIR /app
 
 
-# Copy the built JAR file
+# Copy the built JAR file with root user
 COPY /build/libs/api-service-1.0.0.jar app.jar
 
 # Copy the built JAR file and give ownership to the non-root user
-#COPY --chown=springuser:springgroup /build/libs/api-service-1.0.0.jar app.jar
-# Switch to non-root user
-#USER springuser
+#COPY --chown=springapi:springapigroup /build/libs/api-service-1.0.0.jar app.jar
+
+# Make sure heapdump path exists and is writable
+# RUN mkdir -p /usr/spring-data/logs && chown -R springapi:springapigroup /usr/spring-data
+
+# Use non-root user
+USER springapi
 
 # Expose the application port
 EXPOSE 8080

@@ -123,6 +123,32 @@ app:
     session-day: 30
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
+  allow-mimes:
+    - application/msword
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/vnd.ms-excel
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    - application/vnd.ms-powerpoint
+    - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    - application/pdf
+    - application/vnd.rar
+    - application/zip
+    - image/jpeg
+    - image/png
+    - image/gif
+    - image/webp
+    - text/plain
+    - text/csv
+    - video/mpeg
+    - video/mp4
+    - video/quicktime
+    - video/x-msvideo
+    - video/webm
+    - video/x-flv
+    - video/3gpp
+    - video/3gpp2
+    - video/ogg
+    - video/x-matroska
 
 custom:
   config:
