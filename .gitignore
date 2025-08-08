@@ -52,5 +52,6 @@ Thumbs.db
 *.zip
 *.gz
 spring-data/images
+spring-data/temp-chunks
 spring-data/logs
 out/
