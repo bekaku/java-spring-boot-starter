@@ -1,7 +1,7 @@
 version: '3.9'
 services:
-  api-service-1:
-    container_name: api-service-1
+  api-1:
+    container_name: api-1
 #    build: .
     image: spring-api-service:latest
     extra_hosts:
@@ -13,7 +13,8 @@ services:
       - 8080
     networks:
       - docker-network
-#    environment:
+    environment:
+      - WORKER_ID=1
 #      - JAVA_OPTS=-Xmx512m -Xms512m
     deploy:
       resources:
@@ -29,8 +30,8 @@ services:
       #linux
   #      - /mnt/cdn/spring-data:/usr/spring-data
   #      - /mnt/cdn/spring-data/logs:/usr/spring-data/logs
-#  api-service-2:
-#    container_name: api-service-2
+#  api-2:
+#    container_name: api-2
 #    build: .
 #    image: spring-api-service:latest
 #    restart: always
@@ -44,6 +45,7 @@ services:
 #      - d:\code\spring-data:/usr/spring-data
 #      - d:\code\spring-data\logs:/usr/spring-data/logs
 #    environment:
+#      - WORKER_ID=2
 #      - JAVA_OPTS=-Xmx512m -Xms512m
 networks:
   docker-network:

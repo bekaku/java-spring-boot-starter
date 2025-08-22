@@ -8,5 +8,6 @@ public class UploadImageConfig {
     private int limitHeight;
     private boolean createThumbnail;
     private int thumbnailWidth;
+    private int maxResolution;
     private String thumbnailExname;
 }

@@ -77,7 +77,6 @@ public class PermissionController extends BaseApiController {
 //               PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Permission.getSort())), HttpStatus.OK);
         return permissionService.findAllWithSearch(specification, getPageable(pageable, Permission.getSort()));
 
-
 //        return this.responseEntity(new HashMap<String, Object>() {{
 //            put("datas", permissonService.findAllPaging(!pageable.getSort().isEmpty() ? pageable : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Permission.getSort())));
 //            put("pageable", pageable);
@@ -181,7 +180,7 @@ public class PermissionController extends BaseApiController {
         }}, HttpStatus.OK);
     }
 
-//    @SuppressWarnings("unchecked")
+    //    @SuppressWarnings("unchecked")
     private JSONArray checkAclPermisison(JSONArray aclList, List<String> userPermissions) {
         JSONArray aclFinal = new JSONArray();
         JSONObject menu;

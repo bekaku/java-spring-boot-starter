@@ -3,7 +3,7 @@ environments:
 spring:
   main:
     allow-circular-references: false
-    lazy-initialization: true
+#    lazy-initialization: true
   devtools:
     restart:
       poll-interval: 10s

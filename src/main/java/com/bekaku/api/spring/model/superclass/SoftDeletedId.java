@@ -1,22 +1,18 @@
 package com.bekaku.api.spring.model.superclass;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 
 @MappedSuperclass
 @Getter
 @Setter
-public class SoftDeletedId extends SoftDeleted implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-    @GenericGenerator(name = "native", strategy = "native")
-    private Long id;
+public class SoftDeletedId extends Id implements Serializable {
+    @JsonIgnore
+    @Column(columnDefinition = "tinyint(1) default 0")
+    private Boolean deleted = false;
 }

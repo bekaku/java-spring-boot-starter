@@ -51,6 +51,7 @@ spring:
     password: 'pwd'
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
+      pool-name: App-Instance-${WORKER_ID:1}
       connection-timeout: 30000 # slightly reduced for faster failure detection
       minimum-idle: 5 # more idle connections, helps under consistent load
       maximum-pool-size: 20 # scaled with 4 CPU cores, allows high concurrency 1cpu=8 ,4cores*8=32
@@ -279,6 +280,7 @@ app:
   upload-image:
     limit-width: 1776
     limit-height: 1776
+    max-resolution: 4096 # limit 4k resolution for upload
     create-thumbnail: true
     thumbnail-width: 196
     thumbnail-exname: '_thumb'
@@ -350,8 +352,8 @@ app:
     - text/csv
   cron:
     test-expression: 0 */2 * * * *
-
-
+  worker:
+    id: ${WORKER_ID:1} # fallback to 1 if not set
 custom:
   config:
     file: Config Spring Startertemplate From PRODUCTION MODE (resources/application.yml)

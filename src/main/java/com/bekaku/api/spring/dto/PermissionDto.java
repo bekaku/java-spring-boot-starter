@@ -3,18 +3,15 @@ package com.bekaku.api.spring.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 @JsonRootName("permission")
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PermissionDto {
-    private Long id;
-
+public class PermissionDto extends DtoId {
     @NotEmpty(message = "{error.NotEmpty}")
     private String code;
     private String remark;

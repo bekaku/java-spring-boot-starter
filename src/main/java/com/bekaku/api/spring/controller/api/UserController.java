@@ -121,14 +121,14 @@ public class UserController extends BaseApiController {
                                                     @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
-            throw this.responseErrorNotfound();
+            return null;
         }
         if (AppUtil.isEmpty(dto.getRefreshToken())) {
-            throw this.responseErrorNotfound();
+            return null;
         }
         LoginedProfileItemDto itemDto = getLoginedProfileProcess(dto.getRefreshToken(), apiClient.get());
         if (itemDto == null) {
-            throw this.responseErrorNotfound();
+            return null;
         }
 
         return itemDto;

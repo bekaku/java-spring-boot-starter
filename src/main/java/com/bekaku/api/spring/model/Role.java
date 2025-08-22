@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
+import com.bekaku.api.spring.configuration.AuditListener;
 import com.bekaku.api.spring.model.superclass.SoftDeletedAuditable;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -25,6 +26,7 @@ import java.util.Set;
 })
 @SQLDelete(sql = "UPDATE role SET deleted = true WHERE id=?")
 @SQLRestriction("deleted=false")
+@EntityListeners(AuditListener.class)
 public class Role extends SoftDeletedAuditable<Long> {
 
     public Role(String name, String nameEn, Boolean active, Boolean frontEnd) {
@@ -61,6 +63,17 @@ public class Role extends SoftDeletedAuditable<Long> {
             joinColumns = {@JoinColumn(name = "role")},
             inverseJoinColumns = {@JoinColumn(name = "permission")})
     private Set<Permission> permissions = new HashSet<>();
+
+    @Override
+    public String toString() {
+        return "Role{" +
+                "name='" + name + '\'' +
+                ", nameEn='" + nameEn + '\'' +
+                ", active=" + active +
+                ", frontEnd=" + frontEnd +
+                ", id=" + getId() +
+                '}';
+    }
 
     public static Sort getSort() {
         return Sort.by(Sort.Direction.ASC, "name");

@@ -420,18 +420,13 @@ public class FileManagerController extends BaseApiController {
         String filePath = uploadFile + fileName;
         if (FileUtil.fileExists(filePath)) {
             try {
-                int limitWidth = appProperties.getUploadImage().getLimitWidth();
-                int limitHeight = appProperties.getUploadImage().getLimitHeight();
-
                 File inputFile = new File(filePath);
                 BufferedImage originalImage = ImageIO.read(inputFile);
                 if (originalImage != null) {
                     originalImage = FileUtil.correctOrientation(originalImage, inputFile);
 
                     //get width and height of image
-                    int imageWidth = originalImage.getWidth();
-                    int imageHeight = originalImage.getHeight();
-                    if (imageWidth > limitWidth || imageHeight > limitHeight) {
+                    if (canResize(originalImage)) {
                         BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 1);
                         ImageIO.write(outputImage, "jpg", new File(filePath));
                     }
@@ -440,6 +435,22 @@ public class FileManagerController extends BaseApiController {
                 throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, e.getMessage());
             }
         }
+    }
+
+    private boolean canResize(BufferedImage originalImage) {
+        int imageWidth = originalImage.getWidth();
+        int imageHeight = originalImage.getHeight();
+        int limitWidth = appProperties.getUploadImage().getLimitWidth();
+        int limitHeight = appProperties.getUploadImage().getLimitHeight();
+        int maxResolution = appProperties.getUploadImage().getMaxResolution();
+        return (imageWidth > limitWidth || imageHeight > limitHeight) && (imageWidth <= maxResolution && imageHeight <= maxResolution);
+    }
+
+    private boolean canCreateThumnail(BufferedImage originalImage) {
+        int imageWidth = originalImage.getWidth();
+        int imageHeight = originalImage.getHeight();
+        int maxResolution = appProperties.getUploadImage().getMaxResolution();
+        return (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
     private void thumbnailatorCreateThumnail(String uploadFile, String fileName) {
@@ -452,10 +463,11 @@ public class FileManagerController extends BaseApiController {
                 File inputFile = new File(filePath);
                 BufferedImage originalImage = ImageIO.read(inputFile);
                 if (originalImage != null) {
-                    originalImage = FileUtil.correctOrientation(originalImage, inputFile);
-
-                    BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 1);
-                    ImageIO.write(outputImage, "jpg", new File(fileThumnailPath));
+                    if (canCreateThumnail(originalImage)) {
+                        originalImage = FileUtil.correctOrientation(originalImage, inputFile);
+                        BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 1);
+                        ImageIO.write(outputImage, "jpg", new File(fileThumnailPath));
+                    }
                 }
 
             } catch (IOException e) {

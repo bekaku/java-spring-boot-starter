@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 //@EnableRabbit
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.bekaku.api")
 @EnableJpaAuditing
 //@EnableScheduling
 @EnableAsync
