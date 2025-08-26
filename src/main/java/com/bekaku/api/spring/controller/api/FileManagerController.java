@@ -178,7 +178,7 @@ public class FileManagerController extends BaseApiController {
             }
 
 //            long fileSize = FileUtil.getFileSize(file);
-            String originalName = generateOriginalFileName(file, user, mimeType);
+            String originalName = generateOriginalFileName(file, user, mimeType, originalFilename);
             String fileName;
             FileUploadChunkResponseDto dto = new FileUploadChunkResponseDto();
             if (AppUtil.isEmpty(chunkFilename)) {
@@ -382,8 +382,11 @@ public class FileManagerController extends BaseApiController {
         return new FileManager(null, originalName, fileSize, fileMimeForSave, yearMonthFolder + newName);
     }
 
-    private String generateOriginalFileName(MultipartFile file, UserDto user, String mimeType) {
-        String originalName = FileUtil.getMultipartFileName(file);
+    private String generateOriginalFileName(MultipartFile file, UserDto user, String mimeType, String originalNamePost) {
+        String originalName = originalNamePost;
+        if(AppUtil.isEmpty(originalName)){
+            originalName = FileUtil.getMultipartFileName(file);
+        }
         Optional<String> extension = FileUtil.getExtensionByStringHandling(originalName);
         if (extension.isEmpty()) {
             originalName = FileUtil.generateFileNameByMimeType(user.getId() + "", mimeType);
@@ -399,7 +402,7 @@ public class FileManagerController extends BaseApiController {
 
         boolean isImage = FileUtil.isImage(mimeType);
         long fileSize = FileUtil.getFileSize(file);
-        String originalName = generateOriginalFileName(file, user, mimeType);
+        String originalName = generateOriginalFileName(file, user, mimeType, null);
 
         String yearMonthFolder = isImage ? FileUtil.getImagesYearMonthDirectory() : FileUtil.getFilesYearMonthDirectory();
         String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);

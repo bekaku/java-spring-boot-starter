@@ -341,6 +341,7 @@ app:
     - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
     - application/vnd.ms-powerpoint
     - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    - application/x-tika-ooxml
     - application/pdf
     - application/vnd.rar
     - application/zip

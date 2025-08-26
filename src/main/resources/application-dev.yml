@@ -26,9 +26,9 @@ spring:
       enabled: ALWAYS
   datasource:
     # normal connection to mysql server
-    #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/super_synapse?allowPublicKeyRetrieval=true&useSSL=false
+    #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     # link to docker config from docker-compose.yml
-    #    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/springboot_db?allowPublicKeyRetrieval=true&useSSL=false
+    #    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     # connect to mysql form local docker via port 3308
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     username: root
@@ -130,6 +130,7 @@ app:
     - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
     - application/vnd.ms-powerpoint
     - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    - application/x-tika-ooxml
     - application/pdf
     - application/vnd.rar
     - application/zip
