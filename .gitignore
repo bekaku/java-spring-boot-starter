@@ -56,5 +56,5 @@ spring-data/temp-chunks
 spring-data/logs
 spring-data/files
 out/
-!spring-data/files/spring_starter_mysql.sql
-!spring-data/files/spring_starter_postgres.sql
+!spring_starter_mysql.sql
+!spring_starter_postgres.sql
