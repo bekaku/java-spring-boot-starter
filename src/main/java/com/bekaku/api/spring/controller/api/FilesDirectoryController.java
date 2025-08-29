@@ -2,7 +2,7 @@ package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.specification.SearchSpecification;
-import com.bekaku.api.spring.dto.UserDto;
+import com.bekaku.api.spring.dto.AppUserDto;
 import com.bekaku.api.spring.dto.FilesDirectoryDto;
 import com.bekaku.api.spring.model.FilesDirectory;
 import com.bekaku.api.spring.model.FilesDirectoryPath;
@@ -12,8 +12,6 @@ import com.bekaku.api.spring.service.FilesDirectoryPathService;
 import com.bekaku.api.spring.service.FilesDirectoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +42,7 @@ public class FilesDirectoryController extends BaseApiController {
 
     @PreAuthorize("isHasPermission('files_directory_manage')")
     @PostMapping
-    public ResponseEntity<Object> create(@Valid @RequestBody FilesDirectoryDto dto, @AuthenticationPrincipal UserDto user) {
+    public ResponseEntity<Object> create(@Valid @RequestBody FilesDirectoryDto dto, @AuthenticationPrincipal AppUserDto user) {
         FilesDirectory filesDirectory = filesDirectoryService.convertDtoToEntity(dto);
         if (dto.getFilesDirectoryParentId() > 0) {
             Optional<FilesDirectory> directoryParent = filesDirectoryService.findById(dto.getFilesDirectoryParentId());

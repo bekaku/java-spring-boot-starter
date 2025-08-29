@@ -30,12 +30,12 @@ import java.util.*;
 import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
 
 @Slf4j
-@RequestMapping(path = "/api/user")
+@RequestMapping(path = "/api/appUser")
 @RestController
 @RequiredArgsConstructor
-public class UserController extends BaseApiController {
-    private final UserService userService;
-    private final RoleService roleService;
+public class AppUserController extends BaseApiController {
+    private final AppUserService appUserService;
+    private final AppRoleService appRoleService;
     private final EncryptService encryptService;
     private final FileManagerService fileManagerService;
     private final AccessTokenService accessTokenService;
@@ -44,6 +44,7 @@ public class UserController extends BaseApiController {
     private final PermissionService permissionService;
     private final ApiClientService apiClientService;
     private final JwtService jwtService;
+    private final FavoriteMenuService favoriteMenuService;
 
     @Value("${app.defaults.userpwd}")
     String defaultUserPwd;
@@ -53,9 +54,9 @@ public class UserController extends BaseApiController {
     private final String SHEET_NAME = "users";
 
     @GetMapping("/currentUserData")
-    public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen,
-                                   HttpServletRequest request,
-                                   @RequestHeader(value = ConstantData.X_USER_ID) String currentUserId) {
+    public AppUserDto currentUserData(@AuthenticationPrincipal AppUserDto userAuthen,
+                                      HttpServletRequest request,
+                                      @RequestHeader(value = ConstantData.X_USER_ID) String currentUserId) {
 //    public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen, @CookieValue(name = "jwt_token", required = false) String jwtRefreshTokenCookie) {
         if (userAuthen == null) {
             throw this.responseErrorUnauthorized();
@@ -63,17 +64,15 @@ public class UserController extends BaseApiController {
 //        log.info("request.getCookies() :{}", (Object) request.getCookies());
         String jwtRefreshTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.getRefreshTokenName() + UNDER_SCORE + currentUserId);
         String jwtTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.getTokenName() + UNDER_SCORE + currentUserId);
-        log.info("jwtTokenCookie: {}, currentJwtRefreshTokenCookie :{}",jwtTokenCookie, jwtRefreshTokenCookie);
-        Optional<User> user = userService.findById(userAuthen.getId());
-        if (user.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-        UserDto dto = userService.convertEntityToDto(user.get());
+        log.info("jwtTokenCookie: {}, currentJwtRefreshTokenCookie :{}", jwtTokenCookie, jwtRefreshTokenCookie);
+        AppUser user = appUserService.findAndValidateAppUserBy(userAuthen);
+        AppUserDto dto = appUserService.convertEntityToDto(user);
         if (userAuthen.getAccessTokenId() != null) {
             Optional<AccessToken> accessToken = accessTokenService.findById(userAuthen.getAccessTokenId());
             accessToken.ifPresent(token -> dto.setFcmToken(token.getFcmToken()));
         }
-        dto.setPermissions(permissionService.findAllPermissionCodeByUserId(userAuthen.getId(), false));
+        dto.setPermissions(permissionService.findAllPermissionCodeByUserId(userAuthen.getId()));
+        dto.setFavoriteMenus(favoriteMenuService.findAllByAppUser(user));
         return dto;
     }
 
@@ -108,12 +107,12 @@ public class UserController extends BaseApiController {
         if (userUuId.isEmpty()) {
             return null;
         }
-        Optional<User> user = userService.findByUUID(userUuId.get());
+        Optional<AppUser> user = appUserService.findByUUID(userUuId.get());
         if (user.isEmpty()) {
             return null;
         }
-        UserDto userDto = userService.convertEntityToDto(user.get());
-        return new LoginedProfileItemDto(userDto, new NotificationCount());
+        AppUserDto appUserDto = appUserService.convertEntityToDto(user.get());
+        return new LoginedProfileItemDto(appUserDto, new NotificationCount());
     }
 
     @PostMapping("/findLoginedProfile")
@@ -135,12 +134,12 @@ public class UserController extends BaseApiController {
     }
 
     @PutMapping("/updateDefaultLocale")
-    public ResponseEntity<Object> updateDefaultLocale(@AuthenticationPrincipal UserDto userAuthen, @RequestParam("locale") AppLocale locale) {
+    public ResponseEntity<Object> updateDefaultLocale(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam("locale") AppLocale locale) {
         if (userAuthen != null) {
-            Optional<User> user = userService.findById(userAuthen.getId());
+            Optional<AppUser> user = appUserService.findById(userAuthen.getId());
             if (user.isPresent()) {
                 user.get().setDefaultLocale(locale);
-                userService.save(user.get());
+                appUserService.save(user.get());
             }
         }
         return this.responseEntity(HttpStatus.OK);
@@ -150,90 +149,90 @@ public class UserController extends BaseApiController {
      * Administrator section
      */
 
-    @PreAuthorize("isHasPermission('user_list')")
+    @PreAuthorize("isHasPermission('app_user_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable, HttpServletRequest request) {
-        SearchSpecification<User> specification = new SearchSpecification<>(getSearchCriteriaList());
-        return this.responseEntity(userService.findAllWithSearch(specification, getPageable(pageable, User.getSort())), HttpStatus.OK);
+        SearchSpecification<AppUser> specification = new SearchSpecification<>(getSearchCriteriaList());
+        return this.responseEntity(appUserService.findAllWithSearch(specification, getPageable(pageable, AppUser.getSort())), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('user_manage')")
+    @PreAuthorize("isHasPermission('app_user_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody UserRegisterRequest dto) {
         return this.responseEntity(ceateUserProcess(dto), HttpStatus.CREATED);
     }
 
 
-    private UserDto ceateUserProcess(UserRegisterRequest dto) {
-        User user = new User();
-        user.addNew(dto.getUsername(),
+    private AppUserDto ceateUserProcess(UserRegisterRequest dto) {
+        AppUser appUser = new AppUser();
+        appUser.addNew(dto.getUsername(),
                 dto.getPassword(),
                 dto.getEmail(),
                 dto.isActive());
 
         if (dto.isCheckValidate()) {
-            userValidator.validate(user);
+            userValidator.validate(appUser);
         }
 
-        setUserRoles(dto.getSelectedRoles(), user);
+        setUserRoles(dto.getSelectedRoles(), appUser);
         //encrypt pwd
-        user.setPassword(encryptService.encrypt(user.getPassword(), user.getSalt()));
-        userService.save(user);
+        appUser.setPassword(encryptService.encrypt(appUser.getPassword(), appUser.getSalt()));
+        appUserService.save(appUser);
 
-        return userService.convertEntityToDto(user);
+        return appUserService.convertEntityToDto(appUser);
     }
 
-    private void setUserRoles(Long[] selectedRoles, User user) {
+    private void setUserRoles(Long[] selectedRoles, AppUser appUser) {
         if (selectedRoles.length > 0) {
-            Optional<Role> role;
+            Optional<AppRole> role;
             for (Long roleId : selectedRoles) {
-                role = roleService.findById(roleId);
-                role.ifPresent(value -> user.getRoles().add(value));
+                role = appRoleService.findById(roleId);
+                role.ifPresent(value -> appUser.getAppRoles().add(value));
             }
         }
     }
 
-    @PreAuthorize("isHasPermission('user_view')")
+    @PreAuthorize("isHasPermission('app_user_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") Long id) {
-        Optional<User> user = userService.findById(id);
+        Optional<AppUser> user = appUserService.findById(id);
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        return this.responseEntity(userService.convertEntityToDto(user.get()), HttpStatus.OK);
+        return this.responseEntity(appUserService.convertEntityToDto(user.get()), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('user_manage')")
+    @PreAuthorize("isHasPermission('app_user_manage')")
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateUser(@Valid @RequestBody UserUpdateRequest dto, @PathVariable("id") Long id) {
-        Optional<User> user = userService.findById(id);
+        Optional<AppUser> user = appUserService.findById(id);
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();
         }
         return this.responseEntity(updateUserProcess(user.get(), dto), HttpStatus.OK);
     }
 
-    private UserDto updateUserProcess(User user, UserUpdateRequest dto) {
+    private AppUserDto updateUserProcess(AppUser appUser, UserUpdateRequest dto) {
 
-        user.update(
+        appUser.update(
                 dto.getUsername(),
                 dto.getEmail(),
                 dto.isActive()
         );
 
-        userValidator.validate(user);
+        userValidator.validate(appUser);
         // delete old permissin for this group
-        user.setRoles(new HashSet<>());
-        userService.update(user);
-        setUserRoles(dto.getSelectedRoles(), user);
-        userService.update(user);
-        return userService.convertEntityToDto(user);
+        appUser.setAppRoles(new HashSet<>());
+        appUserService.update(appUser);
+        setUserRoles(dto.getSelectedRoles(), appUser);
+        appUserService.update(appUser);
+        return appUserService.convertEntityToDto(appUser);
     }
 
-    @PreAuthorize("isHasPermission('user_manage')")
+    @PreAuthorize("isHasPermission('app_user_manage')")
     @PutMapping("/updateUserPassword/{id}")
     public ResponseEntity<Object> updateUserPassword(@PathVariable("id") Long id, @Valid @RequestBody UserChangePasswordRequest dto) {
-        Optional<User> user = userService.findById(id);
+        Optional<AppUser> user = appUserService.findById(id);
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();
         }
@@ -241,25 +240,25 @@ public class UserController extends BaseApiController {
         return this.responseServerMessage(i18n.getMessage("success.updatePassword"), HttpStatus.OK);
     }
 
-    private void updateUserPasswordBase(User userUpdate, UserChangePasswordRequest dto) {
-        userUpdate.setPassword(dto.getPassword());
+    private void updateUserPasswordBase(AppUser appUserUpdate, UserChangePasswordRequest dto) {
+        appUserUpdate.setPassword(dto.getPassword());
         //encrypt pwd
-        if (!ObjectUtils.isEmpty(userUpdate.getPassword())) {
-            userUpdate.setPassword(encryptService.encrypt(userUpdate.getPassword(), userUpdate.getSalt()));
-            userService.update(userUpdate);
+        if (!ObjectUtils.isEmpty(appUserUpdate.getPassword())) {
+            appUserUpdate.setPassword(encryptService.encrypt(appUserUpdate.getPassword(), appUserUpdate.getSalt()));
+            appUserService.update(appUserUpdate);
 
             if (dto.isLogoutAllDevice()) {
-                accessTokenService.revokeTokenByUserId(userUpdate.getId());
+                accessTokenService.revokeTokenByUserId(appUserUpdate.getId());
             }
         }
 
     }
 
 
-    @PreAuthorize("isHasPermission('user_manage')")
+    @PreAuthorize("isHasPermission('app_user_manage')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteUser(@PathVariable("id") Long id) {
-        Optional<User> user = userService.findById(id);
+        Optional<AppUser> user = appUserService.findById(id);
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();
         }
@@ -268,8 +267,8 @@ public class UserController extends BaseApiController {
     }
 
 
-    private void deleteUserManage(User user) {
-        userService.delete(user);
+    private void deleteUserManage(AppUser appUser) {
+        appUserService.delete(appUser);
     }
 
 
@@ -277,41 +276,41 @@ public class UserController extends BaseApiController {
      * User section
      */
     @PutMapping("/updateUserAvatar")
-    public ResponseMessage updateUserAvatar(@AuthenticationPrincipal UserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
+    public ResponseMessage updateUserAvatar(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
 
         if (userAuthen == null) {
             return new ResponseMessage(HttpStatus.UNAUTHORIZED, null);
         }
 
-        Optional<User> user = userService.findById(userAuthen.getId());
+        Optional<AppUser> user = appUserService.findById(userAuthen.getId());
         Optional<FileManager> fileManager = fileManagerService.findById(fileManagerId);
         if (user.isEmpty() || fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
         user.get().setAvatarFile(fileManager.get());
-        userService.update(user.get());
+        appUserService.update(user.get());
         return new ResponseMessage(HttpStatus.OK, null);
     }
 
     @PutMapping("/updateUserCover")
-    public ResponseMessage updateUserCover(@AuthenticationPrincipal UserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
+    public ResponseMessage updateUserCover(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
 
         if (userAuthen == null) {
             return new ResponseMessage(HttpStatus.UNAUTHORIZED, null);
         }
 
-        Optional<User> user = userService.findById(userAuthen.getId());
+        Optional<AppUser> user = appUserService.findById(userAuthen.getId());
         Optional<FileManager> fileManager = fileManagerService.findById(fileManagerId);
         if (user.isEmpty() || fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
         user.get().setCoverFile(fileManager.get());
-        userService.update(user.get());
+        appUserService.update(user.get());
         return new ResponseMessage(HttpStatus.OK, null);
     }
 
     @GetMapping("/currentAuthSession")
-    public List<AccessTokenDto> currentAuthSession(HttpServletRequest request, @AuthenticationPrincipal UserDto userAuthen, Pageable pageable) {
+    public List<AccessTokenDto> currentAuthSession(HttpServletRequest request, @AuthenticationPrincipal AppUserDto userAuthen, Pageable pageable) {
 //        Optional<String> readCookieBy = AppUtil.readCookie(request.getCookies(), ConstantData.COOKIE_JWT_REFRESH_TOKEN);
 //        readCookieBy.ifPresent(s -> logger.info("COOKIE_JWT_REFRESH_TOKEN readCookieBy:{}", s));
         return accessTokenService.findAllByUserAndRevoked(userAuthen.getId(), false, pageable);
@@ -319,8 +318,8 @@ public class UserController extends BaseApiController {
 
 
     @PutMapping("/selfUpdatePassword")
-    public ResponseEntity<Object> selfUpdatePassword(@AuthenticationPrincipal UserDto userAuthen, @Valid @RequestBody UserChangePasswordRequest dto) {
-        Optional<User> user = userService.findById(userAuthen.getId());
+    public ResponseEntity<Object> selfUpdatePassword(@AuthenticationPrincipal AppUserDto userAuthen, @Valid @RequestBody UserChangePasswordRequest dto) {
+        Optional<AppUser> user = appUserService.findById(userAuthen.getId());
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();
         }
@@ -339,13 +338,13 @@ public class UserController extends BaseApiController {
             return this.responseServerMessage(i18n.getMessage("error.ondPasswordWrong"), HttpStatus.BAD_REQUEST, false);
         }
 
-        User userUpdate = user.get();
-        userUpdate.setPassword(dto.getNewPassword());
+        AppUser appUserUpdate = user.get();
+        appUserUpdate.setPassword(dto.getNewPassword());
 
         //encrypt pwd
-        if (!ObjectUtils.isEmpty(userUpdate.getPassword())) {
-            userUpdate.setPassword(encryptService.encrypt(userUpdate.getPassword(), userUpdate.getSalt()));
-            userService.update(userUpdate);
+        if (!ObjectUtils.isEmpty(appUserUpdate.getPassword())) {
+            appUserUpdate.setPassword(encryptService.encrypt(appUserUpdate.getPassword(), appUserUpdate.getSalt()));
+            appUserService.update(appUserUpdate);
 
             if (dto.isLogoutAllDevice()) {
                 accessTokenService.revokeTokenByUserId(user.get().getId());
@@ -356,13 +355,13 @@ public class UserController extends BaseApiController {
     }
 
     @PutMapping("/updateEmail")
-    public ResponseEntity<Object> updateEmail(@AuthenticationPrincipal UserDto userAuthen, @RequestBody UserPersonalEditRequest dto) {
-        Optional<User> user = userService.findById(userAuthen.getId());
+    public ResponseEntity<Object> updateEmail(@AuthenticationPrincipal AppUserDto userAuthen, @RequestBody UserPersonalEditRequest dto) {
+        Optional<AppUser> user = appUserService.findById(userAuthen.getId());
         if (user.isEmpty()) {
             throw this.responseErrorNotfound();
         }
         if (dto.getEmail() != null) {
-            Optional<User> userExist = userService.findByEmail(dto.getEmail());
+            Optional<AppUser> userExist = appUserService.findByEmail(dto.getEmail());
             if (userExist.isPresent()) {
                 if (!Objects.equals(userExist.get().getId(), user.get().getId())) {
                     this.throwError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.unsuccessfull"), i18n.getMessage("error.validateDuplicateEmail", dto.getEmail()));
@@ -371,12 +370,12 @@ public class UserController extends BaseApiController {
             user.get().setEmail(dto.getEmail());
         }
         //send email for confirmation before
-        userService.update(user.get());
+        appUserService.update(user.get());
         return this.responseServerMessage(i18n.getMessage("success"), HttpStatus.OK);
     }
 
     @PutMapping("/refreshFcmToken")
-    public ResponseEntity<Object> refreshFcmToken(@AuthenticationPrincipal UserDto userAuthen,
+    public ResponseEntity<Object> refreshFcmToken(@AuthenticationPrincipal AppUserDto userAuthen,
                                                   @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
         Optional<AccessToken> accessToken = accessTokenService.findByToken(userAuthen.getToken());
         if (accessToken.isPresent() && refreshTokenRequest.getFcmToken() != null) {
@@ -389,7 +388,7 @@ public class UserController extends BaseApiController {
     }
 
     @PutMapping("/updateFcmSetting")
-    public ResponseEntity<Object> updateFcmSetting(@AuthenticationPrincipal UserDto userAuthen,
+    public ResponseEntity<Object> updateFcmSetting(@AuthenticationPrincipal AppUserDto userAuthen,
                                                    @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
         Optional<AccessToken> accessToken = accessTokenService.findByToken(userAuthen.getToken());
         if (accessToken.isPresent() && refreshTokenRequest.getFcmToken() != null) {
@@ -400,10 +399,10 @@ public class UserController extends BaseApiController {
     }
 
     @DeleteMapping("/removeAccessTokenSession")
-    public ResponseEntity<Object> removeAccessTokenSession(@AuthenticationPrincipal UserDto userAuthen, @RequestParam(value = "id") Long id
+    public ResponseEntity<Object> removeAccessTokenSession(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam(value = "id") Long id
     ) {
         Optional<AccessToken> accessToken = accessTokenService.findById(id);
-        if (accessToken.isPresent() && Objects.equals(accessToken.get().getUser().getId(), userAuthen.getId())) {
+        if (accessToken.isPresent() && Objects.equals(accessToken.get().getAppUser().getId(), userAuthen.getId())) {
             accessTokenService.logoutProcess(accessToken.get());
         }
         return this.responseServerMessage(i18n.getMessage("success.logoutSuccess"), HttpStatus.OK);
@@ -418,7 +417,7 @@ public class UserController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.apiClientNotFound")));
         }
-        Optional<User> user = userService.findActiveByEmailOrUserName(usernameRequest.getEmailOrUsername());
+        Optional<AppUser> user = appUserService.findActiveByEmailOrUserName(usernameRequest.getEmailOrUsername());
         RefreshTokenResponse response = new RefreshTokenResponse();
         user.ifPresent(value -> response.setUserId(value.getId()));
         return response;

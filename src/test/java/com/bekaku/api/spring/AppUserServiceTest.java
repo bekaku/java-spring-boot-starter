@@ -1,11 +1,9 @@
 package com.bekaku.api.spring;
 
 
-import com.bekaku.api.spring.repository.UserRepository;
-import com.bekaku.api.spring.service.UserService;
+import com.bekaku.api.spring.repository.AppUserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -16,10 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class AppUserServiceTest {
 
     @Mock
-    private UserRepository userRepo;
+    private AppUserRepository userRepo;
 
 //    @InjectMocks
 //    private UserService userService;

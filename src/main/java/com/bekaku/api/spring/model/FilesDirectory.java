@@ -25,8 +25,7 @@ public class FilesDirectory extends Auditable<Long> {
     @Column(length = 125)
     private String name;
 
-    @Column(columnDefinition = "tinyint(1) default 1")
-    boolean active;
+    boolean active = true;
 
     @OneToMany(mappedBy = "filesDirectoryParent", fetch = FetchType.LAZY)
     private Set<FilesDirectory> flesDirectories = new HashSet<>();

@@ -109,7 +109,7 @@ public class EmailServiceImpl implements EmailService {
         templateModel.put("token", accessToken.getToken());
         sendMessageUsingThymeleafTemplate(
                 ConstantData.EMAIL_TEMPLATE_FORGOT,
-                accessToken.getUser().getEmail(),
+                accessToken.getAppUser().getEmail(),
                 i18n.getMessage("email.forgot.title"),
                 templateModel);
     }

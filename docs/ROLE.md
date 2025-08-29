@@ -2,8 +2,8 @@
 
 ```
 METHOD : GET
-URL : /api/role?page={currentPage}&size={size}&sort={#sortField,#sortType}&_q={searchParamiter}
-EXAMPLE : /api/role?page=0&size=2&sort=code,asc&_q=id>=10,frontEnd=false
+URL : /api/appRole?page={currentPage}&size={size}&sort={#sortField,#sortType}&_q={searchParamiter}
+EXAMPLE : /api/appRole?page=0&size=2&sort=code,asc&_q=id>=10,frontEnd=false
 ```
 
 **Request Parameter**
@@ -31,8 +31,8 @@ EXAMPLE : /api/role?page=0&size=2&sort=code,asc&_q=id>=10,frontEnd=false
     },
     {
       "id": 2,
-      "name": "general user",
-      "nameEn": "general user",
+      "name": "general appUser",
+      "nameEn": "general appUser",
       "active": true,
       "frontEnd": true,
       "selectdPermissions": [],
@@ -49,13 +49,13 @@ EXAMPLE : /api/role?page=0&size=2&sort=code,asc&_q=id>=10,frontEnd=false
 
 ```
 METHOD : POST
-URL : /api/role
+URL : /api/appRole
 ```
 
 **Request Parameter**
 
 ```
-Json root name : role
+Json root name : appRole
 ```
 
 | Key                  | Data type | Description   |
@@ -71,7 +71,7 @@ Json root name : role
 
 ```json
 {
-  "role": {
+  "appRole": {
     "name": "It Support",
     "nameEn": "Support",
     "active": true,
@@ -90,13 +90,13 @@ Json root name : role
 
 ```
 METHOD : PUT
-URL : /api/role
+URL : /api/appRole
 ```
 
 **Request Parameter**
 
 ```
-Json root name : role
+Json root name : appRole
 ```
 
 | Key           | Data type | Description   |
@@ -113,7 +113,7 @@ Json root name : role
 
 ```json
 {
-  "role": {
+  "appRole": {
     "id": 2,
     "name": "It Support",
     "nameEn": "Support",
@@ -133,8 +133,8 @@ Json root name : role
 
 ```
 METHOD : GET
-URL : /api/role/{id}
-EXAMPLE : /api/role/1
+URL : /api/appRole/{id}
+EXAMPLE : /api/appRole/1
 ```
 
 **Response success example** :tada:
@@ -159,8 +159,8 @@ EXAMPLE : /api/role/1
 
 ```
 METHOD : DELETE
-URL : /api/role/{id}
-EXAMPLE : /api/role/1
+URL : /api/appRole/{id}
+EXAMPLE : /api/appRole/1
 ```
 
 **Response success example** :tada:
@@ -172,11 +172,11 @@ EXAMPLE : /api/role/1
   "timestamp": "2022-08-03T14:46:58.0779719"
 }
 ```
-## Find all role for backend
+## Find all appRole for backend
 
 ```
 METHOD : GET
-URL : /api/role/findAllBackend
+URL : /api/appRole/findAllBackend
 EXAMPLE : 
 ```
 
@@ -196,11 +196,11 @@ EXAMPLE :
 ]
 ```
 
-## Find all role for frontend and company is null
+## Find all appRole for frontend and company is null
 
 ```
 METHOD : GET
-URL : /api/role/findAllSystemFrontend
+URL : /api/appRole/findAllSystemFrontend
 EXAMPLE : 
 ```
 
@@ -210,8 +210,8 @@ EXAMPLE :
 [
   {
     "id": 2,
-    "name": "general user",
-    "nameEn": "general user",
+    "name": "general appUser",
+    "nameEn": "general appUser",
     "active": true,
     "frontEnd": true,
     "selectdPermissions": [],
@@ -220,12 +220,12 @@ EXAMPLE :
 ]
 ```
 
-## Find all company's role depend on user JWT authen key
+## Find all company's appRole depend on appUser JWT authen key
 
 ```
 METHOD : GET
-URL : /api/role/findAllByCompany?page={currentPage}&size={size}&sort={#sortField,#sortType}&_q={searchParamiter}
-EXAMPLE : /api/role/findAllByCompany?page=0&size=2&sort=code,asc&_q=id>=10,code=false
+URL : /api/appRole/findAllByCompany?page={currentPage}&size={size}&sort={#sortField,#sortType}&_q={searchParamiter}
+EXAMPLE : /api/appRole/findAllByCompany?page=0&size=2&sort=code,asc&_q=id>=10,code=false
 ```
 **Request Parameter**
 
@@ -241,8 +241,8 @@ EXAMPLE : /api/role/findAllByCompany?page=0&size=2&sort=code,asc&_q=id>=10,code=
 [
   {
     "id": 2,
-    "name": "general user",
-    "nameEn": "general user",
+    "name": "general appUser",
+    "nameEn": "general appUser",
     "active": true,
     "frontEnd": true,
     "selectdPermissions": [],
@@ -251,25 +251,25 @@ EXAMPLE : /api/role/findAllByCompany?page=0&size=2&sort=code,asc&_q=id>=10,code=
 ]
 ```
 
-## Create company's role data by company's admin
+## Create company's appRole data by company's admin
 
 ```
 METHOD : POST
-URL : /api/role/createByCompany
+URL : /api/appRole/createByCompany
 ```
-## Update company's role data by company's admin
+## Update company's appRole data by company's admin
 
 ```
 METHOD : PUT
-URL : /api/role/updateByCompany
+URL : /api/appRole/updateByCompany
 ```
 
-## Delete company's role data by company's admin
+## Delete company's appRole data by company's admin
 
 ```
 METHOD : DELETE
-URL : /api/role/deleteByCompany/{id}
-EXAMPLE : /api/role/deleteByCompany/1
+URL : /api/appRole/deleteByCompany/{id}
+EXAMPLE : /api/appRole/deleteByCompany/1
 ```
 
 ---

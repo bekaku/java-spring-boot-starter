@@ -1,7 +1,7 @@
-package com.bekaku.api.spring.configuration;
+package com.bekaku.api.spring.util;
 
-import com.bekaku.api.spring.dto.UserDto;
-import com.bekaku.api.spring.util.AppUtil;
+import com.bekaku.api.spring.dto.AppUserDto;
+import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.vo.IpAddress;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
@@ -16,8 +16,7 @@ public class AuthenticationHelper {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
-
-            if (principal instanceof UserDto userDetails) {
+            if (principal instanceof AppUserDto userDetails) {
                 return userDetails.getId(); // Use getId() if your custom user has it
             }
         }

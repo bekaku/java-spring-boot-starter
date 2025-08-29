@@ -10,12 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-
 @Data
-@JsonRootName("user")
+@JsonRootName("appUser")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
-public class UserDto {
+public class AppUserDto {
     private Long id;
     private String uuid;
     private String email;
@@ -30,5 +29,6 @@ public class UserDto {
     private Boolean active;
     private List<Long> selectedRoles = new ArrayList<>();
     private AppLocale defaultLocale;
-    private List<String> permissions=new ArrayList<>();
+    private List<String> permissions = new ArrayList<>();
+    private List<FavoriteMenuDto> favoriteMenus = new ArrayList<>();
 }

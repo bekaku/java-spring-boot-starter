@@ -18,7 +18,7 @@ Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` t
 ```java
 package com.bekaku.api.spring.controller.api;
 
-@RequestMapping(path = "/api/role")
+@RequestMapping(path = "/api/appRole")
 @RestController
 @RequiredArgsConstructor
 public class RoleController extends BaseApiController {

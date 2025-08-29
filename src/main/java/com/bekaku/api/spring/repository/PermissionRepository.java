@@ -29,24 +29,20 @@ public interface PermissionRepository extends BaseRepository<Permission, Long>, 
     @Query("SELECT e FROM Permission e WHERE e.code LIKE %?1%")
     List<Permission> findAllLikeByCode(String code, Pageable pageable);
 
-    List<Permission> findAllByfrontEnd(boolean frontEnd, Sort sort);
+    List<Permission> findAllBy(Sort sort);
 
-    @Query(value = "SELECT p.code FROM user_role ur LEFT JOIN role_permission pr ON ur.role = pr.role "
-            + " LEFT JOIN permission p ON pr.permission = p.id WHERE p.deleted =0 AND ur.user = :userId AND p.`code` = :code "
+    @Query(value = "SELECT p.code FROM app_user_role ur LEFT JOIN role_permission pr ON ur.app_role = pr.app_role "
+            + " LEFT JOIN permission p ON pr.permission = p.id WHERE ur.app_user = :userId AND p.code = :code "
             , nativeQuery = true)
     List<String> findPermissionsByUserIdAndPermissionCode(@Param(value = "userId") long userId, @Param(value = "code") String code);
 
-    @Query(value = "SELECT DISTINCT(p.`code`) FROM user_role ur LEFT JOIN role_permission pr ON ur.role = pr.role "
-            + " LEFT JOIN permission p ON pr.permission = p.id WHERE p.deleted =0 AND ur.user = ?1 AND p.front_end is false "
+    @Query(value = "SELECT DISTINCT(p.code) FROM app_user_role ur LEFT JOIN role_permission pr ON ur.app_role = pr.app_role "
+            + " LEFT JOIN permission p ON pr.permission = p.id WHERE ur.app_user = ?1 "
             , nativeQuery = true)
-    List<String> findAllBackendPermissionCodeByUserId(Long userId);
+    List<String> findAllPermissionCodeByUserId(Long userId);
 
-    @Query(value = "SELECT DISTINCT(p.`code`) FROM user_role ur LEFT JOIN role_permission pr ON ur.role = pr.role "
-            + " LEFT JOIN permission p ON pr.permission = p.id WHERE p.deleted =0 AND ur.user = ?1 AND p.front_end is true "
-            , nativeQuery = true)
-    List<String> findAllFrontendPermissionCodeByUserId(Long userId);
 
-    @Query(value = "SELECT p.id FROM permission p INNER JOIN role_permission rp ON p.id = rp.permission WHERE rp.role =:roleId", nativeQuery = true)
+    @Query(value = "SELECT p.id FROM permission p INNER JOIN role_permission rp ON p.id = rp.permission WHERE rp.app_role =:roleId", nativeQuery = true)
     List<Long> findAllPermissionIdByRoleId(@Param("roleId") Long roleId);
 
     @Query("SELECT p FROM Permission p WHERE p.code = ?1")

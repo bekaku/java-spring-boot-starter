@@ -1,7 +1,7 @@
 package com.bekaku.api.spring.validator;
 
 import com.bekaku.api.spring.annotation.PermissionRequire;
-import com.bekaku.api.spring.dto.UserDto;
+import com.bekaku.api.spring.dto.AppUserDto;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public class PermissionRequireValidator implements ConstraintValidator<Permissio
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDto userDetails = (UserDto) authentication.getPrincipal();
+        AppUserDto userDetails = (AppUserDto) authentication.getPrincipal();
 //        logger.info("PermissionRequireValidator > isValid >permission :{}, userDetails : {}", this.permissionName, userDetails);
         return false;
     }

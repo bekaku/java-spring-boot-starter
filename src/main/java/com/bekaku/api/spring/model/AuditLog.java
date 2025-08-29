@@ -27,7 +27,8 @@ public class AuditLog extends Id {
 
     private Long entityId;
 
-    @Column(name = "details", columnDefinition = "text default null")
+//    @Column(name = "details", length = 65535)
+    @Column(name = "details", columnDefinition = "TEXT")
     private String details;
 
     private String ipAddress;

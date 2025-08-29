@@ -3,7 +3,7 @@ environments:
 spring:
   main:
     allow-circular-references: false
-#    lazy-initialization: true
+  #    lazy-initialization: true
   devtools:
     restart:
       poll-interval: 10s
@@ -19,22 +19,31 @@ spring:
       hibernate:
         generate_statistics: true
     hibernate:
-      ddl-auto: none  #update, none  validate Hibernate ddl auto (none, create, create-drop, validate, update)
+      ddl-auto: update  #update, none  validate Hibernate ddl auto (none, create, create-drop, validate, update)
 
   output:
     ansi:
       enabled: ALWAYS
   datasource:
+
     # normal connection to mysql server
     #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     # link to docker config from docker-compose.yml
     #    url: jdbc:mysql://${MYSQL_HOST:docker-mysql}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     # connect to mysql form local docker via port 3308
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
-    username: root
+
+    # MySql
+#    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
+#    username: root
+#    password: CH789162be
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # Postgres
+    url: jdbc:postgresql://localhost:5432/spring_starter_postgres
+    username: postgres_user
     password: CH789162be
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    #    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: org.postgresql.Driver
+
     hikari:
       maximum-pool-size: 5
       minimum-idle: 1
@@ -119,7 +128,7 @@ app:
     secret: 1c88aa90d3ca655724a0c78db6a02987720f8dccbb7165609a0f6fc1b031523cf24135365856e5372cb0586abbd14a3cbf82644793d4065df16b0295be3dde6e
     #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes, 600=10 minutes , 60 = 1 minute
     session-time: 86400
-    session-refresh-time: 604800
+    session-refresh-time: 2592000
     session-day: 30
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR

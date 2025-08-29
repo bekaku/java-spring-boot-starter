@@ -15,7 +15,6 @@ import org.hibernate.Hibernate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
-import java.util.UUID;
 
 import static jakarta.persistence.FetchType.LAZY;
 
@@ -35,10 +34,10 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 public class AccessToken extends Id {
 
-    public AccessToken(User user, Date expiresAt, boolean revoked, ApiClient apiClient,
+    public AccessToken(AppUser appUser, Date expiresAt, boolean revoked, ApiClient apiClient,
                        LoginLog loginLog, LocalDateTime createdDate, String fcmToken) {
         this.token = UuidUtils.generateUUID().toString();
-        this.user = user;
+        this.appUser = appUser;
         this.expiresAt = expiresAt;
         this.revoked = revoked;
         this.apiClient = apiClient;
@@ -46,12 +45,11 @@ public class AccessToken extends Id {
         this.createdDate = createdDate;
         this.fcmToken = fcmToken;
         this.fcmEnable = true;
-        this.service = AccessTokenServiceType.LOGIN;
         this.lastestActive = DateUtil.getLocalDateTimeNow();
     }
-    public void onCreateToken(User user, Date expiresAt, String token, AccessTokenServiceType service) {
+    public void onCreateToken(AppUser appUser, Date expiresAt, String token, AccessTokenServiceType service) {
         this.token = token;
-        this.user = user;
+        this.appUser = appUser;
         this.expiresAt = expiresAt;
         this.revoked = false;
         this.createdDate = DateUtil.getLocalDateTimeNow();
@@ -76,16 +74,16 @@ public class AccessToken extends Id {
 
     private String fcmToken;
 
-    @Column(columnDefinition = "tinyint(1) default 1")
-    private Boolean fcmEnable;
+    private Boolean fcmEnable = true;
 
-    @Column(columnDefinition = "tinyint(2) default 1", length = 1, name = "service")
-    private AccessTokenServiceType service;
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name = "service", nullable = false)
+    private AccessTokenServiceType service = AccessTokenServiceType.LOGIN;
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "user")
-    private User user;
+    @JoinColumn(name = "app_user")
+    private AppUser appUser;
 
     @JsonIgnore
     @ManyToOne(fetch = LAZY)
@@ -97,8 +95,7 @@ public class AccessToken extends Id {
     @JoinColumn(name = "loginLog", referencedColumnName = "id")
     private LoginLog loginLog;
 
-    @Column(columnDefinition = "tinyint(1) default 0", name = "revoked")
-    private boolean revoked;
+    private boolean revoked = false;
 
     private Date expiresAt;
 

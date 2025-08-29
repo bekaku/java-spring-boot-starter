@@ -65,7 +65,7 @@ Json root name : permission
 {
   "permission": {
     "code": "read_report",
-    "remark": "user can read report",
+    "remark": "appUser can read report",
     "frontEnd": false,
     "operationType": 1
   }
@@ -100,7 +100,7 @@ Json root name : permission
   "permission": {
     "id": 1,
     "code": "read_report",
-    "remark": "user can read report",
+    "remark": "appUser can read report",
     "frontEnd": false,
     "operationType": 1
   }
@@ -141,7 +141,7 @@ EXAMPLE : /api/permission/1
   "timestamp": "2022-08-03T14:46:58.0779719"
 }
 ```
-## Get user access control list data
+## Get appUser access control list data
 
 ```
 METHOD : GET

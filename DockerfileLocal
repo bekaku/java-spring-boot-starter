@@ -10,7 +10,7 @@ RUN apk --no-cache add curl tzdata && \
     cp /usr/share/zoneinfo/Asia/Bangkok /etc/localtime && \
     echo "Asia/Bangkok" > /etc/timezone
 
-# Create non-root user and group
+# Create non-root appUser and group
 #RUN addgroup -g 1001 springgroup && \
 #    adduser -D -u 1001 -G springgroup springuser
 
@@ -20,10 +20,10 @@ WORKDIR /app
 # Copy the built JAR file
 COPY /build/libs/api-service-1.0.0.jar app.jar
 
-# Copy the built JAR file and give ownership to the non-root user
+# Copy the built JAR file and give ownership to the non-root appUser
 #COPY --chown=springuser:springgroup /build/libs/api-service-1.0.0.jar app.jar
 
-# Switch to non-root user
+# Switch to non-root appUser
 #USER springuser
 
 # Expose the application port

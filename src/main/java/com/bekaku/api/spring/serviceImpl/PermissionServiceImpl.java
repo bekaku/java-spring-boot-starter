@@ -150,11 +150,8 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<String> findAllPermissionCodeByUserId(Long userId, boolean frontend) {
-        if (frontend) {
-            return permissionRepository.findAllFrontendPermissionCodeByUserId(userId);
-        }
-        return permissionRepository.findAllBackendPermissionCodeByUserId(userId);
+    public List<String> findAllPermissionCodeByUserId(Long userId) {
+        return permissionRepository.findAllPermissionCodeByUserId(userId);
     }
 
 
@@ -183,8 +180,8 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<PermissionDto> findAllBy(boolean frontEnd, Sort sort) {
-        List<Permission> list = permissionRepository.findAllByfrontEnd(frontEnd, sort);
+    public List<PermissionDto> findAllBy(Sort sort) {
+        List<Permission> list = permissionRepository.findAllBy(sort);
         return list.stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 

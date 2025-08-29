@@ -1,6 +1,6 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.configuration.AuthenticationHelper;
+import com.bekaku.api.spring.util.AuthenticationHelper;
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.AuditLog;
 import com.bekaku.api.spring.repository.AuditLogRepository;
