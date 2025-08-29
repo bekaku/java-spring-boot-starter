@@ -26,7 +26,6 @@ public class FilesDirectoryPath implements Serializable {
     @EmbeddedId
     private FilesDirectoryPathId filesDirectoryPathId;
 
-    @Column(columnDefinition = "smallint(0) default 0")
     private int level = 0;
 
     public static Sort getSort() {

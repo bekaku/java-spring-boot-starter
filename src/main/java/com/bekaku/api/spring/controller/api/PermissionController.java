@@ -2,9 +2,9 @@ package com.bekaku.api.spring.controller.api;
 
 
 import com.bekaku.api.spring.configuration.I18n;
+import com.bekaku.api.spring.dto.AppUserDto;
 import com.bekaku.api.spring.dto.PermissionDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
-import com.bekaku.api.spring.dto.UserDto;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.specification.SearchSpecification;
@@ -88,21 +88,17 @@ public class PermissionController extends BaseApiController {
                 .and(Sort.by("operationType").ascending());
     }
 
-    @PreAuthorize("isHasPermission('role_manage')")
-    @GetMapping("/findAllBackendPermission")
-    public ResponseEntity<Object> findAllBackendPermission() {
-        return this.responseEntity(permissionService.findAllBy(false, getSort()), HttpStatus.OK);
-    }
-
-    @GetMapping("/findAllFrontendPermission")
-    public ResponseEntity<Object> findAllFrontendPermission() {
-        return this.responseEntity(permissionService.findAllBy(true, getSort()), HttpStatus.OK);
+    @PreAuthorize("isHasPermission('app_role_manage')")
+    @GetMapping("/findAllPermission")
+    public ResponseEntity<Object> findAllPermission() {
+        return this.responseEntity(permissionService.findAllBy(getSort()), HttpStatus.OK);
     }
 
     @PreAuthorize("isHasPermission('permission_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody PermissionDto dto) {
 
+        log.info("dto: {}", dto.getDescription());
         Permission permission = permissionService.convertDtoToEntity(dto);
         Optional<Permission> permissionExist = permissionService.findByCode(dto.getCode());
         if (permissionExist.isPresent()) {
@@ -161,12 +157,12 @@ public class PermissionController extends BaseApiController {
     }
 
     @GetMapping("/userAcl")
-    public ResponseEntity<Object> userAcl(@AuthenticationPrincipal UserDto userAuthen,
+    public ResponseEntity<Object> userAcl(@AuthenticationPrincipal AppUserDto userAuthen,
                                           @RequestParam(value = "getMenuList", required = false, defaultValue = "1") boolean getMenuList) {
         if (userAuthen == null) {
             throw this.responseErrorNotfound();
         }
-        List<String> userPermissions = permissionService.findAllPermissionCodeByUserId(userAuthen.getId(), false);
+        List<String> userPermissions = permissionService.findAllPermissionCodeByUserId(userAuthen.getId());
         JSONArray filterMenus = new JSONArray();
         if (getMenuList) {
             JSONArray rawNavMenus = getJsonFromResource(jsonAcl);

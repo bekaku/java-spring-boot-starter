@@ -2,7 +2,7 @@
 
 ```
 METHOD : GET
-URL : /api/user/currentUserData
+URL : /api/appUser/currentUserData
 EXAMPLE : 
 ```
 

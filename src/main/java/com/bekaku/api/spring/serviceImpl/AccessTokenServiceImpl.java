@@ -2,18 +2,18 @@ package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.AccessTokenDto;
+import com.bekaku.api.spring.dto.AppUserDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
-import com.bekaku.api.spring.dto.UserDto;
 import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.mapper.AccessTokenMapper;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
+import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.LoginLog;
-import com.bekaku.api.spring.model.User;
 import com.bekaku.api.spring.mybatis.AccessTokenMybatis;
-import com.bekaku.api.spring.mybatis.UserMybatis;
+import com.bekaku.api.spring.mybatis.AppUserMybatis;
 import com.bekaku.api.spring.repository.AccessTokenRepository;
 import com.bekaku.api.spring.service.AccessTokenService;
 import com.bekaku.api.spring.service.ApiClientService;
@@ -48,7 +48,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     private final UserAgentService userAgentService;
     private final AccessTokenMybatis accessTokenMybatis;
     private final AccessTokenMapper mapper;
-    private final UserMybatis userMybatis;
+    private final AppUserMybatis appUserMybatis;
     private final JwtService jwtService;
     private final ApiClientService apiClientService;
 
@@ -70,14 +70,14 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                                   UserAgentService userAgentService,
                                   AccessTokenMybatis accessTokenMybatis,
                                   AccessTokenMapper mapper,
-                                  UserMybatis userMybatis,
+                                  AppUserMybatis appUserMybatis,
                                   I18n i18n) {
         this.jwtService = jwtService;
         this.accessTokenRepository = accessTokenRepository;
         this.userAgentService = userAgentService;
         this.accessTokenMybatis = accessTokenMybatis;
         this.mapper = mapper;
-        this.userMybatis = userMybatis;
+        this.appUserMybatis = appUserMybatis;
         this.i18n = i18n;
         this.apiClientService = apiClientService;
     }
@@ -113,8 +113,8 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<AccessToken> findAccessTokenByTokenAndUser(User user, String token) {
-        return accessTokenRepository.findAccessTokenByTokenAndUser(user, token);
+    public Optional<AccessToken> findAccessTokenByTokenAndUser(AppUser appUser, String token) {
+        return accessTokenRepository.findAccessTokenByTokenAndUser(appUser, token);
     }
 
     @Transactional(readOnly = true)
@@ -124,11 +124,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
-    public AccessToken generateRefreshToken(User user, ApiClient apiClient, LoginLog loginLog, String fcmToken) {
+    public AccessToken generateRefreshToken(AppUser appUser, ApiClient apiClient, LoginLog loginLog, String fcmToken) {
         //find user agent or create new if not found
 //        Date expires = new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_YEAR));
         AccessToken accessToken = new AccessToken(
-                user,
+                appUser,
                 jwtService.expireRefreshTokenTimeFromNow(),
                 false,
                 apiClient,
@@ -206,8 +206,13 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<UserDto> findByAccessTokenKey(String token) {
-        return userMybatis.findByAccessTokenKey(token);
+    public Optional<AppUserDto> findByAccessTokenKey(String token) {
+        return appUserMybatis.findByAccessTokenKey(token);
+    }
+
+    @Override
+    public Optional<AccessToken> findByActiveToken(String token) {
+        return accessTokenRepository.findByActiveToken(token);
     }
 
     @Override
@@ -217,8 +222,8 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
-    public AccessToken generateTokenBy(User user, Date expiresAt, String token, AccessTokenServiceType service) {
-        Optional<AccessToken> accessToken = accessTokenRepository.findLatestAccessTokenByUser(user, service);
+    public AccessToken generateTokenBy(AppUser appUser, Date expiresAt, String token, AccessTokenServiceType service) {
+        Optional<AccessToken> accessToken = accessTokenRepository.findLatestAccessTokenByUser(appUser, service);
         AccessToken accessTokenResponse = null;
         if (accessToken.isPresent()) {
             boolean isExpired = isTokenExpired(accessToken.get());
@@ -229,7 +234,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
             }
         } else {
             accessTokenResponse = new AccessToken();
-            accessTokenResponse.onCreateToken(user, expiresAt, token, service);
+            accessTokenResponse.onCreateToken(appUser, expiresAt, token, service);
             save(accessTokenResponse);
         }
         return accessTokenResponse;

@@ -1,5 +1,6 @@
 package com.bekaku.api.spring.dto;
 
+import com.bekaku.api.spring.enumtype.PermissionType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,6 +17,5 @@ public class PermissionDto extends DtoId {
     private String code;
     private String remark;
     private String description;
-    private int operationType;
-    private boolean frontEnd;
+    private PermissionType operationType;
 }

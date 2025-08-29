@@ -28,9 +28,9 @@ import static jakarta.persistence.FetchType.LAZY;
 )
 public class LoginLog extends Id {
 
-    public LoginLog(LoginLogType loginFrom, User user, IpAddress ipAddress, String deviceId, UserAgent userAgent) {
+    public LoginLog(LoginLogType loginFrom, AppUser appUser, IpAddress ipAddress, String deviceId, UserAgent userAgent) {
         this.loginFrom = loginFrom;
-        this.user = user;
+        this.appUser = appUser;
         if (ipAddress != null) {
             this.ip = ipAddress.getIp();
             this.hostName = ipAddress.getHostName();
@@ -42,7 +42,7 @@ public class LoginLog extends Id {
     @JoinColumn(name = "userAgent")
     private UserAgent userAgent;
 
-    @Column(columnDefinition = "tinyint(1) default 1")//1=Web, 2=ios , 3 = andriod
+    @Enumerated(EnumType.ORDINAL)
     private LoginLogType loginFrom;
 
     @Column(length = 50)
@@ -52,8 +52,8 @@ public class LoginLog extends Id {
     private String hostName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user")
-    private User user;
+    @JoinColumn(name = "app_user")
+    private AppUser appUser;
 
     @OneToOne(mappedBy = "loginLog")
     private AccessToken accessToken;

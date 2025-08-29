@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.bekaku.api.spring.mybatis.UserMybatis">
+<mapper namespace="com.bekaku.api.spring.mybatis.AppUserMybatis">
     <!--    Query ffff-->
     <sql id="selectUserData">
         select
@@ -9,10 +9,10 @@
         U.username,
         U.avatar_file_id avatarFileId,
         U.active,
-        UR.role roleId
+        UR.app_role roleId
         from
-        user U
-        left join user_role UR on UR.user = U.id
+        app_user U
+        left join user_role UR on UR.app_user = U.id
     </sql>
 
     <select id="findAll" resultMap="userDataResult">
@@ -20,11 +20,11 @@
         where U.deleted is false
         limit #{page.offset}, #{page.limit}
     </select>
-    <select id="findByUsername" resultType="com.bekaku.api.spring.dto.UserDto">
-        select * from user where deleted is false AND username = #{username}
+    <select id="findByUsername" resultType="com.bekaku.api.spring.dto.AppUserDto">
+        select * from app_user where deleted is false AND username = #{username}
     </select>
-    <select id="findByEmail" resultType="com.bekaku.api.spring.dto.UserDto">
-        select * from user where deleted is false AND email = #{email}
+    <select id="findByEmail" resultType="com.bekaku.api.spring.dto.AppUserDto">
+        select * from app_user where deleted is false AND email = #{email}
     </select>
     <select id="findById" resultMap="userDataResult">
         <include refid="selectUserData"/>
@@ -43,7 +43,7 @@
 
         FROM
         access_token act
-        LEFT JOIN `user` u ON act.`user` = u.id
+        LEFT JOIN app_user u ON act.app_user = u.id
         WHERE
         act.token =#{token}
         AND act.revoked is false
@@ -52,7 +52,7 @@
 
 
     <!--Result Map-->
-    <resultMap id="userDataResult" type="com.bekaku.api.spring.dto.UserDto">
+    <resultMap id="userDataResult" type="com.bekaku.api.spring.dto.AppUserDto">
         <id column="id" property="id"/>
         <result column="email" property="email"/>
         <result column="username" property="username"/>
@@ -62,7 +62,7 @@
             <result column="roleId"/>
         </collection>
     </resultMap>
-    <resultMap id="accessTokenUserDataResult" type="com.bekaku.api.spring.dto.UserDto">
+    <resultMap id="accessTokenUserDataResult" type="com.bekaku.api.spring.dto.AppUserDto">
         <id column="id" property="id"/>
         <result column="salt" property="uuid"/>
         <result column="email" property="email"/>

@@ -23,7 +23,7 @@ public interface PermissionService extends BaseService<Permission, PermissionDto
 
     boolean isHasPermission(long userId, String permissionCode);
 
-    List<String> findAllPermissionCodeByUserId(@Param(value = "userId") Long userId, boolean frontend);
+    List<String> findAllPermissionCodeByUserId(@Param(value = "userId") Long userId);
 
     Optional<Permission> findByCode(String code);
 
@@ -33,7 +33,7 @@ public interface PermissionService extends BaseService<Permission, PermissionDto
 
     List<Long> findAllPermissionIdByRoleId(Long roleId);
 
-    List<PermissionDto> findAllBy(boolean frontEnd ,Sort sort);
+    List<PermissionDto> findAllBy(Sort sort);
 
     // custom cuery
     Object[] findCustomById(Long id);

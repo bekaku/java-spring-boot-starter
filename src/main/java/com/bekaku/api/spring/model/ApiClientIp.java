@@ -43,8 +43,7 @@ public class ApiClientIp extends Auditable<Long> {
     @Column(length = 50)
     private String ipAddress;
 
-    @Column(columnDefinition = "tinyint(1) default 1")
-    private Boolean status;
+    private Boolean status = true;
 
     public static Sort getSort() {
         return Sort.by(Sort.Direction.ASC, "ipAddress");

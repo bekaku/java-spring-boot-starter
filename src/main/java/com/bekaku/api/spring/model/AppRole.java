@@ -19,48 +19,37 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "role", indexes = {
+@Table(name = "app_role", indexes = {
         @Index(columnList = "deleted"),
         @Index(columnList = "updated_user"),
         @Index(columnList = "created_user"),
 })
-@SQLDelete(sql = "UPDATE role SET deleted = true WHERE id=?")
+@SQLDelete(sql = "UPDATE app_role SET deleted = true WHERE id=?")
 @SQLRestriction("deleted=false")
 @EntityListeners(AuditListener.class)
-public class Role extends SoftDeletedAuditable<Long> {
+public class AppRole extends SoftDeletedAuditable<Long> {
 
-    public Role(String name, String nameEn, Boolean active, Boolean frontEnd) {
+    public AppRole(String name, Boolean active) {
         this.name = name;
-        this.nameEn = nameEn;
         this.active = active;
-        this.frontEnd = frontEnd;
     }
 
-    public void update(String name, String nameEn, Boolean active, Boolean frontEnd) {
+    public void update(String name, Boolean active) {
         this.name = name;
-        this.nameEn = nameEn;
         this.active = active;
-        this.frontEnd = frontEnd;
     }
 
     @Column(name = "name", length = 125, nullable = false)
     private String name;
 
-    @Column(name = "name_en", length = 125)
-    private String nameEn;
+    private Boolean active = true;
 
-    @Column(name = "active", columnDefinition = "tinyint(1) default 1")
-    private Boolean active;
-
-    @Column(name = "front_end", columnDefinition = "tinyint(1) default 0")
-    private Boolean frontEnd;
-
-    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
-    Set<User> users;
+    @ManyToMany(mappedBy = "appRoles", fetch = FetchType.LAZY)
+    Set<AppUser> appUsers;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "role_permission",
-            joinColumns = {@JoinColumn(name = "role")},
+            joinColumns = {@JoinColumn(name = "app_role")},
             inverseJoinColumns = {@JoinColumn(name = "permission")})
     private Set<Permission> permissions = new HashSet<>();
 
@@ -68,9 +57,7 @@ public class Role extends SoftDeletedAuditable<Long> {
     public String toString() {
         return "Role{" +
                 "name='" + name + '\'' +
-                ", nameEn='" + nameEn + '\'' +
                 ", active=" + active +
-                ", frontEnd=" + frontEnd +
                 ", id=" + getId() +
                 '}';
     }

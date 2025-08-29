@@ -2,6 +2,7 @@ package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.enumtype.AppLocale;
+import com.bekaku.api.spring.model.superclass.Id;
 import com.bekaku.api.spring.model.superclass.SoftDeletedAuditable;
 import com.bekaku.api.spring.util.UuidUtils;
 import jakarta.persistence.*;
@@ -15,13 +16,12 @@ import org.springframework.data.domain.Sort;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 
 @GenSourceableTable(createPermission = false)
 @Getter
 @Setter
 @Entity
-@Table(name = "user",
+@Table(name = "app_user",
         indexes = {
                 @Index(columnList = "active"),
                 @Index(columnList = "deleted"),
@@ -29,9 +29,9 @@ import java.util.UUID;
                 @Index(columnList = "created_user"),
         }
 )
-@SQLDelete(sql = "UPDATE user SET deleted = true WHERE id=?")
+@SQLDelete(sql = "UPDATE app_user SET deleted = true WHERE id=?")
 @SQLRestriction("deleted=false")
-public class User extends SoftDeletedAuditable<Long> {
+public class AppUser extends SoftDeletedAuditable<Long> {
 
     public void addNew(String username, String password, String email, Boolean active) {
         this.salt = UuidUtils.generateUUID().toString();
@@ -49,6 +49,8 @@ public class User extends SoftDeletedAuditable<Long> {
         this.active = status;
         if (!"".equals(username)) {
             this.username = username;
+        }else{
+            this.username = null;
         }
     }
 
@@ -66,7 +68,7 @@ public class User extends SoftDeletedAuditable<Long> {
     @Column(length = 125, unique = true, nullable = false)
     private String email;
 
-    @Column(length = 1, columnDefinition = "tinyint(1) default 0")
+    @Enumerated(EnumType.ORDINAL)
     private AppLocale defaultLocale;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -79,19 +81,18 @@ public class User extends SoftDeletedAuditable<Long> {
 
     private String salt;
 
-    @Column(columnDefinition = "tinyint(1) default 1", nullable = false)
-    private boolean active;
+    @Column(nullable = false)
+    private boolean active = true;
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 //    private List<AccessToken> accessTokens;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "user_role",
-            joinColumns = @JoinColumn(name = "user"),
-            inverseJoinColumns = @JoinColumn(name = "role"))
-    private Set<Role> roles = new HashSet<>();
-
+            name = "app_user_role",
+            joinColumns = @JoinColumn(name = "app_user"),
+            inverseJoinColumns = @JoinColumn(name = "app_role"))
+    private Set<AppRole> appRoles = new HashSet<>();
 
     public static Sort getSort() {
         return Sort.by(Sort.Direction.ASC, "username");
@@ -101,8 +102,8 @@ public class User extends SoftDeletedAuditable<Long> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        User user = (User) o;
-        return getId() != null && Objects.equals(getId(), user.getId());
+        AppUser appUser = (AppUser) o;
+        return getId() != null && Objects.equals(getId(), appUser.getId());
     }
 
     @Override

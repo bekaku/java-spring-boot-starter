@@ -7,14 +7,13 @@ import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
-import com.bekaku.api.spring.model.Role;
-import com.bekaku.api.spring.model.User;
+import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.model.AppRole;
 import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import jakarta.mail.MessagingException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,10 +25,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.util.*;
 
 import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
@@ -41,11 +38,11 @@ import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
 @RequiredArgsConstructor
 public class AuthController extends BaseApiController {
 
-    private final UserService userService;
+    private final AppUserService appUserService;
     private final AuthService authService;
     private final AccessTokenService accessTokenService;
     private final EncryptService encryptService;
-    private final RoleService roleService;
+    private final AppRoleService appRoleService;
     private final ApiClientService apiClientService;
     private final JwtService jwtService;
     private final EmailService emailService;
@@ -69,12 +66,12 @@ public class AuthController extends BaseApiController {
         validateUserRegister(registerDto);
 
         //user can have many role
-        Set<Role> roles = new HashSet<>();
+        Set<AppRole> appRoles = new HashSet<>();
         if (registerDto.getSelectedRoles().length > 0) {
-            Optional<Role> role;
+            Optional<AppRole> role;
             for (long roleId : registerDto.getSelectedRoles()) {
-                role = roleService.findById(roleId);
-                role.ifPresent(roles::add);
+                role = appRoleService.findById(roleId);
+                role.ifPresent(appRoles::add);
             }
         }
 //        else {
@@ -82,27 +79,27 @@ public class AuthController extends BaseApiController {
 //            Optional<Role> role = roleService.findById(defaultRole);
 //            role.ifPresent(roles::add);
 //        }
-        User user = new User();
-        user.addNew(
+        AppUser appUser = new AppUser();
+        appUser.addNew(
                 registerDto.getUsername(),
                 registerDto.getPassword(),
                 registerDto.getEmail(),
                 registerDto.isActive()
         );
-        user.setRoles(roles);
+        appUser.setAppRoles(appRoles);
         //encrypt pwd
-        user.setPassword(encryptService.encrypt(user.getPassword(), user.getSalt()));
-        userService.save(user);
+        appUser.setPassword(encryptService.encrypt(appUser.getPassword(), appUser.getSalt()));
+        appUserService.save(appUser);
         return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }
 
     private void validateUserRegister(@RequestBody UserRegisterRequest registerParam) {
 
         List<String> errors = new ArrayList<>();
-        if (userService.findByUsername(registerParam.getUsername()).isPresent()) {
+        if (appUserService.findByUsername(registerParam.getUsername()).isPresent()) {
             errors.add(i18n.getMessage("error.validateDuplicateUsername", registerParam.getUsername()));
         }
-        if (userService.findByEmail(registerParam.getEmail()).isPresent()) {
+        if (appUserService.findByEmail(registerParam.getEmail()).isPresent()) {
             errors.add(i18n.getMessage("error.validateDuplicateEmail", registerParam.getEmail()));
         }
         if (!errors.isEmpty()) {
@@ -128,7 +125,7 @@ public class AuthController extends BaseApiController {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.apiClientNotFound")));
         }
-        Optional<User> user = userService.findActiveByEmailOrUserName(loginRequest.getEmailOrUsername());
+        Optional<AppUser> user = appUserService.findActiveByEmailOrUserName(loginRequest.getEmailOrUsername());
         if (user.isEmpty()) {
             throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
                     i18n.getMessage("error.userNotFound", loginRequest.getEmailOrUsername())));
@@ -260,7 +257,7 @@ public class AuthController extends BaseApiController {
                                                               @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                                               @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) throws MessagingException {
 
-        Optional<User> user = userService.findByEmail(reqBody.getEmail());
+        Optional<AppUser> user = appUserService.findByEmail(reqBody.getEmail());
         if (user.isEmpty()) {
             throw new ApiException(new ApiError(HttpStatus.NOT_FOUND, i18n.getMessage("error.error"),
                     i18n.getMessage("error.userNotFound", reqBody.getEmail())));
@@ -284,7 +281,7 @@ public class AuthController extends BaseApiController {
     }
 
     private AccessToken getRequestForgotPasswordAccesstoken(ForgotPasswordRequest reqBody) {
-        Optional<User> user = userService.findByEmail(reqBody.getEmail());
+        Optional<AppUser> user = appUserService.findByEmail(reqBody.getEmail());
         if (user.isEmpty()) {
             throw this.responseErrorBadRequest();
         }
@@ -318,8 +315,8 @@ public class AuthController extends BaseApiController {
         }
 
         AccessToken accessToken = getRequestForgotPasswordAccesstoken(reqBody);
-        String newPassword = encryptService.encrypt(reqBody.getNewPassword(), accessToken.getUser().getSalt());
-        userService.updatePasswordBy(accessToken.getUser(), newPassword);
+        String newPassword = encryptService.encrypt(reqBody.getNewPassword(), accessToken.getAppUser().getSalt());
+        appUserService.updatePasswordBy(accessToken.getAppUser(), newPassword);
         accessTokenService.delete(accessToken);
         return this.responseServerMessage(i18n.getMessage("helper.reset_pwd_ok", reqBody.getEmail()));
     }
@@ -350,10 +347,10 @@ public class AuthController extends BaseApiController {
 
     @Deprecated
     @DeleteMapping("/removeAccessTokenSession")
-    public ResponseEntity<Object> removeAccessTokenSession(@AuthenticationPrincipal UserDto userAuthen, @RequestParam(value = "id") Long id
+    public ResponseEntity<Object> removeAccessTokenSession(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam(value = "id") Long id
     ) {
         Optional<AccessToken> accessToken = accessTokenService.findById(id);
-        if (accessToken.isPresent() && Objects.equals(accessToken.get().getUser().getId(), userAuthen.getId())) {
+        if (accessToken.isPresent() && Objects.equals(accessToken.get().getAppUser().getId(), userAuthen.getId())) {
             logoutProcess(accessToken.get());
         }
         return this.responseServerMessage(i18n.getMessage("success.logoutSuccess"), HttpStatus.OK);

@@ -177,7 +177,7 @@ app:
 
 [//]: # (**Project structure**)
 
-[//]: # (![image]&#40;https://user-images.githubusercontent.com/33171470/116986615-32423a00-acf8-11eb-88f7-db2e44a77b12.png&#41;)
+[//]: # (![image]&#40;https://appUser-images.githubusercontent.com/33171470/116986615-32423a00-acf8-11eb-88f7-db2e44a77b12.png&#41;)
 
 
 Open Terminal and run following command 
@@ -255,7 +255,7 @@ URL : /api/auth/login
 
 **Request Parameters**
 ```
-Json root name : user
+Json root name : appUser
 ```
 | Key                  | Data type                            | Description   |
 | -------------------- |----------------------------------| --------------|
@@ -265,7 +265,7 @@ Json root name : user
 
 ```json
 {
-  "user": {
+  "appUser": {
     "emailOrUsername" : "admin@mydomain.com",
     "password" : "P@ssw0rd",
     "loginForm" : 1
@@ -307,7 +307,7 @@ Json root name : user
 **Get current User**
 ```
 METHOD : GET
-URL : /api/user/currentUserData
+URL : /api/appUser/currentUserData
 ```
 **Response success example** :tada:
 
@@ -393,7 +393,7 @@ Json root name : permission
 {
   "permission": {
     "code": "read_report",
-    "description": "user can read report",
+    "description": "appUser can read report",
     "module": "AD"
   }
 }
@@ -459,8 +459,8 @@ EXAMPLE : /api/permission/1
 
 ```
 METHOD : GET
-URL : /api/role?page={currentPage}&size={size}&sort={#sortField,#sortType}
-EXAMPLE : /api/role?page=0&size=2&sort=code,asc
+URL : /api/appRole?page={currentPage}&size={size}&sort={#sortField,#sortType}
+EXAMPLE : /api/appRole?page=0&size=2&sort=code,asc
 ```
 **Request Parameter**
 
@@ -491,11 +491,11 @@ EXAMPLE : /api/role?page=0&size=2&sort=code,asc
 
 ```
 METHOD : POST
-URL : /api/role
+URL : /api/appRole
 ```
 **Request Parameter**
 ```
-Json root name : role
+Json root name : appRole
 ```
 | Key                  | Data type                            | Description   |
 | -------------------- |----------------------------------| --------------|
@@ -507,7 +507,7 @@ Json root name : role
 **Request example**
 ```json
 {
-  "role": {
+  "appRole": {
     "name": "develop",
     "description": "developer 555",
     "status": true,
@@ -525,7 +525,7 @@ Json root name : role
 
 ```
 METHOD : PUT
-URL : /api/role
+URL : /api/appRole
 ```
 **Request Parameter**
 ```
@@ -541,7 +541,7 @@ Json root name : permission
 **Request example**
 ```json
 {
-  "role": {
+  "appRole": {
     "id": 55,
     "name": "develop",
     "description": "developer",
@@ -558,8 +558,8 @@ Json root name : permission
 
 ```
 METHOD : GET
-URL : /api/role/{id}
-EXAMPLE : /api/role/1
+URL : /api/appRole/{id}
+EXAMPLE : /api/appRole/1
 ```
 **Response success example** :tada:
 ```json
@@ -576,8 +576,8 @@ EXAMPLE : /api/role/1
 
 ```
 METHOD : DELETE
-URL : /api/role/{id}
-EXAMPLE : /api/role/1
+URL : /api/appRole/{id}
+EXAMPLE : /api/appRole/1
 ```
 
 ---
@@ -587,7 +587,7 @@ EXAMPLE : /api/role/1
 
 ```
 METHOD : POST
-URL : /api/user
+URL : /api/appUser
 ```
 **Request Parameter**
 ```
@@ -636,7 +636,7 @@ Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}||{PERM
 ```java
 package com.bekaku.api.spring.controller.api;
 
-@RequestMapping(path = "/api/role")
+@RequestMapping(path = "/api/appRole")
 @RestController
 @RequiredArgsConstructor
 public class RoleController extends BaseApiController {
@@ -653,7 +653,7 @@ public class RoleController extends BaseApiController {
     @PreAuthorize("isHasPermission('role_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
-        logger.info("/api/role > findAll, isLogEnable {}", logEnable);
+        logger.info("/api/appRole > findAll, isLogEnable {}", logEnable);
         return this.responseEntity(roleService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
                 PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Role.getSort())), HttpStatus.OK);
     }
@@ -661,19 +661,19 @@ public class RoleController extends BaseApiController {
     @PreAuthorize("isHasPermission('role_add||user_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
-        Role role = roleService.convertDtoToEntity(dto);
-        roleValidator.validate(role);
-        setRolePermission(dto, role);
-        roleService.save(role);
-        return this.responseEntity(roleService.convertEntityToDto(role), HttpStatus.CREATED);
+        Role appRole = roleService.convertDtoToEntity(dto);
+        roleValidator.validate(appRole);
+        setRolePermission(dto, appRole);
+        roleService.save(appRole);
+        return this.responseEntity(roleService.convertEntityToDto(appRole), HttpStatus.CREATED);
     }
 
-    private void setRolePermission(RoleDto dto, Role role) {
+    private void setRolePermission(RoleDto dto, Role appRole) {
         if (dto.getSelectdPermissions().length > 0) {
             Optional<Permission> permission;
             for (long permissionId : dto.getSelectdPermissions()) {
                 permission = permissionService.findById(permissionId);
-                permission.ifPresent(value -> role.getPermissions().add(value));
+                permission.ifPresent(value -> appRole.getPermissions().add(value));
             }
         }
     }

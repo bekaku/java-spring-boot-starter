@@ -4,7 +4,7 @@ A modern, production-ready Spring Boot starter template for building secure REST
 
 ## 🌟 Overview
 
-This starter template provides a robust foundation for Java-based REST API development using Spring Boot and Gradle. It includes enterprise-level features such as JWT authentication, role-based access control, comprehensive API documentation, and automated code generation tools.
+This starter template provides a robust foundation for Java-based REST API development using Spring Boot and Gradle. It includes enterprise-level features such as JWT authentication, appRole-based access control, comprehensive API documentation, and automated code generation tools.
 
 
 ## 📋 Table of Contents
@@ -278,10 +278,10 @@ Access interactive API documentation at:
 | Endpoint | Method | Description | Auth Required |
 |----------|--------|-------------|---------------|
 | `/api/auth/login` | POST | User authentication | No |
-| `/api/user/currentUserData` | GET | Get current user info | Yes |
+| `/api/appUser/currentUserData` | GET | Get current appUser info | Yes |
 | `/api/permission` | GET, POST, PUT, DELETE | Permission management | Yes |
-| `/api/role` | GET, POST, PUT, DELETE | Role management | Yes |
-| `/api/user` | POST | User registration | Yes |
+| `/api/appRole` | GET, POST, PUT, DELETE | Role management | Yes |
+| `/api/appUser` | POST | User registration | Yes |
 
 ## 🔐 Authentication & Authorization
 
@@ -291,7 +291,7 @@ Access interactive API documentation at:
    ```json
    POST /api/auth/login
    {
-     "user": {
+     "appUser": {
        "emailOrUsername": "admin@mydomain.com",
        "password": "P@ssw0rd",
        "loginForm": 1

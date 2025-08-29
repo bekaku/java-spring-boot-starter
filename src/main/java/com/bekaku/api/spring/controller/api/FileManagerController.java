@@ -2,15 +2,15 @@ package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.*;
+import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FileMime;
 import com.bekaku.api.spring.model.FilesDirectory;
-import com.bekaku.api.spring.model.User;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.service.FileMimeService;
 import com.bekaku.api.spring.service.FilesDirectoryService;
-import com.bekaku.api.spring.service.UserService;
+import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
@@ -19,9 +19,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -44,7 +41,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import static com.bekaku.api.spring.util.FileUtil.TEMP_UPLOAD_DIR;
@@ -60,7 +56,7 @@ public class FileManagerController extends BaseApiController {
     private final FileMimeService fileMimeService;
     private final I18n i18n;
     private final AppProperties appProperties;
-    private final UserService userService;
+    private final AppUserService appUserService;
 
     @PreAuthorize("isHasPermission('file_manager_list')")
     @GetMapping
@@ -130,18 +126,18 @@ public class FileManagerController extends BaseApiController {
     }
 
     @DeleteMapping("/deleteFileApi/{id}")
-    public ResponseEntity<Object> deleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal UserDto auth) {
+    public ResponseEntity<Object> deleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal AppUserDto auth) {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        userService.requireTheSameUser(auth.getId(), fileManager.get().getCreatedUser());
+        appUserService.requireTheSameUser(auth.getId(), fileManager.get().getCreatedUser());
         fileManagerService.deleteFileBy(fileManager.get());
         return this.responseEntity(HttpStatus.OK);
     }
 
     @DeleteMapping("/internalDeleteFileApi/{id}")
-    public ResponseEntity<Object> internalDeleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal UserDto auth, HttpServletRequest request) {
+    public ResponseEntity<Object> internalDeleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal AppUserDto auth, HttpServletRequest request) {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -160,7 +156,7 @@ public class FileManagerController extends BaseApiController {
                                                      @RequestParam("totalChunks") int totalChunks,
                                                      @RequestParam("originalFilename") String originalFilename,
                                                      @RequestParam("chunkFilename") String chunkFilename,
-                                                     @AuthenticationPrincipal UserDto user) {
+                                                     @AuthenticationPrincipal AppUserDto user) {
 
         try {
             String uploadPathTmp = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR);
@@ -202,7 +198,7 @@ public class FileManagerController extends BaseApiController {
 
     @PostMapping("/mergeChunkApi")
     public FileManagerDto mergeChunkApi(@Valid @RequestBody FileUploadChunkMergeRequestDto dto,
-                                        @AuthenticationPrincipal UserDto user) {
+                                        @AuthenticationPrincipal AppUserDto user) {
         log.info("mergeChunkApi > totalChunks:{}, fileMime:{}, originalFilename:{}, chunkFilename:{}, fileDirectoryId:{}",
                 dto.getTotalChunks(), dto.getFileMime(), dto.getOriginalFilename(), dto.getChunkFilename(), dto.getFileDirectoryId());
         if (AppUtil.isEmpty(dto.getChunkFilename()) || dto.getTotalChunks() == 0) {
@@ -275,7 +271,7 @@ public class FileManagerController extends BaseApiController {
     public FileManagerDto uploadApi(@RequestParam(ConstantData.FILES_UPLOAD_ATT) MultipartFile file,
                                     @RequestParam(name = "fileDirectoryId", required = false, defaultValue = "0") long fileDirectoryId,
                                     @RequestParam(name = "resizeImage", required = false, defaultValue = "1") boolean resizeImage,
-                                    @AuthenticationPrincipal UserDto user) {
+                                    @AuthenticationPrincipal AppUserDto user) {
 
         if (file.isEmpty()) {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.fileUploadNotFound"));
@@ -311,7 +307,7 @@ public class FileManagerController extends BaseApiController {
     }
 
     @PostMapping("/uploadBase64Api")
-    public ResponseEntity<Object> uploadBase64Api(@Valid @RequestBody UploadRequest dto, @AuthenticationPrincipal UserDto user) {
+    public ResponseEntity<Object> uploadBase64Api(@Valid @RequestBody UploadRequest dto, @AuthenticationPrincipal AppUserDto user) {
         if (AppUtil.isEmpty(dto.getFileBase64())) {
             throw this.responseErrorBadRequest();
         }
@@ -344,7 +340,7 @@ public class FileManagerController extends BaseApiController {
         }
     }
 
-    private FileManager uploadBase64Process(UploadRequest dto, UserDto user) {
+    private FileManager uploadBase64Process(UploadRequest dto, AppUserDto user) {
         String mimeType = FileUtil.detectBase64MimeType(dto.getFileBase64());
         this.validateAllowMemeType(mimeType);
         long fileSize = FileUtil.getFileSizeFromBase64(dto.getFileBase64());
@@ -382,7 +378,7 @@ public class FileManagerController extends BaseApiController {
         return new FileManager(null, originalName, fileSize, fileMimeForSave, yearMonthFolder + newName);
     }
 
-    private String generateOriginalFileName(MultipartFile file, UserDto user, String mimeType, String originalNamePost) {
+    private String generateOriginalFileName(MultipartFile file, AppUserDto user, String mimeType, String originalNamePost) {
         String originalName = originalNamePost;
         if(AppUtil.isEmpty(originalName)){
             originalName = FileUtil.getMultipartFileName(file);
@@ -395,7 +391,7 @@ public class FileManagerController extends BaseApiController {
         return FileUtil.trimFileName(originalName, 125);
     }
 
-    private FileManager uploadProcess(MultipartFile file, UserDto user, boolean resizeImage) {
+    private FileManager uploadProcess(MultipartFile file, AppUserDto user, boolean resizeImage) {
 
         String mimeType = FileUtil.getMimeType(file).toLowerCase();
         this.validateAllowMemeType(mimeType);
@@ -489,13 +485,13 @@ public class FileManagerController extends BaseApiController {
     }
 
     @PutMapping("/updateUserAvatar")
-    public ResponseMessage updateUserAvatar(@AuthenticationPrincipal UserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
+    public ResponseMessage updateUserAvatar(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
 
         if (userAuthen == null) {
             return new ResponseMessage(HttpStatus.UNAUTHORIZED, null);
         }
 
-        Optional<User> user = userService.findById(userAuthen.getId());
+        Optional<AppUser> user = appUserService.findById(userAuthen.getId());
         Optional<FileManager> fileManager = fileManagerService.findById(fileManagerId);
         if (user.isEmpty() || fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -508,18 +504,18 @@ public class FileManagerController extends BaseApiController {
 
 
         user.get().setAvatarFile(fileManager.get());
-        userService.update(user.get());
+        appUserService.update(user.get());
         return new ResponseMessage(HttpStatus.OK, null);
     }
 
     @PutMapping("/updateUserCover")
-    public ResponseMessage updateUserCover(@AuthenticationPrincipal UserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
+    public ResponseMessage updateUserCover(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
 
         if (userAuthen == null) {
             return new ResponseMessage(HttpStatus.UNAUTHORIZED, null);
         }
 
-        Optional<User> user = userService.findById(userAuthen.getId());
+        Optional<AppUser> user = appUserService.findById(userAuthen.getId());
         Optional<FileManager> fileManager = fileManagerService.findById(fileManagerId);
         if (user.isEmpty() || fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -530,7 +526,7 @@ public class FileManagerController extends BaseApiController {
         }
 
         user.get().setCoverFile(fileManager.get());
-        userService.update(user.get());
+        appUserService.update(user.get());
         return new ResponseMessage(HttpStatus.OK, null);
     }
 

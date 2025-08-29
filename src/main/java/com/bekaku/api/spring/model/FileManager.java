@@ -51,17 +51,13 @@ public class FileManager extends SoftDeletedAuditableCreated<Long> {
     @Column
     private String filePath;
 
-    @Column(columnDefinition = "tinyint(1) default 1")
-    boolean readable;
+    boolean readable = true;
 
-    @Column(columnDefinition = "tinyint(1) default 1")
-    boolean writeable;
+    boolean writeable = true;
 
-    @Column(columnDefinition = "tinyint(1) default 0")
-    boolean locked;
+    boolean locked = false;
 
-    @Column(columnDefinition = "tinyint(1) default 0")
-    boolean hidden;
+    boolean hidden = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "files_directory_id")

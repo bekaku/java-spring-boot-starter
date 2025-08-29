@@ -16,7 +16,7 @@ URL : /api/auth/login
 **Request Parameters**
 
 ```
-Json root name : user
+Json root name : appUser
 ```
 
 | Key                  | Data type                            | Description   |
@@ -27,7 +27,7 @@ Json root name : user
 
 ```json
 {
-  "user": {
+  "appUser": {
     "email": "admin@mydomain.com",
     "password": "1234",
     "loginForm": 1

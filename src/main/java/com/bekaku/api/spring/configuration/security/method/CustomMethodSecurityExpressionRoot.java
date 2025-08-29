@@ -1,6 +1,6 @@
 package com.bekaku.api.spring.configuration.security.method;
 
-import com.bekaku.api.spring.dto.UserDto;
+import com.bekaku.api.spring.dto.AppUserDto;
 import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.util.ConstantData;
 import org.slf4j.Logger;
@@ -17,7 +17,7 @@ public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot i
     private Object filterObject;
     private Object returnObject;
     private Object target;
-    private final UserDto userDto;
+    private final AppUserDto appUserDto;
     Logger logger = LoggerFactory.getLogger(CustomMethodSecurityExpressionRoot.class);
 
     private final PermissionService permissionService;
@@ -29,7 +29,7 @@ public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot i
      */
     public CustomMethodSecurityExpressionRoot(Authentication authentication, PermissionService permissionService) {
         super(authentication);
-        this.userDto = (UserDto) authentication.getPrincipal();
+        this.appUserDto = (AppUserDto) authentication.getPrincipal();
         this.permissionService = permissionService;
     }
 
@@ -68,7 +68,7 @@ public class CustomMethodSecurityExpressionRoot extends SecurityExpressionRoot i
      * @return
      */
     public boolean isHasPermission(String permissionSeparated) {
-        Long userId = this.userDto.getId();
+        Long userId = this.appUserDto.getId();
         boolean isPermited = false;
         // Check if the delimiter exists
         if (permissionSeparated.contains(ConstantData.OR_SEPARATED)) {

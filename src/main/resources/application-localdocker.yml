@@ -3,6 +3,11 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:host.docker.internal}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: CH789162be
+    #Postgres
+    #    url: jdbc:postgresql://YOUR_PRODUCTION_SERVER:5432/spring_starter_postgres
+    #    username: root
+    #    password: 'pwd'
+    #    driver-class-name: org.postgresql.Driver
   kafka:
     bootstrap-servers: host.docker.internal:9092
 

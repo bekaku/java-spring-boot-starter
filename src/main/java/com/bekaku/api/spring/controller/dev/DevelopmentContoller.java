@@ -1,16 +1,16 @@
 package com.bekaku.api.spring.controller.dev;
 
+import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.configuration.MetadataExtractorIntegrator;
 import com.bekaku.api.spring.controller.api.BaseApiController;
-import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.enumtype.DevFrontendTheme;
 import com.bekaku.api.spring.model.ApiClient;
+import com.bekaku.api.spring.model.AppRole;
 import com.bekaku.api.spring.model.Permission;
-import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.service.ApiClientService;
+import com.bekaku.api.spring.service.AppRoleService;
 import com.bekaku.api.spring.service.PermissionService;
-import com.bekaku.api.spring.service.RoleService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.FileUtil;
@@ -22,14 +22,11 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedWriter;
@@ -47,7 +44,7 @@ public class DevelopmentContoller extends BaseApiController {
     private final I18n i18n;
     private final PermissionService permissonService;
     private final ApiClientService apiClientService;
-    private final RoleService roleService;
+    private final AppRoleService appRoleService;
 
 
     @Value("${environments.production}")
@@ -101,37 +98,6 @@ public class DevelopmentContoller extends BaseApiController {
         INSERT INTO `permission`  (`code`, front_end) VALUES ('user_view',false);
         INSERT INTO `permission`  (`code`, front_end) VALUES ('user_manage',false);
         INSERT INTO `permission`  (`code`, front_end) VALUES ('backend_login',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('graph_config_list',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('graph_config_view',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('graph_config_manage',false);
-
-        // frontend
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('frontend_login',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_theme_owner_list',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_theme_owner_view',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_theme_owner_manage',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('front_company_view',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('front_company_manage',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_role_list',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_role_view',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_role_manage',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_user_list',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_user_view',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_user_manage',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_notice_list',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_notice_view',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_notice_manage',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_announcement_list',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_announcement_view',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_announcement_manage',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_organization_list',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_organization_view',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('company_organization_manage',true);
-
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('reward_shop_list',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('reward_shop_view',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('reward_shop_manage',true);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('reward_deliver',true);
 
 
         INSERT INTO `role`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `front_end`, `name`, `name_en`, `company_id`) VALUES (1, 0, NULL, NULL, '2022-06-02 16:16:08.386441', 1, 1, 0, 'Developer', 'Developer', NULL);
@@ -156,58 +122,6 @@ public class DevelopmentContoller extends BaseApiController {
         INSERT INTO `user_role`(`user`, `role`) VALUES (1, 1);
         INSERT INTO `api_client`(`id`, `created_date`, `created_user`, `updated_date`, `updated_user`, `api_name`, `api_token`, `by_pass`, `status`) VALUES (1, '2022-04-19 16:39:10', NULL, '2022-04-19 16:39:10', NULL, 'default', '10b7b78c-6544-4a04-9839-8f8c10d9445e', 1, 1);
 
-
-        INSERT INTO `system_configuration` VALUES (1, 0, '2022-08-03 11:37:51.553358', 1, 1.000, 1.000, 1.000, 1.000, 1.000, 1, 1.000, 1.000, 1.000, 1, 1.000, 1.000, 1.000, 1, 1.000, 1.000, 2, 1, 2, '1.1.0', '1.0.13', 15, 0, 1, 1.000, 1.000, 1.500);
-
-        INSERT INTO `de_formula` VALUES (1, 0, '2022-08-03 11:40:33.841454', 1, '2023-03-29 09:42:37.120059', 1, 'DE_1', 'DE-1', 'ค่าความนิยมของตนเอง โดยคำนวณจาก D-get / E-own', 0, NULL, 3, 0, 0);
-        INSERT INTO `de_formula` VALUES (2, 0, '2022-08-03 11:41:08.062573', 1, '2023-03-29 09:43:17.962197', 1, 'DE_2', 'DE-2', 'ค่าความมีส่วนร่วมของตนเอง โดยคำนวณจาก D-give / (E-รวมทั้งทีม – E-own)', 0, NULL, 4, 0, 0);
-        INSERT INTO `de_formula` VALUES (3, 0, '2022-08-03 11:41:31.910997', 1, '2023-03-29 09:44:40.470123', 1, 'D_GIVE', 'D-GIVE', 'คำนวณค่า D ที่ให้คนอื่น', 1, NULL, 3, 1, 2);
-        INSERT INTO `de_formula` VALUES (4, 0, '2022-08-03 11:41:44.902581', 1, '2023-03-29 09:44:40.482798', 1, 'D_GET', 'D-GET', 'คำนวณค่า D ที่ได้รับจากคนอื่น', 1, NULL, 2, 1, 3);
-        INSERT INTO `de_formula` VALUES (5, 0, '2022-08-03 11:41:54.257178', 1, '2023-03-29 09:44:40.449138', 1, 'E_OWN', 'E', 'คำนวณค่า E ของตนเอง', 1, NULL, 0, 1, 1);
-        INSERT INTO `de_formula` VALUES (7, 0, '2023-03-29 09:38:00.266813', 1, '2023-03-29 09:44:13.026037', 1, 'POST', 'Post', 'เก็บคะแนนโพสต์เพื่อเอาไว้คำนวณค่าอื่นๆ เท่านั้น', 1, NULL, 1, 0, 0);
-        INSERT INTO `de_formula` VALUES (8, 0, '2023-03-29 09:40:19.062446', 1, '2023-03-29 09:44:40.512382', 1, 'D_LEARN', 'D_LEARN', 'เป็นตัวแปร ที่เราเข้าไปแสดงตนว่า ได้เรียนรู้จากโพสของผู้อื่น (L1=กดปุ่มได้เรียนรู้ L2=กดปุ่มได้เรียนรู้ พร้อมแสดงวิธีการเรียน', 1, NULL, 4, 1, 4);
-        INSERT INTO `de_formula` VALUES (9, 0, '2023-03-29 09:40:49.047600', 1, '2023-03-29 09:44:40.582237', 1, 'D_ACT', 'D_ACT', 'เป็นตัวแปร ที่เราได้ไปสั่งการหรือนำไปใช้งาน และการสรุปข้อมูลในหน้าโพส', 1, NULL, 5, 1, 5);
-        INSERT INTO `de_formula` VALUES (10, 0, '2023-03-29 09:41:01.614932', 1, '2023-03-29 09:44:40.638504', 1, 'D_GET_P', 'D_GET_P', 'คะแนน D-Index ต่อคะแนนโพส', 1, NULL, 6, 1, 6);
-        INSERT INTO `de_formula` VALUES (11, 0, '2023-03-29 09:41:11.887660', 1, '2023-03-29 09:44:40.673163', 1, 'D_GIVE_P', 'D_GIVE_P', 'คะแนน D-Index ต่อคะแนนโพส', 1, NULL, 7, 1, 7);
-        INSERT INTO `de_formula` VALUES (12, 0, '2023-03-29 09:41:21.449604', 1, '2023-03-29 09:44:40.685587', 1, 'D_LEARN_P', 'D_LEARN_P', 'คะแนน D-Index ต่อคะแนนโพส', 1, NULL, 8, 1, 8);
-        INSERT INTO `de_formula` VALUES (13, 0, '2023-03-29 09:41:32.980990', 1, '2023-03-29 09:44:40.706848', 1, 'D_ACT_P', 'D_ACT_P', 'คะแนน D-Index ต่อคะแนนโพส', 1, NULL, 9, 1, 9);
-        INSERT INTO `de_formula` VALUES (14, 0, '2023-03-29 09:41:42.784266', 1, '2023-03-29 09:44:40.785810', 1, 'D_GET_H', 'D_GET_H', 'คะแนน D-Index ต่อจำนวนคน', 1, NULL, 10, 1, 10);
-        INSERT INTO `de_formula` VALUES (15, 0, '2023-03-29 09:41:52.580213', 1, '2023-03-29 09:44:40.799187', 1, 'D_GIVE_H', 'D_GIVE_H', 'คะแนน D-Index ต่อจำนวนคน', 1, NULL, 11, 1, 11);
-        INSERT INTO `de_formula` VALUES (16, 0, '2023-03-29 09:42:02.438135', 1, '2023-03-29 09:44:40.812562', 1, 'D_LEARN_H', 'D_LEARN_H', 'คะแนน D-Index ต่อจำนวนคน', 1, NULL, 12, 1, 12);
-        INSERT INTO `de_formula` VALUES (17, 0, '2023-03-29 09:42:12.874733', 1, '2023-03-29 09:44:41.036988', 1, 'D_ACT_H', 'D_ACT_H', 'คะแนน D-Index ต่อจำนวนคน', 1, NULL, 13, 1, 13);
-
-
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (1, 0, '2022-08-03 11:46:00.580204', 1, '2022-08-03 11:46:00.580204', 1, 1, 'ธุรกิจการเกษตร ', 'Agribusiness');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (2, 0, '2022-08-03 11:46:12.736977', 1, '2022-08-03 11:46:12.736977', 1, 1, 'อาหารและเครื่องดื่ม', 'Food & Beverage');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (3, 0, '2022-08-03 11:46:22.285980', 1, '2022-08-03 11:46:22.285980', 1, 1, 'แฟชั่น ', 'Fashion');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (4, 0, '2022-08-03 11:46:34.656183', 1, '2022-08-03 11:46:34.656183', 1, 1, 'ของใช้ในครัวเรือนและสำนักงาน', 'Home & Office Products');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (5, 0, '2022-08-03 11:46:46.500385', 1, '2022-08-03 11:46:46.500385', 1, 1, 'ของใช้ส่วนตัวและเวชภัณฑ์', 'Personal Products & Pharmaceuticals');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (6, 0, '2022-08-03 11:46:55.741782', 1, '2022-08-03 11:46:55.741782', 1, 1, 'ธนาคาร', 'Banking');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (7, 0, '2022-08-03 11:47:07.376204', 1, '2022-08-03 11:47:07.376204', 1, 1, 'เงินทุนและหลักทรัพย์', 'Finance & Securities');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (8, 0, '2022-08-03 11:47:17.876588', 1, '2022-08-03 11:47:17.876588', 1, 1, 'ประกันภัยและประกันชีวิต', 'Insurance');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (9, 0, '2022-08-03 11:47:28.812506', 1, '2022-08-03 11:47:28.812506', 1, 1, 'ยานยนต์', 'Automotive');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (10, 0, '2022-08-03 11:47:40.098632', 1, '2022-08-03 11:47:40.098632', 1, 1, 'วัสดุอุตสาหกรรมและเครื่องจักร', 'Industrial Materials & Machine');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (11, 0, '2022-08-03 11:47:50.803602', 1, '2022-08-03 11:47:50.803602', 1, 1, 'บรรจุภัณฑ์', 'Packaging');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (12, 0, '2022-08-03 11:48:02.197796', 1, '2022-08-03 11:48:02.197796', 1, 1, 'กระดาษและวัสดุการพิมพ์', 'Paper & Printing Materials');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (13, 0, '2022-08-03 11:48:14.084197', 1, '2022-08-03 11:48:14.084197', 1, 1, 'ปิโตรเคมีและเคมีภัณฑ์', 'Petrochemicals & Chemicals');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (14, 0, '2022-08-03 11:48:26.485295', 1, '2022-08-03 11:48:26.485295', 1, 1, 'เหล็ก และ ผลิตภัณฑ์โลหะ', 'Steel and Metal Products');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (15, 0, '2022-08-03 11:48:39.245558', 1, '2022-08-03 11:48:39.245558', 1, 1, 'วัสดุก่อสร้าง', 'Construction Materials');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (16, 0, '2022-08-03 11:48:50.285858', 1, '2022-08-03 11:48:50.285858', 1, 1, 'บริการรับเหมาก่อสร้าง', 'Construction Services');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (17, 0, '2022-08-03 11:49:02.965310', 1, '2022-08-03 11:49:02.965310', 1, 1, 'พัฒนาอสังหาริมทรัพย์', 'Property Development');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (18, 0, '2022-08-03 11:49:29.136459', 1, '2022-08-03 11:49:29.136459', 1, 1, 'กองทุนรวมอสังหาริม ทรัพย์และกองทรัสต์เพื่อการลงทุนในอสังหาริมทรัพย์', 'roperty Fund & Real Estate Investment Trusts');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (19, 0, '2022-08-03 11:49:44.150787', 1, '2022-08-03 11:49:44.150787', 1, 1, 'พลังงานและสาธารณูปโภค', 'Energy & Utilities');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (20, 0, '2022-08-03 11:49:53.349443', 1, '2022-08-03 11:49:53.349443', 1, 1, 'เหมืองแร่', 'Mining');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (21, 0, '2022-08-03 11:50:02.501037', 1, '2022-08-03 11:50:02.501037', 1, 1, 'พาณิชย์', 'Commerce');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (22, 0, '2022-08-03 11:50:16.588919', 1, '2022-08-03 11:50:16.588919', 1, 1, 'การแพทย์', 'Health Care Services');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (23, 0, '2022-08-03 11:50:27.725738', 1, '2022-08-03 11:50:27.725738', 1, 1, 'สื่อและสิ่งพิมพ์', 'Media & Publishing');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (24, 0, '2022-08-03 11:50:38.216671', 1, '2022-08-03 11:50:38.216671', 1, 1, 'บริการเฉพาะกิจ', 'Professional Services');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (25, 0, '2022-08-03 11:50:49.939513', 1, '2022-08-03 11:50:49.939513', 1, 1, 'การท่องเที่ยวและสันทนาการ ', 'Tourisms & Leisure');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (26, 0, '2022-08-03 11:51:00.658094', 1, '2022-08-03 11:51:00.658094', 1, 1, 'ขนส่งและโลจิสติกส์', 'Transportation & Logistics');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (27, 0, '2022-08-03 11:51:12.947540', 1, '2022-08-03 11:51:12.947540', 1, 1, 'ชิ้นส่วนอิเล็กทรอนิกส์', 'Electronic Components');
-        INSERT INTO `company_type`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `name`, `name_en`) VALUES (28, 0, '2022-08-03 11:51:24.405444', 1, '2022-08-03 11:51:24.405444', 1, 1, 'เทคโนโลยีสารสนเทศและการสื่อสาร', 'Information & Communication Technology');
-
-
-
         Index
         alter table files_directory_path add INDEX k_files_directory (files_directory);
         alter table files_directory_path add INDEX k_files_directory_parent (files_directory_parent);
@@ -223,18 +137,18 @@ public class DevelopmentContoller extends BaseApiController {
         ALTER TABLE post_data ADD FULLTEXT IDXFTpost_solution(post_solution);
          */
         permissonService.saveAll(Arrays.asList(
-                new Permission("api_client_list", false),
-                new Permission("api_client_view", false),
-                new Permission("api_client_manage", false),
-                new Permission("permission_list", false),
-                new Permission("permission_view", false),
-                new Permission("permission_manage", false),
-                new Permission("role_list", false),
-                new Permission("role_view", false),
-                new Permission("role_manage", false),
-                new Permission("user_list", false),
-                new Permission("user_view", false),
-                new Permission("user_manage", false)
+                new Permission("api_client_list"),
+                new Permission("api_client_view"),
+                new Permission("api_client_manage"),
+                new Permission("permission_list"),
+                new Permission("permission_view"),
+                new Permission("permission_manage"),
+                new Permission("role_list"),
+                new Permission("role_view"),
+                new Permission("role_manage"),
+                new Permission("user_list"),
+                new Permission("user_view"),
+                new Permission("user_manage")
         ));
     }
 
@@ -244,9 +158,9 @@ public class DevelopmentContoller extends BaseApiController {
     }
 
     private void migrateDevRole() {
-        Role role = new Role("developer", "developer", true, false);
-        role.getPermissions().addAll(permissonService.findAll());
-        roleService.save(role);
+        AppRole appRole = new AppRole("developer", true);
+        appRole.getPermissions().addAll(permissonService.findAll());
+        appRoleService.save(appRole);
     }
 
     @RequestMapping(value = "/generateSrcV2", method = RequestMethod.GET)
@@ -354,7 +268,7 @@ public class DevelopmentContoller extends BaseApiController {
                         generateServiceImpl(className, genSourceableTable.createDto());
                     }
                     if (genSourceableTable.createController()) {
-                        generateController(className, genSourceableTable.createDto());
+                        generateController(className, genSourceableTable.createDto(), genSourceableTable.createPermission());
                     }
 //                    if (genSourceableTable.createMapper()) {
 //                        log.error("  createMapper : {} ", className);
@@ -375,13 +289,13 @@ public class DevelopmentContoller extends BaseApiController {
                     }
                     if (genSourceableTable.createPermission()) {
                         if (permissonService.findByCode(table.getName() + "_list").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_list", false));
+                            permissonService.save(new Permission(table.getName() + "_list"));
                         }
                         if (permissonService.findByCode(table.getName() + "_view").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_view", false));
+                            permissonService.save(new Permission(table.getName() + "_view"));
                         }
                         if (permissonService.findByCode(table.getName() + "_manage").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_manage", false));
+                            permissonService.save(new Permission(table.getName() + "_manage"));
                         }
 //                        permissonService.saveAll(Arrays.asList(
 //                                new Permission(table.getName()+"_list", table.getName()+"_list", table.getName()+"_list", false),
@@ -520,6 +434,7 @@ public class DevelopmentContoller extends BaseApiController {
             }
         }
     }
+
     private void generateDtoMapper(String entityName, PersistentClass persistentClass) {
         String fileName = entityName + "Mapper";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".mapper." + fileName;
@@ -775,7 +690,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateController(String entityName, boolean haveDto) {
+    private void generateController(String entityName, boolean haveDto, boolean havePermission) {
         //package com.bekaku.api.spring.controller.api
         String fileName = entityName + "Controller";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api." + fileName;
@@ -799,10 +714,11 @@ public class DevelopmentContoller extends BaseApiController {
 //                writer.append("import org.slf4j.Logger;\n");
 //                writer.append("import org.slf4j.LoggerFactory;\n");
                 writer.append("import lombok.extern.slf4j.Slf4j;\n");
+                writer.append("import lombok.RequiredArgsConstructor;\n");
 //                writer.append("import jakarta.servlet.http.HttpServletRequest;\n");
                 writer.append("import com.bekaku.api.spring.specification.SearchSpecification;\n");
-                writer.append("import org.springframework.beans.factory.annotation.Autowired;\n");
-                writer.append("import org.springframework.http.HttpStatus;\n");
+//                writer.append("import org.springframework.beans.factory.annotation.Autowired;\n");
+//                writer.append("import org.springframework.http.HttpStatus;\n");
                 writer.append("import org.springframework.http.ResponseEntity;\n");
                 writer.append("import org.springframework.web.bind.annotation.*;\n");
                 writer.append("import org.springframework.security.access.prepost.PreAuthorize;\n");
@@ -822,10 +738,12 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    private final ").append(entityName).append("Service ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service;\n");
 //                writer.append("    @Autowired\n");
                 writer.append("    private final I18n i18n;\n");
-                writer.append(" //   Logger logger = LoggerFactory.getLogger(").append(entityName).append("Controller.class);\n");
+//                writer.append(" //   Logger logger = LoggerFactory.getLogger(").append(entityName).append("Controller.class);\n");
                 writer.append("\n");
                 //findall
-                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_list')\")\n");
+                if (havePermission) {
+                    writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_list')\")\n");
+                }
                 writer.append("    @GetMapping\n");
 
 //                writer.append("    public ResponseEntity<Object> findAll(@RequestParam(value = \"page\", defaultValue = \"0\") int page,\n");
@@ -845,7 +763,9 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    }\n");
                 //create
                 writer.append("\n");
-                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                if (havePermission) {
+                    writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                }
                 writer.append("    @PostMapping\n");
                 if (haveDto) {
                     writer.append("    public ").append(entityName).append("Dto create(@Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
@@ -870,7 +790,9 @@ public class DevelopmentContoller extends BaseApiController {
 
                 //update
                 writer.append("\n");
-                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                if (havePermission) {
+                    writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                }
                 writer.append("    @PutMapping(\"/{id}\")\n");
                 if (haveDto) {
                     writer.append("    public ").append(entityName).append("Dto update(@PathVariable(\"id\") Long id, @Valid @RequestBody ").append(entityName).append("Dto dto) {\n");
@@ -919,7 +841,9 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    }\n");
                 //delete
                 writer.append("\n");
-                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                if (havePermission) {
+                    writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                }
                 writer.append("    @DeleteMapping(\"/{id}\")\n");
                 writer.append("    public ResponseEntity<Object> delete(@PathVariable(\"id\") Long id) {\n");
                 writer.append("        Optional<").append(entityName).append("> ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(" = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findById(id);\n");
@@ -1117,7 +1041,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("  headers\n");
             writer.append("} = useCrudList<").append(entityName).append(">(\n");
             writer.append("  {\n");
-            writer.append("    crudName: '").append(tableName).append("',\n");
+            writer.append("    crudName: '").append(entityName).append("',\n");
             writer.append("    apiEndpoint: '/api',\n");
             writer.append("    headers: headerItems,\n");
             writer.append("    defaultSort: {\n");
@@ -1245,7 +1169,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("  onSubmit,\n");
             writer.append("} = useCrudForm<").append(entityName).append(">(\n");
             writer.append("  {\n");
-            writer.append("    crudName: '").append(tableName).append("',\n");
+            writer.append("    crudName: '").append(entityName).append("',\n");
 //            writer.append("    backLink: `/${AdminRootPath}/").append(tableNameKebabCase).append("`,\n");
 //            writer.append("    backLink: '/").append(tableNameKebabCase).append("',\n");
             writer.append("    apiEndpoint: '/api',\n");

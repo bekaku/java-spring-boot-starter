@@ -49,11 +49,9 @@ public class ApiClient extends Auditable<Long> {
     @Column(unique = true)
     private String apiToken;
 
-    @Column(columnDefinition = "tinyint(1) default 0")
-    private Boolean byPass;
+    private Boolean byPass= false;
 
-    @Column(columnDefinition = "tinyint(1) default 1")
-    private Boolean status;
+    private Boolean status =true;
 
     // https://www.baeldung.com/jpa-cascade-types
     @OneToMany(mappedBy = "apiClient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

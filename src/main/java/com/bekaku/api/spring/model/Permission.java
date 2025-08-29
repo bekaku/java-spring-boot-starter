@@ -2,6 +2,7 @@ package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.configuration.AuditListener;
+import com.bekaku.api.spring.enumtype.PermissionType;
 import com.bekaku.api.spring.model.superclass.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,39 +21,29 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "permission")
 public class Permission extends Id {
-    public Permission(String code, Boolean frontEnd) {
+    public Permission(String code) {
         this.code = code;
-        this.frontEnd = frontEnd;
     }
-
     @Column(nullable = false, length = 125, unique = true)
     private String code;
 
-    @Column(name = "remark", columnDefinition = "text default null")
-    private String remark;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
-//    private String module;
+    private String module;
 
-    @Column(name = "front_end", columnDefinition = "tinyint(1) default 1")
-    private Boolean frontEnd;
-
-    /**
-     * 1=crud, 2=report, 3=other
-     */
-    @Column(columnDefinition = "tinyint(0) default 1")
-    private int operationType = 1;
+    @Enumerated(EnumType.ORDINAL)
+    private PermissionType operationType = PermissionType.CRUD;
 
     @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
-    Set<Role> roles = new HashSet<>();
+    Set<AppRole> appRoles = new HashSet<>();
 
     @Override
     public String toString() {
         return "Permission{" +
                 "code='" + code + '\'' +
-                ", remark='" + remark + '\'' +
-                ", frontEnd=" + frontEnd +
+                ", description='" + description + '\'' +
                 ", operationType=" + operationType +
-                ", roles=" + roles +
                 ", id=" + getId() +
                 '}';
     }

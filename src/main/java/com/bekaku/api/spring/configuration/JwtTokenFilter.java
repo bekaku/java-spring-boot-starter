@@ -1,15 +1,14 @@
 package com.bekaku.api.spring.configuration;
 
 
-import com.bekaku.api.spring.dto.UserDto;
+import com.bekaku.api.spring.dto.AppUserDto;
+import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,7 +46,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 //        logger.info("JwtTokenFilter > doFilterInternal");
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            Optional<UserDto> userData = jwtService.jwtVerify(request.getHeader(ConstantData.ACCEPT_APIC_LIENT), request.getHeader(ConstantData.AUTHORIZATION), request.getHeader(ConstantData.X_SYNC_ACTIVE));
+            Optional<AppUserDto> userData = jwtService.jwtVerify(request.getHeader(ConstantData.ACCEPT_APIC_LIENT), request.getHeader(ConstantData.AUTHORIZATION), request.getHeader(ConstantData.X_SYNC_ACTIVE));
 //            logger.info("JwtVerify User data : {}", userData.<Object>map(UserDto::getEmail).orElse(null));
             if (userData.isPresent()) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -57,7 +56,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 );
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            }else {
+            } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"Invalid or missing token\"}");

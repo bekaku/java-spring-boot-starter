@@ -4,15 +4,16 @@ import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.controller.api.BaseApiController;
 import com.bekaku.api.spring.dto.UserRegisterRequest;
 import com.bekaku.api.spring.logger.AppLogger;
-import com.bekaku.api.spring.model.User;
+import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.properties.LoggingFileProperties;
 import com.bekaku.api.spring.queue.QueueSender;
 import com.bekaku.api.spring.service.AccessTokenService;
-import com.bekaku.api.spring.service.UserService;
+import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
+import com.bekaku.api.spring.util.SnowflakeIdHolder;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -32,7 +33,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -54,7 +54,7 @@ public class TestController extends BaseApiController {
 
     private final ServletContext servletContext;
 
-    private final UserService userService;
+    private final AppUserService appUserService;
     private final AccessTokenService accessTokenService;
 
     private final Executor asyncExecutor;
@@ -78,6 +78,11 @@ public class TestController extends BaseApiController {
     @GetMapping("/ping")
     public String ping() {
         return "Pong";
+    }
+
+    @GetMapping("/snowflakeGenerate")
+    public Long snowflakeGenerate() {
+        return SnowflakeIdHolder.generator().nextId();
     }
 
 //    @GetMapping("/kafkaSend")
@@ -163,6 +168,9 @@ public class TestController extends BaseApiController {
             put("requestFrom", requestFrom);
             put("userAgent", userAgent);
             put("testConfigFile", testConfigFile);
+            put("currentTimeStamp", System.currentTimeMillis());
+            put("currentTimeStampUtil", DateUtil.getCurrentMilliTimeStamp());
+            put("getLocalDateTimeNow", DateUtil.getLocalDateTimeNow());
         }}, HttpStatus.OK);
     }
 
@@ -185,11 +193,11 @@ public class TestController extends BaseApiController {
 
     @GetMapping("/test-page-loop")
     public void testLoopPaging(){
-        Page<User> page;
+        Page<AppUser> page;
         int pageNumber = 0;
         do {
             log.info("page:{}", pageNumber);
-            page = userService.findAllPageBy(PageRequest.of(pageNumber++, 20));
+            page = appUserService.findAllPageBy(PageRequest.of(pageNumber++, 20));
             page.forEach(user -> {
                 log.info("id:{}, email:{}", user.getId(), user.getEmail());
             });
@@ -197,13 +205,13 @@ public class TestController extends BaseApiController {
     }
     @GetMapping("/async-process")
     public CompletableFuture<String> triggerAsync() {
-        return userService.processAsyncTask()
+        return appUserService.processAsyncTask()
                 .thenApply(result -> "Controller got: " + result);
     }
 
     @GetMapping("/get-user-async")
-    public CompletableFuture<List<User>> getAsyncUser() {
-        return CompletableFuture.supplyAsync(userService::findAll, asyncExecutor);
+    public CompletableFuture<List<AppUser>> getAsyncUser() {
+        return CompletableFuture.supplyAsync(appUserService::findAll, asyncExecutor);
 //        return CompletableFuture.supplyAsync(()->userService.findAll(), asyncExecutor);
 //        return CompletableFuture.supplyAsync(()->{
 //            return userService.findAll();
@@ -211,8 +219,8 @@ public class TestController extends BaseApiController {
     }
 
     @GetMapping("/get-user-async2")
-    public CompletableFuture<List<User>> getAsyncUser2() {
-        return CompletableFuture.supplyAsync(userService::findAll, asyncExecutor)
+    public CompletableFuture<List<AppUser>> getAsyncUser2() {
+        return CompletableFuture.supplyAsync(appUserService::findAll, asyncExecutor)
                 .exceptionally(ex -> {
                     throw new RuntimeException("Error fetching users", ex);
                 });

@@ -10,9 +10,6 @@ public class BaseResponseException {
     @Autowired
     private I18n i18n;
 
-    public ApiException responseErrorNotfound() {
-        return this.responseError(HttpStatus.NOT_FOUND, null, i18n.getMessage("error.dataNotfound"));
-    }
     public ApiException responseErrorUnauthorized() {
         return this.responseError(HttpStatus.UNAUTHORIZED, null, i18n.getMessage("error.401"));
     }
@@ -29,9 +26,14 @@ public class BaseResponseException {
         return this.responseError(HttpStatus.NOT_FOUND, null, i18n.getMessage("error.dataNotfound") + " " + data);
     }
 
+    public ApiException responseErrorNotfound() {
+        return this.responseError(HttpStatus.NOT_FOUND, null, i18n.getMessage("error.dataNotfound"));
+    }
+
     public ApiException responseErrorDuplicate(String data) {
         return this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.validateDuplicate", data));
     }
+
     public ApiException responseError(String error) {
         return this.responseError(HttpStatus.BAD_REQUEST, null, error);
     }

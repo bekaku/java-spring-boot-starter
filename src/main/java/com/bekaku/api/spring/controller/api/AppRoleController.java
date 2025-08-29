@@ -1,12 +1,12 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.dto.RoleDto;
+import com.bekaku.api.spring.dto.AppRoleDto;
+import com.bekaku.api.spring.model.AppRole;
 import com.bekaku.api.spring.model.Permission;
-import com.bekaku.api.spring.model.Role;
 import com.bekaku.api.spring.service.PermissionService;
-import com.bekaku.api.spring.service.RoleService;
-import com.bekaku.api.spring.service.UserService;
+import com.bekaku.api.spring.service.AppRoleService;
+import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.validator.RoleValidator;
 import jakarta.validation.Valid;
@@ -23,14 +23,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@RequestMapping(path = "/api/role")
+@RequestMapping(path = "/api/appRole")
 @RestController
 @RequiredArgsConstructor
-public class RoleController extends BaseApiController {
+public class AppRoleController extends BaseApiController {
 
-    private final RoleService roleService;
+    private final AppRoleService appRoleService;
     private final PermissionService permissionService;
-    private final UserService userService;
+    private final AppUserService appUserService;
     private final I18n i18n;
     private final RoleValidator roleValidator;
 
@@ -44,98 +44,97 @@ public class RoleController extends BaseApiController {
     @Value("${environments.production}")
     boolean isProduction;
 
-    @PreAuthorize("isHasPermission('role_list')")
+    @PreAuthorize("isHasPermission('app_role_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
-        SearchSpecification<Role> specification = new SearchSpecification<>(getSearchCriteriaList());
-        return this.responseEntity(roleService.findAllWithSearch(specification, getPageable(pageable, Role.getSort())), HttpStatus.OK);
+        SearchSpecification<AppRole> specification = new SearchSpecification<>(getSearchCriteriaList());
+        return this.responseEntity(appRoleService.findAllWithSearch(specification, getPageable(pageable, AppRole.getSort())), HttpStatus.OK);
     }
 
-    @GetMapping("/findAllBackend")
-    public ResponseEntity<Object> findAllBackend() {
-
-        return this.responseEntity(roleService.findAllByFrontEndOrderByNameAsc(false)
+    @GetMapping("/findAll")
+    public ResponseEntity<Object> findAll() {
+        return this.responseEntity(appRoleService.findAllByOrderByNameAsc()
                         .stream()
-                        .map(roleService::convertEntityToDto)
+                        .map(appRoleService::convertEntityToDto)
                         .collect(Collectors.toList()),
                 HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('role_manage')")
+    @PreAuthorize("isHasPermission('app_role_manage')")
     @PostMapping
-    public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
+    public ResponseEntity<Object> create(@Valid @RequestBody AppRoleDto dto) {
         return this.responseEntity(createProcess(dto), HttpStatus.CREATED);
     }
 
-    private RoleDto createProcess(RoleDto dto) {
+    private AppRoleDto createProcess(AppRoleDto dto) {
 
-        Role role = roleService.convertDtoToEntity(dto);
-        roleValidator.validate(role);
-        setRolePermission(dto, role);
-        roleService.save(role);
-        return roleService.convertEntityToDto(role);
+        AppRole appRole = appRoleService.convertDtoToEntity(dto);
+        roleValidator.validate(appRole);
+        setRolePermission(dto, appRole);
+        appRoleService.save(appRole);
+        return appRoleService.convertEntityToDto(appRole);
     }
 
-    private void setRolePermission(RoleDto dto, Role role) {
+    private void setRolePermission(AppRoleDto dto, AppRole appRole) {
         if (dto.getSelectdPermissions().length > 0) {
             Optional<Permission> permission;
             for (long permissionId : dto.getSelectdPermissions()) {
                 permission = permissionService.findById(permissionId);
-                permission.ifPresent(value -> role.getPermissions().add(value));
+                permission.ifPresent(value -> appRole.getPermissions().add(value));
             }
         }
     }
 
-    @PreAuthorize("isHasPermission('role_manage')")
+    @PreAuthorize("isHasPermission('app_role_manage')")
     @PutMapping("/{id}")
-    public ResponseEntity<Object> update(@Valid @RequestBody RoleDto dto, @PathVariable("id") long id) {
-        Optional<Role> role = roleService.findById(id);
+    public ResponseEntity<Object> update(@Valid @RequestBody AppRoleDto dto, @PathVariable("id") long id) {
+        Optional<AppRole> role = appRoleService.findById(id);
         if (role.isEmpty()) {
             throw this.responseErrorNotfound();
         }
         return this.responseEntity(updateProcess(role.get(), dto), HttpStatus.OK);
     }
 
-    private RoleDto updateProcess(Role role, RoleDto dto) {
-        role.update(dto.getName(), dto.getNameEn(), dto.isActive(), dto.isFrontEnd());
-        roleValidator.validate(role);
+    private AppRoleDto updateProcess(AppRole appRole, AppRoleDto dto) {
+        appRole.update(dto.getName(), dto.isActive());
+        roleValidator.validate(appRole);
         // delete old permissin for this group
-        role.setPermissions(new HashSet<>());
-        roleService.update(role);
+        appRole.setPermissions(new HashSet<>());
+        appRoleService.update(appRole);
 
         // add permission to this role
         if (dto.getSelectdPermissions().length > 0) {
-            setRolePermission(dto, role);
+            setRolePermission(dto, appRole);
         } else {
-            role.setPermissions(new HashSet<>());
+            appRole.setPermissions(new HashSet<>());
         }
-        roleService.update(role);
-        return roleService.convertEntityToDto(role);
+        appRoleService.update(appRole);
+        return appRoleService.convertEntityToDto(appRole);
     }
 
-    @PreAuthorize("isHasPermission('role_view')")
+    @PreAuthorize("isHasPermission('app_role_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
-        Optional<Role> role = roleService.findById(id);
+        Optional<AppRole> role = appRoleService.findById(id);
         if (role.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        RoleDto roleDto = roleService.convertEntityToDto(role.get());
+        AppRoleDto appRoleDto = appRoleService.convertEntityToDto(role.get());
         List<Long> permissonSelectedList = permissionService.findAllPermissionIdByRoleId(id);
         if (!permissonSelectedList.isEmpty()) {
-            roleDto.setSelectdPermissions(permissonSelectedList.toArray(new Long[0]));
+            appRoleDto.setSelectdPermissions(permissonSelectedList.toArray(new Long[0]));
         }
-        return this.responseEntity(roleDto, HttpStatus.OK);
+        return this.responseEntity(appRoleDto, HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('role_manage')")
+    @PreAuthorize("isHasPermission('app_role_manage')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id) {
-        Optional<Role> role = roleService.findById(id);
+        Optional<AppRole> role = appRoleService.findById(id);
         if (role.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        roleService.delete(role.get());
+        appRoleService.delete(role.get());
         return this.responseDeleteMessage();
     }
 }

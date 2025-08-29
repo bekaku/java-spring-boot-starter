@@ -5,7 +5,7 @@ spring:
     virtual:
       enabled: true
   main:
-#    lazy-initialization: true #websocket not work as expected
+    #    lazy-initialization: true #websocket not work as expected
     allow-circular-references: true
     keep-alive: true
   profiles:
@@ -46,10 +46,19 @@ spring:
     #    url: jdbc:mysql://${MYSQL_HOST:my.mysqlserver.com}:13537/springboot_bekaku?allowPublicKeyRetrieval=true&useSSL=false
     #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/super_synapse?allowPublicKeyRetrieval=true&useSSL=false
     #    Docker mysql network
+
+    # MySql
     url: jdbc:mysql://${MYSQL_HOST:YOUR_PRODUCTION_SERVER}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: 'pwd'
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+    #Postgres
+    #    url: jdbc:postgresql://YOUR_PRODUCTION_SERVER:5432/spring_starter_postgres
+    #    username: root
+    #    password: 'pwd'
+    #    driver-class-name: org.postgresql.Driver
+
     hikari:
       pool-name: App-Instance-${WORKER_ID:1}
       connection-timeout: 30000 # slightly reduced for faster failure detection
@@ -298,7 +307,7 @@ app:
     secret: 962a5d50f2ee9f987e8d45d0687a1ead3315f8255b65e914709952a5606a304f5a5a651e3cf4dc6d759b956081cc1c8cf85cd4606287e443ea11f3a555f33c0a
     #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes
     session-time: 86400
-    session-refresh-time: 604800
+    session-refresh-time: 2592000
     session-day: 30
     token-name: _server_jwt_key
     refresh-token-name: _server_refresh_key

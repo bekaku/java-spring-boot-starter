@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @JsonRootName("dtoName")
 @Getter
 @Setter
-public class DtoValidationTemplate extends DtoId{
+public class DtoValidationTemplate extends DtoId {
     /* https://www.baeldung.com/java-validation
     @NotNull validates that the annotated property value isn’t null.
     @AssertTrue validates that the annotated property value is true.
@@ -61,4 +61,32 @@ public class DtoValidationTemplate extends DtoId{
 
     @NotNull(message = "{error.NotEmpty}")
     private String shareTopic;
+
+        /*
+
+    @Column(name = "remark", columnDefinition = "TEXT")
+    private String remark;
+
+    @Column(columnDefinition = "boolean default true")
+    private boolean active;
+
+    @Column(columnDefinition = "bit default 0")
+    private boolean calculateUseScore;
+
+    @Column(columnDefinition = "int default 0")
+    private int starLevel;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "post_datetime", columnDefinition = "datetime")
+    private LocalDateTime postDatetime;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "post_datetime", columnDefinition = "datetime", updatable = false)
+    private LocalDateTime postDatetime;
+
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Column(name = "start_date", columnDefinition = "date")
+    private LocalDate startDate;
+     */
 }
