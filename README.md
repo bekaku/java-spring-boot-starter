@@ -224,10 +224,17 @@ Configure your database connection in `application.yml` or `application-dev.yml`
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/your_db_name?allowPublicKeyRetrieval=true&useSSL=false
+    #MySql
+    #url: jdbc:mysql://localhost:3306/spring_starter_mysql?allowPublicKeyRetrieval=true&useSSL=false
+    #username: your_username
+    #password: your_password
+    #driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # Postgres
+    url: jdbc:postgresql://localhost:5432/spring_starter_postgres
     username: your_username
     password: your_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
   
   jpa:
     hibernate:
@@ -246,14 +253,23 @@ Configure your log4j in `log4j2-prod.xml` or `log4j2-dev.xml`:
 ## ✨ Database Setup
 
 ### Database Installation
-
+```
+Database file location /path/to/your/spring-data/files/spring_starter_mysql.sql or spring_starter_postgres.sql
+```
 1. **Import the database schema**
    ```bash
    # Windows
-   mysql -uroot -p your_db_name < E:\path\to\spring_starter.sql
+   
+   # MySql
+   mysql -uroot -p your_db_name < E:\path\to\spring_starter_mysql.sql
+   
+   # Postgres
+   psql -U your_user_name -d your_db_name -f  E:\path\to\spring_starter_postgres.sql
    
    # Linux/macOS
-   mysql -uroot -p your_db_name < /path/to/spring_starter.sql
+   
+   # MySql
+   mysql -uroot -p your_db_name < /path/to/spring_starter_mysql.sql
    ```
 
 2. **Update configuration**
