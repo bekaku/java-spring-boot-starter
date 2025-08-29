@@ -36,7 +36,7 @@ nbdist/
 # Logs and databases #
 ######################
 *.log
-*.sql
+#*.sql
 *.sqlite
 
 # OS generated files #
@@ -51,10 +51,14 @@ Thumbs.db
 
 *.zip
 *.gz
-spring-data/images
-spring-data/temp-chunks
-spring-data/logs
-spring-data/files
+
 out/
-!spring_starter_mysql.sql
-!spring_starter_postgres.sql
+spring-data/images/*
+spring-data/temp-chunks/*
+spring-data/logs/*
+spring-data/files/*
+
+!spring-data/files/spring_starter_mysql.sql
+!spring-data/files/spring_starter_postgres.sql
+!spring-data/images/default-men-avatar.png
+!spring-data/images/default-women-avatar.png
