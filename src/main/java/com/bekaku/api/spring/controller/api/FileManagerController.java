@@ -41,6 +41,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 import static com.bekaku.api.spring.util.FileUtil.TEMP_UPLOAD_DIR;
@@ -60,10 +61,10 @@ public class FileManagerController extends BaseApiController {
 
     @PreAuthorize("isHasPermission('file_manager_list')")
     @GetMapping
-    public ResponseEntity<Object> findAll(
+    public List<FileManagerDto> findAll(
             Pageable pageable,
             @RequestParam(value = "directoryId", defaultValue = "0") long directoryId,
-            HttpServletRequest request) {
+            @AuthenticationPrincipal AppUserDto auth) {
         // http://localhost:8084/api/fileManager?page=1&size=10&sort=fileName,asc&directoryId=0
 //    public ResponseEntity<Object> findAll(@RequestParam(value = "page", defaultValue = "0") int page,
 //                                          @RequestParam(value = "size", defaultValue = "20") int size,
@@ -73,7 +74,7 @@ public class FileManagerController extends BaseApiController {
 //                                          HttpServletRequest request) {
 
 //        return this.responseEntity(fileManagerService.findAllFolderAndFileByParentFolder(new Paging(page, size, sort), directoryId > 0 ? directoryId : null), HttpStatus.OK);
-        return this.responseEntity(fileManagerService.findAllFolderAndFileByParentFolder(getPaging(pageable), directoryId > 0 ? directoryId : null), HttpStatus.OK);
+        return fileManagerService.findAllFolderAndFileByParentFolder(getPaging(pageable), directoryId > 0 ? directoryId : null, auth.getId());
 //        return this.responseEntity(getPaging(pageable), HttpStatus.OK);
 
 //        return this.responseEntity(new HashMap<String, Object>() {{
@@ -380,7 +381,7 @@ public class FileManagerController extends BaseApiController {
 
     private String generateOriginalFileName(MultipartFile file, AppUserDto user, String mimeType, String originalNamePost) {
         String originalName = originalNamePost;
-        if(AppUtil.isEmpty(originalName)){
+        if (AppUtil.isEmpty(originalName)) {
             originalName = FileUtil.getMultipartFileName(file);
         }
         Optional<String> extension = FileUtil.getExtensionByStringHandling(originalName);

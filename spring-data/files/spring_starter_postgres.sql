@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 6MOnHnqoEubxlAlrcWp4wUeDSD0Cw2cllgqcdQQeI4AjyVlM45YeRbAhLPGyUeL
+\restrict RZcwLhJ0tqpbsUS1w1zWVIhSguHpDtnwsZGI4FsTsW2fEK8cNCNuYAYV3lpDRh7
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -158,6 +158,19 @@ CREATE TABLE public.audit_log (
 ALTER TABLE public.audit_log OWNER TO postgres_user;
 
 --
+-- Name: favorite_menu; Type: TABLE; Schema: public; Owner: postgres_user
+--
+
+CREATE TABLE public.favorite_menu (
+    id bigint NOT NULL,
+    url character varying(255),
+    app_user bigint
+);
+
+
+ALTER TABLE public.favorite_menu OWNER TO postgres_user;
+
+--
 -- Name: file_manager; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -297,12 +310,13 @@ CREATE TABLE public.user_agent (
 
 ALTER TABLE public.user_agent OWNER TO postgres_user;
 
-
 --
 -- Data for Name: access_token; Type: TABLE DATA; Schema: public; Owner: postgres_user
 --
 
 COPY public.access_token (id, created_date, expires_at, fcm_enable, fcm_token, lastest_active, logouted_date, revoked, service, token, api_client, app_user, login_log) FROM stdin;
+351291491810807808	2025-08-27 16:06:58.271912	2025-09-26 16:06:58.267	t	\N	2025-08-28 10:34:52.880127	\N	f	1	0198eac7-c896-7d38-8e4d-a6f427466c7d	350921408848597000	350885844724224000	351291491538178048
+351573615310802944	2025-08-28 10:48:01.751626	2025-09-28 10:51:00.114	t	\N	2025-08-29 13:14:08.932051	\N	f	1	0198f3f3-3912-7e18-ab29-8b0e54cbef11	350921408848597000	350885844724224000	351573614979452928
 \.
 
 
@@ -328,7 +342,7 @@ COPY public.api_client_ip (id, created_date, created_user, updated_date, updated
 --
 
 COPY public.app_role (id, deleted, created_date, created_user, updated_date, updated_user, active, name) FROM stdin;
-350888314967953409	f	2025-08-26 13:24:53.476566	350885844724224000	2025-08-26 15:10:52.11191	350885844724224000	t	Developer
+350888314967953409	f	2025-08-26 13:24:53.476566	350885844724224000	2025-08-29 13:14:03.549576	350885844724224000	t	Developer
 \.
 
 
@@ -355,21 +369,21 @@ COPY public.app_user_role (app_user, app_role) FROM stdin;
 --
 
 COPY public.audit_log (id, action, details, entity_id, entity_name, ip_address, "timestamp", username) FROM stdin;
-350888053419544576	CREATE	Role{name='Developer', active=false, id=null}	\N	AppRole	192.168.7.39	2025-08-26 13:23:51.120393	350885844724224000
-350888314967953408	CREATE	Role{name='Developer', active=true, id=null}	\N	AppRole	192.168.7.39	2025-08-26 13:24:53.478306	350885844724224000
-350897401558470656	CREATE	Permission{code='api_client_list', description='', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:00:59.889648	350885844724224000
-350897731989934080	CREATE	Permission{code='api_client_view', description='', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:02:18.670179	350885844724224000
-350898678350745600	CREATE	Permission{code='api_client_manage', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:06:04.30018	350885844724224000
-350898898228744192	CREATE	Permission{code='permission_list', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:06:56.724105	350885844724224000
-350898930600382464	CREATE	Permission{code='permission_view', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:07:04.442276	350885844724224000
-350898947750891520	CREATE	Permission{code='permission_manage', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:07:08.530743	350885844724224000
-350898969737433088	CREATE	Permission{code='role_list', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:07:13.772315	350885844724224000
-350898990356631552	CREATE	Permission{code='role_view', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:07:18.689439	350885844724224000
-350899010636091392	CREATE	Permission{code='role_manage', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:07:23.524447	350885844724224000
-350899032303865856	CREATE	Permission{code='user_list', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:07:28.689969	350885844724224000
-350899050880438272	CREATE	Permission{code='user_view', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:07:33.118972	350885844724224000
-350899073227689984	CREATE	Permission{code='user_manage', description='', operationType=null, id=null}	\N	Permission	192.168.7.39	2025-08-26 14:07:38.446838	350885844724224000
-350914985053917184	UPDATE	Role{name='Developer', active=true, id=350888314967953409}	350888314967953409	AppRole	192.168.7.39	2025-08-26 15:10:52.11884	350885844724224000
+351972435110662144	CREATE	Permission{code='files_directory_list', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:12:47.860243	350885844724224000
+351972465980739584	CREATE	Permission{code='files_directory_view', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:12:55.221027	350885844724224000
+351972492656513024	CREATE	Permission{code='files_directory_manage', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:13:01.582505	350885844724224000
+351972526756204544	CREATE	Permission{code='file_manager_list', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:13:09.712709	350885844724224000
+351972551611650048	CREATE	Permission{code='file_manager_view', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:13:15.638051	350885844724224000
+351972582246846464	CREATE	Permission{code='file_manager_manage', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:13:22.942581	350885844724224000
+351972752585920512	UPDATE	Role{name='Developer', active=true, id=350888314967953409}	350888314967953409	AppRole	192.168.7.39	2025-08-29 13:14:03.554057	350885844724224000
+\.
+
+
+--
+-- Data for Name: favorite_menu; Type: TABLE DATA; Schema: public; Owner: postgres_user
+--
+
+COPY public.favorite_menu (id, url, app_user) FROM stdin;
 \.
 
 
@@ -410,7 +424,8 @@ COPY public.files_directory_path (files_directory, files_directory_parent, level
 --
 
 COPY public.login_log (id, created_at, device_id, host_name, ip, login_from, app_user, user_agent) FROM stdin;
-350887237174431744	2025-08-26 13:20:36.743	\N	bekaku	192.168.7.39	\N	350885844724224000	350887237119905792
+351291491538178048	2025-08-27 16:06:58.501	59fa4d75-6237-4564-a3d8-bf4cf670805d	bekaku	192.168.7.39	0	350885844724224000	351291491475263488
+351573614979452928	2025-08-28 10:48:01.985	59fa4d75-6237-4564-a3d8-bf4cf670805d	bekaku	192.168.7.39	0	350885844724224000	351291491475263488
 \.
 
 
@@ -423,7 +438,6 @@ COPY public.permission (id, code, operation_type, module, description) FROM stdi
 350897732065431552	api_client_view	0	\N	
 350898678438825984	api_client_manage	0	\N	
 350898898232938496	permission_list	0	\N	
-350898930604576768	permission_view	0	\N	
 350898947750891521	permission_manage	0	\N	
 350898969737433089	app_role_list	0	\N	
 350898990360825856	app_role_view	0	\N	
@@ -432,6 +446,13 @@ COPY public.permission (id, code, operation_type, module, description) FROM stdi
 350899050880438273	app_user_view	0	\N	
 350899073227689985	app_user_manage	0	\N	
 350945166250479600	login	0	\N	\N
+350898930604576768	permission_view	0	\N	Permission(View)
+351972435173576704	files_directory_list	0	\N	\N
+351972466005905408	files_directory_view	0	\N	\N
+351972492660707328	files_directory_manage	0	\N	\N
+351972526756204545	file_manager_list	0	\N	\N
+351972551611650049	file_manager_view	0	\N	\N
+351972582251040768	file_manager_manage	0	\N	\N
 \.
 
 
@@ -440,19 +461,25 @@ COPY public.permission (id, code, operation_type, module, description) FROM stdi
 --
 
 COPY public.role_permission (app_role, permission) FROM stdin;
+350888314967953409	350945166250479600
+350888314967953409	350899032308060160
+350888314967953409	351972466005905408
+350888314967953409	351972435173576704
+350888314967953409	350899010636091393
+350888314967953409	351972551611650049
+350888314967953409	351972492660707328
+350888314967953409	350898969737433089
+350888314967953409	350899050880438273
+350888314967953409	350897401642356736
+350888314967953409	350898898232938496
+350888314967953409	350898947750891521
 350888314967953409	350898990360825856
 350888314967953409	350898678438825984
-350888314967953409	350898898232938496
 350888314967953409	350899073227689985
-350888314967953409	350897401642356736
-350888314967953409	350899032308060160
-350888314967953409	350899050880438273
-350888314967953409	350899010636091393
-350888314967953409	350898969737433089
-350888314967953409	350898947750891521
-350888314967953409	350898930604576768
+350888314967953409	351972582251040768
 350888314967953409	350897732065431552
-350888314967953409	350945166250479600
+350888314967953409	350898930604576768
+350888314967953409	351972526756204545
 \.
 
 
@@ -470,14 +497,7 @@ COPY public.system_activity_logs (id, action_date_time, description, user_id) FR
 
 COPY public.user_agent (id, agent) FROM stdin;
 350887237119905792	PostmanRuntime/7.45.0
-\.
-
-
---
--- Data for Name: user_login_logs; Type: TABLE DATA; Schema: public; Owner: postgres_user
---
-
-COPY public.user_login_logs (id, login_date, login_from, user_id) FROM stdin;
+351291491475263488	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36
 \.
 
 
@@ -535,6 +555,14 @@ ALTER TABLE ONLY public.app_user_role
 
 ALTER TABLE ONLY public.audit_log
     ADD CONSTRAINT audit_log_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: favorite_menu favorite_menu_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.favorite_menu
+    ADD CONSTRAINT favorite_menu_pkey PRIMARY KEY (id);
 
 
 --
@@ -658,14 +686,6 @@ ALTER TABLE ONLY public.user_agent
 
 
 --
--- Name: user_login_logs user_login_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres_user
---
-
-ALTER TABLE ONLY public.user_login_logs
-    ADD CONSTRAINT user_login_logs_pkey PRIMARY KEY (id);
-
-
---
 -- Name: idx1g886n9ijc3v1kn2ja05c61gx; Type: INDEX; Schema: public; Owner: postgres_user
 --
 
@@ -715,24 +735,10 @@ CREATE INDEX idx9b2hqhmteavbi90n9d839p2b5 ON public.api_client_ip USING btree (c
 
 
 --
--- Name: idx9yerujh0nyt4c1bk128ksccbx; Type: INDEX; Schema: public; Owner: postgres_user
---
-
-CREATE INDEX idx9yerujh0nyt4c1bk128ksccbx ON public.user_login_logs USING btree (login_from);
-
-
---
 -- Name: idxago4re6d8ldeib4w1ceru2mwy; Type: INDEX; Schema: public; Owner: postgres_user
 --
 
 CREATE INDEX idxago4re6d8ldeib4w1ceru2mwy ON public.app_user USING btree (active);
-
-
---
--- Name: idxbywlfkna4hg69ek16bl92k26q; Type: INDEX; Schema: public; Owner: postgres_user
---
-
-CREATE INDEX idxbywlfkna4hg69ek16bl92k26q ON public.user_login_logs USING btree (login_date);
 
 
 --
@@ -955,16 +961,16 @@ ALTER TABLE ONLY public.login_log
 
 
 --
--- Name: user_login_logs fkrjwhgl4bq03dd4o5jdqtj2vnd; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
+-- Name: favorite_menu fksul1w41buaq90mmjqtngiqjrk; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
 --
 
-ALTER TABLE ONLY public.user_login_logs
-    ADD CONSTRAINT fkrjwhgl4bq03dd4o5jdqtj2vnd FOREIGN KEY (user_id) REFERENCES public.app_user(id);
+ALTER TABLE ONLY public.favorite_menu
+    ADD CONSTRAINT fksul1w41buaq90mmjqtngiqjrk FOREIGN KEY (app_user) REFERENCES public.app_user(id);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 6MOnHnqoEubxlAlrcWp4wUeDSD0Cw2cllgqcdQQeI4AjyVlM45YeRbAhLPGyUeL
+\unrestrict RZcwLhJ0tqpbsUS1w1zWVIhSguHpDtnwsZGI4FsTsW2fEK8cNCNuYAYV3lpDRh7
 

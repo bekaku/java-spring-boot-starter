@@ -23,7 +23,7 @@ public interface FileManagerService extends BaseService<FileManager, FileManager
 
     ImageDto getImageDtoBy(String fileMime, String path);
 
-    List<FileManagerDto> findAllFolderAndFileByParentFolder(Paging page, Long parentDirectoryId);
+    List<FileManagerDto> findAllFolderAndFileByParentFolder(Paging page, Long parentDirectoryId, Long ownerId);
 
     List<FileManager> findAllByFilesDirectory(FilesDirectory filesDirectory);
 

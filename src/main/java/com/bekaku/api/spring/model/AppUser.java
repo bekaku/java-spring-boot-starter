@@ -99,14 +99,6 @@ public class AppUser extends SoftDeletedAuditable<Long> {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        AppUser appUser = (AppUser) o;
-        return getId() != null && Objects.equals(getId(), appUser.getId());
-    }
-
-    @Override
     public int hashCode() {
         return getClass().hashCode();
     }

@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,6 +34,15 @@ public class FilesDirectory extends Auditable<Long> {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "files_directory_parent")
     private FilesDirectory filesDirectoryParent;
+
+    private LocalDateTime latestUpdated;
+
+    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private long fileSize = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner")
+    private AppUser owner;
 
     public static Sort getSort() {
         return Sort.by(Sort.Direction.ASC, "name");

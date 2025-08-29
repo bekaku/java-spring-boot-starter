@@ -4,23 +4,29 @@
     <!--    Query https://mybatis.org/mybatis-3/dynamic-sql.html-->
     <sql id="mainQuery">
         SELECT f.id,
-        m.`name` fileMime,
+        m.name fileMime,
         f.original_file_name fileName,
         f.file_path filePath,
         f.file_size fileSize,
         f.created_date createdDate,
+        f.created_date latestUpdated,
+        f.owner ownerId,
+        NULL updatedUser,
         '0' AS directoryFolder
         FROM file_manager f
         LEFT JOIN file_mime m ON f.file_mime_id = m.id
     </sql>
     <sql id="dirQuery">
         SELECT
-        dir.`id`,
+        dir.id,
         'directory' AS fileMime,
-        dir.`name` fileName,
+        dir.name fileName,
         '' AS filePath,
-        '0' AS fileSize,
+        dir.file_size AS fileSize,
         dir.created_date createdDate,
+        dir.latest_updated latestUpdated,
+        dir.owner ownerId,
+        dir.updated_user updatedUser,
         '1' AS directoryFolder
         FROM
         files_directory dir
@@ -40,6 +46,7 @@
                 WHERE f.deleted is false AND f.files_directory_id IS NULL
             </otherwise>
         </choose>
+        AND f.owner = #{ownerId}
 
         UNION ALL
         <include refid="dirQuery"/>
@@ -51,21 +58,30 @@
                 WHERE dir.files_directory_parent IS NULL
             </otherwise>
         </choose>
+        AND dir.owner = #{ownerId}
+
         <if test="page.sortfield != null and page.sortmode != null">
             order by ${page.sortfield} ${page.sortmode}
         </if>
         <if test="page.offset != null and page.offset != null">
-            limit #{page.offset}, #{page.limit}
+            <!--            Mysql-->
+            <!--            limit #{page.offset}, #{page.limit}-->
+            <!--            Postgres-->
+            LIMIT #{page.limit} OFFSET #{page.offset}
         </if>
     </select>
 
     <!--Result Map-->
     <resultMap id="findForPublicByIdResult" type="com.bekaku.api.spring.vo.FileManagerPublicVo">
         <id column="id" property="id"/>
+        <result column="directoryFolder" property="directoryFolder"/>
         <result column="fileMime" property="fileMime"/>
         <result column="fileName" property="fileName"/>
         <result column="filePath" property="filePath"/>
         <result column="fileSize" property="fileSize"/>
         <result column="createdDate" property="createdDate"/>
+        <result column="latestUpdated" property="latestUpdated"/>
+        <result column="ownerId" property="ownerId"/>
+        <result column="updatedUser" property="updatedUserId"/>
     </resultMap>
 </mapper>

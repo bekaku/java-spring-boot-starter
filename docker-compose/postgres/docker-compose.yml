@@ -1,0 +1,20 @@
+#version: '3.9'
+services:
+  postgres:
+    container_name: postgres
+    image: "postgres:17.6-alpine"
+    volumes:
+      - ./log:/var/log/postgresql
+      - ./datadir:/var/lib/postgresql/data
+    #restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - docker-network
+    environment:
+      POSTGRES_DB: spring_starter_postgres
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: CH789162be
+networks:
+  docker-network:
+    external: true

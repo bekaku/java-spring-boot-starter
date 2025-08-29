@@ -117,7 +117,8 @@ public class FileManagerServiceImpl implements FileManagerService {
                 FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getFilePath(), null),
                 isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null,
                 FileUtil.humanReadableByteCountSI(fileManager.getFileSize()),
-                fileManager.getCreatedDate());
+                fileManager.getCreatedDate(),
+                false);
 
         return dto;
     }
@@ -175,14 +176,16 @@ public class FileManagerServiceImpl implements FileManagerService {
     private FileManagerDto setVoToDto(FileManagerPublicVo publicVo) {
         FileManagerDto dto = new FileManagerDto();
         boolean isImage = FileUtil.isImage(publicVo.getFileMime());
-
+        String path = !publicVo.isDirectoryFolder() ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), publicVo.getFilePath(), null) : null;
+        String thumbnailPath = isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(publicVo.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null;
         dto.assign(publicVo.getId(),
                 publicVo.getFileMime(),
                 publicVo.getFileName(),
-                FileUtil.generateCdnPath(appProperties.getCdnForPublic(), publicVo.getFilePath(), null),
-                isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(publicVo.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null,
+                path,
+                thumbnailPath,
                 FileUtil.humanReadableByteCountSI(publicVo.getFileSize()),
-                publicVo.getCreatedDate());
+                publicVo.getCreatedDate(),
+                publicVo.isDirectoryFolder());
 
         return dto;
     }
@@ -197,14 +200,15 @@ public class FileManagerServiceImpl implements FileManagerService {
                 FileUtil.generateCdnPath(appProperties.getCdnForPublic(), f.getFilePath(), null),
                 isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(f.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null,
                 FileUtil.humanReadableByteCountSI(f.getFileSize()),
-                f.getCreatedDate());
+                f.getCreatedDate(),
+                false);
 
         return dto;
     }
 
     @Override
-    public List<FileManagerDto> findAllFolderAndFileByParentFolder(Paging page, Long parentDirectoryId) {
-        List<FileManagerPublicVo> voList = fileManagerMybatis.findAllFolderAndFileByParentFolder(page, parentDirectoryId);
+    public List<FileManagerDto> findAllFolderAndFileByParentFolder(Paging page, Long parentDirectoryId, Long owner) {
+        List<FileManagerPublicVo> voList = fileManagerMybatis.findAllFolderAndFileByParentFolder(page, parentDirectoryId, owner);
         return voList
                 .stream()
                 .map(this::setVoToDto)

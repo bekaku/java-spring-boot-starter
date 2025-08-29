@@ -1,8 +1,11 @@
 package com.bekaku.api.spring.serviceImpl;
 
+import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.FilesDirectoryDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
+import com.bekaku.api.spring.exception.BaseResponseException;
 import com.bekaku.api.spring.mapper.FilesDirectoryMapper;
+import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.FilesDirectory;
 import com.bekaku.api.spring.mybatis.FilesDirectoryMybatis;
 import com.bekaku.api.spring.repository.FilesDirectoryRepository;
@@ -24,11 +27,11 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 @Service
-public class FilesDirectoryServiceImpl implements FilesDirectoryService {
+public class FilesDirectoryServiceImpl extends BaseResponseException implements FilesDirectoryService {
     private final FilesDirectoryRepository filesDirectoryRepository;
     private final FilesDirectoryMapper modelMapper;
     private final FilesDirectoryMybatis filesDirectoryMybatis;
-
+    private final I18n i18n;
 
     @Transactional(readOnly = true)
     @Override
@@ -58,7 +61,7 @@ public class FilesDirectoryServiceImpl implements FilesDirectoryService {
         return null;
     }
 
-    private ResponseListDto<FilesDirectoryDto> getListFromResult(Page<FilesDirectory> result){
+    private ResponseListDto<FilesDirectoryDto> getListFromResult(Page<FilesDirectory> result) {
         return new ResponseListDto<>(result.getContent()
                 .stream()
                 .map(this::convertEntityToDto)
@@ -131,5 +134,40 @@ public class FilesDirectoryServiceImpl implements FilesDirectoryService {
             }
         }
         return dto;
+    }
+
+    @Override
+    public Optional<FilesDirectoryDto> findByIdAndOwnerId(Long id, Long ownerId) {
+        return filesDirectoryMybatis.findByIdAndOwnerId(id, ownerId);
+    }
+
+    @Override
+    public void validateFolderOwner(AppUser appUser, FilesDirectory folder) {
+        if (!appUser.getId().equals(folder.getOwner().getId())) {
+            throw this.responseErrorForbidden(i18n.getMessage("error.folder.forbidden"));
+        }
+    }
+
+    @Override
+    public FilesDirectory validateFolderOwnerAndGetBy(AppUser appUser, Long folderID) {
+        Optional<FilesDirectory> directoryExist = filesDirectoryRepository.findByOwnerAndId(appUser, folderID);
+        if (directoryExist.isEmpty()) {
+            throw this.responseErrorForbidden(i18n.getMessage("error.folder.forbidden"));
+        }
+        return directoryExist.get();
+    }
+
+    @Override
+    public void validateDuplicateName(AppUser appUser, String name, FilesDirectory filesDirectoryParent) {
+        Optional<FilesDirectory> directoryExist;
+        if (filesDirectoryParent != null) {
+            validateFolderOwner(appUser, filesDirectoryParent);
+            directoryExist = filesDirectoryRepository.findByNameAndFilesDirectoryParent(name, filesDirectoryParent);
+        } else {
+            directoryExist = filesDirectoryRepository.findByNameAndOwnerAndFilesDirectoryParentIsNull(name, appUser);
+        }
+        if (directoryExist.isPresent()) {
+            throw this.responseErrorDuplicate(i18n.getMessage("model.filesDirectory"));
+        }
     }
 }

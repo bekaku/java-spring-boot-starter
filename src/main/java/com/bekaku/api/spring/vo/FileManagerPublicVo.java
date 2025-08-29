@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -18,4 +19,12 @@ public class FileManagerPublicVo {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime latestUpdated;
+
+    @JsonIgnore
+    private Long ownerId;
+    @JsonIgnore
+    private Long updatedUserId;
 }

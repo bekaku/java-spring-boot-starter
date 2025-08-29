@@ -7,11 +7,11 @@
         SELECT cp.files_directory AS id
         ,c1.active
         ,cp.files_directory_parent AS filesDirectoryParentId
-        ,c1.created_user AS createdUser
+        ,c1.owner AS ownerId
         ,c1.updated_user AS updatedUser
         ,GROUP_CONCAT(c2.id) filesDirectoryGroups
         ,GROUP_CONCAT(c2.`name` ORDER BY cp.`level` SEPARATOR '>') AS pathName
-        ,c1.`name` AS name
+        ,c1.name AS name
         FROM files_directory_path cp
         LEFT JOIN files_directory AS c1 ON (cp.files_directory = c1.id)
         LEFT JOIN files_directory AS c2 ON (cp.files_directory_parent = c2.id)
@@ -23,11 +23,12 @@
         SELECT cp.files_directory AS id
         ,c1.active
         ,c1.files_directory_parent AS filesDirectoryParentId
-        ,c1.created_user AS createdUser
+        ,c1.owner AS ownerId
         ,c1.updated_user AS updatedUser
         ,c2.id directoryPath
-        ,c2.`name` directoryPathName
-        ,c1.`name` AS name
+        ,c2.name directoryPathName
+        ,c1.name AS name
+        ,c1.file_size AS fileSize
         FROM files_directory_path cp
         LEFT JOIN files_directory AS c1 ON (cp.files_directory = c1.id)
         LEFT JOIN files_directory AS c2 ON (cp.files_directory_parent = c2.id)
@@ -36,13 +37,13 @@
     <select id="findById" resultMap="findByIdResult">
         <include refid="mainQuery"/>
         WHERE cp.files_directory = #{id}
-        ORDER BY cp.`level`
+        ORDER BY cp.level
     </select>
 
-    <select id="findByIdAndCrestedUserId" resultMap="findByIdResult">
+    <select id="findByIdAndOwnerId" resultMap="findByIdResult">
         <include refid="mainQuery"/>
-        WHERE filesDirectory.id = #{id} AND filesDirectory.created_user = #{createdUserId}
-        ORDER BY cp.`level`
+        WHERE cp.files_directory = #{id} AND c1.owner = #{ownerId}
+        ORDER BY cp.level
     </select>
 
     <!--Result Map-->
@@ -51,6 +52,9 @@
         <result column="active" property="active"/>
         <result column="filesDirectoryParentId" property="filesDirectoryParentId"/>
         <result column="name" property="name"/>
+        <result column="ownerId" property="ownerId"/>
+        <result column="updatedUser" property="updatedUserId"/>
+        <result column="fileSize" property="fileSize"/>
         <collection property="directoryPathIds" javaType="list" ofType="long">
             <result column="directoryPath"/>
         </collection>

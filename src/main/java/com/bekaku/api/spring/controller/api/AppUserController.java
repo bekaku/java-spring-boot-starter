@@ -1,13 +1,36 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.dto.*;
+import com.bekaku.api.spring.dto.AccessTokenDto;
+import com.bekaku.api.spring.dto.AppUserDto;
+import com.bekaku.api.spring.dto.EmailOrUsernameRequest;
+import com.bekaku.api.spring.dto.LoginedProfileItemDto;
+import com.bekaku.api.spring.dto.NotificationCount;
+import com.bekaku.api.spring.dto.RefreshTokenRequest;
+import com.bekaku.api.spring.dto.RefreshTokenResponse;
+import com.bekaku.api.spring.dto.ResponseMessage;
+import com.bekaku.api.spring.dto.UserChangePasswordRequest;
+import com.bekaku.api.spring.dto.UserPersonalEditRequest;
+import com.bekaku.api.spring.dto.UserRegisterRequest;
+import com.bekaku.api.spring.dto.UserUpdateRequest;
 import com.bekaku.api.spring.enumtype.AppLocale;
 import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
-import com.bekaku.api.spring.model.*;
+import com.bekaku.api.spring.model.AccessToken;
+import com.bekaku.api.spring.model.ApiClient;
+import com.bekaku.api.spring.model.AppRole;
+import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.properties.JwtProperties;
-import com.bekaku.api.spring.service.*;
+import com.bekaku.api.spring.service.AccessTokenService;
+import com.bekaku.api.spring.service.ApiClientService;
+import com.bekaku.api.spring.service.AppRoleService;
+import com.bekaku.api.spring.service.AppUserService;
+import com.bekaku.api.spring.service.EncryptService;
+import com.bekaku.api.spring.service.FavoriteMenuService;
+import com.bekaku.api.spring.service.FileManagerService;
+import com.bekaku.api.spring.service.JwtService;
+import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
@@ -58,6 +81,7 @@ public class AppUserController extends BaseApiController {
                                       HttpServletRequest request,
                                       @RequestHeader(value = ConstantData.X_USER_ID) String currentUserId) {
 //    public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen, @CookieValue(name = "jwt_token", required = false) String jwtRefreshTokenCookie) {
+
         if (userAuthen == null) {
             throw this.responseErrorUnauthorized();
         }

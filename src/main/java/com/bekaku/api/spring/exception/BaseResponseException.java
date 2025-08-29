@@ -17,6 +17,9 @@ public class BaseResponseException {
     public ApiException responseErrorForbidden() {
         return this.responseError(HttpStatus.FORBIDDEN, null, i18n.getMessage("error.403"));
     }
+    public ApiException responseErrorForbidden(String error) {
+        return this.responseError(HttpStatus.FORBIDDEN, i18n.getMessage("error.403"), error);
+    }
 
     public ApiException responseErrorBadRequest() {
         return this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.error"));

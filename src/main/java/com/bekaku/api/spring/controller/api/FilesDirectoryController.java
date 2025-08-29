@@ -1,6 +1,8 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
+import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.AppUserDto;
 import com.bekaku.api.spring.dto.FilesDirectoryDto;
@@ -31,6 +33,7 @@ public class FilesDirectoryController extends BaseApiController {
     private final FilesDirectoryService filesDirectoryService;
     private final FilesDirectoryPathService filesDirectoryPathService;
     private final FileManagerService fileManagerService;
+    private final AppUserService appUserService;
     private final I18n i18n;
 
     @PreAuthorize("isHasPermission('files_directory_list')")
@@ -43,12 +46,18 @@ public class FilesDirectoryController extends BaseApiController {
     @PreAuthorize("isHasPermission('files_directory_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody FilesDirectoryDto dto, @AuthenticationPrincipal AppUserDto user) {
+
+        AppUser appUser = appUserService.findAndValidateAppUserBy(user);
+
         FilesDirectory filesDirectory = filesDirectoryService.convertDtoToEntity(dto);
         if (dto.getFilesDirectoryParentId() > 0) {
             Optional<FilesDirectory> directoryParent = filesDirectoryService.findById(dto.getFilesDirectoryParentId());
             directoryParent.ifPresent(filesDirectory::setFilesDirectoryParent);
         }
 
+        //validate duplicate name
+        filesDirectoryService.validateDuplicateName(appUser, dto.getName(), filesDirectory.getFilesDirectoryParent());
+        filesDirectory.setOwner(appUser);
         filesDirectoryService.save(filesDirectory);
         manageFileDirectoryPath(filesDirectory);
         return this.responseEntity(filesDirectoryService.convertEntityToDto(filesDirectory), HttpStatus.OK);
@@ -86,18 +95,11 @@ public class FilesDirectoryController extends BaseApiController {
 
     @PreAuthorize("isHasPermission('files_directory_view')")
     @GetMapping("/{id}")
-    public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
-        Optional<FilesDirectory> filesDirectory = filesDirectoryService.findById(id);
-        if (filesDirectory.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-
-        Optional<FilesDirectoryDto> directoryDto = filesDirectoryService.findDirectoryById(id);
+    public ResponseEntity<Object> findOne(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user) {
+        Optional<FilesDirectoryDto> directoryDto = filesDirectoryService.findByIdAndOwnerId(id, user.getId());
         if (directoryDto.isPresent()) {
             return this.responseEntity(directoryDto.get(), HttpStatus.OK);
         }
-
-//        return this.responseEntity(filesDirectoryService.convertEntityToDto(filesDirectory.get()), HttpStatus.OK);
         return this.responseEntity(HttpStatus.NOT_FOUND);
     }
 

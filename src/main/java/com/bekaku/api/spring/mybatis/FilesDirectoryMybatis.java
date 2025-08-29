@@ -11,5 +11,5 @@ public interface FilesDirectoryMybatis {
 
     Optional<FilesDirectoryDto> findById(@Param("id") Long id);
 
-    Optional<FilesDirectoryDto> findByIdAndCrestedUserId(@Param("id") Long id, @Param("createdUserId") Long createdUserId);
+    Optional<FilesDirectoryDto> findByIdAndOwnerId(@Param("id") Long id, @Param("ownerId") Long ownerId);
 }

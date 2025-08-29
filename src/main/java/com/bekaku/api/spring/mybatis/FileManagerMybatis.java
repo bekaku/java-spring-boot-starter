@@ -13,5 +13,5 @@ public interface FileManagerMybatis {
 
     Optional<FileManagerPublicVo> findForPublicById(@Param("id") Long id);
 
-    List<FileManagerPublicVo> findAllFolderAndFileByParentFolder(@Param("page") Paging page, Long parentDirectoryId);
+    List<FileManagerPublicVo> findAllFolderAndFileByParentFolder(@Param("page") Paging page, @Param("parentDirectoryId") Long parentDirectoryId, @Param("ownerId") Long ownerId);
 }

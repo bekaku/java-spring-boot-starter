@@ -148,7 +148,13 @@ public class DevelopmentContoller extends BaseApiController {
                 new Permission("role_manage"),
                 new Permission("user_list"),
                 new Permission("user_view"),
-                new Permission("user_manage")
+                new Permission("user_manage"),
+                new Permission("files_directory_list"),
+                new Permission("files_directory_view"),
+                new Permission("files_directory_manage"),
+                new Permission("file_manager_list"),
+                new Permission("file_manager_view"),
+                new Permission("file_manager_manage")
         ));
     }
 
