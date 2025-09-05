@@ -217,6 +217,7 @@ public class FileUtil {
         Tika tika = new Tika();
         return tika.detect(file);
     }
+
     public static String getMimeType(Path path) throws IOException {
         if (path == null) {
             return null;
@@ -367,6 +368,12 @@ public class FileUtil {
         String extension = originalFileName.substring(lastDotIndex); // includes the dot
         String trimmedName = namePart.length() > limit ? namePart.substring(0, limit) : namePart;
         return trimmedName + extension;
+    }
+
+    public static String trimString(String text, int limit) {
+        if (text == null || limit < 1) return text;
+
+        return text.length() <= limit ? text : text.substring(0, limit);
     }
 
 }

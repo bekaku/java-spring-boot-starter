@@ -33,7 +33,7 @@ spring:
     # connect to mysql form local docker via port 3308
 
     # MySql
-#    url: jdbc:mysql://${MYSQL_HOST:localhost}:3308/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
+#    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
 #    username: root
 #    password: CH789162be
 #    driver-class-name: com.mysql.cj.jdbc.Driver
@@ -127,38 +127,11 @@ app:
   jwt:
     secret: 1c88aa90d3ca655724a0c78db6a02987720f8dccbb7165609a0f6fc1b031523cf24135365856e5372cb0586abbd14a3cbf82644793d4065df16b0295be3dde6e
     #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes, 600=10 minutes , 60 = 1 minute
-    session-time: 86400
+    session-time: 604800
     session-refresh-time: 2592000
     session-day: 30
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
-  allow-mimes:
-    - application/msword
-    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
-    - application/vnd.ms-excel
-    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-    - application/vnd.ms-powerpoint
-    - application/vnd.openxmlformats-officedocument.presentationml.presentation
-    - application/x-tika-ooxml
-    - application/pdf
-    - application/vnd.rar
-    - application/zip
-    - image/jpeg
-    - image/png
-    - image/gif
-    - image/webp
-    - text/plain
-    - text/csv
-    - video/mpeg
-    - video/mp4
-    - video/quicktime
-    - video/x-msvideo
-    - video/webm
-    - video/x-flv
-    - video/3gpp
-    - video/3gpp2
-    - video/ogg
-    - video/x-matroska
 
 custom:
   config:

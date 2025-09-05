@@ -3,18 +3,34 @@ services:
   postgres:
     container_name: postgres
     image: "postgres:17.6-alpine"
+#    image: "postgres:18beta3-alpine"
     volumes:
+      #- ./pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
       - ./log:/var/log/postgresql
-      - ./datadir:/var/lib/postgresql/data
+      - ./conf/postgres.conf:/usr/local/share/postgresql/postgresql.conf
+      - ./conf/pg_hba.conf:/usr/local/share/postgresql/pg_hba.conf
     #restart: always
     ports:
       - "5432:5432"
-    networks:
-      - docker-network
+#    networks:
+#      - docker-network
     environment:
       POSTGRES_DB: spring_starter_postgres
       POSTGRES_USER: postgres_user
-      POSTGRES_PASSWORD: CH789162be
-networks:
-  docker-network:
-    external: true
+      POSTGRES_PASSWORD: STRONG_PASSWORD
+    command:   [
+      "postgres",
+      "-c", "config_file=/usr/local/share/postgresql/postgresql.conf",
+      "-c", "hba_file=/usr/local/share/postgresql/pg_hba.conf"
+    ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+#networks:
+#  docker-network:
+#    external: true
+volumes:
+  pg_data:

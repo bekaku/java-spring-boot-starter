@@ -21,7 +21,7 @@ public class FileManagerPublicVo {
     private LocalDateTime createdDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime latestUpdated;
+    private LocalDateTime updatedDate;
 
     @JsonIgnore
     private Long ownerId;

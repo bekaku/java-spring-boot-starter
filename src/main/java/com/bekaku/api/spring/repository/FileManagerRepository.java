@@ -2,6 +2,8 @@ package com.bekaku.api.spring.repository;
 
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FilesDirectory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +13,5 @@ import java.util.List;
 public interface FileManagerRepository extends BaseRepository<FileManager, Long>, JpaSpecificationExecutor<FileManager> {
 
     List<FileManager> findAllByFilesDirectory(FilesDirectory filesDirectory);
+    Page<FileManager> findAllByFilesDirectory(FilesDirectory filesDirectory, Pageable pageable);
 }

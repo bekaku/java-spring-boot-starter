@@ -1,7 +1,9 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
+import com.bekaku.api.spring.dto.FileManagerDto;
 import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.AppUserDto;
@@ -14,6 +16,8 @@ import com.bekaku.api.spring.service.FilesDirectoryPathService;
 import com.bekaku.api.spring.service.FilesDirectoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +49,7 @@ public class FilesDirectoryController extends BaseApiController {
 
     @PreAuthorize("isHasPermission('files_directory_manage')")
     @PostMapping
-    public ResponseEntity<Object> create(@Valid @RequestBody FilesDirectoryDto dto, @AuthenticationPrincipal AppUserDto user) {
+    public FileManagerDto create(@Valid @RequestBody FilesDirectoryDto dto, @AuthenticationPrincipal AppUserDto user) {
 
         AppUser appUser = appUserService.findAndValidateAppUserBy(user);
 
@@ -60,7 +64,7 @@ public class FilesDirectoryController extends BaseApiController {
         filesDirectory.setOwner(appUser);
         filesDirectoryService.save(filesDirectory);
         manageFileDirectoryPath(filesDirectory);
-        return this.responseEntity(filesDirectoryService.convertEntityToDto(filesDirectory), HttpStatus.OK);
+        return fileManagerService.setVoToDto(filesDirectory);
     }
 
     private void manageFileDirectoryPath(FilesDirectory filesDirectory) {
@@ -82,36 +86,37 @@ public class FilesDirectoryController extends BaseApiController {
     }
 
     @PreAuthorize("isHasPermission('files_directory_manage')")
-    @PutMapping
-    public ResponseEntity<Object> update(@Valid @RequestBody FilesDirectoryDto dto) {
-        FilesDirectory filesDirectory = filesDirectoryService.convertDtoToEntity(dto);
-        Optional<FilesDirectory> oldData = filesDirectoryService.findById(dto.getId());
+    @PutMapping("/{id}")
+    public FileManagerDto update(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user, @Valid @RequestBody FilesDirectoryDto dto) {
+        Optional<FilesDirectory> oldData = filesDirectoryService.findByIdAndOwnerId(id, user.getId());
         if (oldData.isEmpty()) {
-            throw this.responseErrorNotfound();
+            throw this.responseErrorNotfound(i18n.getMessage("model.filesDirectory"));
         }
-        filesDirectoryService.update(filesDirectory);
-        return this.responseEntity(filesDirectoryService.convertEntityToDto(filesDirectory), HttpStatus.OK);
+        oldData.get().onUpdate(dto.getName());
+        filesDirectoryService.update(oldData.get());
+        return fileManagerService.setVoToDto(oldData.get());
     }
 
     @PreAuthorize("isHasPermission('files_directory_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user) {
-        Optional<FilesDirectoryDto> directoryDto = filesDirectoryService.findByIdAndOwnerId(id, user.getId());
-        if (directoryDto.isPresent()) {
-            return this.responseEntity(directoryDto.get(), HttpStatus.OK);
+        Optional<FilesDirectoryDto> directoryDto = filesDirectoryService.findDtoByIdAndOwnerId(id, user.getId());
+        if (directoryDto.isEmpty()) {
+            throw this.responseErrorNotfound(i18n.getMessage("model.filesDirectory"));
         }
-        return this.responseEntity(HttpStatus.NOT_FOUND);
+        return this.responseEntity(directoryDto.get(), HttpStatus.OK);
     }
 
     @PreAuthorize("isHasPermission('files_directory_manage')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") long id) throws IOException {
-        Optional<FilesDirectory> filesDirectory = filesDirectoryService.findById(id);
+    public ResponseEntity<Object> delete(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user) throws IOException {
+        Optional<FilesDirectory> filesDirectory = filesDirectoryService.findByIdAndOwnerId(id, user.getId());
         if (filesDirectory.isEmpty()) {
-            throw this.responseErrorNotfound();
+            throw this.responseErrorNotfound(i18n.getMessage("model.filesDirectory"));
         }
 
         //find subfolder and files
+        /*
         List<FilesDirectory> subFolderList = filesDirectoryService.findAllByFilesDirectoryParent(filesDirectory.get());
         for (FilesDirectory f : subFolderList) {
             //delete file manager in this folder
@@ -124,6 +129,21 @@ public class FilesDirectoryController extends BaseApiController {
             //delete sub folder
             filesDirectoryService.delete(f);
         }
+         */
+        Page<FilesDirectory> page;
+        int pageNumber = 0;
+        do {
+            page = filesDirectoryService.findAllByFilesDirectoryParent(filesDirectory.get(), PageRequest.of(pageNumber++, 20));
+            page.forEach(folder -> {
+                //delete file manager in this folder
+                fileManagerService.deleteAllFileByFilesDirectory(folder);
+                //delete from folder path
+                filesDirectoryPathService.deleteByFolderId(folder.getId());
+                filesDirectoryPathService.deleteByParentFolderId(folder.getId());
+                //delete sub folder
+                filesDirectoryService.delete(folder);
+            });
+        } while (!page.isEmpty());
 
         //delete from folder path
         filesDirectoryPathService.deleteByFolderId(id);

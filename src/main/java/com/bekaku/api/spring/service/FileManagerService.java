@@ -14,6 +14,7 @@ public interface FileManagerService extends BaseService<FileManager, FileManager
     Optional<FileManagerDto> findForPublicById(Long id);
 
     FileManagerDto setEntityToDto(FileManager f);
+    FileManagerDto setVoToDto(FilesDirectory filesDirectory);
 
     Optional<ImageDto> findImageDtoBy(Long id);
 
@@ -23,7 +24,11 @@ public interface FileManagerService extends BaseService<FileManager, FileManager
 
     ImageDto getImageDtoBy(String fileMime, String path);
 
-    List<FileManagerDto> findAllFolderAndFileByParentFolder(Paging page, Long parentDirectoryId, Long ownerId);
+    List<FileManagerDto> findAllFolderAndFileByParentFolderAndOwnerId(Paging page, Long parentDirectoryId, Long ownerId);
+
+    List<FileManagerDto> findAllFolderByParentFolderAndOwnerId(Paging page, Long parentDirectoryId, Long ownerId);
+
+    List<FileManagerDto> findAllFileByParentFolderAndOwnerId(Paging page, Long parentDirectoryId, Long ownerId);
 
     List<FileManager> findAllByFilesDirectory(FilesDirectory filesDirectory);
 

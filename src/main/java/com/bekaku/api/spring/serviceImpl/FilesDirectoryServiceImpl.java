@@ -111,34 +111,52 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
         return modelMapper.toEntity(filesDirectoryDto);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<FilesDirectory> findByIdAndOwnerId(Long id, Long appUserId) {
+        return filesDirectoryRepository.findByIdAndOwnerId(id, appUserId);
+    }
+
+    @Transactional(readOnly = true)
     @Override
     public List<FilesDirectory> findAllByFilesDirectoryParent(FilesDirectory filesDirectoryParent) {
         return filesDirectoryRepository.findAllByFilesDirectoryParent(filesDirectoryParent);
     }
 
     @Override
-    public Optional<FilesDirectoryDto> findDirectoryById(Long id) {
-        Optional<FilesDirectoryDto> dto = filesDirectoryMybatis.findById(id);
-        List<DirectoryPathVo> paths = new ArrayList<>();
-        if (dto.isPresent()) {
-            paths.add(new DirectoryPathVo(null, null, dto.get().getDirectoryPathIds().isEmpty(), true));
-            dto.get().setPaths(paths);
-            if (!dto.get().getDirectoryPathIds().isEmpty()) {
-                for (int i = 0; i < dto.get().getDirectoryPathIds().size(); i++) {
-                    Long pathId = dto.get().getDirectoryPathIds().get(i);
-                    String pathName = dto.get().getDirectoryPathNames().get(i);
-                    paths.add(new DirectoryPathVo(pathId, pathName, i == (dto.get().getDirectoryPathIds().size() - 1), false));
-                }
-                dto.get().getDirectoryPathIds().clear();
-                dto.get().getDirectoryPathNames().clear();
-            }
-        }
-        return dto;
+    public Page<FilesDirectory> findAllByFilesDirectoryParent(FilesDirectory filesDirectoryParent, Pageable pageable) {
+        return filesDirectoryRepository.findAllByFilesDirectoryParent(filesDirectoryParent, pageable);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public Optional<FilesDirectoryDto> findByIdAndOwnerId(Long id, Long ownerId) {
-        return filesDirectoryMybatis.findByIdAndOwnerId(id, ownerId);
+    public Optional<FilesDirectoryDto> findDirectoryById(Long id) {
+        return filesDirectoryMybatis.findById(id).flatMap(this::setDtoBy);
+    }
+
+    private Optional<FilesDirectoryDto> setDtoBy(FilesDirectoryDto dto) {
+        List<DirectoryPathVo> paths = new ArrayList<>();
+        if (dto != null) {
+            paths.add(new DirectoryPathVo(null, null, dto.getDirectoryPathIds().isEmpty(), true));
+            dto.setPaths(paths);
+            if (!dto.getDirectoryPathIds().isEmpty()) {
+                for (int i = 0; i < dto.getDirectoryPathIds().size(); i++) {
+                    Long pathId = dto.getDirectoryPathIds().get(i);
+                    String pathName = dto.getDirectoryPathNames().get(i);
+                    paths.add(new DirectoryPathVo(pathId, pathName, i == (dto.getDirectoryPathIds().size() - 1), false));
+                }
+                dto.getDirectoryPathIds().clear();
+                dto.getDirectoryPathNames().clear();
+            }
+            return Optional.of(dto);
+        }
+        return Optional.empty();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<FilesDirectoryDto> findDtoByIdAndOwnerId(Long id, Long ownerId) {
+        return filesDirectoryMybatis.findByIdAndOwnerId(id, ownerId).flatMap(this::setDtoBy);
     }
 
     @Override
@@ -148,6 +166,7 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
     public FilesDirectory validateFolderOwnerAndGetBy(AppUser appUser, Long folderID) {
         Optional<FilesDirectory> directoryExist = filesDirectoryRepository.findByOwnerAndId(appUser, folderID);
@@ -157,6 +176,7 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
         return directoryExist.get();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public void validateDuplicateName(AppUser appUser, String name, FilesDirectory filesDirectoryParent) {
         Optional<FilesDirectory> directoryExist;

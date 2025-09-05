@@ -35,6 +35,8 @@ public class FilesDirectoryDto extends DtoId {
     private Long updatedUserId;
 
     // optional
+    @JsonIgnore
     private List<Long> directoryPathIds = new ArrayList<>();
+    @JsonIgnore
     private List<String> directoryPathNames = new ArrayList<>();
 }

@@ -16,6 +16,9 @@ public class Paging {
     private String sortmode;
     private String sortfield;
 
+    private final String ASC_MODE="asc";
+    private final String DESC_MODE="desc";
+
     public Paging(int page, int limit, String sort) {
         setLimit(limit);
         setOffset(page);
@@ -26,8 +29,9 @@ public class Paging {
         if (sort != null && !sort.isEmpty()) {
             String[] splitParams = sort.toLowerCase().split(",");
             if (splitParams.length == 2) {
+                String sortmode = splitParams[1];
                 this.sortfield = splitParams[0];
-                this.sortmode = splitParams[1];
+                this.sortmode = sortmode.equals(DESC_MODE) ? DESC_MODE : ASC_MODE;
             }
         }
     }

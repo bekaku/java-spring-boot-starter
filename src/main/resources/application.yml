@@ -170,14 +170,15 @@ server:
     encoding:
       charset: UTF-8
       force-response: true
-  connection-timeout: 5s
+  connection-timeout: 20000
   max-http-header-size: 8KB
   port: 8080
   http2:
     enabled: true
   compression:
     enabled: true
-    mime-types: text/html,text/xml,text/plain,application/json
+    mime-types: text/html,text/xml,text/plain,application/json,application/xml
+    min-response-size: 1024
   undertow:
     # I/O Threads (CPU cores * 2)
     io-threads: 8
@@ -205,13 +206,16 @@ server:
     whitelabel:
       enabled: false
   tomcat:
-    #    max-swallow-size: 10MB
-    max-http-post-size: 1MB
+    # The max size of an HTTP request body that will be read into memory.
+    max-swallow-size: 10MB # Set to -1 for unlimited size, which is risky. Set based on max file size.
+    max-http-post-size: 10MB # Set to a value that accommodates your file upload needs
+    keep-alive-timeout: 15000
+    max-keep-alive-requests: 100 # Set to -1 for long-lived connections
     accesslog:
-      enabled: true
+      enabled: false
     accept-count: 100
-    max-connections: 8192
-    connection-timeout: 2000
+    max-connections: 10000
+    connection-timeout: 20000   # 20 seconds
     threads:
       max: 200
       min-spare: 20
@@ -351,6 +355,7 @@ app:
     - application/vnd.ms-powerpoint
     - application/vnd.openxmlformats-officedocument.presentationml.presentation
     - application/x-tika-ooxml
+    - application/x-tika-msoffice
     - application/pdf
     - application/vnd.rar
     - application/zip
@@ -360,6 +365,22 @@ app:
     - image/webp
     - text/plain
     - text/csv
+    - video/mpeg
+    - video/mp4
+    - video/quicktime
+    - video/x-msvideo
+    - video/webm
+    - video/x-flv
+    - video/3gpp
+    - video/3gpp2
+    - video/ogg
+    - video/x-matroska
+    - audio/mpeg
+    - audio/wav
+    - audio/ogg
+    - audio/flac
+    - audio/mp4
+
   cron:
     test-expression: 0 */2 * * * *
   worker:

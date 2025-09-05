@@ -12,10 +12,10 @@ import com.bekaku.api.spring.repository.FileManagerRepository;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.FileUtil;
-import com.bekaku.api.spring.vo.FileManagerPublicVo;
 import com.bekaku.api.spring.vo.Paging;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -36,6 +36,7 @@ public class FileManagerServiceImpl implements FileManagerService {
     private final FileManagerMybatis fileManagerMybatis;
     private final FileManagerMapper modelMapper;
     private final AppProperties appProperties;
+    private final String DIRECTORY_MIME = "directory";
 
     @Transactional(readOnly = true)
     @Override
@@ -118,7 +119,9 @@ public class FileManagerServiceImpl implements FileManagerService {
                 isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null,
                 FileUtil.humanReadableByteCountSI(fileManager.getFileSize()),
                 fileManager.getCreatedDate(),
-                false);
+                fileManager.getCreatedDate(),
+                false,
+                isImage);
 
         return dto;
     }
@@ -131,15 +134,14 @@ public class FileManagerServiceImpl implements FileManagerService {
     @Transactional(readOnly = true)
     @Override
     public Optional<FileManagerDto> findForPublicById(Long id) {
-        Optional<FileManagerPublicVo> vo = fileManagerMybatis.findForPublicById(id);
-        return vo.map(this::setVoToDto);
+        return fileManagerMybatis.findForPublicById(id).map(this::setVoToDto);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Optional<ImageDto> findImageDtoBy(Long id) {
-        Optional<FileManagerPublicVo> vo = fileManagerMybatis.findForPublicById(id);
-        return vo.map(fileManagerPublicVo -> getImageDtoBy(fileManagerPublicVo.getFileMime(), fileManagerPublicVo.getFilePath()));
+        return fileManagerMybatis.findForPublicById(id)
+                .map(fileManagerPublicVo -> getImageDtoBy(fileManagerPublicVo.getFileMime(), fileManagerPublicVo.getFilePath()));
     }
 
     public ImageDto getDefaultAvatar() {
@@ -173,20 +175,42 @@ public class FileManagerServiceImpl implements FileManagerService {
         return Optional.of(getImageDtoBy(fileManager.getFileMime().getName(), fileManager.getFilePath()));
     }
 
-    private FileManagerDto setVoToDto(FileManagerPublicVo publicVo) {
-        FileManagerDto dto = new FileManagerDto();
+    private FileManagerDto setVoToDto(FileManagerDto publicVo) {
+//        FileManagerDto dto = new FileManagerDto();
         boolean isImage = FileUtil.isImage(publicVo.getFileMime());
         String path = !publicVo.isDirectoryFolder() ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), publicVo.getFilePath(), null) : null;
         String thumbnailPath = isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(publicVo.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null;
-        dto.assign(publicVo.getId(),
-                publicVo.getFileMime(),
-                publicVo.getFileName(),
-                path,
-                thumbnailPath,
-                FileUtil.humanReadableByteCountSI(publicVo.getFileSize()),
-                publicVo.getCreatedDate(),
-                publicVo.isDirectoryFolder());
+//        dto.assign(publicVo.getId(),
+//                publicVo.getFileMime(),
+//                publicVo.getFileName(),
+//                path,
+//                thumbnailPath,
+//                FileUtil.humanReadableByteCountSI(publicVo.getFileSize()),
+//                publicVo.getCreatedDate(),
+//                publicVo.getUpdatedDate(),
+//                publicVo.isDirectoryFolder());
+//
+//        return dto;
+        publicVo.setFilePath(path);
+        publicVo.setFileThumbnailPath(thumbnailPath);
+        publicVo.setFileSize(FileUtil.humanReadableByteCountSI(publicVo.getFileSizeNo()));
+        publicVo.setImage(isImage);
+        return publicVo;
+    }
 
+    @Override
+    public FileManagerDto setVoToDto(FilesDirectory filesDirectory) {
+        FileManagerDto dto = new FileManagerDto();
+        dto.assign(filesDirectory.getId(),
+                DIRECTORY_MIME,
+                filesDirectory.getName(),
+                null,
+                null,
+                FileUtil.humanReadableByteCountSI(filesDirectory.getFileSize()),
+                filesDirectory.getCreatedDate(),
+                filesDirectory.getLatestUpdated(),
+                true,
+                false);
         return dto;
     }
 
@@ -196,21 +220,34 @@ public class FileManagerServiceImpl implements FileManagerService {
 
         dto.assign(f.getId(),
                 f.getFileMime().getName(),
-                f.getFileName(),
+                f.getOriginalFileName(),
                 FileUtil.generateCdnPath(appProperties.getCdnForPublic(), f.getFilePath(), null),
                 isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(f.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null,
                 FileUtil.humanReadableByteCountSI(f.getFileSize()),
                 f.getCreatedDate(),
-                false);
-
+                f.getCreatedDate(),
+                false,
+                isImage);
         return dto;
     }
 
     @Override
-    public List<FileManagerDto> findAllFolderAndFileByParentFolder(Paging page, Long parentDirectoryId, Long owner) {
-        List<FileManagerPublicVo> voList = fileManagerMybatis.findAllFolderAndFileByParentFolder(page, parentDirectoryId, owner);
-        return voList
-                .stream()
+    public List<FileManagerDto> findAllFolderAndFileByParentFolderAndOwnerId(Paging page, Long parentDirectoryId, Long owner) {
+        return fileManagerMybatis.findAllFolderAndFileByParentFolderAndOwnerId(page, parentDirectoryId, owner).stream()
+                .map(this::setVoToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FileManagerDto> findAllFolderByParentFolderAndOwnerId(Paging page, Long parentDirectoryId, Long ownerId) {
+        return fileManagerMybatis.findAllFolderByParentFolderAndOwnerId(page, parentDirectoryId, ownerId).stream()
+                .map(this::setVoToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FileManagerDto> findAllFileByParentFolderAndOwnerId(Paging page, Long parentDirectoryId, Long ownerId) {
+        return fileManagerMybatis.findAllFileByParentFolderAndOwnerId(page, parentDirectoryId, ownerId).stream()
                 .map(this::setVoToDto)
                 .collect(Collectors.toList());
     }
@@ -223,12 +260,18 @@ public class FileManagerServiceImpl implements FileManagerService {
 
     @Override
     public void deleteAllFileByFilesDirectory(FilesDirectory filesDirectory) {
-        List<FileManager> fileManagers = fileManagerRepository.findAllByFilesDirectory(filesDirectory);
-        if (!fileManagers.isEmpty()) {
-            for (FileManager f : fileManagers) {
-                deleteFileBy(f);
-            }
-        }
+        Page<FileManager> page;
+        int pageNumber = 0;
+        do {
+            page = fileManagerRepository.findAllByFilesDirectory(filesDirectory, PageRequest.of(pageNumber++, 20));
+            page.forEach(this::deleteFileBy);
+        } while (!page.isEmpty());
+//        List<FileManager> fileManagers = fileManagerRepository.findAllByFilesDirectory(filesDirectory);
+//        if (!fileManagers.isEmpty()) {
+//            for (FileManager f : fileManagers) {
+//                deleteFileBy(f);
+//            }
+//        }
     }
 
     @Override

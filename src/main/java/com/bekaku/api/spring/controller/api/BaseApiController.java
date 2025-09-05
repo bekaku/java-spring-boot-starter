@@ -144,6 +144,27 @@ public class BaseApiController extends BaseResponseException {
         return null;
     }
 
+    public Paging getPaging(Pageable pageable, List<String> acceptSortField) {
+        Pageable p = pageable.isPaged() ? pageable : null;
+        String sortString = null;
+        if (p != null) {
+            if (!pageable.getSort().isEmpty()) {
+                Sort sort = pageable.getSort();
+                for (Sort.Order order : sort) {
+                    if (!acceptSortField.isEmpty()) {
+                        sortString = order.getProperty() + "," + order.getDirection();
+                    } else {
+                        if (acceptSortField.contains(order.getProperty())) {
+                            sortString = order.getProperty() + "," + order.getDirection();
+                        }
+                    }
+                }
+            }
+            return new Paging(p.getPageNumber(), p.getPageSize(), sortString);
+        }
+        return null;
+    }
+
     public HashMap<String, Object> getSearchCriteriaMap() {
         List<SearchCriteria> list = getSearchCriteriaList();
         HashMap<String, Object> search = new HashMap<>();

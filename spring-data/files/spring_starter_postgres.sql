@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict RZcwLhJ0tqpbsUS1w1zWVIhSguHpDtnwsZGI4FsTsW2fEK8cNCNuYAYV3lpDRh7
+\restrict 4Zes2bESwI0YK4xc3W2k9RYZa7IO15triRzPHKtWRiUWm2ubNw594P7DKOPOOVf
 
--- Dumped from database version 17.6
--- Dumped by pg_dump version 17.6
+-- Dumped from database version 18beta3
+-- Dumped by pg_dump version 18beta3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -188,7 +188,8 @@ CREATE TABLE public.file_manager (
     readable boolean NOT NULL,
     writeable boolean NOT NULL,
     file_mime_id bigint,
-    files_directory_id bigint
+    files_directory_id bigint,
+    owner bigint
 );
 
 
@@ -218,7 +219,10 @@ CREATE TABLE public.files_directory (
     updated_user bigint,
     active boolean NOT NULL,
     name character varying(125),
-    files_directory_parent bigint
+    files_directory_parent bigint,
+    file_size bigint DEFAULT 0 NOT NULL,
+    latest_updated timestamp(6) without time zone,
+    owner bigint
 );
 
 
@@ -391,7 +395,7 @@ COPY public.favorite_menu (id, url, app_user) FROM stdin;
 -- Data for Name: file_manager; Type: TABLE DATA; Schema: public; Owner: postgres_user
 --
 
-COPY public.file_manager (id, deleted, created_date, created_user, file_name, file_path, file_size, hidden, locked, original_file_name, readable, writeable, file_mime_id, files_directory_id) FROM stdin;
+COPY public.file_manager (id, deleted, created_date, created_user, file_name, file_path, file_size, hidden, locked, original_file_name, readable, writeable, file_mime_id, files_directory_id, owner) FROM stdin;
 \.
 
 
@@ -407,7 +411,7 @@ COPY public.file_mime (id, name) FROM stdin;
 -- Data for Name: files_directory; Type: TABLE DATA; Schema: public; Owner: postgres_user
 --
 
-COPY public.files_directory (id, created_date, created_user, updated_date, updated_user, active, name, files_directory_parent) FROM stdin;
+COPY public.files_directory (id, created_date, created_user, updated_date, updated_user, active, name, files_directory_parent, file_size, latest_updated, owner) FROM stdin;
 \.
 
 
@@ -865,6 +869,14 @@ ALTER TABLE ONLY public.role_permission
 
 
 --
+-- Name: files_directory fk8g9rqrbcuspfvhbp49e8w0j9x; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.files_directory
+    ADD CONSTRAINT fk8g9rqrbcuspfvhbp49e8w0j9x FOREIGN KEY (owner) REFERENCES public.app_user(id);
+
+
+--
 -- Name: access_token fk9adhg4bm3rvd167xpgg38aqfs; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
 --
 
@@ -902,6 +914,14 @@ ALTER TABLE ONLY public.role_permission
 
 ALTER TABLE ONLY public.app_user_role
     ADD CONSTRAINT fkcprhx6mpypdwshju5p7pi971y FOREIGN KEY (app_role) REFERENCES public.app_role(id);
+
+
+--
+-- Name: file_manager fked7fai3fug3jnfglyc5syus3y; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.file_manager
+    ADD CONSTRAINT fked7fai3fug3jnfglyc5syus3y FOREIGN KEY (owner) REFERENCES public.app_user(id);
 
 
 --
@@ -972,5 +992,5 @@ ALTER TABLE ONLY public.favorite_menu
 -- PostgreSQL database dump complete
 --
 
-\unrestrict RZcwLhJ0tqpbsUS1w1zWVIhSguHpDtnwsZGI4FsTsW2fEK8cNCNuYAYV3lpDRh7
+\unrestrict 4Zes2bESwI0YK4xc3W2k9RYZa7IO15triRzPHKtWRiUWm2ubNw594P7DKOPOOVf
 

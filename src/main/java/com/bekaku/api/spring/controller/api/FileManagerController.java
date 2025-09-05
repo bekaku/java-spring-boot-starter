@@ -34,6 +34,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
@@ -41,6 +43,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,6 +62,8 @@ public class FileManagerController extends BaseApiController {
     private final AppProperties appProperties;
     private final AppUserService appUserService;
 
+    private final List<String> sortProperties = List.of("fileName", "createdDate", "updatedDate", "fileSize", "fileMime");
+
     @PreAuthorize("isHasPermission('file_manager_list')")
     @GetMapping
     public List<FileManagerDto> findAll(
@@ -74,7 +79,7 @@ public class FileManagerController extends BaseApiController {
 //                                          HttpServletRequest request) {
 
 //        return this.responseEntity(fileManagerService.findAllFolderAndFileByParentFolder(new Paging(page, size, sort), directoryId > 0 ? directoryId : null), HttpStatus.OK);
-        return fileManagerService.findAllFolderAndFileByParentFolder(getPaging(pageable), directoryId > 0 ? directoryId : null, auth.getId());
+        return fileManagerService.findAllFolderAndFileByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
 //        return this.responseEntity(getPaging(pageable), HttpStatus.OK);
 
 //        return this.responseEntity(new HashMap<String, Object>() {{
@@ -82,6 +87,24 @@ public class FileManagerController extends BaseApiController {
 //            put("size", size);
 //            put("sort", sort);
 //        }}, HttpStatus.OK);
+    }
+
+    @PreAuthorize("isHasPermission('file_manager_list')")
+    @GetMapping("/findAllFolder")
+    public List<FileManagerDto> findAllFolder(
+            Pageable pageable,
+            @RequestParam(value = "directoryId", defaultValue = "0") long directoryId,
+            @AuthenticationPrincipal AppUserDto auth) {
+        return fileManagerService.findAllFolderByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
+    }
+
+    @PreAuthorize("isHasPermission('file_manager_list')")
+    @GetMapping("/findAllFile")
+    public List<FileManagerDto> findAllFile(
+            Pageable pageable,
+            @RequestParam(value = "directoryId", defaultValue = "0") long directoryId,
+            @AuthenticationPrincipal AppUserDto auth) {
+        return fileManagerService.findAllFileByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
     }
 
     @PreAuthorize("isHasPermission('file_manager_manage')")
@@ -162,6 +185,7 @@ public class FileManagerController extends BaseApiController {
         try {
             String uploadPathTmp = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR);
             String mimeType = FileUtil.getMimeType(file).toLowerCase();
+            log.info("mimeType: {}", mimeType);
             if (chunkNumber == 1) {
                 this.validateAllowMemeType(mimeType);
             } else {
@@ -206,6 +230,7 @@ public class FileManagerController extends BaseApiController {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required parameters.");
         }
 
+        log.info("THIS 1");
         try {
             // Get directory paths
             Path tempFileDir = Paths.get(FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR));
@@ -241,11 +266,12 @@ public class FileManagerController extends BaseApiController {
 
             //resize image
             if (isImage) {
-                if (dto.isResizeImage()) {
+                ImageDto imgInfo = getImageInfo(uploadPath + dto.getChunkFilename());
+                if (dto.isResizeImage() && canResize(imgInfo)) {
                     thumbnailatorResize(uploadPath, dto.getChunkFilename());
                 }
                 //create thumbnail
-                if (appProperties.getUploadImage().isCreateThumbnail()) {
+                if (appProperties.getUploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
                     thumbnailatorCreateThumnail(uploadPath, dto.getChunkFilename());
                 }
             }
@@ -264,6 +290,43 @@ public class FileManagerController extends BaseApiController {
 
         } catch (IOException e) {
             throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, "Failed to merge file: " + dto.getOriginalFilename());
+        }
+    }
+
+    private ImageDto getImageInfo(String path) {
+        File file = new File(path);
+
+        if (!file.exists() || !file.isFile()) {
+            log.error("File not found: {}", path);
+            return null;
+        }
+
+        // File size
+        try {
+            long fileSize = Files.size(file.toPath());
+            long width = -1, height = -1;
+
+            try (ImageInputStream iis = ImageIO.createImageInputStream(file)) {
+                Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
+                if (!readers.hasNext()) {
+                    log.error("No suitable ImageReader found for file: {}", path);
+                    return null;
+                }
+
+                ImageReader reader = readers.next();
+                try {
+                    reader.setInput(iis, true, true);
+                    width = reader.getWidth(0);
+                    height = reader.getHeight(0);
+                } finally {
+                    reader.dispose();
+                }
+            }
+            log.info("File Info:  {}", String.format("Size: %d bytes, Width: %d px, Height: %d px", fileSize, width, height));
+            return new ImageDto(fileSize, width, height);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            return null;
         }
     }
 
@@ -366,11 +429,12 @@ public class FileManagerController extends BaseApiController {
         }
         //resize image
         if (isImage) {
-            if (isResizeImage) {
+            ImageDto imgInfo = getImageInfo(uploadPath + newName);
+            if (isResizeImage && canResize(imgInfo)) {
                 thumbnailatorResize(uploadPath, newName);
             }
             //create thumbnail
-            if (appProperties.getUploadImage().isCreateThumbnail()) {
+            if (appProperties.getUploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
                 thumbnailatorCreateThumnail(uploadPath, newName);
             }
         }
@@ -446,10 +510,32 @@ public class FileManagerController extends BaseApiController {
         return (imageWidth > limitWidth || imageHeight > limitHeight) && (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
+    private boolean canResize(ImageDto imageDto) {
+        if (imageDto == null) {
+            return false;
+        }
+        long imageWidth = imageDto.getWidth();
+        long imageHeight = imageDto.getHeight();
+        long limitWidth = appProperties.getUploadImage().getLimitWidth();
+        long limitHeight = appProperties.getUploadImage().getLimitHeight();
+        long maxResolution = appProperties.getUploadImage().getMaxResolution();
+        return (imageWidth > limitWidth || imageHeight > limitHeight) && (imageWidth <= maxResolution && imageHeight <= maxResolution);
+    }
+
     private boolean canCreateThumnail(BufferedImage originalImage) {
         int imageWidth = originalImage.getWidth();
         int imageHeight = originalImage.getHeight();
         int maxResolution = appProperties.getUploadImage().getMaxResolution();
+        return (imageWidth <= maxResolution && imageHeight <= maxResolution);
+    }
+
+    private boolean canCreateThumnail(ImageDto imageDto) {
+        if (imageDto == null) {
+            return false;
+        }
+        long imageWidth = imageDto.getWidth();
+        long imageHeight = imageDto.getHeight();
+        long maxResolution = appProperties.getUploadImage().getMaxResolution();
         return (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
