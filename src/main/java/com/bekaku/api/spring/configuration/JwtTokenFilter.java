@@ -37,6 +37,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             "/favicon.ico",
             "/_websocket/**",
             "/dev/development/**",
+            "/actuator/**",
             "/test/**",
             "/welcome",
             "/theymeleaf"

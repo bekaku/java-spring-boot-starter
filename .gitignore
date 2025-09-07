@@ -62,3 +62,4 @@ spring-data/files/*
 !spring-data/files/spring_starter_postgres.sql
 !spring-data/images/default-men-avatar.png
 !spring-data/images/default-women-avatar.png
+src/main/generated/*

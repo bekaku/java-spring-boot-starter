@@ -51,7 +51,8 @@ public class WebSecurityConfig {
                         "/" + cdnPathAlias + "/**",
                         "/favicon.ico",
                         "/oauth2",
-                        "/_websocket/**"
+                        "/_websocket/**",
+                        "/actuator/**"
                 );
     }
 
