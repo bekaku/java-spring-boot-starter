@@ -230,7 +230,7 @@ public class FileManagerController extends BaseApiController {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required parameters.");
         }
 
-        log.info("THIS 1");
+        AppUser appUser = appUserService.findAndValidateAppUserBy(user);
         try {
             // Get directory paths
             Path tempFileDir = Paths.get(FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR));
@@ -285,6 +285,7 @@ public class FileManagerController extends BaseApiController {
                 directory = filesDirectoryService.findById(dto.getFileDirectoryId());
             }
             directory.ifPresent(f::setFilesDirectory);
+            f.setOwner(appUser);
             fileManagerService.save(f);
             return fileManagerService.convertEntityToDto(f);
 
@@ -349,6 +350,8 @@ public class FileManagerController extends BaseApiController {
         if (fileDirectoryId > 0) {
             directory = filesDirectoryService.findById(fileDirectoryId);
         }
+        AppUser appUser = appUserService.findAndValidateAppUserBy(user);
+        f.setOwner(appUser);
         directory.ifPresent(f::setFilesDirectory);
         fileManagerService.save(f);
         return fileManagerService.convertEntityToDto(f);
@@ -384,6 +387,8 @@ public class FileManagerController extends BaseApiController {
         if (dto.getFileDirectoryId() != null && dto.getFileDirectoryId() > 0) {
             directory = filesDirectoryService.findById(dto.getFileDirectoryId());
         }
+        AppUser appUser = appUserService.findAndValidateAppUserBy(user);
+        f.setOwner(appUser);
         directory.ifPresent(f::setFilesDirectory);
         fileManagerService.save(f);
         return this.responseEntity(fileManagerService.convertEntityToDto(f), HttpStatus.OK);
