@@ -14,6 +14,7 @@ public interface JwtService {
     String toToken(AppUser appUser, String token, ApiClient apiClient, Date expired, JwtType jwtType);
 
     Optional<String> getSubFromToken(String token, ApiClient apiClient);
+    Optional<String> getSubFromAuthorizationHeader(String authorization, ApiClient apiClient);
 
     Optional<String> getUUIDFromToken(String token, ApiClient apiClient);
 

@@ -33,10 +33,10 @@ spring:
     # connect to mysql form local docker via port 3308
 
     # MySql
-#    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
-#    username: root
-#    password: CH789162be
-#    driver-class-name: com.mysql.cj.jdbc.Driver
+    #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
+    #    username: root
+    #    password: CH789162be
+    #    driver-class-name: com.mysql.cj.jdbc.Driver
 
     # Postgres
     url: jdbc:postgresql://localhost:5432/spring_starter_postgres
@@ -49,6 +49,8 @@ spring:
       minimum-idle: 1
 
   mvc:
+    async:
+      request-timeout: -1 # 30000 =30 seconds timeout for async requests, -1 is no limit
     static-path-pattern: /content/**
   thymeleaf:
     cache: false
@@ -111,7 +113,7 @@ app:
       - capacitor://localhost # iOS Hybrid App (Dev/Prod)
       - ionic://localhost
 
-  url: http://127.0.0.1
+  url: http://localhost
   port: 8080
   test-prop: develop mode
   version: 1.0.1

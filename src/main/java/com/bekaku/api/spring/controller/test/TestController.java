@@ -212,6 +212,7 @@ public class TestController extends BaseApiController {
     @GetMapping("/get-user-async")
     public CompletableFuture<List<AppUser>> getAsyncUser() {
         return CompletableFuture.supplyAsync(appUserService::findAll, asyncExecutor);
+//        return CompletableFuture.supplyAsync(() -> streamFileByFilePath(fileName, chunkSize), asyncExecutor);
 //        return CompletableFuture.supplyAsync(()->userService.findAll(), asyncExecutor);
 //        return CompletableFuture.supplyAsync(()->{
 //            return userService.findAll();

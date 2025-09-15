@@ -1,8 +1,11 @@
 package com.bekaku.api.spring.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
@@ -36,10 +39,10 @@ import java.util.List;
 import java.util.Objects;
 
 //@ControllerAdvice
+@Slf4j
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ExceptionResolver {
-    Logger logger = LoggerFactory.getLogger(ExceptionResolver.class);
     //    @ExceptionHandler(ApiException.class)
 //    ErrorResponse handleApiException(ApiException e) {
 //        return ErrorResponse.builder(e, e.getApiError().getStatus(), e.getMessage())
@@ -170,6 +173,57 @@ public class ExceptionResolver {
         final ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage(), ex.getCause().getMessage());
         return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
     }
+
+    // Handle ClientAbortException without trying to inject it as parameter
+    @ExceptionHandler(ClientAbortException.class)
+    public void handleClientAbortException(HttpServletRequest request) {
+        log.info("Client aborted connection for: {}", request.getRequestURI());
+        // Don't try to send response - client already disconnected
+        // Just log it and return gracefully
+    }
+
+    //    @ExceptionHandler(IOException.class)
+//    public ResponseEntity<Object> handleIOException(IOException ex) {
+//        if (ex.getMessage() != null && (ex.getMessage().contains("aborted by the software") ||
+//                (ex.getClass() != null && ex.getClass().getName().contains("ClientAbortException"))
+//        )) {
+//            return ResponseEntity.noContent().build();
+//        }
+//        final ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getLocalizedMessage(), ex.getCause().getMessage());
+//        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+//    }
+// Alternative: Handle it as IOException (ClientAbortException extends IOException)
+    @ExceptionHandler(IOException.class)
+    public void handleIOException(IOException ex, HttpServletRequest request, HttpServletResponse response) {
+        String message = ex.getMessage();
+        String uri = request.getRequestURI();
+
+        // Check for client disconnect patterns
+        if (message != null && (
+                message.contains("Broken pipe") ||
+                        message.contains("Connection reset") ||
+                        message.contains("ClientAbortException") ||
+                        ex.getClass().getSimpleName().contains("ClientAbort"))) {
+
+//            log.info("Client disconnected during streaming for: {} - {}", uri, message);
+            return; // Don't send error response for client disconnects
+        }
+
+        // Handle other IO exceptions
+        if (!response.isCommitted()) {
+            try {
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"I/O error occurred\"}");
+                response.getWriter().flush();
+            } catch (IOException writeEx) {
+                log.warn("Could not write error response: {}", writeEx.getMessage());
+            }
+        } else {
+//            log.warn("I/O exception after response committed for: {} - {}", uri, message);
+        }
+    }
+
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Resource> handleMissingStaticResource(NoResourceFoundException ex) throws IOException {

@@ -97,6 +97,20 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
+    public Optional<String> getSubFromAuthorizationHeader(String authorization, ApiClient apiClient) {
+        Optional<String> authToken = getTokenString(authorization);
+        if (authToken.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            Jws<Claims> claimsJws = Jwts.parser().verifyWith(getKey(apiClient)).build().parseSignedClaims(authToken.get());
+            return Optional.ofNullable(claimsJws.getPayload().getSubject());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public Optional<String> getUUIDFromToken(String token, ApiClient apiClient) {
         try {
             Optional<Claims> claims = getClaimsFromToken(token, apiClient);
@@ -152,48 +166,26 @@ public class JwtServiceImpl implements JwtService {
                 // TODO verify apiClient later
                 Optional<Claims> claims = getClaimsFromToken(authToken.get(), null);
                 if (claims.isPresent()) {
-                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                        String sub = claims.get().getSubject();
+//                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    String sub = claims.get().getSubject();
 //                        String userUuid = (String) claims.get().get(UUID);
-                        String jwtTypeString = (String) claims.get().get(JWT_TYPE_ATT);
-                        if (!AppUtil.isEmpty(sub) && !AppUtil.isEmpty(jwtTypeString)) {
-                            JwtType jwtType = JwtType.valueOf(jwtTypeString);
-                            if (jwtType.equals(JwtType.Authen)) {
-                                Optional<AppUserDto> userDto = accessTokenService.findByAccessTokenKey(sub);
-                                if (userDto.isPresent()) {
+                    String jwtTypeString = (String) claims.get().get(JWT_TYPE_ATT);
+                    if (!AppUtil.isEmpty(sub) && !AppUtil.isEmpty(jwtTypeString)) {
+                        JwtType jwtType = JwtType.valueOf(jwtTypeString);
+                        if (jwtType.equals(JwtType.Authen)) {
+                            Optional<AppUserDto> userDto = accessTokenService.findByAccessTokenKey(sub);
+                            if (userDto.isPresent()) {
 
-                                    //sync online status if required TODO you can implement with Message Queue eg. RabbitMQ
-                                    if (syncActiveHeader != null && syncActiveHeader.equals("1")) {
-                                        accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), userDto.get().getAccessTokenId());
-                                    }
-                                    userDto.get().setToken(sub);
-                                    dto.set(userDto);
+                                //sync online status if required TODO you can implement with Message Queue eg. RabbitMQ
+                                if (syncActiveHeader != null && syncActiveHeader.equals("1")) {
+                                    accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), userDto.get().getAccessTokenId());
                                 }
+                                userDto.get().setToken(sub);
+                                dto.set(userDto);
                             }
-                            /*
-                            UserDto userDto;
-                            Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(sub, false);
-                            if (accessToken.isPresent()) {
-                                userDto = setUserDto(accessToken.get().getUser());
-                                if (userDto != null) {
-                                    //sync online status if required TODO you can implement with Message Queue eg. RabbitMQ
-                                    if(syncActiveHeader!=null && syncActiveHeader.equals("1")) {
-                                        accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), accessToken.get().getId());
-                                    }
-                                    userDto.setToken(sub);
-                                    userDto.setAccessTokenId(accessToken.get().getId());
-                                    dto.set(Optional.of(userDto));
-                                }
-                            } else if (userUuid != null) {
-                                Optional<User> userByUUID = userService.findByUUID(userUuid);
-                                if (userByUUID.isPresent()) {
-                                    userDto = setUserDto(userByUUID.get());
-                                    dto.set(Optional.of(userDto));
-                                }
-                            }
-                            */
                         }
                     }
+//                    }
                 }
             }
         }

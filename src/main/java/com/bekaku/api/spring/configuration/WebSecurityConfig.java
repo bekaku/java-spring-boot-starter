@@ -71,6 +71,8 @@ public class WebSecurityConfig {
                             // Allow static CDN resources
                             .requestMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
                             // Public auth endpoints
+                            .requestMatchers("/api/fileManager/files/stream").permitAll()
+                            .requestMatchers("/api/fileManager/video/stream").permitAll()
                             .requestMatchers(HttpMethod.POST,
                                     "/api/auth/login",
                                     "/api/auth/logout",

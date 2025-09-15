@@ -107,7 +107,7 @@ spring:
   #            enable: true
   mvc:
     async:
-      request-timeout: 30000  # 30 seconds timeout for async requests
+      request-timeout: 30000  # 30000=30 seconds timeout for async requests, -1 is no limit
     #setting to default locale th_TH, en_US
     locale: th_TH
     #force locale resolver to spring boot reconized your settings
@@ -234,6 +234,10 @@ logging:
     web: WARN
     com.bekaku.api.spring: INFO
     org:
+      apache:
+        catalina:
+          connector:
+            ClientAbortException: OFF
       springframework: ERROR
       hibernate:
         SQL: ERROR
@@ -321,6 +325,8 @@ app:
     image: https://static.productionready.io/images/smiley-cyrus.jpg
     role: 2
     userpwd: 1234
+    data-stream-limit: 5 #MB
+    data-stream-chunk-size: 8192 #KB
   #Object properties
   mail-config:
     noreply-address: noreply@yourdomain.com

@@ -1,4 +1,4 @@
-package com.bekaku.api.spring.vo;
+package com.bekaku.api.spring.properties;
 
 import lombok.Data;
 

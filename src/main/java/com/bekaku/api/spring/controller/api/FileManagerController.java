@@ -1,24 +1,36 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.dto.*;
+import com.bekaku.api.spring.dto.AppUserDto;
+import com.bekaku.api.spring.dto.FileManagerDto;
+import com.bekaku.api.spring.dto.FileUploadChunkMergeRequestDto;
+import com.bekaku.api.spring.dto.FileUploadChunkResponseDto;
+import com.bekaku.api.spring.dto.ImageDto;
+import com.bekaku.api.spring.dto.ResponseMessage;
+import com.bekaku.api.spring.dto.UploadRequest;
 import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FileMime;
 import com.bekaku.api.spring.model.FilesDirectory;
+import com.bekaku.api.spring.properties.AppDefaultsProperties;
 import com.bekaku.api.spring.properties.AppProperties;
+import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.service.FileMimeService;
 import com.bekaku.api.spring.service.FilesDirectoryService;
-import com.bekaku.api.spring.service.AppUserService;
+import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.util.FileUtil;
+import com.google.common.util.concurrent.RateLimiter;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.util.LimitedInputStream;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -27,9 +39,22 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.context.request.async.WebAsyncTask;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -37,15 +62,28 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 
 import static com.bekaku.api.spring.util.FileUtil.TEMP_UPLOAD_DIR;
 
@@ -60,9 +98,12 @@ public class FileManagerController extends BaseApiController {
     private final FileMimeService fileMimeService;
     private final I18n i18n;
     private final AppProperties appProperties;
+    private final AppDefaultsProperties appDefaultsProperties;
     private final AppUserService appUserService;
-
+    private final JwtService jwtService;
     private final List<String> sortProperties = List.of("fileName", "createdDate", "updatedDate", "fileSize", "fileMime");
+    private final Executor executor = new ThreadPoolTaskExecutor();
+    private String fileName;
 
     @PreAuthorize("isHasPermission('file_manager_list')")
     @GetMapping
@@ -696,6 +737,7 @@ public class FileManagerController extends BaseApiController {
                 .body(new InputStreamResource(fileInputStream));
 
         */
+
         try {
             // Validate file path before any operations
             if (!isValidFilePath(fileName)) {
@@ -740,58 +782,392 @@ public class FileManagerController extends BaseApiController {
     }
 
     //TODO not working as aspect
+//    @GetMapping("/files/stream")
+    public WebAsyncTask<ResponseEntity<StreamingResponseBody>> streamFileAsync(HttpServletRequest request,
+                                                                               @RequestParam("path") String fileName,
+                                                                               @RequestParam(defaultValue = "8192") int chunkSize) {
+
+//        Optional<AppUserDto> userAuthen = jwtService.jwtVerify(
+//                request.getHeader(ConstantData.ACCEPT_APIC_LIENT),
+//                request.getHeader(ConstantData.AUTHORIZATION),
+//                request.getHeader(ConstantData.X_SYNC_ACTIVE));
+//        if (userAuthen.isEmpty()) {
+//            throw this.responseErrorForbidden();
+//        }
+        log.info("streamFile:{}, chunkSize:{}", fileName, chunkSize);
+        long timeout = 60 * 60 * 1000L; // 1 hour in ms
+//        return streamFileByFilePath(fileName, chunkSize);
+//        Callable<ResponseEntity<StreamingResponseBody>> callable = () -> streamRateLimitFileByFilePath(fileName, chunkSize);
+        Callable<ResponseEntity<StreamingResponseBody>> callable = () -> streamFileByFilePath(fileName, chunkSize);
+        WebAsyncTask<ResponseEntity<StreamingResponseBody>> webAsyncTask = new WebAsyncTask<>(timeout, callable);
+//        webAsyncTask.onTimeout(() -> ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).build());
+//        webAsyncTask.onError(() -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+        return webAsyncTask;
+    }
+
     @GetMapping("/files/stream")
-    public ResponseEntity<StreamingResponseBody> streamFile(@RequestParam("path") String fileName) {
+    public ResponseEntity<StreamingResponseBody> streamFile(
+            @RequestParam("path") String filePath,
+            @RequestParam(defaultValue = "8192") int chunkSize,
+            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+            @RequestHeader(value = ConstantData.AUTHORIZATION) String authorization
+    ) {
+
+        log.info("streamFile:{}, chunkSize:{}, apiClientName:{}, authorization:{}", filePath, chunkSize, apiClientName, authorization);
+        //        Optional<AppUserDto> userAuthen = jwtService.jwtVerify(
+//                apiClientName,
+//                request.getHeader(ConstantData.AUTHORIZATION),
+//                request.getHeader(ConstantData.X_SYNC_ACTIVE));
+        Optional<String> jwtSub = jwtService.getSubFromAuthorizationHeader(authorization, null);
+        log.info("jwtSub :{} ", jwtSub.isPresent());
+        if (jwtSub.isEmpty()) {
+            throw this.responseErrorForbidden();
+        }
+        return streamFileByFilePath(filePath, chunkSize);
+//        return streamRateLimitFileByFilePath(filePath, chunkSize);
+    }
+
+    //    @GetMapping("/files/stream")
+    public void streamFileManual(
+            @RequestParam("path") String filePath,
+            @RequestParam(defaultValue = "8192") int chunkSize,
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+
+        log.info("Manual stream for file: {}", filePath);
+
+        // Validate before setting any response headers
+        File file = new File(appProperties.getUploadPath(), filePath);
+        if (!file.exists() || !file.isFile()) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            return;
+        }
+
+        String mimeType = FileUtil.getMimeType(file);
+        if (!isAllowedMimeType(mimeType)) {
+            response.setStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value());
+            return;
+        }
+
+        // Set headers
+        response.setContentType(mimeType);
+        response.setContentLengthLong(file.length());
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+        response.setHeader("Cache-Control", "no-cache");
+
+        // Stream the file
+        try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file));
+             ServletOutputStream outputStream = response.getOutputStream()) {
+
+            byte[] buffer = new byte[chunkSize > 0 ? chunkSize : 8192];
+            int bytesRead;
+            long totalBytes = 0;
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                try {
+                    outputStream.write(buffer, 0, bytesRead);
+                    totalBytes += bytesRead;
+
+                    // Flush periodically
+                    if (totalBytes % (1024 * 1024) == 0) {
+                        outputStream.flush();
+                    }
+
+                } catch (IOException e) {
+                    log.info("Client disconnected after {} bytes for file: {}", totalBytes, filePath);
+                    break; // Client disconnected, stop gracefully
+                }
+            }
+
+            try {
+                outputStream.flush();
+                log.info("Successfully streamed {} bytes for file: {}", totalBytes, filePath);
+            } catch (IOException e) {
+                log.info("Client disconnected before final flush for file: {}", filePath);
+            }
+
+        } catch (FileNotFoundException e) {
+            log.error("File not found: {}", filePath);
+            if (!response.isCommitted()) {
+                response.setStatus(HttpStatus.NOT_FOUND.value());
+            }
+        } catch (IOException e) {
+            log.info("I/O error during manual streaming (likely client disconnect): {}", filePath);
+            // Don't throw - this is likely a client disconnect
+        }
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private ResponseEntity<StreamingResponseBody> streamRateLimitFileByFilePath(String filePath, int chunkSize) {
+        // Validate file path before any operations
+        if (!isValidFilePath(filePath)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        File file = new File(appProperties.getUploadPath(), filePath);
+
+        validateStreamFile(file);
+        String mimeType = "";
         try {
-            // Validate file path before any operations
-            if (!isValidFilePath(fileName)) {
-                return ResponseEntity.badRequest().build();
+            mimeType = FileUtil.getMimeType(file);
+        } catch (IOException ignore) {
+        }
+
+        // Prepare response headers
+        HttpHeaders headers = prepareHeaders(file);
+
+        // Create streaming response
+        StreamingResponseBody responseBody = outputStream -> {
+            try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file))) {
+                byte[] buffer = new byte[(chunkSize > 0 && chunkSize <= 1024 * 1024) ? chunkSize : 8192]; // default 8 KB if chunkSize not set
+                int bytesRead;
+
+                // 3 MB/s throttling
+                RateLimiter rateLimiter = RateLimiter.create(appDefaultsProperties.getDataStreamLimit() * 1024 * 1024);
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    // Throttle download speed
+                    rateLimiter.acquire(bytesRead);
+                    outputStream.write(buffer, 0, bytesRead);
+                    outputStream.flush();
+                }
+                try {
+                    outputStream.flush();
+                } catch (IOException ignore) {
+                    // client disconnected before flush
+//                        log.error("Error streaming file {}: {}", fileName, ignore.getMessage());
+                }
+            } catch (IOException ignore) {
+                // Log the error but do not re-throw. This is expected behavior for client disconnections.
+                // The specific error might be "Broken pipe" or "Connection reset by peer."
+                log.warn("Client disconnected while streaming file: {}", filePath);
             }
+        };
 
-            File file = new File(appProperties.getUploadPath(), fileName);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(responseBody);
+    }
 
-            // Validate file location and existence
-            if (!isFileAccessAllowed(file)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
+    private ResponseEntity<StreamingResponseBody> streamFileByFilePath(String filePath, int chunkSize) {
+        // Validate file path before any operations
+        if (!isValidFilePath(filePath)) {
+            return ResponseEntity.badRequest().build();
+        }
 
-            if (!file.exists() || !file.isFile()) {
-                return ResponseEntity.notFound().build();
-            }
+        File file = new File(appProperties.getUploadPath(), filePath);
+        validateStreamFile(file);
+        String mimeType = "";
+        try {
+            mimeType = FileUtil.getMimeType(file);
+        } catch (IOException ignore) {
+        }
 
-            // Get and validate MIME type
-            String mimeType = FileUtil.getMimeType(file);
-            if (!isAllowedMimeType(mimeType)) {
-                return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).build();
-            }
+        // Prepare response headers
+        HttpHeaders headers = prepareHeaders(file);
+        StreamingResponseBody responseBody = outputStream -> {
+            try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file))) {
+                byte[] buffer = new byte[(chunkSize > 0 && chunkSize <= 1024 * 1024) ? chunkSize : 8192];
+                int bytesRead;
 
-            // Prepare response headers
-            HttpHeaders headers = prepareHeaders(file);
+                int flushThreshold = 1024 * 1024;
+                int bytesSinceFlush = 0;
 
-            // Create streaming response
-            StreamingResponseBody responseBody = outputStream -> {
-                try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(file))) {
-                    byte[] buffer = new byte[8192]; // Larger buffer for better performance
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                        outputStream.flush(); // Ensure data is written
+
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                    bytesSinceFlush += bytesRead;
+
+                    if (bytesSinceFlush >= flushThreshold) {
+                        outputStream.flush();
+                        bytesSinceFlush = 0;
                     }
                 }
-            };
+                // Final flush after the loop
+                try {
+                    outputStream.flush();
+                } catch (IOException ignore) {
+                    // Client disconnected before final flush, so ignore.
+                }
+            } catch (IOException ignore) {
+                log.warn("Client disconnected while streaming file: {}", filePath);
+            }
+        };
 
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .contentLength(file.length())
-                    .contentType(MediaType.parseMediaType(mimeType))
-                    .body(responseBody);
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(responseBody);
+    }
 
+    //Video Streaming
+    /* Streming video
+    @GetMapping("/video/stream")
+    public ResponseEntity<Resource> streamVideo(
+            @RequestParam("path") String filePath,
+            @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader) throws IOException {
+        File file = new File(appProperties.getUploadPath(), filePath);
+
+        if (!file.exists() || !file.isFile()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String mimeType = Files.probeContentType(file.toPath());
+        if (mimeType == null) {
+            mimeType = "application/octet-stream";
+        }
+
+        long fileLength = file.length();
+        long rangeStart = 0;
+        long rangeEnd = fileLength - 1;
+
+        if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+            String[] ranges = rangeHeader.substring(6).split("-");
+            rangeStart = Long.parseLong(ranges[0]);
+            if (ranges.length > 1 && !ranges[1].isEmpty()) {
+                rangeEnd = Long.parseLong(ranges[1]);
+            }
+        }
+
+        if (rangeEnd > fileLength - 1) {
+            rangeEnd = fileLength - 1;
+        }
+
+        long contentLength = rangeEnd - rangeStart + 1;
+        InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
+        inputStream.skip(rangeStart);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Range", "bytes " + rangeStart + "-" + rangeEnd + "/" + fileLength);
+        headers.setContentLength(contentLength);
+
+        return ResponseEntity.status(rangeHeader == null ? HttpStatus.OK : HttpStatus.PARTIAL_CONTENT)
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(new InputStreamResource(new LimitedInputStream(inputStream, contentLength) {
+                    @Override
+                    protected void raiseError(long l, long l1) throws IOException {
+
+                    }
+                }));
+    }
+  */
+    @GetMapping("/video/stream")
+    public ResponseEntity<StreamingResponseBody> streamVideo(
+            @RequestParam("path") String filePath,
+            @RequestParam(defaultValue = "8192") int chunkSize,
+            @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader) {
+        return streamingVideoByFilePath(filePath, chunkSize, rangeHeader);
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private ResponseEntity<StreamingResponseBody> streamingVideoByFilePath(String filePath, int chunkSize, String rangeHeader) {
+        if (!isValidFilePath(filePath)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        File file = new File(appProperties.getUploadPath(), filePath);
+
+        validateStreamFile(file);
+        String mimeType = "";
+        try {
+            mimeType = FileUtil.getMimeType(file);
+        } catch (IOException ignore) {
+        }
+
+        log.info("Streaming video mimeType: {}", mimeType);
+        long fileLength = file.length();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.ACCEPT_RANGES, "bytes");
+
+        // Parse Range header
+        long rangeStart = 0;
+        long rangeEnd = fileLength - 1;
+        boolean isPartial = false;
+
+//        String rangeHeader = RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs
+//                ? attrs.getRequest().getHeader(HttpHeaders.RANGE)
+//                : null;
+
+        if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+            isPartial = true;
+            String[] ranges = rangeHeader.substring(6).split("-");
+            try {
+                rangeStart = Long.parseLong(ranges[0]);
+                if (ranges.length > 1 && !ranges[1].isEmpty()) {
+                    rangeEnd = Long.parseLong(ranges[1]);
+                }
+            } catch (NumberFormatException ignore) {
+            }
+            if (rangeEnd > fileLength - 1) {
+                rangeEnd = fileLength - 1;
+            }
+            if (rangeStart > rangeEnd) {
+                return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).build();
+            }
+
+            headers.add(HttpHeaders.CONTENT_RANGE, "bytes " + rangeStart + "-" + rangeEnd + "/" + fileLength);
+        }
+
+        long contentLength = rangeEnd - rangeStart + 1;
+        headers.setContentType(MediaType.parseMediaType(mimeType));
+        headers.setContentLength(contentLength);
+
+        long finalRangeStart = rangeStart;
+
+        StreamingResponseBody responseBody = outputStream -> {
+            try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                raf.seek(finalRangeStart);
+
+                byte[] buffer = new byte[(chunkSize > 0 && chunkSize <= 1024 * 1024) ? chunkSize : 8192];
+                long bytesRemaining = contentLength;
+                // Guava RateLimiter: 3 MB/s
+                RateLimiter rateLimiter = RateLimiter.create(appDefaultsProperties.getDataStreamLimit() * 1024 * 1024);
+                while (bytesRemaining > 0) {
+                    int bytesToRead = (int) Math.min(buffer.length, bytesRemaining);
+                    int bytesRead = raf.read(buffer, 0, bytesToRead);
+                    if (bytesRead == -1) break;
+
+                    // Acquire permits = number of bytes
+                    rateLimiter.acquire(bytesRead);
+
+                    outputStream.write(buffer, 0, bytesRead);
+                    bytesRemaining -= bytesRead;
+                }
+                outputStream.flush();
+            } catch (IOException ignore) {
+            }
+        };
+
+        return (isPartial ? ResponseEntity.status(HttpStatus.PARTIAL_CONTENT) : ResponseEntity.ok())
+                .headers(headers)
+                .body(responseBody);
+    }
+
+
+    private void validateStreamFile(File file) {
+        try {
+            if (!isFileAccessAllowed(file)) {
+                throw this.responseErrorForbidden();
+            }
+        } catch (IOException ignore) {
+            throw this.responseErrorForbidden();
+        }
+
+        if (!file.exists() || !file.isFile()) {
+            throw this.responseErrorNotfound();
+        }
+
+        String mimeType;
+        try {
+            mimeType = FileUtil.getMimeType(file);
         } catch (IOException e) {
-            log.error("Error processing file request: {}", fileName, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (Exception e) {
-            log.error("Unexpected error while processing file request: {}", fileName, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw this.responseError(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        }
+        if (!isAllowedMimeType(mimeType)) {
+            throw this.responseError(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         }
     }
 
@@ -810,7 +1186,7 @@ public class FileManagerController extends BaseApiController {
         try {
             validateAllowMemeType(mimeType);
             return true;
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException ignore) {
             return false;
         }
     }

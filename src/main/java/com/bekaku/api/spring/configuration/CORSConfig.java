@@ -1,21 +1,17 @@
 package com.bekaku.api.spring.configuration;
 
-import com.bekaku.api.spring.properties.AppProperties;
-import com.bekaku.api.spring.properties.CorsProperties;
+import com.bekaku.api.spring.properties.AppCorsProperties;
 import com.bekaku.api.spring.util.ConstantData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
 
 @Configuration
 public class CORSConfig implements WebMvcConfigurer {
 
     @Autowired
-    private CorsProperties corsProperties;
+    private AppCorsProperties appCorsProperties;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -32,7 +28,7 @@ public class CORSConfig implements WebMvcConfigurer {
                 )
                 .exposedHeaders(ConstantData.CONTENT_DISPOSITION, "Set-Cookie")
                 .allowCredentials(true)
-                .allowedOrigins(corsProperties.getAllowedOrigins().toArray(new String[0]))
+                .allowedOrigins(appCorsProperties.getAllowedOrigins().toArray(new String[0]))
                 .maxAge(3600);
 //                .allowedOriginPatterns("*");
 //                .allowedOrigins(

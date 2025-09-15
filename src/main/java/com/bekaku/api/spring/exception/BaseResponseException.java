@@ -17,6 +17,7 @@ public class BaseResponseException {
     public ApiException responseErrorForbidden() {
         return this.responseError(HttpStatus.FORBIDDEN, null, i18n.getMessage("error.403"));
     }
+
     public ApiException responseErrorForbidden(String error) {
         return this.responseError(HttpStatus.FORBIDDEN, i18n.getMessage("error.403"), error);
     }
@@ -35,6 +36,10 @@ public class BaseResponseException {
 
     public ApiException responseErrorDuplicate(String data) {
         return this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.validateDuplicate", data));
+    }
+
+    public ApiException responseError(HttpStatus status) {
+        return this.responseError(status, null, i18n.getMessage("error.error"));
     }
 
     public ApiException responseError(String error) {
