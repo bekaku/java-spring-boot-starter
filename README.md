@@ -341,13 +341,13 @@ Accept-ApiClient: default
 Use the `@PreAuthorize` annotation to protect specific endpoints:
 
 ```java
-@PreAuthorize("isHasPermission('role_list')")
+@PreAuthorize("@permissionChecker.hasPermission('role_list')")
 @GetMapping
 public ResponseEntity<Object> findAll(Pageable pageable) {
     // Implementation
 }
 
-@PreAuthorize("isHasPermission('role_add||user_manage')")
+@PreAuthorize("@permissionChecker.hasAnyPermission('role_add', 'user_manage')")
 @PostMapping
 public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
     // Implementation

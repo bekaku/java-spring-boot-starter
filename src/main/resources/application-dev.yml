@@ -80,6 +80,7 @@ logging:
     com.bekaku.api.spring: DEBUG
     org.springframework.boot.web.embedded.undertow: DEBUG
     io.undertow: DEBUG
+    org.springframework.security: DEBUG
     org:
       springframework: ERROR
       hibernate:

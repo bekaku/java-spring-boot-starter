@@ -631,7 +631,7 @@ Json root name : userRegister
 
 **Access control list example usage**
 
-Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}||{PERMISSION_NAME2}||{PERMISSION_NAME3}')")` to method in controller.
+Just add an annotation `@PreAuthorize("@permissionChecker.hasPermission('{PERMISSION_NAME}||{PERMISSION_NAME2}||{PERMISSION_NAME3}')")` to method in controller.
 
 ```java
 package com.bekaku.api.spring.controller.api;
@@ -650,7 +650,7 @@ public class RoleController extends BaseApiController {
     @Value("${app.loging.enable}")
     boolean logEnable;
 
-    @PreAuthorize("isHasPermission('role_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('role_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
         logger.info("/api/appRole > findAll, isLogEnable {}", logEnable);
@@ -658,7 +658,7 @@ public class RoleController extends BaseApiController {
                 PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Role.getSort())), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('role_add||user_manage')")
+    @PreAuthorize("@permissionChecker.hasAnyPermission('role_add', 'user_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
         Role appRole = roleService.convertDtoToEntity(dto);

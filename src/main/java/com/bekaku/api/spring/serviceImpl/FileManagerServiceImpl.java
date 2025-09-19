@@ -3,6 +3,7 @@ package com.bekaku.api.spring.serviceImpl;
 import com.bekaku.api.spring.dto.FileManagerDto;
 import com.bekaku.api.spring.dto.ImageDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
+import com.bekaku.api.spring.enumtype.FileMimeType;
 import com.bekaku.api.spring.mapper.FileManagerMapper;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FilesDirectory;
@@ -110,18 +111,22 @@ public class FileManagerServiceImpl implements FileManagerService {
 
     @Override
     public FileManagerDto convertEntityToDto(FileManager fileManager) {
-        boolean isImage = FileUtil.isImage(fileManager.getFileMime().getName());
+        String mimeType = fileManager.getFileMime().getName();
+        FileMimeType fileMimeType = FileUtil.getFileMimeType(mimeType);
         FileManagerDto dto = new FileManagerDto();
+        String thumbnailPath = null;
+        if (fileMimeType.equals(FileMimeType.IMAGE)) {
+            thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null);
+        }
         dto.assign(fileManager.getId(),
-                fileManager.getFileMime().getName(),
+                mimeType,
                 fileManager.getOriginalFileName(),
                 FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getFilePath(), null),
-                isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null,
+                thumbnailPath,
                 FileUtil.humanReadableByteCountSI(fileManager.getFileSize()),
                 fileManager.getCreatedDate(),
                 fileManager.getCreatedDate(),
-                false,
-                isImage);
+                fileMimeType);
 
         return dto;
     }
@@ -175,27 +180,21 @@ public class FileManagerServiceImpl implements FileManagerService {
         return Optional.of(getImageDtoBy(fileManager.getFileMime().getName(), fileManager.getFilePath()));
     }
 
-    private FileManagerDto setVoToDto(FileManagerDto publicVo) {
-//        FileManagerDto dto = new FileManagerDto();
-        boolean isImage = FileUtil.isImage(publicVo.getFileMime());
-        String path = !publicVo.isDirectoryFolder() ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), publicVo.getFilePath(), null) : null;
-        String thumbnailPath = isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(publicVo.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null;
-//        dto.assign(publicVo.getId(),
-//                publicVo.getFileMime(),
-//                publicVo.getFileName(),
-//                path,
-//                thumbnailPath,
-//                FileUtil.humanReadableByteCountSI(publicVo.getFileSize()),
-//                publicVo.getCreatedDate(),
-//                publicVo.getUpdatedDate(),
-//                publicVo.isDirectoryFolder());
-//
-//        return dto;
-        publicVo.setFilePath(path);
-        publicVo.setFileThumbnailPath(thumbnailPath);
-        publicVo.setFileSize(FileUtil.humanReadableByteCountSI(publicVo.getFileSizeNo()));
-        publicVo.setImage(isImage);
-        return publicVo;
+    private FileManagerDto setVoToDto(FileManagerDto vo) {
+        FileMimeType fileMimeType = FileUtil.getFileMimeType(vo.getFileMime());
+        String path = null;
+        if (!fileMimeType.equals(FileMimeType.DIRECTORY)) {
+            path = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), vo.getFilePath(), null);
+        }
+        String thumbnailPath = null;
+        if (fileMimeType.equals(FileMimeType.IMAGE)) {
+            thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(vo.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null);
+        }
+        vo.setFilePath(path);
+        vo.setFileThumbnailPath(thumbnailPath);
+        vo.setFileSize(FileUtil.humanReadableByteCountSI(vo.getFileSizeNo()));
+        vo.setFileMimeType(fileMimeType);
+        return vo;
     }
 
     @Override
@@ -209,25 +208,8 @@ public class FileManagerServiceImpl implements FileManagerService {
                 FileUtil.humanReadableByteCountSI(filesDirectory.getFileSize()),
                 filesDirectory.getCreatedDate(),
                 filesDirectory.getLatestUpdated(),
-                true,
-                false);
-        return dto;
-    }
-
-    public FileManagerDto setEntityToDto(FileManager f) {
-        FileManagerDto dto = new FileManagerDto();
-        boolean isImage = FileUtil.isImage(f.getFileMime().getName());
-
-        dto.assign(f.getId(),
-                f.getFileMime().getName(),
-                f.getOriginalFileName(),
-                FileUtil.generateCdnPath(appProperties.getCdnForPublic(), f.getFilePath(), null),
-                isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(f.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null) : null,
-                FileUtil.humanReadableByteCountSI(f.getFileSize()),
-                f.getCreatedDate(),
-                f.getCreatedDate(),
-                false,
-                isImage);
+                FileMimeType.DIRECTORY
+        );
         return dto;
     }
 

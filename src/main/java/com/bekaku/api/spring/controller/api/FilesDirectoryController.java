@@ -40,14 +40,14 @@ public class FilesDirectoryController extends BaseApiController {
     private final AppUserService appUserService;
     private final I18n i18n;
 
-    @PreAuthorize("isHasPermission('files_directory_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('files_directory_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
         SearchSpecification<FilesDirectory> specification = new SearchSpecification<>(getSearchCriteriaList());
         return this.responseEntity(filesDirectoryService.findAllWithSearch(specification, getPageable(pageable, FilesDirectory.getSort())), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('files_directory_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('files_directory_manage')")
     @PostMapping
     public FileManagerDto create(@Valid @RequestBody FilesDirectoryDto dto, @AuthenticationPrincipal AppUserDto user) {
 
@@ -85,7 +85,7 @@ public class FilesDirectoryController extends BaseApiController {
         filesDirectoryPathService.save(new FilesDirectoryPath(pathId, level));
     }
 
-    @PreAuthorize("isHasPermission('files_directory_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('files_directory_manage')")
     @PutMapping("/{id}")
     public FileManagerDto update(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user, @Valid @RequestBody FilesDirectoryDto dto) {
         Optional<FilesDirectory> oldData = filesDirectoryService.findByIdAndOwnerId(id, user.getId());
@@ -97,7 +97,7 @@ public class FilesDirectoryController extends BaseApiController {
         return fileManagerService.setVoToDto(oldData.get());
     }
 
-    @PreAuthorize("isHasPermission('files_directory_view')")
+    @PreAuthorize("@permissionChecker.hasPermission('files_directory_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user) {
         Optional<FilesDirectoryDto> directoryDto = filesDirectoryService.findDtoByIdAndOwnerId(id, user.getId());
@@ -107,7 +107,7 @@ public class FilesDirectoryController extends BaseApiController {
         return this.responseEntity(directoryDto.get(), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('files_directory_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('files_directory_manage')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user) throws IOException {
         Optional<FilesDirectory> filesDirectory = filesDirectoryService.findByIdAndOwnerId(id, user.getId());

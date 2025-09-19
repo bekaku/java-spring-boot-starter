@@ -71,6 +71,19 @@ public class FileManager extends SoftDeletedAuditableCreated<Long> {
     @JoinColumn(name = "owner")
     private AppUser owner;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "thumbnail_file")
+    private FileManager thumbnailFile;
+
+    @Column(columnDefinition = "INT DEFAULT 0")
+    private int duration;
+
+    @Column(length = 125)
+    private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     public boolean isImage() {
         return FileUtil.isImage(getFileMime().getName());
     }

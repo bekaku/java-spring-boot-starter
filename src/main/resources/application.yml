@@ -325,7 +325,7 @@ app:
     image: https://static.productionready.io/images/smiley-cyrus.jpg
     role: 2
     userpwd: 1234
-    data-stream-limit: 5 #MB
+    data-stream-limit: 3 #MB
     data-stream-chunk-size: 8192 #KB
   #Object properties
   mail-config:

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+
 /*
  * //https://www.baeldung.com/spring-data-jpa-query
  * //https://docs.spring.io/spring-data/jpa/docs/current/reference/html/
@@ -31,18 +32,26 @@ public interface PermissionRepository extends BaseRepository<Permission, Long>, 
 
     List<Permission> findAllBy(Sort sort);
 
-    @Query(value = "SELECT p.code FROM app_user_role ur LEFT JOIN role_permission pr ON ur.app_role = pr.app_role "
-            + " LEFT JOIN permission p ON pr.permission = p.id WHERE ur.app_user = :userId AND p.code = :code "
+    @Query(value = "SELECT p.code " +
+            "FROM app_user_role ur " +
+            "INNER JOIN role_permission pr ON ur.app_role = pr.app_role " +
+            "INNER JOIN permission p ON pr.permission = p.id " +
+            "WHERE ur.app_user = ?1 AND p.code = ?2 "
             , nativeQuery = true)
-    List<String> findPermissionsByUserIdAndPermissionCode(@Param(value = "userId") long userId, @Param(value = "code") String code);
+    List<String> findPermissionsByUserIdAndPermissionCode(long userId, String code);
 
-    @Query(value = "SELECT DISTINCT(p.code) FROM app_user_role ur LEFT JOIN role_permission pr ON ur.app_role = pr.app_role "
-            + " LEFT JOIN permission p ON pr.permission = p.id WHERE ur.app_user = ?1 "
+    @Query(value = "SELECT DISTINCT(p.code) " +
+            "FROM app_user_role ur " +
+            "INNER JOIN role_permission pr ON ur.app_role = pr.app_role " +
+            "INNER JOIN permission p ON pr.permission = p.id " +
+            "WHERE ur.app_user = ?1 "
             , nativeQuery = true)
     List<String> findAllPermissionCodeByUserId(Long userId);
 
 
-    @Query(value = "SELECT p.id FROM permission p INNER JOIN role_permission rp ON p.id = rp.permission WHERE rp.app_role =:roleId", nativeQuery = true)
+    @Query(value = "SELECT p.id FROM permission p " +
+            "INNER JOIN role_permission rp ON p.id = rp.permission " +
+            "WHERE rp.app_role =:roleId", nativeQuery = true)
     List<Long> findAllPermissionIdByRoleId(@Param("roleId") Long roleId);
 
     @Query("SELECT p FROM Permission p WHERE p.code = ?1")

@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -18,10 +21,8 @@ import org.springframework.security.web.header.writers.XXssProtectionHeaderWrite
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class WebSecurityConfig {
-
-    @Value("${spring.h2.console.enabled:false}")
-    private boolean h2ConsoleEnabled;
 
     @Value("${app.cdn-path-alias}")
     String cdnPathAlias;
@@ -39,22 +40,21 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers(
-                        "/css/**",
-                        "/js/**",
-                        "/img/**",
-                        "/lib/**",
-                        "/content/**",
-                        "/" + cdnPathAlias + "/**",
-                        "/favicon.ico",
-                        "/oauth2",
-                        "/_websocket/**",
-                        "/actuator/**"
-                );
-    }
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return (web) -> web.ignoring()
+//                .requestMatchers(
+//                        "/css/**",
+//                        "/js/**",
+//                        "/img/**",
+//                        "/lib/**",
+//                        "/content/**",
+//                        "/" + cdnPathAlias + "/**",
+//                        "/favicon.ico",
+//                        "/_websocket/**",
+//                        "/actuator/**"
+//                );
+//    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -69,10 +69,15 @@ public class WebSecurityConfig {
 //                                .requestMatchers(HttpMethod.GET, "/css/**", "/js/**").permitAll()
 //                                .requestMatchers(HttpMethod.GET, "/content/**").permitAll()
                             // Allow static CDN resources
-                            .requestMatchers(HttpMethod.GET, "/" + cdnPathAlias + "/**").permitAll()
-                            // Public auth endpoints
+                            .requestMatchers("/favicon.ico",
+                                    "/_websocket/**",
+                                    "/actuator/**",
+                                    "/css/**",
+                                    "/" + cdnPathAlias + "/**").permitAll()
+
                             .requestMatchers("/api/fileManager/files/stream").permitAll()
                             .requestMatchers("/api/fileManager/video/stream").permitAll()
+                            // Public auth endpoints
                             .requestMatchers(HttpMethod.POST,
                                     "/api/auth/login",
                                     "/api/auth/logout",
@@ -88,12 +93,10 @@ public class WebSecurityConfig {
                             // API routes require authentication
                             .requestMatchers("/api/**").authenticated();
                     if (!isProduction) {
-                        requests
-                                .requestMatchers(HttpMethod.POST, "/dev/development/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/dev/development/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/test/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/test/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/welcome", "/theymeleaf").permitAll();
+                        requests.requestMatchers("/test/**",
+                                "/dev/development/**",
+                                "/welcome",
+                                "/theymeleaf").permitAll();
                     }
 //                    requests.anyRequest().authenticated();
                     requests.anyRequest().denyAll();
@@ -110,5 +113,13 @@ public class WebSecurityConfig {
                 .addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+        DefaultMethodSecurityExpressionHandler expressionHandler =
+                new DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setPermissionEvaluator(new CustomPermissionEvaluator());
+        return expressionHandler;
     }
 }

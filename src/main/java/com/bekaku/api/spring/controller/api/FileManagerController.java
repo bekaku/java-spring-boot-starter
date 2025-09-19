@@ -8,6 +8,7 @@ import com.bekaku.api.spring.dto.FileUploadChunkResponseDto;
 import com.bekaku.api.spring.dto.ImageDto;
 import com.bekaku.api.spring.dto.ResponseMessage;
 import com.bekaku.api.spring.dto.UploadRequest;
+import com.bekaku.api.spring.enumtype.FileMimeType;
 import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FileMime;
@@ -30,7 +31,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.fileupload.util.LimitedInputStream;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -52,8 +52,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.request.async.WebAsyncTask;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -67,7 +65,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
@@ -103,9 +100,8 @@ public class FileManagerController extends BaseApiController {
     private final JwtService jwtService;
     private final List<String> sortProperties = List.of("fileName", "createdDate", "updatedDate", "fileSize", "fileMime");
     private final Executor executor = new ThreadPoolTaskExecutor();
-    private String fileName;
 
-    @PreAuthorize("isHasPermission('file_manager_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
     @GetMapping
     public List<FileManagerDto> findAll(
             Pageable pageable,
@@ -130,7 +126,7 @@ public class FileManagerController extends BaseApiController {
 //        }}, HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('file_manager_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
     @GetMapping("/findAllFolder")
     public List<FileManagerDto> findAllFolder(
             Pageable pageable,
@@ -139,7 +135,7 @@ public class FileManagerController extends BaseApiController {
         return fileManagerService.findAllFolderByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
     }
 
-    @PreAuthorize("isHasPermission('file_manager_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
     @GetMapping("/findAllFile")
     public List<FileManagerDto> findAllFile(
             Pageable pageable,
@@ -148,7 +144,7 @@ public class FileManagerController extends BaseApiController {
         return fileManagerService.findAllFileByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
     }
 
-    @PreAuthorize("isHasPermission('file_manager_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody FileManagerDto dto) {
         FileManager fileManager = fileManagerService.convertDtoToEntity(dto);
@@ -156,7 +152,7 @@ public class FileManagerController extends BaseApiController {
         return this.responseEntity(fileManagerService.convertEntityToDto(fileManager), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('file_manager_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_manage')")
     @PutMapping
     public ResponseEntity<Object> update(@Valid @RequestBody FileManagerDto dto) {
         FileManager fileManager = fileManagerService.convertDtoToEntity(dto);
@@ -168,7 +164,7 @@ public class FileManagerController extends BaseApiController {
         return this.responseEntity(fileManagerService.convertEntityToDto(fileManager), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('file_manager_view')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
@@ -179,7 +175,7 @@ public class FileManagerController extends BaseApiController {
         return this.responseEntity(fileManagerService.convertEntityToDto(fileManager.get()), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('file_manager_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_manage')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id) throws IOException {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
@@ -295,9 +291,10 @@ public class FileManagerController extends BaseApiController {
             if (AppUtil.isEmpty(mimeType)) {
                 throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required mime type.");
             }
-            boolean isImage = FileUtil.isImage(mimeType);
-            log.info("mergeChunkApi > isImage:{}, mimeType:{}, fileSize:{}", isImage, mimeType, fileSize);
-            String yearMonthFolder = isImage ? FileUtil.getImagesYearMonthDirectory() : FileUtil.getFilesYearMonthDirectory();
+            FileMimeType fileMimeType = FileUtil.getFileMimeType(mimeType);
+            log.info("mergeChunkApi > isImage:{}, mimeType:{}, fileSize:{}", fileMimeType, mimeType, fileSize);
+            String yearMonthFolder = FileUtil.getUploadYearMonthPath(fileMimeType);
+            log.info("yearMonthFolder:{}", yearMonthFolder);
             String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
             Path finalUploadDir = Paths.get(uploadPath);
 
@@ -306,7 +303,7 @@ public class FileManagerController extends BaseApiController {
             Files.move(mergedTempFilePath, finalFilePath, StandardCopyOption.REPLACE_EXISTING);
 
             //resize image
-            if (isImage) {
+            if (fileMimeType.equals(FileMimeType.IMAGE)) {
                 ImageDto imgInfo = getImageInfo(uploadPath + dto.getChunkFilename());
                 if (dto.isResizeImage() && canResize(imgInfo)) {
                     thumbnailatorResize(uploadPath, dto.getChunkFilename());
@@ -320,6 +317,20 @@ public class FileManagerController extends BaseApiController {
             Optional<FileMime> mime = fileMimeService.findByName(mimeType.toLowerCase());
             FileMime fileMimeForSave = mime.orElseGet(() -> fileMimeService.save(new FileMime(mimeType.toLowerCase())));
             FileManager f = new FileManager(null, dto.getOriginalFilename(), fileSize, fileMimeForSave, yearMonthFolder + dto.getChunkFilename());
+            if (dto.getDuration() != null) {
+                f.setDuration(dto.getDuration());
+            }
+            if (!AppUtil.isEmpty(dto.getTitle())) {
+                f.setTitle(dto.getTitle());
+            }
+            if (!AppUtil.isEmpty(dto.getDescription())) {
+                f.setDescription(dto.getDescription());
+            }
+            if(dto.getThumbnailFileId() != null){
+                Optional<FileManager> thumbnailFile = fileManagerService.findById(dto.getThumbnailFileId());
+                thumbnailFile.ifPresent(f::setThumbnailFile);
+            }
+
             // Create and return FileManagerDto
             Optional<FilesDirectory> directory = Optional.empty();
             if (dto.getFileDirectoryId() != null && dto.getFileDirectoryId() > 0) {
@@ -334,6 +345,7 @@ public class FileManagerController extends BaseApiController {
             throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, null, "Failed to merge file: " + dto.getOriginalFilename());
         }
     }
+
 
     private ImageDto getImageInfo(String path) {
         File file = new File(path);
@@ -372,7 +384,7 @@ public class FileManagerController extends BaseApiController {
         }
     }
 
-    //    @PreAuthorize("isHasPermission('file_manager_manage')")
+    //    @PreAuthorize("@permissionChecker.hasPermission('file_manager_manage')")
     @PostMapping("/uploadApi")
     public FileManagerDto uploadApi(@RequestParam(ConstantData.FILES_UPLOAD_ATT) MultipartFile file,
                                     @RequestParam(name = "fileDirectoryId", required = false, defaultValue = "0") long fileDirectoryId,
@@ -507,11 +519,12 @@ public class FileManagerController extends BaseApiController {
         String mimeType = FileUtil.getMimeType(file).toLowerCase();
         this.validateAllowMemeType(mimeType);
 
-        boolean isImage = FileUtil.isImage(mimeType);
+        FileMimeType fileMimeType = FileUtil.getFileMimeType(mimeType);
+        boolean isImage = fileMimeType.equals(FileMimeType.IMAGE);
         long fileSize = FileUtil.getFileSize(file);
         String originalName = generateOriginalFileName(file, user, mimeType, null);
 
-        String yearMonthFolder = isImage ? FileUtil.getImagesYearMonthDirectory() : FileUtil.getFilesYearMonthDirectory();
+        String yearMonthFolder = FileUtil.getUploadYearMonthPath(fileMimeType);
         String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
         String newName = isImage ? FileUtil.generateJpgFileName(user.getId() + "", originalName) :
                 FileUtil.generateFileName(user.getId() + "", originalName);

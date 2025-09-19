@@ -1,7 +1,9 @@
 package com.bekaku.api.spring.dto;
 
+import com.bekaku.api.spring.enumtype.FileMimeType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -9,7 +11,7 @@ import java.time.LocalDateTime;
 @Data
 public class FileManagerDto {
     public void assign(Long id, String fileMime, String fileName, String filePath, String fileThumbnailPath,
-                       String fileSize, LocalDateTime createdDate,LocalDateTime updatedDate,  boolean directoryFolder, boolean image) {
+                       String fileSize, LocalDateTime createdDate,LocalDateTime updatedDate, FileMimeType fileMimeType) {
         this.id = id;
         this.fileMime = fileMime;
         this.fileName = fileName;
@@ -17,9 +19,8 @@ public class FileManagerDto {
         this.fileThumbnailPath = fileThumbnailPath;
         this.fileSize = fileSize;
         this.createdDate = createdDate;
-        this.directoryFolder = directoryFolder;
         this.updatedDate = updatedDate;
-        this.image = image;
+        this.fileMimeType = fileMimeType;
     }
 
     private Long id;
@@ -31,8 +32,10 @@ public class FileManagerDto {
     private Long fileSizeNo;
     private Long fileCount;
     private Long functionId;
-    private boolean directoryFolder;
-    private boolean image=false;
+    private FileMimeType fileMimeType;
+    private int duration;
+    private String title;
+    private String description;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;

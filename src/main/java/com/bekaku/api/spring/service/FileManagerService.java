@@ -13,7 +13,6 @@ import java.util.Optional;
 public interface FileManagerService extends BaseService<FileManager, FileManagerDto> {
     Optional<FileManagerDto> findForPublicById(Long id);
 
-    FileManagerDto setEntityToDto(FileManager f);
     FileManagerDto setVoToDto(FilesDirectory filesDirectory);
 
     Optional<ImageDto> findImageDtoBy(Long id);

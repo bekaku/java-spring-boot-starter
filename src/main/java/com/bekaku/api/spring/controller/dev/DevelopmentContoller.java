@@ -748,7 +748,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("\n");
                 //findall
                 if (havePermission) {
-                    writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_list')\")\n");
+                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_list')\")\n");
                 }
                 writer.append("    @GetMapping\n");
 
@@ -770,7 +770,7 @@ public class DevelopmentContoller extends BaseApiController {
                 //create
                 writer.append("\n");
                 if (havePermission) {
-                    writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
                 }
                 writer.append("    @PostMapping\n");
                 if (haveDto) {
@@ -797,7 +797,7 @@ public class DevelopmentContoller extends BaseApiController {
                 //update
                 writer.append("\n");
                 if (havePermission) {
-                    writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
                 }
                 writer.append("    @PutMapping(\"/{id}\")\n");
                 if (haveDto) {
@@ -826,7 +826,7 @@ public class DevelopmentContoller extends BaseApiController {
 
                 //findOne
                 writer.append("\n");
-                writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_view')\")\n");
+                writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_view')\")\n");
                 writer.append("    @GetMapping(\"/{id}\")\n");
                 if (haveDto) {
                     writer.append("    public ").append(entityName).append("Dto findOne(@PathVariable(\"id\") Long id) {\n");
@@ -848,7 +848,7 @@ public class DevelopmentContoller extends BaseApiController {
                 //delete
                 writer.append("\n");
                 if (havePermission) {
-                    writer.append("    @PreAuthorize(\"isHasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
                 }
                 writer.append("    @DeleteMapping(\"/{id}\")\n");
                 writer.append("    public ResponseEntity<Object> delete(@PathVariable(\"id\") Long id) {\n");

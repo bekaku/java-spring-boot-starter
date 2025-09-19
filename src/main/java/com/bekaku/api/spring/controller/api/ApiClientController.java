@@ -34,7 +34,7 @@ public class ApiClientController extends BaseApiController {
     private final I18n i18n;
     //   Logger logger = LoggerFactory.getLogger(ApiClientController.class);
 
-    @PreAuthorize("isHasPermission('api_client_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('api_client_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
 //        return this.responseEntity(apiClientService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
@@ -43,7 +43,7 @@ public class ApiClientController extends BaseApiController {
         return this.responseEntity(apiClientService.findAllWithSearch(specification, getPageable(pageable, Permission.getSort())), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('api_client_add')")
+    @PreAuthorize("@permissionChecker.hasPermission('api_client_add')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody ApiClientDto dto) {
 
@@ -65,7 +65,7 @@ public class ApiClientController extends BaseApiController {
         return this.responseEntity(apiClientService.convertEntityToDto(apiClient), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('api_client_edit')")
+    @PreAuthorize("@permissionChecker.hasPermission('api_client_edit')")
     @PutMapping("/refreshToken/{apiClientId}")
     public ResponseEntity<Object> refreshApiToken(@PathVariable("apiClientId") long apiClientId) {
         Optional<ApiClient> apiClient = apiClientService.findById(apiClientId);
@@ -77,7 +77,7 @@ public class ApiClientController extends BaseApiController {
         return this.responseEntity(HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('api_client_edit')")
+    @PreAuthorize("@permissionChecker.hasPermission('api_client_edit')")
     @PutMapping
     public ResponseEntity<Object> update(@Valid @RequestBody ApiClientDto dto) {
 
@@ -96,7 +96,7 @@ public class ApiClientController extends BaseApiController {
         return this.responseEntity(apiClientService.convertEntityToDto(apiClient), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('api_client_view')")
+    @PreAuthorize("@permissionChecker.hasPermission('api_client_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
         Optional<ApiClient> apiClient = apiClientService.findById(id);
@@ -116,7 +116,7 @@ public class ApiClientController extends BaseApiController {
         return this.responseEntity(dto, HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('api_client_delete')")
+    @PreAuthorize("@permissionChecker.hasPermission('api_client_delete')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id) {
         Optional<ApiClient> apiClient = apiClientService.findById(id);

@@ -45,14 +45,14 @@ public class PermissionController extends BaseApiController {
     @Value("classpath:/acl.json")
     private Resource jsonAcl;
 
-    @PreAuthorize("isHasPermission('permission_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('permission_list')")
     @GetMapping("/findAllLikeByCode")
     public List<PermissionDto> findAllLikeByCode(@RequestParam("_q") String code, Pageable pageable) {
         return permissionService.findAllLikeByCode(code, getPageable(pageable, Permission.getSort()));
     }
 
     //http://localhost:8084/api/permission?page=0&size=10&sort=code,asc&_q=code:permission_list,name:user_list,id>10,id>=20,id!=10,id<10,id<=10,id=1
-    @PreAuthorize("isHasPermission('permission_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('permission_list')")
     @GetMapping
     public ResponseListDto<PermissionDto> findAll(Pageable pageable) {
 //        if(pageable.getSort().isEmpty()){
@@ -88,13 +88,13 @@ public class PermissionController extends BaseApiController {
                 .and(Sort.by("operationType").ascending());
     }
 
-    @PreAuthorize("isHasPermission('app_role_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_manage')")
     @GetMapping("/findAllPermission")
     public ResponseEntity<Object> findAllPermission() {
         return this.responseEntity(permissionService.findAllBy(getSort()), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('permission_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('permission_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody PermissionDto dto) {
 
@@ -115,7 +115,7 @@ public class PermissionController extends BaseApiController {
         return this.responseEntity(permissionService.convertEntityToDto(permission), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("isHasPermission('permission_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('permission_manage')")
     @PutMapping("/{id}")
     public ResponseEntity<Object> update(@Valid @RequestBody PermissionDto dto, @PathVariable("id") long id) {
         Permission permission = permissionService.convertDtoToEntity(dto);
@@ -133,7 +133,7 @@ public class PermissionController extends BaseApiController {
         return this.responseEntity(permissionService.convertEntityToDto(permission), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('permission_view')")
+    @PreAuthorize("@permissionChecker.hasPermission('permission_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
         Optional<Permission> permission = permissionService.findById(id);
@@ -145,7 +145,7 @@ public class PermissionController extends BaseApiController {
 //        return this.responseEntity(permissionService.findAllCustom(), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('permission_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('permission_manage')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id) {
         Optional<Permission> permission = permissionService.findById(id);

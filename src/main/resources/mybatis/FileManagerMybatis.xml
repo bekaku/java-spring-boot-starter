@@ -13,6 +13,9 @@
         f.created_date updatedDate,
         f.owner ownerId,
         NULL updatedUser,
+        duration,
+        title,
+        description,
         '0' AS directoryFolder
         FROM file_manager f
         LEFT JOIN file_mime m ON f.file_mime_id = m.id
@@ -29,6 +32,9 @@
         dir.latest_updated updatedDate,
         dir.owner ownerId,
         dir.updated_user updatedUser,
+        NULL duration,
+        NULL title,
+        NULL description,
         '1' AS directoryFolder
         FROM
         files_directory dir
@@ -121,7 +127,7 @@
     <!--Result Map-->
     <resultMap id="findForPublicByIdResult" type="com.bekaku.api.spring.dto.FileManagerDto">
         <id column="id" property="id"/>
-        <result column="directoryFolder" property="directoryFolder"/>
+<!--        <result column="directoryFolder" property="directoryFolder"/>-->
         <result column="fileMime" property="fileMime"/>
         <result column="fileName" property="fileName"/>
         <result column="filePath" property="filePath"/>
@@ -131,5 +137,8 @@
         <result column="updatedDate" property="updatedDate"/>
         <result column="ownerId" property="ownerId"/>
         <result column="updatedUser" property="updatedUserId"/>
+        <result column="duration" property="duration"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
     </resultMap>
 </mapper>

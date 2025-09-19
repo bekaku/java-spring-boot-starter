@@ -13,7 +13,7 @@
 
 **Access control list example usage**
 
-Just add an annotation `@PreAuthorize("isHasPermission('{PERMISSION_NAME}')")` to method in controller.
+Just add an annotation `@PreAuthorize("@permissionChecker.hasPermission('{PERMISSION_NAME}')")` to method in controller.
 
 ```java
 package com.bekaku.api.spring.controller.api;
@@ -23,11 +23,11 @@ package com.bekaku.api.spring.controller.api;
 @RequiredArgsConstructor
 public class RoleController extends BaseApiController {
     
-    @PreAuthorize("isHasPermission('role_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('role_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
     }
-    @PreAuthorize("isHasPermission('role_add')")
+    @PreAuthorize("@permissionChecker.hasPermission('role_add')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
     }

@@ -44,7 +44,7 @@ public class AppRoleController extends BaseApiController {
     @Value("${environments.production}")
     boolean isProduction;
 
-    @PreAuthorize("isHasPermission('app_role_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable) {
         SearchSpecification<AppRole> specification = new SearchSpecification<>(getSearchCriteriaList());
@@ -60,7 +60,7 @@ public class AppRoleController extends BaseApiController {
                 HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('app_role_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody AppRoleDto dto) {
         return this.responseEntity(createProcess(dto), HttpStatus.CREATED);
@@ -85,7 +85,7 @@ public class AppRoleController extends BaseApiController {
         }
     }
 
-    @PreAuthorize("isHasPermission('app_role_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_manage')")
     @PutMapping("/{id}")
     public ResponseEntity<Object> update(@Valid @RequestBody AppRoleDto dto, @PathVariable("id") long id) {
         Optional<AppRole> role = appRoleService.findById(id);
@@ -112,7 +112,7 @@ public class AppRoleController extends BaseApiController {
         return appRoleService.convertEntityToDto(appRole);
     }
 
-    @PreAuthorize("isHasPermission('app_role_view')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
         Optional<AppRole> role = appRoleService.findById(id);
@@ -127,7 +127,7 @@ public class AppRoleController extends BaseApiController {
         return this.responseEntity(appRoleDto, HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('app_role_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_manage')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id) {
         Optional<AppRole> role = appRoleService.findById(id);

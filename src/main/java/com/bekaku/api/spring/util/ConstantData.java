@@ -50,8 +50,11 @@ public class ConstantData {
     public static final String DEFAULT_PROJECT_ROOT_PACKAGE = "com.bekaku.api.spring";
 
     public static final String IMAGE = "image";
+    public static final String VIDEO = "video";
     public static final String IMAGES = "images";
     public static final String FILES = "files";
+    public static final String MEDIAS = "medias";
+    public static final String DIRECTORY = "directory";
 
     public static final String FILES_UPLOAD_ATT = "_filesUploadName";
 

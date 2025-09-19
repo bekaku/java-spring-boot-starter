@@ -1,5 +1,6 @@
 package com.bekaku.api.spring.util;
 
+import com.bekaku.api.spring.enumtype.FileMimeType;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import net.coobird.thumbnailator.Thumbnails;
@@ -26,7 +27,6 @@ import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.Base64;
 import java.util.Optional;
-import java.util.UUID;
 
 public class FileUtil {
 
@@ -119,12 +119,26 @@ public class FileUtil {
         return cdnPath + ConstantData.BACK_SLACK + directory + (filename != null ? filename : "");
     }
 
+    public static String getUploadYearMonthPath(FileMimeType fileMimeType) {
+        if (fileMimeType.equals(FileMimeType.IMAGE)) {
+            return getImagesYearMonthDirectory();
+        } else if (fileMimeType.equals(FileMimeType.FILE)) {
+            return getMediasYearMonthDirectory();
+        }
+        return getFilesYearMonthDirectory();
+    }
+
+
     public static String getImagesYearMonthDirectory() {
         return ConstantData.IMAGES + ConstantData.BACK_SLACK + DateUtil.getLocalDateByForMat(DateUtil.getLocalDateNow(), DateUtil.CDN_YEAR_MONTH_FORMAT) + ConstantData.BACK_SLACK;
     }
 
     public static String getFilesYearMonthDirectory() {
         return ConstantData.FILES + ConstantData.BACK_SLACK + DateUtil.getLocalDateByForMat(DateUtil.getLocalDateNow(), DateUtil.CDN_YEAR_MONTH_FORMAT) + ConstantData.BACK_SLACK;
+    }
+
+    public static String getMediasYearMonthDirectory() {
+        return ConstantData.MEDIAS + ConstantData.BACK_SLACK + DateUtil.getLocalDateByForMat(DateUtil.getLocalDateNow(), DateUtil.CDN_YEAR_MONTH_FORMAT) + ConstantData.BACK_SLACK;
     }
 
     public static String getDirectoryForUpload(String cdnUploadPath, String directory) {
@@ -311,8 +325,26 @@ public class FileUtil {
         return 0;
     }
 
+    public static FileMimeType getFileMimeType(String mimeType) {
+        if (isImage(mimeType)) {
+            return FileMimeType.IMAGE;
+        } else if (FileUtil.isVideo(mimeType)) {
+            return FileMimeType.VIDEO;
+        }else if (FileUtil.isDirectory(mimeType)) {
+            return FileMimeType.DIRECTORY;
+        }
+        return FileMimeType.FILE;
+    }
+
     public static boolean isImage(String mimeType) {
         return mimeType.contains(ConstantData.IMAGE);
+    }
+
+    public static boolean isVideo(String mimeType) {
+        return mimeType.contains(ConstantData.VIDEO);
+    }
+    public static boolean isDirectory(String mimeType) {
+        return mimeType.contains(ConstantData.DIRECTORY);
     }
 
     public static Long getFileSize(MultipartFile file) {

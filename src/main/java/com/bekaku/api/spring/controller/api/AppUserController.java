@@ -173,14 +173,14 @@ public class AppUserController extends BaseApiController {
      * Administrator section
      */
 
-    @PreAuthorize("isHasPermission('app_user_list')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_list')")
     @GetMapping
     public ResponseEntity<Object> findAll(Pageable pageable, HttpServletRequest request) {
         SearchSpecification<AppUser> specification = new SearchSpecification<>(getSearchCriteriaList());
         return this.responseEntity(appUserService.findAllWithSearch(specification, getPageable(pageable, AppUser.getSort())), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('app_user_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_manage')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody UserRegisterRequest dto) {
         return this.responseEntity(ceateUserProcess(dto), HttpStatus.CREATED);
@@ -216,7 +216,7 @@ public class AppUserController extends BaseApiController {
         }
     }
 
-    @PreAuthorize("isHasPermission('app_user_view')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_view')")
     @GetMapping("/{id}")
     public ResponseEntity<Object> findOne(@PathVariable("id") Long id) {
         Optional<AppUser> user = appUserService.findById(id);
@@ -226,7 +226,7 @@ public class AppUserController extends BaseApiController {
         return this.responseEntity(appUserService.convertEntityToDto(user.get()), HttpStatus.OK);
     }
 
-    @PreAuthorize("isHasPermission('app_user_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_manage')")
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateUser(@Valid @RequestBody UserUpdateRequest dto, @PathVariable("id") Long id) {
         Optional<AppUser> user = appUserService.findById(id);
@@ -253,7 +253,7 @@ public class AppUserController extends BaseApiController {
         return appUserService.convertEntityToDto(appUser);
     }
 
-    @PreAuthorize("isHasPermission('app_user_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_manage')")
     @PutMapping("/updateUserPassword/{id}")
     public ResponseEntity<Object> updateUserPassword(@PathVariable("id") Long id, @Valid @RequestBody UserChangePasswordRequest dto) {
         Optional<AppUser> user = appUserService.findById(id);
@@ -279,7 +279,7 @@ public class AppUserController extends BaseApiController {
     }
 
 
-    @PreAuthorize("isHasPermission('app_user_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_manage')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteUser(@PathVariable("id") Long id) {
         Optional<AppUser> user = appUserService.findById(id);

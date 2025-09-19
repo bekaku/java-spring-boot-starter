@@ -58,7 +58,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         boolean isStreamingEndpoint = STREAMING_ENDPOINTS.stream()
                 .anyMatch(requestURI::contains);
-        log.info("JwtTokenFilter > doFilterInternal > isStreamingEndpoint: {}", isStreamingEndpoint);
         try {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 Optional<AppUserDto> userData = jwtService.jwtVerify(
