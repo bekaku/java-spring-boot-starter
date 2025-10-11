@@ -122,7 +122,7 @@ public class FileUtil {
     public static String getUploadYearMonthPath(FileMimeType fileMimeType) {
         if (fileMimeType.equals(FileMimeType.IMAGE)) {
             return getImagesYearMonthDirectory();
-        } else if (fileMimeType.equals(FileMimeType.FILE)) {
+        } else if (fileMimeType.equals(FileMimeType.VIDEO)) {
             return getMediasYearMonthDirectory();
         }
         return getFilesYearMonthDirectory();

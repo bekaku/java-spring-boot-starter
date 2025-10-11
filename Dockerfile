@@ -3,7 +3,7 @@ FROM eclipse-temurin:21-jdk-alpine
 
 # Set environment variables
 ENV TZ=Asia/Bangkok \
-    JAVA_OPTS="-Xms1G -Xmx1G -Xss256k -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=75.0 -XX:MaxGCPauseMillis=100 -XX:+ParallelRefProcEnabled -XX:+UseCompressedOops -XX:+UseCompressedClassPointers -XX:+AlwaysPreTouch -XX:+TieredCompilation -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/usr/spring-data/logs/heapdump.hprof"
+    JAVA_OPTS="-Xms2G -Xmx2G -Xss256k -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=75.0 -XX:MaxGCPauseMillis=100 -XX:+ParallelRefProcEnabled -XX:+UseCompressedOops -XX:+UseCompressedClassPointers -XX:+AlwaysPreTouch -XX:+TieredCompilation -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/usr/spring-data/logs/heapdump.hprof"
 
 # Install required packages and set timezone
 RUN apk --no-cache add curl tzdata && \

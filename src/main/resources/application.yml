@@ -213,11 +213,11 @@ server:
     max-keep-alive-requests: 100 # Set to -1 for long-lived connections
     accesslog:
       enabled: false
-    accept-count: 100
+    accept-count: 100000
     max-connections: 10000
     connection-timeout: 20000   # 20 seconds
     threads:
-      max: 200
+      max: 500
       min-spare: 20
 logging:
   include-application-name: false

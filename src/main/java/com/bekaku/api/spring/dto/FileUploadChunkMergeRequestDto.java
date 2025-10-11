@@ -19,6 +19,7 @@ public class FileUploadChunkMergeRequestDto {
     private String chunkFilename;
     private Long fileDirectoryId;
     private boolean resizeImage;
+    private boolean hidden;
     private Integer duration;
     private String title;
     private String description;

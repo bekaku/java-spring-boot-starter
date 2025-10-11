@@ -2,10 +2,8 @@
 services:
   postgres:
     container_name: postgres
-    image: "postgres:17.6-alpine"
-#    image: "postgres:18beta3-alpine"
+    image: "postgres:18-alpine"
     volumes:
-      #- ./pg_data:/var/lib/postgresql/data
       - pg_data:/var/lib/postgresql/data
       - ./log:/var/log/postgresql
       - ./conf/postgres.conf:/usr/local/share/postgresql/postgresql.conf

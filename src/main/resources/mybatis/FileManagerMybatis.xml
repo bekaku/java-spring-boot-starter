@@ -13,12 +13,14 @@
         f.created_date updatedDate,
         f.owner ownerId,
         NULL updatedUser,
-        duration,
-        title,
-        description,
+        f.duration,
+        f.title,
+        f.description,
+        ft.file_path thumbnailPath,
         '0' AS directoryFolder
         FROM file_manager f
         LEFT JOIN file_mime m ON f.file_mime_id = m.id
+        LEFT JOIN file_manager ft ON f.thumbnail_file = ft.id
     </sql>
     <sql id="dirQuery">
         SELECT
@@ -35,6 +37,7 @@
         NULL duration,
         NULL title,
         NULL description,
+        NULL thumbnailPath,
         '1' AS directoryFolder
         FROM
         files_directory dir
@@ -55,6 +58,7 @@
             </otherwise>
         </choose>
         AND f.owner = #{ownerId}
+        AND f.hidden is false
 
         UNION ALL
         <include refid="dirQuery"/>
@@ -89,6 +93,7 @@
             </otherwise>
         </choose>
         AND dir.owner = #{ownerId}
+        AND f.hidden is false
 
         <if test="page.sortfield != null and page.sortmode != null">
             order by ${page.sortfield} ${page.sortmode}
@@ -112,6 +117,7 @@
             </otherwise>
         </choose>
         AND f.owner = #{ownerId}
+        AND f.hidden is false
 
         <if test="page.sortfield != null and page.sortmode != null">
             order by ${page.sortfield} ${page.sortmode}
@@ -140,5 +146,6 @@
         <result column="duration" property="duration"/>
         <result column="title" property="title"/>
         <result column="description" property="description"/>
+        <result column="thumbnailPath" property="fileThumbnailPath"/>
     </resultMap>
 </mapper>

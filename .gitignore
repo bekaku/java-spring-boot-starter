@@ -57,6 +57,7 @@ spring-data/images/*
 spring-data/temp-chunks/*
 spring-data/logs/*
 spring-data/files/*
+spring-data/medias/*
 
 !spring-data/files/spring_starter_mysql.sql
 !spring-data/files/spring_starter_postgres.sql

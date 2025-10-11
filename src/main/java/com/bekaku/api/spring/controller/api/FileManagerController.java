@@ -263,6 +263,8 @@ public class FileManagerController extends BaseApiController {
                                         @AuthenticationPrincipal AppUserDto user) {
         log.info("mergeChunkApi > totalChunks:{}, fileMime:{}, originalFilename:{}, chunkFilename:{}, fileDirectoryId:{}",
                 dto.getTotalChunks(), dto.getFileMime(), dto.getOriginalFilename(), dto.getChunkFilename(), dto.getFileDirectoryId());
+
+        log.info("hidden:{}" , dto.isHidden());
         if (AppUtil.isEmpty(dto.getChunkFilename()) || dto.getTotalChunks() == 0) {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required parameters.");
         }
@@ -292,7 +294,7 @@ public class FileManagerController extends BaseApiController {
                 throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required mime type.");
             }
             FileMimeType fileMimeType = FileUtil.getFileMimeType(mimeType);
-            log.info("mergeChunkApi > isImage:{}, mimeType:{}, fileSize:{}", fileMimeType, mimeType, fileSize);
+            log.info("mergeChunkApi > fileMimeType:{}, mimeType:{}, fileSize:{}", fileMimeType, mimeType, fileSize);
             String yearMonthFolder = FileUtil.getUploadYearMonthPath(fileMimeType);
             log.info("yearMonthFolder:{}", yearMonthFolder);
             String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
@@ -330,7 +332,7 @@ public class FileManagerController extends BaseApiController {
                 Optional<FileManager> thumbnailFile = fileManagerService.findById(dto.getThumbnailFileId());
                 thumbnailFile.ifPresent(f::setThumbnailFile);
             }
-
+            f.setHidden(dto.isHidden());
             // Create and return FileManagerDto
             Optional<FilesDirectory> directory = Optional.empty();
             if (dto.getFileDirectoryId() != null && dto.getFileDirectoryId() > 0) {
