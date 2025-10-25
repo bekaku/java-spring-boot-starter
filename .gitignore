@@ -61,6 +61,9 @@ spring-data/medias/*
 
 !spring-data/files/spring_starter_mysql.sql
 !spring-data/files/spring_starter_postgres.sql
+!spring-data/files/province.sql
+!spring-data/files/district.sql
+!spring-data/files/sub_district.sql
 !spring-data/images/default-men-avatar.png
 !spring-data/images/default-women-avatar.png
 src/main/generated/*
