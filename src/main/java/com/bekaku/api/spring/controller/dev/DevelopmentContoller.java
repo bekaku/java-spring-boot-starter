@@ -1338,7 +1338,8 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      API: '/api/").append(entityNameLowerFirst).append("',\n");
             writer.append("      method: 'POST',\n");
             writer.append("      body: {\n");
-            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+//            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+            writer.append("        data: request,\n");
             writer.append("      },\n");
             writer.append("    });\n");
             writer.append("  };\n");
@@ -1347,7 +1348,8 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
             writer.append("      method: 'PUT',\n");
             writer.append("      body: {\n");
-            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+//            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+            writer.append("        data: request,\n");
             writer.append("      },\n");
             writer.append("    });\n");
             writer.append("  };\n");
@@ -1850,7 +1852,8 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      API: '/api/").append(entityNameLowerFirst).append("',\n");
             writer.append("      method: 'POST',\n");
             writer.append("      body: {\n");
-            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+//            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+            writer.append("        data: request,\n");
             writer.append("      },\n");
             writer.append("    });\n");
             writer.append("  };\n");
@@ -1859,7 +1862,8 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      API: `/api/").append(entityNameLowerFirst).append("/${id}`,\n");
             writer.append("      method: 'PUT',\n");
             writer.append("      body: {\n");
-            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+//            writer.append("        ").append(entityNameLowerFirst).append(": request,\n");
+            writer.append("        data: request,\n");
             writer.append("      },\n");
             writer.append("    });\n");
             writer.append("  };\n");
