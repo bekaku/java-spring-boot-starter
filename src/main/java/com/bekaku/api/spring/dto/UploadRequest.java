@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@JsonRootName("uploadRequest")
+@JsonRootName("data")
 @Data
 @NoArgsConstructor
 public class UploadRequest {

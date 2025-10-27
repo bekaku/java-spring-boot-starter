@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
 
 
 @Getter
-@JsonRootName("forgotPasswordRequest")
+@JsonRootName("data")
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)

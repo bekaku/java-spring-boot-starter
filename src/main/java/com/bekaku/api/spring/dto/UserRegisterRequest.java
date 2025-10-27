@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
 
 @Setter
 @Getter
-@JsonRootName("user")
+@JsonRootName("data")
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserRegisterRequest extends UserRequestDto {

@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 @Data
-@JsonRootName("apiClientIp")
+@JsonRootName("data")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class ApiClientIpDto {

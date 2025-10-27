@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@JsonRootName("apiClient")
+@JsonRootName("data")
 @Data
 @NoArgsConstructor
 public class ApiClientDto {

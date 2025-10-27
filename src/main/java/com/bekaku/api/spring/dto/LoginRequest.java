@@ -15,7 +15,7 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Setter
-@JsonRootName("user")
+@JsonRootName("data")
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)

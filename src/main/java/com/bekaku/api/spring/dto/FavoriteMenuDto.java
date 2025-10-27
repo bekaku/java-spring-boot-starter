@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Setter
-@JsonRootName("favoriteMenu")
+@JsonRootName("data")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class FavoriteMenuDto {

@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 @Data
-@JsonRootName("filesDirectoryPath")
+@JsonRootName("data")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class FilesDirectoryPathDto{

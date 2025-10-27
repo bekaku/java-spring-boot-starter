@@ -12,7 +12,7 @@ import lombok.experimental.Accessors;
 
 @Setter
 @Getter
-@JsonRootName("userChangePasswordRequest")
+@JsonRootName("data")
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserChangePasswordRequest {

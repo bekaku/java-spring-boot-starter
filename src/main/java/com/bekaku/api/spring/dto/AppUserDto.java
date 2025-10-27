@@ -11,7 +11,7 @@ import java.util.List;
 
 
 @Data
-@JsonRootName("appUser")
+@JsonRootName("data")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class AppUserDto {

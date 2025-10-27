@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@JsonRootName("apiClient")
+@JsonRootName("data")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

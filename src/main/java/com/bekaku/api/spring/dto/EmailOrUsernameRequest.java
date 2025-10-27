@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
-@JsonRootName("emailOrUsername")
+@JsonRootName("data")
 @Getter
 @Setter
 public class EmailOrUsernameRequest {

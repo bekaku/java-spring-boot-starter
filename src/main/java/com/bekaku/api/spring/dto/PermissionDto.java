@@ -8,7 +8,7 @@ import lombok.*;
 
 @Getter
 @Setter
-@JsonRootName("permission")
+@JsonRootName("data")
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
