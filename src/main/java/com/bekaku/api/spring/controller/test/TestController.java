@@ -2,6 +2,7 @@ package com.bekaku.api.spring.controller.test;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.controller.api.BaseApiController;
+import com.bekaku.api.spring.dto.PermissionDto;
 import com.bekaku.api.spring.dto.UserRegisterRequest;
 import com.bekaku.api.spring.logger.AppLogger;
 import com.bekaku.api.spring.model.AppUser;
@@ -10,6 +11,7 @@ import com.bekaku.api.spring.properties.LoggingFileProperties;
 import com.bekaku.api.spring.queue.QueueSender;
 import com.bekaku.api.spring.service.AccessTokenService;
 import com.bekaku.api.spring.service.AppUserService;
+import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
@@ -58,6 +60,8 @@ public class TestController extends BaseApiController {
     private final AccessTokenService accessTokenService;
 
     private final Executor asyncExecutor;
+
+    private final PermissionService permissionService;
 
     @Value("${logging.file.path}")
     String logingFilePath;
@@ -191,6 +195,11 @@ public class TestController extends BaseApiController {
         }}, HttpStatus.OK);
     }
 
+    @GetMapping("/getTest2")
+    public PermissionDto getTest2() {
+        return permissionService.findDtoById(350898930604576768L).orElse(null);
+    }
+
     @GetMapping("/test-page-loop")
     public void testLoopPaging(){
         Page<AppUser> page;
@@ -226,7 +235,6 @@ public class TestController extends BaseApiController {
                     throw new RuntimeException("Error fetching users", ex);
                 });
     }
-
     /*
     @GetMapping
     public CompletableFuture<List<User>> getAllUsers() {

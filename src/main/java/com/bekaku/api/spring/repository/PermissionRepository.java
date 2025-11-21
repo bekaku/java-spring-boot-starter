@@ -1,5 +1,6 @@
 package com.bekaku.api.spring.repository;
 
+import com.bekaku.api.spring.dto.PermissionDto;
 import com.bekaku.api.spring.model.Permission;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,6 +22,10 @@ import java.util.Optional;
 public interface PermissionRepository extends BaseRepository<Permission, Long>, JpaSpecificationExecutor<Permission> {
 
     Optional<Permission> findByCode(String code);
+
+
+    //    @Query("SELECT new com.example.dto.UserDTO(u.id, u.name) FROM User u")
+//    List<UserDTO> findAllUsers();
 
 //    List<Permission> findAllByModule(String module);
 
@@ -64,4 +69,17 @@ public interface PermissionRepository extends BaseRepository<Permission, Long>, 
     @Modifying
     @Query("DELETE from Permission p where p.code = :code")
     void deletePermission(@Param("code") String code);
+
+    // For JPA Example
+    @Query("""
+                    SELECT new com.bekaku.api.spring.dto.PermissionDto(
+                        e.id,
+                        e.operationType,
+                        e.description,
+                        e.code
+                        )
+                        FROM Permission e
+                        WHERE e.id=?1
+            """)
+    Optional<PermissionDto> findDtoById(Long id);
 }

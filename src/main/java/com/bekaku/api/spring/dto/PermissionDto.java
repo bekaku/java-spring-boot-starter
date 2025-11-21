@@ -13,6 +13,14 @@ import lombok.*;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PermissionDto extends DtoId {
+
+    public PermissionDto(Long id, PermissionType operationType, String description, String code) {
+        setId(id);
+        this.operationType = operationType;
+        this.description = description;
+        this.code = code;
+    }
+
     @NotEmpty(message = "{error.NotEmpty}")
     private String code;
     private String remark;

@@ -12,6 +12,7 @@ import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.repository.FileManagerRepository;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.FileUtil;
 import com.bekaku.api.spring.vo.Paging;
 import lombok.RequiredArgsConstructor;
@@ -115,13 +116,19 @@ public class FileManagerServiceImpl implements FileManagerService {
         FileMimeType fileMimeType = FileUtil.getFileMimeType(mimeType);
         FileManagerDto dto = new FileManagerDto();
         String thumbnailPath = null;
+        String path = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getFilePath(), null);
         if (fileMimeType.equals(FileMimeType.IMAGE)) {
-            thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null);
+            String tnPath = FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname());
+            if (isFileExist(tnPath)) {
+                thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), tnPath, null);
+            } else {
+                thumbnailPath = path;
+            }
         }
         dto.assign(fileManager.getId(),
                 mimeType,
                 fileManager.getOriginalFileName(),
-                FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getFilePath(), null),
+                path,
                 thumbnailPath,
                 FileUtil.humanReadableByteCountSI(fileManager.getFileSize()),
                 fileManager.getCreatedDate(),
@@ -190,7 +197,12 @@ public class FileManagerServiceImpl implements FileManagerService {
         if (vo.getFileThumbnailPath() != null) {
             thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), vo.getFileThumbnailPath(), null);
         } else if (fileMimeType.equals(FileMimeType.IMAGE)) {
-            thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(vo.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), null);
+            String tnPath = FileUtil.generateThumbnailName(vo.getFilePath(), appProperties.getUploadImage().getThumbnailExname());
+            if (isFileExist(tnPath)) {
+                thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), tnPath, null);
+            } else {
+                thumbnailPath = path;
+            }
         }
         vo.setFilePath(path);
         vo.setFileThumbnailPath(thumbnailPath);
@@ -276,6 +288,18 @@ public class FileManagerServiceImpl implements FileManagerService {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private boolean isFileExist(String path) {
+        if (AppUtil.isEmpty(path)) {
+            return false;
+        }
+        String filePath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), path);
+        try {
+            return Files.exists(Path.of(filePath));
+        } catch (Exception ignore) {
+            return false;
         }
     }
 }

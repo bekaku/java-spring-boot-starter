@@ -40,4 +40,6 @@ public interface PermissionService extends BaseService<Permission, PermissionDto
 
     List<Object[]> findAllCustom();
 
+    Optional<PermissionDto> findDtoById(Long id);
+
 }

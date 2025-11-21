@@ -197,6 +197,11 @@ public class PermissionServiceImpl implements PermissionService {
         return permissionRepositoryCustom.findAll();
     }
 
+    @Override
+    public Optional<PermissionDto> findDtoById(Long id) {
+        return permissionRepository.findDtoById(id);
+    }
+
     //custom JPA query
 //    public List<Permission> findAllNativeByCrudTableAndActive(String curdTable, Boolean status) {
 //        Query query = this.entityManager.createNativeQuery("select * from permission p where p.crud_table = :tableName AND p.status=:status ", Permission.class);
