@@ -84,6 +84,9 @@ public class FileManager extends SoftDeletedAuditableCreated<Long> {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean useThumbnail;
+
     public boolean isImage() {
         return FileUtil.isImage(getFileMime().getName());
     }

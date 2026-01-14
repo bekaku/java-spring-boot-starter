@@ -220,7 +220,7 @@ public class FileManagerController extends BaseApiController {
                                                      @AuthenticationPrincipal AppUserDto user) {
 
         try {
-            String uploadPathTmp = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR);
+            String uploadPathTmp = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR, true);
             String mimeType = FileUtil.getMimeType(file).toLowerCase();
             log.info("mimeType: {}", mimeType);
             if (chunkNumber == 1) {
@@ -272,7 +272,7 @@ public class FileManagerController extends BaseApiController {
         AppUser appUser = appUserService.findAndValidateAppUserBy(user);
         try {
             // Get directory paths
-            Path tempFileDir = Paths.get(FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR));
+            Path tempFileDir = Paths.get(FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR, true));
 
             // Merge file into a temporary merged file first
             Path mergedTempFilePath = tempFileDir.resolve(dto.getChunkFilename() + ".merged");
@@ -297,13 +297,13 @@ public class FileManagerController extends BaseApiController {
             log.info("mergeChunkApi > fileMimeType:{}, mimeType:{}, fileSize:{}", fileMimeType, mimeType, fileSize);
             String yearMonthFolder = FileUtil.getUploadYearMonthPath(fileMimeType);
             log.info("yearMonthFolder:{}", yearMonthFolder);
-            String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
+            String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder, true);
             Path finalUploadDir = Paths.get(uploadPath);
 
             Path finalFilePath = finalUploadDir.resolve(dto.getChunkFilename());
             // Move merged file to final upload folder
             Files.move(mergedTempFilePath, finalFilePath, StandardCopyOption.REPLACE_EXISTING);
-
+            boolean useThumbnail=false;
             //resize image
             if (fileMimeType.equals(FileMimeType.IMAGE)) {
                 ImageDto imgInfo = getImageInfo(uploadPath + dto.getChunkFilename());
@@ -312,6 +312,7 @@ public class FileManagerController extends BaseApiController {
                 }
                 //create thumbnail
                 if (appProperties.getUploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
+                    useThumbnail=true;
                     thumbnailatorCreateThumnail(uploadPath, dto.getChunkFilename());
                 }
             }
@@ -332,6 +333,7 @@ public class FileManagerController extends BaseApiController {
                 Optional<FileManager> thumbnailFile = fileManagerService.findById(dto.getThumbnailFileId());
                 thumbnailFile.ifPresent(f::setThumbnailFile);
             }
+            f.setUseThumbnail(useThumbnail);
             f.setHidden(dto.isHidden());
             // Create and return FileManagerDto
             Optional<FilesDirectory> directory = Optional.empty();
@@ -470,7 +472,7 @@ public class FileManagerController extends BaseApiController {
         long fileSize = FileUtil.getFileSizeFromBase64(dto.getFileBase64());
         String originalName = "image_" + System.currentTimeMillis() + ".jpg";
         String yearMonthFolder = FileUtil.getImagesYearMonthDirectory();
-        String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
+        String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder, true);
         String newName = FileUtil.generateJpgFileNameByMemeType(user.getId() + "", mimeType);
         byte[] decodedImg = FileUtil.convertBase64ToByteArray(dto.getFileBase64());
         return uploadAndResizeProcess(decodedImg, mimeType, yearMonthFolder, uploadPath, originalName, newName, fileSize, true, dto.isResizeImage());
@@ -527,7 +529,7 @@ public class FileManagerController extends BaseApiController {
         String originalName = generateOriginalFileName(file, user, mimeType, null);
 
         String yearMonthFolder = FileUtil.getUploadYearMonthPath(fileMimeType);
-        String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder);
+        String uploadPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), yearMonthFolder, true);
         String newName = isImage ? FileUtil.generateJpgFileName(user.getId() + "", originalName) :
                 FileUtil.generateFileName(user.getId() + "", originalName);
         byte[] bytes;

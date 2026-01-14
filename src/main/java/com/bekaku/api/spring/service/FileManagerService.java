@@ -17,11 +17,14 @@ public interface FileManagerService extends BaseService<FileManager, FileManager
 
     Optional<ImageDto> findImageDtoBy(Long id);
 
+    ImageDto getImageDtoBy(FileManager fileManager);
+
+    ImageDto getImageDtoBy(String fileMime, String path, boolean useThumbnail);
+
     Optional<ImageDto> findImageDtoBy(FileManager fileManager);
 
     ImageDto getDefaultAvatar();
 
-    ImageDto getImageDtoBy(String fileMime, String path);
 
     List<FileManagerDto> findAllFolderAndFileByParentFolderAndOwnerId(Paging page, Long parentDirectoryId, Long ownerId);
 

@@ -17,7 +17,8 @@
         f.title,
         f.description,
         ft.file_path thumbnailPath,
-        '0' AS directoryFolder
+        '0' AS directoryFolder,
+        f.use_thumbnail useThumbnail
         FROM file_manager f
         LEFT JOIN file_mime m ON f.file_mime_id = m.id
         LEFT JOIN file_manager ft ON f.thumbnail_file = ft.id
@@ -38,7 +39,8 @@
         NULL title,
         NULL description,
         NULL thumbnailPath,
-        '1' AS directoryFolder
+        '1' AS directoryFolder,
+        '0' useThumbnail
         FROM
         files_directory dir
     </sql>
@@ -147,5 +149,6 @@
         <result column="title" property="title"/>
         <result column="description" property="description"/>
         <result column="thumbnailPath" property="fileThumbnailPath"/>
+        <result column="useThumbnail" property="useThumbnail"/>
     </resultMap>
 </mapper>

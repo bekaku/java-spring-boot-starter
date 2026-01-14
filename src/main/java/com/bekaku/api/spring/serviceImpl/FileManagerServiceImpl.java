@@ -117,9 +117,19 @@ public class FileManagerServiceImpl implements FileManagerService {
         FileManagerDto dto = new FileManagerDto();
         String thumbnailPath = null;
         String path = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getFilePath(), null);
-        if (fileMimeType.equals(FileMimeType.IMAGE)) {
+
+        if (fileManager.getThumbnailFile() != null) {
+            if (fileManager.getThumbnailFile().isUseThumbnail()) {
+                String tnPath = FileUtil.generateThumbnailName(fileManager.getThumbnailFile().getFilePath(), appProperties.getUploadImage().getThumbnailExname());
+                thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), tnPath, null);
+            } else {
+                thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getThumbnailFile().getFilePath(), null);
+            }
+
+        } else if (fileMimeType.equals(FileMimeType.IMAGE)) {
             String tnPath = FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname());
-            if (isFileExist(tnPath)) {
+//            if (isFileExist(tnPath)) {
+            if (fileManager.isUseThumbnail()) {
                 thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), tnPath, null);
             } else {
                 thumbnailPath = path;
@@ -153,7 +163,7 @@ public class FileManagerServiceImpl implements FileManagerService {
     @Override
     public Optional<ImageDto> findImageDtoBy(Long id) {
         return fileManagerMybatis.findForPublicById(id)
-                .map(fileManagerPublicVo -> getImageDtoBy(fileManagerPublicVo.getFileMime(), fileManagerPublicVo.getFilePath()));
+                .map(vo -> getImageDtoBy(vo.getFileMime(), vo.getFilePath(), vo.isUseThumbnail()));
     }
 
     public ImageDto getDefaultAvatar() {
@@ -165,14 +175,21 @@ public class FileManagerServiceImpl implements FileManagerService {
     }
 
     @Override
-    public ImageDto getImageDtoBy(String fileMime, String path) {
+    public ImageDto getImageDtoBy(String fileMime, String path, boolean useThumbnail) {
         if (fileMime == null || path == null) {
             return null;
         }
 
         boolean isImage = FileUtil.isImage(fileMime);
         String url = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), path, null);
-        String thumbUrl = isImage ? FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(path, appProperties.getUploadImage().getThumbnailExname()), null) : null;
+        String thumbUrl = null;
+        if (isImage) {
+            if (useThumbnail) {
+                thumbUrl = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), FileUtil.generateThumbnailName(path, appProperties.getUploadImage().getThumbnailExname()), null);
+            } else {
+                thumbUrl = url;
+            }
+        }
         ImageDto imageDto = new ImageDto();
         imageDto.setImage(url);
         imageDto.setThumbnail(thumbUrl);
@@ -180,11 +197,19 @@ public class FileManagerServiceImpl implements FileManagerService {
     }
 
     @Override
+    public ImageDto getImageDtoBy(FileManager fileManager) {
+        if (fileManager.getFileMime() == null) {
+            return null;
+        }
+        return getImageDtoBy(fileManager.getFileMime().getName(), fileManager.getFilePath(), fileManager.isUseThumbnail());
+    }
+
+    @Override
     public Optional<ImageDto> findImageDtoBy(FileManager fileManager) {
         if (fileManager == null) {
             return Optional.empty();
         }
-        return Optional.of(getImageDtoBy(fileManager.getFileMime().getName(), fileManager.getFilePath()));
+        return Optional.of(getImageDtoBy(fileManager.getFileMime().getName(), fileManager.getFilePath(), fileManager.isUseThumbnail()));
     }
 
     private FileManagerDto setVoToDto(FileManagerDto vo) {
@@ -198,7 +223,8 @@ public class FileManagerServiceImpl implements FileManagerService {
             thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), vo.getFileThumbnailPath(), null);
         } else if (fileMimeType.equals(FileMimeType.IMAGE)) {
             String tnPath = FileUtil.generateThumbnailName(vo.getFilePath(), appProperties.getUploadImage().getThumbnailExname());
-            if (isFileExist(tnPath)) {
+//            if (isFileExist(tnPath)) {
+            if (vo.isUseThumbnail()) {
                 thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), tnPath, null);
             } else {
                 thumbnailPath = path;
@@ -277,11 +303,12 @@ public class FileManagerServiceImpl implements FileManagerService {
     }
 
     private void deleteFileFromPath(FileManager fileManager) {
-        String filePath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), fileManager.getFilePath());
+        String filePath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), fileManager.getFilePath(), false);
         try {
             Files.deleteIfExists(Path.of(filePath));
             if (fileManager.isImage()) {
-                String fileThumbnailPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname()));
+                String fileThumbnailPath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(),
+                        FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.getUploadImage().getThumbnailExname()), false);
                 Files.deleteIfExists(Path.of(fileThumbnailPath));
             }
             fileManager.setFilesDirectory(null);
@@ -295,9 +322,8 @@ public class FileManagerServiceImpl implements FileManagerService {
         if (AppUtil.isEmpty(path)) {
             return false;
         }
-        String filePath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), path);
         try {
-            return Files.exists(Path.of(filePath));
+            return Files.exists(Path.of(appProperties.getUploadPath() + path));
         } catch (Exception ignore) {
             return false;
         }

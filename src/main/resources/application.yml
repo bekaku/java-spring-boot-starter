@@ -263,7 +263,8 @@ management:
       show-details: always
     web:
       exposure:
-        include: health,metrics,prometheus,info,startup
+        include: health,prometheus,info
+#        include: health,metrics,prometheus,info,startup
   metrics:
     enable:
       hikari: true

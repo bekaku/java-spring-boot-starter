@@ -141,8 +141,10 @@ public class FileUtil {
         return ConstantData.MEDIAS + ConstantData.BACK_SLACK + DateUtil.getLocalDateByForMat(DateUtil.getLocalDateNow(), DateUtil.CDN_YEAR_MONTH_FORMAT) + ConstantData.BACK_SLACK;
     }
 
-    public static String getDirectoryForUpload(String cdnUploadPath, String directory) {
-        getAndCheckUploadPath(cdnUploadPath + directory);
+    public static String getDirectoryForUpload(String cdnUploadPath, String directory, boolean createFolderIfNotExist) {
+        if(createFolderIfNotExist){
+            getAndCheckUploadPath(cdnUploadPath + directory);
+        }
         return cdnUploadPath + directory;
     }
 
@@ -159,12 +161,18 @@ public class FileUtil {
         return ImageIO.read(inputStream);
     }
 
-    public static String generateThumbnailName(String fileName, String thumPostFixName) {
-       /* String[] splitName = fileName.split("\\.");
-        if(splitName.length==2){
-            return fileName.replace("."+splitName[1], thumPostFixName + "."+splitName[1]);
-        }*/
-        return fileName.replace(".jpg", thumPostFixName + ".jpg");
+    public static String generateThumbnailName(String fileName, String thumbPostFixName) {
+        int lastDotIndex = fileName.lastIndexOf('.');
+
+        // No extension found → just append postfix
+        if (lastDotIndex == -1) {
+            return fileName + thumbPostFixName;
+        }
+
+        String namePart = fileName.substring(0, lastDotIndex);
+        String extPart  = fileName.substring(lastDotIndex); // includes the dot
+
+        return namePart + thumbPostFixName + extPart;
     }
 
     public static BufferedImage correctOrientation(BufferedImage image, File file) throws IOException {
