@@ -1,11 +1,11 @@
 package com.bekaku.api.spring;
 
 
-import com.bekaku.api.spring.repository.AppUserRepository;
+import com.bekaku.api.spring.service.AppUserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -16,8 +16,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AppUserServiceTest {
 
-    @Mock
-    private AppUserRepository userRepo;
+    @MockitoBean
+    private AppUserService appUserService;
 
 //    @InjectMocks
 //    private UserService userService;
@@ -26,9 +26,9 @@ class AppUserServiceTest {
     void shouldThrowExceptionWhenUserNotFound() {
         // Arrange
         Long userId = 1542L;
-        when(userRepo.findById(userId)).thenReturn(Optional.empty());
+        when(appUserService.findById(userId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(NoSuchElementException.class, () -> userRepo.findById(userId));
+        assertThrows(NoSuchElementException.class, () -> appUserService.findById(userId));
     }
 }

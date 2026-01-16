@@ -1,7 +1,7 @@
 package com.bekaku.api.spring.configuration;
 
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
+import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;

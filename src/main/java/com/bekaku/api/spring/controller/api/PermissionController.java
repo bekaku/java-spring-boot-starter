@@ -8,14 +8,16 @@ import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
@@ -24,10 +26,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +55,9 @@ public class PermissionController extends BaseApiController {
 
     @Value("classpath:/acl.json")
     private Resource jsonAcl;
+    // Gson instance for conversions
+    private final Gson gson = new Gson();
+
 
     @PreAuthorize("@permissionChecker.hasPermission('permission_list')")
     @GetMapping("/findAllLikeByCode")
@@ -163,76 +177,71 @@ public class PermissionController extends BaseApiController {
             throw this.responseErrorNotfound();
         }
         List<String> userPermissions = permissionService.findAllPermissionCodeByUserId(userAuthen.getId());
-        JSONArray filterMenus = new JSONArray();
+        JsonArray filterMenus = new JsonArray();
+
         if (getMenuList) {
-            JSONArray rawNavMenus = getJsonFromResource(jsonAcl);
+            JsonArray rawNavMenus = getJsonFromResource(jsonAcl);
             filterMenus = checkAclPermisison(rawNavMenus, userPermissions);
         }
 
-        JSONArray finalFilterMenus = filterMenus;
+        // Convert Gson JsonArray to standard Java List for correct serialization by Spring/Jackson
+        List<Object> finalFilterMenusList = gson.fromJson(filterMenus, List.class);
+
         return this.responseEntity(new HashMap<String, Object>() {{
-            put("menus", finalFilterMenus);
+            put("menus", finalFilterMenusList);
             put("permissions", userPermissions);
         }}, HttpStatus.OK);
     }
 
-    //    @SuppressWarnings("unchecked")
-    private JSONArray checkAclPermisison(JSONArray aclList, List<String> userPermissions) {
-        JSONArray aclFinal = new JSONArray();
-        JSONObject menu;
-        for (Object o : aclList) {
-            //Level 1
-            menu = new JSONObject();
-            JSONObject menuLevel1 = (JSONObject) o;
+    private JsonArray checkAclPermisison(JsonArray aclList, List<String> userPermissions) {
+        JsonArray aclFinal = new JsonArray();
+        JsonObject menu;
+
+        // Loop through JsonArray elements
+        for (JsonElement o : aclList) {
+            // Level 1
+            menu = new JsonObject();
+            JsonObject menuLevel1 = o.getAsJsonObject();
+
             if (menuLevel1 != null) {
-                if (menuLevel1.containsKey("header")) {
-                    menu.put("header", menuLevel1.get("header"));
-                }
-                if (menuLevel1.containsKey("border")) {
-                    menu.put("border", menuLevel1.get("border"));
-                }
-                //child pages
-                if (menuLevel1.containsKey("pages")) {
-                    JSONArray pages = (JSONArray) menuLevel1.get("pages");
-                    JSONArray filterPages = new JSONArray();
+                // Copy properties if they exist
+                copyProperty(menuLevel1, menu, "header");
+                copyProperty(menuLevel1, menu, "border");
+
+                // Child pages
+                if (menuLevel1.has("pages")) {
+                    JsonArray pages = menuLevel1.getAsJsonArray("pages");
+                    JsonArray filterPages = new JsonArray();
+
                     if (pages != null && !pages.isEmpty()) {
-                        for (Object page : pages) {
-                            JSONObject p = (JSONObject) page;
+                        for (JsonElement page : pages) {
+                            JsonObject p = page.getAsJsonObject();
                             if (p != null) {
-                                //if have child pages
-                                if (p.containsKey("items")) {
-                                    JSONArray pageItems = (JSONArray) p.get("items");
+                                // If have child items
+                                if (p.has("items")) {
+                                    JsonArray pageItems = p.getAsJsonArray("items");
                                     if (!pageItems.isEmpty()) {
-                                        JSONArray childs = getJsonArray(userPermissions, pageItems);
+                                        JsonArray childs = getJsonArray(userPermissions, pageItems);
                                         if (!childs.isEmpty()) {
-                                            JSONObject menuHaveChild = new JSONObject();
-                                            if (p.containsKey("title")) {
-                                                menuHaveChild.put("title", p.get("title"));
-                                            }
-                                            if (p.containsKey("icon")) {
-                                                menuHaveChild.put("icon", p.get("icon"));
-                                            }
-                                            if (p.containsKey("color")) {
-                                                menuHaveChild.put("color", p.get("color"));
-                                            }
-                                            if (p.containsKey("iconText")) {
-                                                menuHaveChild.put("iconText", p.get("iconText"));
-                                            }
-                                            if (p.containsKey("noActiveLink")) {
-                                                menuHaveChild.put("noActiveLink", p.get("noActiveLink"));
-                                            }
-                                            if (p.containsKey("to")) {
-                                                menuHaveChild.put("to", p.get("to"));
-                                            }
-                                            if (p.containsKey("border")) {
-                                                menuHaveChild.put("border", p.get("border"));
-                                            }
-                                            menuHaveChild.put("items", childs);
+                                            JsonObject menuHaveChild = new JsonObject();
+                                            copyProperty(p, menuHaveChild, "title");
+                                            copyProperty(p, menuHaveChild, "icon");
+                                            copyProperty(p, menuHaveChild, "color");
+                                            copyProperty(p, menuHaveChild, "iconText");
+                                            copyProperty(p, menuHaveChild, "noActiveLink");
+                                            copyProperty(p, menuHaveChild, "to");
+                                            copyProperty(p, menuHaveChild, "border");
+
+                                            menuHaveChild.add("items", childs);
                                             filterPages.add(menuHaveChild);
                                         }
                                     }
                                 } else {
-                                    String permission = p.containsKey("permission") ? (String) p.get("permission") : null;
+                                    // Check permission for single item
+                                    String permission = (p.has("permission") && !p.get("permission").isJsonNull())
+                                            ? p.get("permission").getAsString()
+                                            : null;
+
                                     boolean isPermised = permission == null || userPermissions.contains(permission);
                                     if (isPermised) {
                                         filterPages.add(p);
@@ -241,10 +250,12 @@ public class PermissionController extends BaseApiController {
                             }
                         }
                     }
-                    menu.put("pages", filterPages);
+                    menu.add("pages", filterPages);
                 }
-                if (menu.containsKey("pages")) {
-                    JSONArray pages = (JSONArray) menu.get("pages");
+
+                // Only add menu if it has pages
+                if (menu.has("pages")) {
+                    JsonArray pages = menu.getAsJsonArray("pages");
                     if (!pages.isEmpty()) {
                         aclFinal.add(menu);
                     }
@@ -255,12 +266,15 @@ public class PermissionController extends BaseApiController {
         return aclFinal;
     }
 
-    private static @NotNull JSONArray getJsonArray(List<String> userPermissions, JSONArray pageItems) {
-        JSONArray childs = new JSONArray();
-        for (Object pageItem : pageItems) {
-            JSONObject item = (JSONObject) pageItem;
+    private static @NotNull JsonArray getJsonArray(List<String> userPermissions, JsonArray pageItems) {
+        JsonArray childs = new JsonArray();
+        for (JsonElement pageItem : pageItems) {
+            JsonObject item = pageItem.getAsJsonObject();
             if (item != null) {
-                String permission = item.containsKey("permission") ? (String) item.get("permission") : null;
+                String permission = (item.has("permission") && !item.get("permission").isJsonNull())
+                        ? item.get("permission").getAsString()
+                        : null;
+
                 boolean isPermised = permission == null || userPermissions.contains(permission);
                 if (isPermised) {
                     childs.add(item);
@@ -270,21 +284,24 @@ public class PermissionController extends BaseApiController {
         return childs;
     }
 
-    private JSONArray getJsonFromResource(Resource resource) {
-        JSONArray jsonArray;
-        try {
-//            File file = resource.getFile();
-            InputStream file = resource.getInputStream();
-            String content = new String(file.readAllBytes(), StandardCharsets.UTF_8);
-//            String content = new String(Files.readAllBytes(file.toPath()));
-            JSONParser parser = new JSONParser();
-            Object object = parser.parse(content);
-            jsonArray = (JSONArray) object;
-        } catch (ParseException | IOException e) {
+    // Helper to reduce repetitive code
+    private void copyProperty(JsonObject source, JsonObject target, String key) {
+        if (source.has(key)) {
+            target.add(key, source.get(key));
+        }
+    }
+
+    private JsonArray getJsonFromResource(Resource resource) {
+        try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+            // Gson parser - much cleaner than reading bytes manually
+            JsonElement element = JsonParser.parseReader(reader);
+            if (element.isJsonArray()) {
+                return element.getAsJsonArray();
+            }
+            return new JsonArray(); // Fallback if root is not an array
+        } catch (JsonSyntaxException | IOException e) {
             throw this.responseError(HttpStatus.INTERNAL_SERVER_ERROR, i18n.getMessage("error.error"), e.getMessage());
         }
-
-        return jsonArray;
     }
 
 }

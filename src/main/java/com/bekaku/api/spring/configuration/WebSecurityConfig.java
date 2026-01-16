@@ -96,6 +96,8 @@ public class WebSecurityConfig {
                         requests.requestMatchers("/test/**",
                                 "/dev/development/**",
                                 "/welcome",
+                                "/swagger-ui/**",
+                                "/api-docs/**",
                                 "/theymeleaf").permitAll();
                     }
 //                    requests.anyRequest().authenticated();

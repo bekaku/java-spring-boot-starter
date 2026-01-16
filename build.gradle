@@ -1,17 +1,15 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.4'
+    id 'org.springframework.boot' version '4.0.1'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
-//    id 'org.graalvm.buildtools.native' version '0.11.0'
-//    id 'war'
 }
 
 group = 'com.bekaku.api.spring'
 version = '1.0.0'
 java {
-    sourceCompatibility = '21'
+    sourceCompatibility = '25'
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -24,9 +22,13 @@ configurations {
         extendsFrom developmentOnly
     }
     configureEach {
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
-        exclude group: 'commons-logging', module: 'commons-logging'
+//        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+//        exclude group: 'commons-logging', module: 'commons-logging'
 //        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+        exclude group: "org.apache.logging.log4j", module: "log4j-to-slf4j"
+        exclude group: "ch.qos.logback", module: "logback-classic"
+        exclude group: "ch.qos.logback", module: "logback-core"
+
     }
 }
 repositories {
@@ -39,73 +41,77 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-//    implementation('org.springframework.boot:spring-boot-starter-web') {
-//        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-//    }
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 //    implementation 'org.springframework.boot:spring-boot-starter-undertow'
 
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-logging'
-    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+//    implementation 'org.springframework.boot:spring-boot-starter-logging'
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+    implementation 'org.springframework:spring-jcl:6.2.15'
 
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
-    implementation 'commons-validator:commons-validator:1.10.0'
+    implementation 'commons-validator:commons-validator:1.10.1'
 
 //    implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'io.micrometer:micrometer-registry-prometheus:1.15.1'
+//    implementation 'io.micrometer:micrometer-registry-prometheus:1.17.0-M1'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
-    // bug whith springboot version 3.2.0 to be develop by mybatis dev
-    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
 
-//    implementation 'org.jetbrains:annotations:26.0.2'
 //    Databases
-    runtimeOnly 'org.postgresql:postgresql'
-    implementation 'com.mysql:mysql-connector-j:9.4.0'
-    implementation 'com.zaxxer:HikariCP:7.0.0'
-    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6',
-            'io.jsonwebtoken:jjwt-orgjson:0.12.6'
+    // Progres
+    runtimeOnly 'org.postgresql:postgresql:42.7.9'
+    // MySql
+//    implementation 'com.mysql:mysql-connector-j:9.5.0'
+    implementation 'com.zaxxer:HikariCP:7.0.2'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1'
 
-    implementation 'com.google.code.gson:gson:2.13.1'
-    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+//    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
-    implementation 'joda-time:joda-time:2.14.0'
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0',
+            'io.jsonwebtoken:jjwt-orgjson:0.13.0'
 
-    compileOnly 'org.projectlombok:lombok:1.18.38'
-    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    implementation 'com.google.code.gson:gson:2.13.2'
+//    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
+//    implementation 'joda-time:joda-time:2.14.0'
+
+    compileOnly 'org.projectlombok:lombok:1.18.42'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
 
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
     //Image
-    implementation 'net.coobird:thumbnailator:0.4.20'
+    implementation 'net.coobird:thumbnailator:0.4.21'
     implementation 'com.drewnoakes:metadata-extractor:2.19.0'
-    implementation 'org.apache.tika:tika-core:3.2.1'
-    implementation 'org.apache.tika:tika-parsers-standard:3.2.1'
-    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.12.0'
+    implementation 'org.apache.tika:tika-core:3.2.3'
+    implementation 'org.apache.tika:tika-parsers-standard:3.2.3'
+    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.13.0'
 
-    implementation 'org.apache.poi:poi-ooxml:5.4.1'
+    // Report
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     implementation 'com.github.f4b6a3:uuid-creator:6.1.1'
 
 //    caching
-//    implementation group: 'javax.cache', name: 'cache-api', version: '1.1.1'
-//    implementation group: 'org.ehcache', name: 'ehcache', version: '3.10.8'
-    implementation 'javax.cache:cache-api:1.1.1'
-    implementation 'org.ehcache:ehcache:3.10.8'
-    implementation 'org.jsoup:jsoup:1.21.1'
-    implementation 'com.google.guava:guava:33.4.0-jre'
-    implementation 'com.google.firebase:firebase-admin:9.5.0'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+//    implementation 'javax.cache:cache-api:1.1.1'
+    implementation 'org.ehcache:ehcache:3.11.1'
 
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+    //Google Service
+    implementation 'com.google.guava:guava:33.5.0-jre'
+    implementation 'com.google.firebase:firebase-admin:9.7.0'
+
+    implementation 'org.jsoup:jsoup:1.22.1'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
@@ -113,8 +119,8 @@ dependencies {
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.projectlombok:lombok:1.18.30'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.4'
+    testImplementation 'org.projectlombok:lombok:1.18.42'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.1.0-M1'
 }
 
 tasks.named('test') {
@@ -123,6 +129,7 @@ tasks.named('test') {
 tasks.named('bootBuildImage') {
     builder = 'paketobuildpacks/builder-jammy-base:latest'
 }
+/*
 tasks.register('runGenerateSrc') {
     def url = 'http://localhost:8080/dev/development/generateSrc'
     def body = '{}'
@@ -134,6 +141,8 @@ tasks.register('runGenerateSrc') {
     def jsonstr = proc.in.text
     println jsonstr
 }
+ */
+
 tasks.register('runDev') {
     dependsOn 'bootRun'
     bootRun.systemProperty('spring.profiles.active', 'dev')
