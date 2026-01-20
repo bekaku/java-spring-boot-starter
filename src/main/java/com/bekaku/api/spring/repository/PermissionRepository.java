@@ -20,6 +20,18 @@ import java.util.Optional;
 @Repository
 public interface PermissionRepository extends BaseRepository<Permission, Long>, JpaSpecificationExecutor<Permission> {
 
+    /*
+        @Query("""
+            SELECT new com.bekaku.api.spring.dto.ProvinceDto(
+                p.id,
+                p.name,
+                p.nameEn
+            )
+            FROM Province p
+            WHERE p.id = ?1
+            """)
+    Optional<ProvinceDto> findDtoBy(Long id);
+     */
     Optional<Permission> findByCode(String code);
 
 //    List<Permission> findAllByModule(String module);
