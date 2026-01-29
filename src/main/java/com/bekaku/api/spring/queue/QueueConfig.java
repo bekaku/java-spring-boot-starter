@@ -1,12 +1,14 @@
 package com.bekaku.api.spring.queue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -45,14 +47,17 @@ public class QueueConfig {
         return new Queue(QUEUE_SEND_NOTIFY, NON_DURABLE);
     }
 
+    @Bean
     public Queue appQueueScheduleCalculateDe() {
         return new Queue(QUEUE_SHEDULE_CALCULATE_DE, NON_DURABLE);
     }
 
+    @Bean
     public Queue appQueueScheduleCalculateUserLevel() {
         return new Queue(QUEUE_SHEDULE_CALCULATE_USER_LEVEL, NON_DURABLE);
     }
 
+    @Bean
     public Queue appQueueRewardTradeProcess() {
         return new Queue(QUEUE_REWARD_TRADE_PROCESS, NON_DURABLE);
     }
@@ -73,27 +78,50 @@ public class QueueConfig {
 //    }
 
     @Bean
-    List<Binding> bindings() {
+    public List<Binding> bindings(
+            TopicExchange exchange,
+            Queue appQueueGeneric,
+            Queue appQueueCalculateScore,
+            Queue appQueueSendNotify,
+            Queue appQueueScheduleCalculateDe,
+            Queue appQueueScheduleCalculateUserLevel,
+            Queue appQueueRewardTradeProcess
+    ) {
         return Arrays.asList(
-                BindingBuilder.bind(appQueueGeneric()).to(appExchange()).with(ROUTING_KEY),
-                BindingBuilder.bind(appQueueCalculateScore()).to(appExchange()).with(ROUTING_KEY),
-                BindingBuilder.bind(appQueueSendNotify()).to(appExchange()).with(ROUTING_KEY),
-                BindingBuilder.bind(appQueueScheduleCalculateDe()).to(appExchange()).with(ROUTING_KEY),
-                BindingBuilder.bind(appQueueScheduleCalculateUserLevel()).to(appExchange()).with(ROUTING_KEY),
-                BindingBuilder.bind(appQueueRewardTradeProcess()).to(appExchange()).with(ROUTING_KEY)
+                BindingBuilder.bind(appQueueGeneric).to(exchange).with(ROUTING_KEY),
+                BindingBuilder.bind(appQueueCalculateScore).to(exchange).with(ROUTING_KEY),
+                BindingBuilder.bind(appQueueSendNotify).to(exchange).with(ROUTING_KEY),
+                BindingBuilder.bind(appQueueScheduleCalculateDe).to(exchange).with(ROUTING_KEY),
+                BindingBuilder.bind(appQueueScheduleCalculateUserLevel).to(exchange).with(ROUTING_KEY),
+                BindingBuilder.bind(appQueueRewardTradeProcess).to(exchange).with(ROUTING_KEY)
         );
     }
 
     // You can comment the two methods below to use the default serialization / deserialization (instead of JSON)
     @Bean
-    public RabbitTemplate rabbitTemplate(final ConnectionFactory connectionFactory) {
-        final var rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(producerJackson2MessageConverter());
+    public RabbitTemplate rabbitTemplate(
+            ConnectionFactory connectionFactory,
+            JacksonJsonMessageConverter messageConverter
+    ) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(messageConverter);
         return rabbitTemplate;
     }
 
     @Bean
-    public Jackson2JsonMessageConverter producerJackson2MessageConverter() {
-        return new Jackson2JsonMessageConverter();
+    public JacksonJsonMessageConverter jacksonMessageConverter() {
+        return new JacksonJsonMessageConverter();
+    }
+
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+            ConnectionFactory connectionFactory,
+            JacksonJsonMessageConverter messageConverter
+    ) {
+        SimpleRabbitListenerContainerFactory factory =
+                new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setMessageConverter(messageConverter);
+        return factory;
     }
 }

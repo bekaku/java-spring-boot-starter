@@ -45,7 +45,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             "/actuator/**",
             "/test/**",
             "/welcome",
-            "/theymeleaf"
+            "/theymeleaf",
+            "/api-docs/**",
+            "/swagger-ui/**"
     );
     private static final List<String> STREAMING_ENDPOINTS = Arrays.asList(
             "/api/fileManager/files/stream",
