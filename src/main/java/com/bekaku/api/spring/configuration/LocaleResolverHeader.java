@@ -37,8 +37,12 @@ public class LocaleResolverHeader {
 //        localeResolver.setDefaultLocale(new Locale(defaultLocale));
 
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
-        localeResolver.setDefaultLocale(new Locale(defaultLocale));
+        // Set your supported locales so the resolver knows what it's allowed to pick
+        localeResolver.setSupportedLocales(Arrays.asList(new Locale("en"), new Locale("th")));
+//        localeResolver.setDefaultLocale(new Locale(defaultLocale));
 
+        // Ensure defaultLocale isn't null/empty from properties
+        localeResolver.setDefaultLocale(new Locale(defaultLocale != null ? defaultLocale : "en"));
         //Cookie
 //        CookieLocaleResolver localeResolver = new CookieLocaleResolver();
 //        localeResolver.setDefaultLocale(new Locale(defaultLocale));
