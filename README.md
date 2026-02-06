@@ -55,7 +55,7 @@ This starter template provides a robust foundation for Java-based REST API devel
 
 | Category | Technology |
 |----------|------------|
-| **Framework** | Spring Boot 3.x |
+| **Framework** | Spring Boot 4.x |
 | **Build Tool** | Gradle 8.x |
 | **Language** | Java 17+ |
 | **Database** | H2, MySQL 8+, PostgreSQL |
