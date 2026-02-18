@@ -13,8 +13,14 @@ spring:
     active: dev
   #    active: localdocker
   jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Bangkok
     deserialization:
       UNWRAP_ROOT_VALUE: true
+      FAIL_ON_UNKNOWN_PROPERTIES: false
+      FAIL_ON_NULL_FOR_PRIMITIVES: false
   transaction:
     default-timeout: 30
   jpa:
@@ -141,7 +147,9 @@ spring:
     password: 'pwd'
     listener:
       simple:
-        concurrency: 1
+        concurrency: 3
+        max-concurrency: 10
+        prefetch: 10
         retry:
           enabled: true
           initial-interval: 5000
@@ -254,6 +262,7 @@ mybatis:
     default-statement-timeout: 3000
     map-underscore-to-camel-case: true
     use-generated-keys: true
+
 springdoc:
   swagger-ui:
     enabled: false

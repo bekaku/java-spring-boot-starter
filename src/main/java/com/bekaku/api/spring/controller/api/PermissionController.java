@@ -172,7 +172,7 @@ public class PermissionController extends BaseApiController {
 
     @GetMapping("/userAcl")
     public ResponseEntity<Object> userAcl(@AuthenticationPrincipal AppUserDto userAuthen,
-                                          @RequestParam(value = "getMenuList", required = false, defaultValue = "1") boolean getMenuList) {
+                                          @RequestParam(value = "getMenuList", required = false, defaultValue = "0") boolean getMenuList) {
         if (userAuthen == null) {
             throw this.responseErrorNotfound();
         }

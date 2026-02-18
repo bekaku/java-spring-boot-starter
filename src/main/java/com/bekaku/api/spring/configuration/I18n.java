@@ -50,7 +50,8 @@ public class I18n {
         try {
             return accessor.getMessage(code, args, LocaleContextHolder.getLocale());
         } catch (Exception e) {
-            return null;
+//            return null;
+            return "???" + code + "???";
         }
     }
 
