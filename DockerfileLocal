@@ -1,5 +1,5 @@
 # Use a lightweight JDK image
-FROM eclipse-temurin:21-jdk-alpine
+FROM eclipse-temurin:25-jdk-alpine
 
 # Set environment variables
 ENV TZ=Asia/Bangkok \
