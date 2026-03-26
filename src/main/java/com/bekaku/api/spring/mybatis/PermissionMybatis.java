@@ -9,10 +9,5 @@ import java.util.List;
 
 @Mapper
 public interface PermissionMybatis {
-    /**
-     *
-     * @param page
-     * Pa
-     */
     List<Permission> findAllWithPaging(@Param("page") Paging page);
 }
