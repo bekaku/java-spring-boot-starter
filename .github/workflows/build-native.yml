@@ -1,0 +1,42 @@
+name: Build GraalVM Native Image
+
+# กำหนดว่าจะให้ทำงานตอนไหน (เช่น ตอน Push โค้ดเข้า branch main)
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: # อนุญาตให้กดสั่งรันแบบ Manual ได้บนหน้าเว็บ GitHub
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest # ใช้ Ubuntu runner ของ GitHub (เร็วและฟรี)
+
+    steps:
+      # 1. ดึง Source Code ล่าสุด
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. ติดตั้ง Docker Buildx (จำเป็นสำหรับการใช้ --mount=type=cache ใน Dockerfile)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 3. Build Docker Image
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./DockerfileNative
+          push: true # เปลี่ยนเป็น true ถ้าต้องการ Push ขึ้น Registry (เช่น Docker Hub)
+          tags: |
+            baekaku/spring-api-native:latest
+            baekaku/spring-api-native:${{ github.sha }}
+          # 4. เวทมนตร์จัดการ Cache! ให้ GitHub เก็บ Cache ของ Gradle และ GraalVM ไว้ข้ามรอบการ Build
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -8,7 +8,7 @@
 //import org.springframework.kafka.core.ConsumerFactory;
 //import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 //
-//@Configuration
+//@Configuration(proxyBeanMethods = false)
 //public class KafkaConsumerConfig {
 //
 //    @Bean(name = "group1ConsumerFactory")

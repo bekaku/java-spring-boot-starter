@@ -6,7 +6,7 @@ Remove-Item -Path ".\build\spring-api-service.tar" -ErrorAction SilentlyContinue
 docker rmi spring-api-service:latest
 
 # Build the Spring Boot JAR file.
-.\gradlew bootJar
+#.\gradlew bootJar
 
 # Build the new Docker image using the specified Dockerfile.
 docker image build --no-cache -t spring-api-service:latest -f DockerfileLocal .

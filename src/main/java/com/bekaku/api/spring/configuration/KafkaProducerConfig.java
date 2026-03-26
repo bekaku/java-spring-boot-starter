@@ -13,7 +13,7 @@
 //import java.util.HashMap;
 //import java.util.Map;
 //
-//@Configuration
+//@Configuration(proxyBeanMethods = false)
 //public class KafkaProducerConfig {
 //
 //    @Value("${spring.kafka.bootstrap-servers}")
@@ -29,7 +29,7 @@
 //    }
 //
 //    @Bean
-//    public KafkaTemplate<String, Object> kafkaTemplate() {
-//        return new KafkaTemplate<>(producerFactory());
+//    public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
+//        return new KafkaTemplate<>(producerFactory);
 //    }
 //}

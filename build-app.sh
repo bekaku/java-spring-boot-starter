@@ -3,7 +3,7 @@ rm ./build/libs/api-service-1.0.0.jar
 rm ./build/spring-api-service.tar
 
 docker rmi spring-api-service:latest
-./gradlew bootJar
+#./gradlew bootJar
 
 docker image build --no-cache -t spring-api-service:latest .
 

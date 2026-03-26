@@ -2,6 +2,7 @@ package com.bekaku.api.spring.queue;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Declarables;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
@@ -14,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.Arrays;
 import java.util.List;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class QueueConfig {
     public static final String EXCHANGE_NAME = "com.bekaku.api.spring";
     public static final String QUEUE_GENERIC_NAME = "com.bekaku.api.spring.generic";
@@ -77,7 +78,7 @@ public class QueueConfig {
 //    }
 
     @Bean
-    public List<Binding> bindings(
+    public Declarables bindings(
             TopicExchange exchange,
             Queue appQueueGeneric,
             Queue appQueueCalculateScore,
@@ -86,7 +87,7 @@ public class QueueConfig {
             Queue appQueueScheduleCalculateUserLevel,
             Queue appQueueRewardTradeProcess
     ) {
-        return Arrays.asList(
+        return new Declarables(
                 BindingBuilder.bind(appQueueGeneric).to(exchange).with(ROUTING_KEY),
                 BindingBuilder.bind(appQueueCalculateScore).to(exchange).with(ROUTING_KEY),
                 BindingBuilder.bind(appQueueSendNotify).to(exchange).with(ROUTING_KEY),

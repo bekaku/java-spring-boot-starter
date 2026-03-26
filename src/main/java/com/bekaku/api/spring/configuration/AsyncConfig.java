@@ -8,7 +8,7 @@ import java.util.concurrent.Executor;
 
 import static com.bekaku.api.spring.util.ConstantData.ASYNC_TASK_NAME;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class AsyncConfig {
     @Bean(name = ASYNC_TASK_NAME)
     public Executor asyncExecutor() {

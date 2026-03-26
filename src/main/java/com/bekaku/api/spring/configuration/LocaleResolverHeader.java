@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class LocaleResolverHeader {
     @Value("${spring.mvc.locale}")
     String defaultLocale;
@@ -68,9 +68,9 @@ public class LocaleResolverHeader {
     }
 
     @Bean
-    public LocalValidatorFactoryBean getValidator() {
+    public LocalValidatorFactoryBean getValidator(MessageSource messageSource) {
         LocalValidatorFactoryBean bean = new LocalValidatorFactoryBean();
-        bean.setValidationMessageSource(messageSource());
+        bean.setValidationMessageSource(messageSource);
         return bean;
     }
 }

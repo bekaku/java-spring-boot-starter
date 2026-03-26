@@ -9,7 +9,7 @@ import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class CacheConfig {
     @Bean
     public org.springframework.cache.CacheManager cacheManager() {

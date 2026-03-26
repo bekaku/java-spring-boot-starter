@@ -1,42 +1,58 @@
 package com.bekaku.api.spring.properties;
 
 import com.bekaku.api.spring.util.ConstantData;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Getter
-@Setter
-@Configuration
 @ConfigurationProperties(prefix = "app")
-public class AppProperties {
-    private String testProp;
-    private String version;
-    private MailConfig mailConfig;//app.mail-config
-    private UploadImageConfig uploadImage;//app.upload-image
-    private List<String> defaultRecipients;//app.default-recipients
-    private Map<String, String> additionalHeaders;//app.additional-headers
-    private List<MenuConfig> menus = new ArrayList<>();//app.menus
-    private JwtProperties jwt;
-    private QueueConfig queue;
-    private String cdnPath;
-    private String cdnPathAlias;
-    private String url;
-    private String port;
-    private String cdnUrl;
-    private String cdnPort;
-    private List<String> allowMimes;//app.allow-mimes
+public record AppProperties(
+        String testProp,
+        String version,
+        MailConfig mailConfig,          // app.mail-config
+        UploadImageConfig uploadImage,  // app.upload-image
+        List<String> defaultRecipients, // app.default-recipients
+        Map<String, String> additionalHeaders, // app.additional-headers
+        List<MenuConfig> menus,         // app.menus
+        JwtProperties jwt,
+        QueueConfig queue,
+        String cdnPath,
+        String cdnPathAlias,
+        String url,
+        String port,
+        String cdnUrl,
+        String cdnPort,
+        List<String> allowMimes         // app.allow-mimes
+) {
 
+    // 2. วิธีจัดการกับ Default Value (แทนที่ = new ArrayList<>())
+    // เราใช้ Compact Constructor เพื่อเช็กว่าถ้า Spring ไม่ได้ Bind ค่ามาให้ ให้เป็น List ว่าง
+    public AppProperties {
+        if (menus == null) {
+            menus = List.of(); // หรือจะใช้ new java.util.ArrayList<>() ก็ได้ครับ
+        }
+        if (defaultRecipients == null) {
+            defaultRecipients = List.of();
+        }
+        if (allowMimes == null) {
+            allowMimes = List.of();
+        }
+    }
+
+    // 3. Custom Methods สามารถเขียนไว้ข้างใน Body ได้เลย
+    // สังเกตว่าเราเลิกใช้ getCdnPath() แล้วเปลี่ยนมาเรียกชื่อตัวแปร cdnPath ตรงๆ ได้เลย
     public String getUploadPath() {
-        return getCdnPath().replace("file:///", "");
+        if (cdnPath == null) return ""; // ดัก Null ไว้หน่อยเพื่อความปลอดภัยครับ
+        return cdnPath.replace("file:///", "");
     }
 
     public String getCdnForPublic() {
-        return getCdnUrl() + (getCdnPort().equalsIgnoreCase("80") || getCdnPort().equalsIgnoreCase("443") ? "" : ConstantData.COLON + getCdnPort()) + ConstantData.BACK_SLACK + getCdnPathAlias();
+        if (cdnUrl == null || cdnPort == null || cdnPathAlias == null) return "";
+
+        return cdnUrl +
+                (cdnPort.equalsIgnoreCase("80") || cdnPort.equalsIgnoreCase("443") ? "" : ConstantData.COLON + cdnPort) +
+                ConstantData.BACK_SLACK +
+                cdnPathAlias;
     }
 }

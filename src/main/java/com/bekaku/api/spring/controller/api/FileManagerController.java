@@ -311,7 +311,7 @@ public class FileManagerController extends BaseApiController {
                     thumbnailatorResize(uploadPath, dto.getChunkFilename());
                 }
                 //create thumbnail
-                if (appProperties.getUploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
+                if (appProperties.uploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
                     useThumbnail=true;
                     thumbnailatorCreateThumnail(uploadPath, dto.getChunkFilename());
                 }
@@ -461,7 +461,7 @@ public class FileManagerController extends BaseApiController {
     }
 
     private void validateAllowMemeType(String mimeType) {
-        if (AppUtil.isEmpty(mimeType) || !appProperties.getAllowMimes().contains(mimeType)) {
+        if (AppUtil.isEmpty(mimeType) || !appProperties.allowMimes().contains(mimeType)) {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, i18n.getMessage("error.fileMimeNotAllow"));
         }
     }
@@ -496,7 +496,7 @@ public class FileManagerController extends BaseApiController {
                 thumbnailatorResize(uploadPath, newName);
             }
             //create thumbnail
-            if (appProperties.getUploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
+            if (appProperties.uploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
                 thumbnailatorCreateThumnail(uploadPath, newName);
             }
         }
@@ -554,7 +554,7 @@ public class FileManagerController extends BaseApiController {
 
                     //get width and height of image
                     if (canResize(originalImage)) {
-                        BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getLimitWidth(), appProperties.getUploadImage().getLimitHeight(), 1);
+                        BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.uploadImage().getLimitWidth(), appProperties.uploadImage().getLimitHeight(), 1);
                         ImageIO.write(outputImage, "jpg", new File(filePath));
                     }
                 }
@@ -567,9 +567,9 @@ public class FileManagerController extends BaseApiController {
     private boolean canResize(BufferedImage originalImage) {
         int imageWidth = originalImage.getWidth();
         int imageHeight = originalImage.getHeight();
-        int limitWidth = appProperties.getUploadImage().getLimitWidth();
-        int limitHeight = appProperties.getUploadImage().getLimitHeight();
-        int maxResolution = appProperties.getUploadImage().getMaxResolution();
+        int limitWidth = appProperties.uploadImage().getLimitWidth();
+        int limitHeight = appProperties.uploadImage().getLimitHeight();
+        int maxResolution = appProperties.uploadImage().getMaxResolution();
         return (imageWidth > limitWidth || imageHeight > limitHeight) && (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
@@ -579,16 +579,16 @@ public class FileManagerController extends BaseApiController {
         }
         long imageWidth = imageDto.getWidth();
         long imageHeight = imageDto.getHeight();
-        long limitWidth = appProperties.getUploadImage().getLimitWidth();
-        long limitHeight = appProperties.getUploadImage().getLimitHeight();
-        long maxResolution = appProperties.getUploadImage().getMaxResolution();
+        long limitWidth = appProperties.uploadImage().getLimitWidth();
+        long limitHeight = appProperties.uploadImage().getLimitHeight();
+        long maxResolution = appProperties.uploadImage().getMaxResolution();
         return (imageWidth > limitWidth || imageHeight > limitHeight) && (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
     private boolean canCreateThumnail(BufferedImage originalImage) {
         int imageWidth = originalImage.getWidth();
         int imageHeight = originalImage.getHeight();
-        int maxResolution = appProperties.getUploadImage().getMaxResolution();
+        int maxResolution = appProperties.uploadImage().getMaxResolution();
         return (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
@@ -598,7 +598,7 @@ public class FileManagerController extends BaseApiController {
         }
         long imageWidth = imageDto.getWidth();
         long imageHeight = imageDto.getHeight();
-        long maxResolution = appProperties.getUploadImage().getMaxResolution();
+        long maxResolution = appProperties.uploadImage().getMaxResolution();
         return (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
@@ -606,7 +606,7 @@ public class FileManagerController extends BaseApiController {
         String filePath = uploadFile + fileName;
         if (FileUtil.fileExists(filePath)) {
             try {
-                String thumbName = FileUtil.generateThumbnailName(fileName, appProperties.getUploadImage().getThumbnailExname());
+                String thumbName = FileUtil.generateThumbnailName(fileName, appProperties.uploadImage().getThumbnailExname());
                 String fileThumnailPath = uploadFile + thumbName;
 
                 File inputFile = new File(filePath);
@@ -614,7 +614,7 @@ public class FileManagerController extends BaseApiController {
                 if (originalImage != null) {
                     if (canCreateThumnail(originalImage)) {
                         originalImage = FileUtil.correctOrientation(originalImage, inputFile);
-                        BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.getUploadImage().getThumbnailWidth(), appProperties.getUploadImage().getThumbnailWidth(), 1);
+                        BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.uploadImage().getThumbnailWidth(), appProperties.uploadImage().getThumbnailWidth(), 1);
                         ImageIO.write(outputImage, "jpg", new File(fileThumnailPath));
                     }
                 }
@@ -940,7 +940,7 @@ public class FileManagerController extends BaseApiController {
                 int bytesRead;
 
                 // 3 MB/s throttling
-                RateLimiter rateLimiter = RateLimiter.create(appDefaultsProperties.getDataStreamLimit() * 1024 * 1024);
+                RateLimiter rateLimiter = RateLimiter.create(appDefaultsProperties.dataStreamLimit() * 1024 * 1024);
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
                     // Throttle download speed
                     rateLimiter.acquire(bytesRead);
@@ -1141,7 +1141,7 @@ public class FileManagerController extends BaseApiController {
                 byte[] buffer = new byte[(chunkSize > 0 && chunkSize <= 1024 * 1024) ? chunkSize : 8192];
                 long bytesRemaining = contentLength;
                 // Guava RateLimiter: 3 MB/s
-                RateLimiter rateLimiter = RateLimiter.create(appDefaultsProperties.getDataStreamLimit() * 1024 * 1024);
+                RateLimiter rateLimiter = RateLimiter.create(appDefaultsProperties.dataStreamLimit() * 1024 * 1024);
                 while (bytesRemaining > 0) {
                     int bytesToRead = (int) Math.min(buffer.length, bytesRemaining);
                     int bytesRead = raf.read(buffer, 0, bytesToRead);

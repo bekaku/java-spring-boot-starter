@@ -18,7 +18,12 @@ import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -269,7 +274,7 @@ public class AppUtil {
     }
 
     public static String getCookieByName(Cookie[] cookies, String name) {
-        if(cookies==null){
+        if (cookies == null) {
             return null;
         }
         for (Cookie c : cookies) {
@@ -277,11 +282,13 @@ public class AppUtil {
         }
         return null;
     }
+
     public static String getCookieByName(HttpServletRequest request, String targetCookieName) {
         return getCookieByName(request.getCookies(), targetCookieName);
     }
+
     public static List<String> getCookieRefreshJwtTokenAll(Cookie[] cookies, String targetCookieName) {
-        if(cookies==null){
+        if (cookies == null) {
             return new ArrayList<>();
         }
         return Arrays.stream(cookies)
@@ -289,6 +296,7 @@ public class AppUtil {
                 .map(Cookie::getValue)
                 .toList();
     }
+
     public static Optional<String> readCookie(Cookie[] cookies, String key) {
         if (cookies == null) {
             return Optional.empty();
@@ -308,10 +316,15 @@ public class AppUtil {
     }
 
     public static String generateRandomNumber(int length) {
-        Random random = new Random();
+//        Random random = new Random();
+//        StringBuilder sb = new StringBuilder(length);
+//        for (int i = 0; i < length; i++) {
+//            sb.append(random.nextInt(10)); // Appending random digits (0-9)
+//        }
+//        return sb.toString();
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            sb.append(random.nextInt(10)); // Appending random digits (0-9)
+            sb.append(ThreadLocalRandom.current().nextInt(10));
         }
         return sb.toString();
     }

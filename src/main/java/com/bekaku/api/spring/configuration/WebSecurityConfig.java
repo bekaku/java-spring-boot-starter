@@ -19,15 +19,16 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 
-@Configuration
-@EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
+@Configuration(proxyBeanMethods = false)
+//@EnableWebSecurity
+//@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
+//@EnableMethodSecurity
 public class WebSecurityConfig {
 
-    @Value("${app.cdn-path-alias}")
+    @Value("${app.cdn-path-alias:cdn}")
     String cdnPathAlias;
 
-    @Value("${environments.production}")
+    @Value("${environments.production:false}")
     boolean isProduction;
 
     @Bean
@@ -57,7 +58,7 @@ public class WebSecurityConfig {
 //    }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, JwtTokenFilter jwtTokenFilter) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
@@ -112,7 +113,7 @@ public class WebSecurityConfig {
 //                .httpBasic(Customizer.withDefaults())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }

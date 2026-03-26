@@ -86,8 +86,8 @@ public class AppUserController extends BaseApiController {
             throw this.responseErrorUnauthorized();
         }
 //        log.info("request.getCookies() :{}", (Object) request.getCookies());
-        String jwtRefreshTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.getRefreshTokenName() + UNDER_SCORE + currentUserId);
-        String jwtTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.getTokenName() + UNDER_SCORE + currentUserId);
+        String jwtRefreshTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.refreshTokenName() + UNDER_SCORE + currentUserId);
+        String jwtTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.tokenName() + UNDER_SCORE + currentUserId);
         log.info("jwtTokenCookie: {}, currentJwtRefreshTokenCookie :{}", jwtTokenCookie, jwtRefreshTokenCookie);
         AppUser user = appUserService.findAndValidateAppUserBy(userAuthen);
         AppUserDto dto = appUserService.convertEntityToDto(user);
@@ -109,7 +109,7 @@ public class AppUserController extends BaseApiController {
         if (apiClient.isEmpty()) {
             return new ArrayList<>();
         }
-        List<String> allJwtRefreshToken = AppUtil.getCookieRefreshJwtTokenAll(request.getCookies(), jwtProperties.getRefreshTokenName() + UNDER_SCORE);
+        List<String> allJwtRefreshToken = AppUtil.getCookieRefreshJwtTokenAll(request.getCookies(), jwtProperties.refreshTokenName() + UNDER_SCORE);
         log.info("allJwtRefreshToken :{}", allJwtRefreshToken);
         if (allJwtRefreshToken.isEmpty()) {
             return new ArrayList<>();

@@ -187,11 +187,11 @@ public class TestController extends BaseApiController {
     @GetMapping("/properties")
     public ResponseEntity<Object> testProperties() {
         return this.responseEntity(new HashMap<String, Object>() {{
-            put("normal-properties", appProperties != null ? appProperties.getVersion() : null);
-            put("object-properties", appProperties != null ? appProperties.getMailConfig() : null);
-            put("list-properties", appProperties != null ? appProperties.getDefaultRecipients() : null);
-            put("map-Properties", appProperties != null ? appProperties.getAdditionalHeaders() : null);
-            put("object-list-properties", appProperties != null ? appProperties.getMenus() : null);
+            put("normal-properties", appProperties != null ? appProperties.version() : null);
+            put("object-properties", appProperties != null ? appProperties.mailConfig() : null);
+            put("list-properties", appProperties != null ? appProperties.defaultRecipients() : null);
+            put("map-Properties", appProperties != null ? appProperties.additionalHeaders() : null);
+            put("object-list-properties", appProperties != null ? appProperties.menus() : null);
         }}, HttpStatus.OK);
     }
 

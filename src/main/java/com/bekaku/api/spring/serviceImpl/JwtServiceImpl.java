@@ -63,7 +63,7 @@ public class JwtServiceImpl implements JwtService {
 
     public SecretKey getKey(ApiClient apiClient) {
 //        byte[] keyByte = Decoders.BASE64.decode(apiClient.getApiToken());
-        byte[] keyByte = Decoders.BASE64.decode(this.jwtProperties.getSecret());
+        byte[] keyByte = Decoders.BASE64.decode(this.jwtProperties.secret());
         return Keys.hmacShaKeyFor(keyByte);
     }
 
@@ -292,12 +292,12 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Long expireMillisec() {
-        return this.jwtProperties.getSessionTime() * 1000L;
+        return this.jwtProperties.sessionTime() * 1000L;
     }
 
     @Override
     public Long expireRefreshSecond() {
-        return (long) this.jwtProperties.getSessionRefreshTime();
+        return (long) this.jwtProperties.sessionRefreshTime();
     }
 
     @Override

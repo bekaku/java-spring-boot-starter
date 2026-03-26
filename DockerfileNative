@@ -1,0 +1,53 @@
+# ---------- BUILD STAGE ----------
+FROM ghcr.io/graalvm/native-image-community:25-ol9 AS builder
+
+WORKDIR /build
+
+
+# copy gradle wrapper
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x gradlew
+
+# copy gradle config first (for dependency cache)
+COPY build.gradle settings.gradle gradle.properties ./
+
+# download dependencies (cached layer)
+# RUN ./gradlew dependencies --no-daemon
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew dependencies --no-daemon
+
+# copy source code
+COPY src src
+
+# build native image
+# RUN ./gradlew nativeCompile -x test \
+#     --no-daemon \
+#     --max-workers=2 \
+#     -Dorg.gradle.jvmargs="-Xmx3g"
+
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew nativeCompile -x test \
+    --no-daemon
+
+# ---------- RUNTIME STAGE ----------
+FROM oraclelinux:9-slim
+
+WORKDIR /app
+
+RUN microdnf update -y && \
+    microdnf install -y tzdata && \
+    microdnf clean all
+
+COPY --from=builder /build/build/native/nativeCompile/api-service /app/api-service
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 --start-period=5s \
+  CMD ["/app/api-service", "--health-check"]
+
+ENV TZ="Asia/Bangkok"
+#"--spring.profiles.active=localdocker"
+ENTRYPOINT ["/app/api-service", \
+            "-Duser.timezone=Asia/Bangkok", \
+            "--spring.config.additional-location=/usr/spring-data/env/"]

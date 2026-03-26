@@ -9,9 +9,9 @@ spring:
     allow-circular-references: true
     keep-alive: true
   profiles:
-    #    active: prod
+    #active: prod
     active: dev
-  #    active: localdocker
+    #active: localdocker
   jackson:
     serialization:
       FAIL_ON_EMPTY_BEANS: false
@@ -111,6 +111,11 @@ spring:
             class: javax.net.ssl.SSLSocketFactory
   #          starttls:
   #            enable: true
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 50
   mvc:
     async:
       request-timeout: 30000  # 30000=30 seconds timeout for async requests, -1 is no limit
@@ -258,6 +263,7 @@ mybatis:
   # mybatis.mapper-locations=mybatis/*.xml
   mapperLocations: classpath:mybatis/*.xml
   configuration:
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
     cache-enabled: true
     default-statement-timeout: 3000
     map-underscore-to-camel-case: true

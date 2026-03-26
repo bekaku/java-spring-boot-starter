@@ -144,14 +144,14 @@ public class AuthController extends BaseApiController {
         if (currentUserId == null) {
             return null;
         }
-        return jwtProperties.getRefreshTokenName() + UNDER_SCORE + currentUserId;
+        return jwtProperties.refreshTokenName() + UNDER_SCORE + currentUserId;
     }
 
     private String getReJwtKeyBy(Long currentUserId) {
         if (currentUserId == null) {
             return null;
         }
-        return jwtProperties.getTokenName() + UNDER_SCORE + currentUserId;
+        return jwtProperties.tokenName() + UNDER_SCORE + currentUserId;
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {

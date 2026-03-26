@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class WebConfigurerAdapter implements WebMvcConfigurer {
 
     @Value("${app.cdn-path}")

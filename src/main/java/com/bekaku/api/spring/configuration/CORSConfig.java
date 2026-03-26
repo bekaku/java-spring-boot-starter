@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class CORSConfig implements WebMvcConfigurer {
 
     @Autowired
@@ -28,7 +28,7 @@ public class CORSConfig implements WebMvcConfigurer {
                 )
                 .exposedHeaders(ConstantData.CONTENT_DISPOSITION, "Set-Cookie")
                 .allowCredentials(true)
-                .allowedOrigins(appCorsProperties.getAllowedOrigins().toArray(new String[0]))
+                .allowedOrigins(appCorsProperties.allowedOrigins().toArray(new String[0]))
                 .maxAge(3600);
 //                .allowedOriginPatterns("*");
 //                .allowedOrigins(

@@ -4,9 +4,10 @@ services:
     container_name: api-1
 #    build: .
     image: spring-api-service:latest
+    # image: baekaku/spring-api-service:latest
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    restart: always
+    restart: unless-stopped
     ports:
       - '8080:8080'
     expose:
@@ -15,6 +16,7 @@ services:
       - docker-network
     environment:
       - WORKER_ID=1
+#      - SPRING_PROFILES_ACTIVE=localdocker
 #      - JAVA_OPTS=-Xmx512m -Xms512m
     deploy:
       resources:
@@ -30,23 +32,6 @@ services:
       #linux
   #      - /mnt/cdn/spring-data:/usr/spring-data
   #      - /mnt/cdn/spring-data/logs:/usr/spring-data/logs
-#  api-2:
-#    container_name: api-2
-#    build: .
-#    image: spring-api-service:latest
-#    restart: always
-#    ports:
-#      - '8081:8080'
-#    expose:
-#      - 8081
-#    networks:
-#      - docker-network
-#    volumes:
-#      - d:\code\spring-data:/usr/spring-data
-#      - d:\code\spring-data\logs:/usr/spring-data/logs
-#    environment:
-#      - WORKER_ID=2
-#      - JAVA_OPTS=-Xmx512m -Xms512m
 networks:
   docker-network:
     driver: bridge

@@ -1,0 +1,10 @@
+.gradle
+.idea
+build
+docker-compose
+docs
+kubernetes
+spring-data
+HELP.md
+README.md
+README-TEMP.md
