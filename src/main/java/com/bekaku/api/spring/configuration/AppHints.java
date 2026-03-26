@@ -38,6 +38,7 @@ public class AppHints implements RuntimeHintsRegistrar {
         // 5. ไฟล์รูปภาพในโฟลเดอร์ static/img/
         // ใช้ **/* เพื่อก๊อปปี้ทุกไฟล์ (ไม่สนนามสกุล) ที่อยู่ใน img และโฟลเดอร์ย่อย
         hints.resources().registerPattern("static/img/**/*");
+        hints.resources().registerPattern("log4j2.*\\.xml");
 
         // (ทางเลือก) ถ้าอยากเจาะจงเฉพาะนามสกุลไฟล์รูปภาพ เพื่อไม่ให้ไฟล์ขยะติดไปด้วย
         // hints.resources().registerPattern("static/img/**/*.png");
@@ -48,7 +49,7 @@ public class AppHints implements RuntimeHintsRegistrar {
                 org.apache.ibatis.logging.slf4j.Slf4jImpl.class,
                 MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS
         );
-        registerMappers(hints);
+//        registerMappers(hints);
     }
 
     private void registerMappers(RuntimeHints hints) {
