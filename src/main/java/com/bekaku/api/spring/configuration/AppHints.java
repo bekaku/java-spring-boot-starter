@@ -73,10 +73,12 @@ public class AppHints implements RuntimeHintsRegistrar {
 
                 Class<?> mapperClass = Class.forName(bd.getBeanClassName());
 
-                hints.proxies().registerJdkProxy(
+                hints.reflection().registerType(
                         mapperClass,
-                        org.apache.ibatis.annotations.Mapper.class
+                        MemberCategory.INVOKE_PUBLIC_METHODS,
+                        MemberCategory.INVOKE_DECLARED_METHODS
                 );
+                hints.proxies().registerJdkProxy(mapperClass);
 
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
