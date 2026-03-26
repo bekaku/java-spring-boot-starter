@@ -132,8 +132,8 @@ graalvmNative {
 //            buildArgs.add('--enable-http')
 //            buildArgs.add('--enable-https')
             buildArgs.addAll([
-//                    '-J-Xmx5G',
-//                    '-J-Xms2G',
+//                    '-J-Xmx7G',
+//                    '-J-Xms4G',
                     // '-J-XX:ActiveProcessorCount=2',
                     "--initialize-at-run-time=org.springframework.security.config.annotation.method.configuration.AuthorizationProxyWebConfiguration",
             ])

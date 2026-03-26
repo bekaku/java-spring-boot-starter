@@ -22,7 +22,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @ConfigurationPropertiesScan
 @ImportRuntimeHints(AppHints.class)
 @EnableAsync
-//@MapperScan("com.bekaku.api.spring.mybatis")
+@MapperScan("com.bekaku.api.spring.mybatis")
 public class SpringApiApplication {
 
     @Value("${environments.production}")

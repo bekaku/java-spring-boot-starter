@@ -1,8 +1,15 @@
 package com.bekaku.api.spring.configuration;
 
+import com.bekaku.api.spring.mybatis.AccessTokenMybatis;
+import com.bekaku.api.spring.mybatis.AppRoleMybatis;
+import com.bekaku.api.spring.mybatis.AppUserMybatis;
+import com.bekaku.api.spring.mybatis.FileManagerMybatis;
+import com.bekaku.api.spring.mybatis.FilesDirectoryMybatis;
+import com.bekaku.api.spring.mybatis.PermissionMybatis;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.aot.hint.TypeReference;
 
 public class AppHints implements RuntimeHintsRegistrar {
     @Override
@@ -33,10 +40,23 @@ public class AppHints implements RuntimeHintsRegistrar {
                 org.apache.ibatis.logging.slf4j.Slf4jImpl.class,
                 MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS
         );
-        hints.reflection().registerType(
-                org.apache.ibatis.logging.LogFactory.class,
-                MemberCategory.INVOKE_PUBLIC_METHODS,
-                MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS
+        hints.proxies().registerJdkProxy(
+                AccessTokenMybatis.class
+        );
+        hints.proxies().registerJdkProxy(
+                AppRoleMybatis.class
+        );
+        hints.proxies().registerJdkProxy(
+                AppUserMybatis.class
+        );
+        hints.proxies().registerJdkProxy(
+                FileManagerMybatis.class
+        );
+        hints.proxies().registerJdkProxy(
+                FilesDirectoryMybatis.class
+        );
+        hints.proxies().registerJdkProxy(
+                PermissionMybatis.class
         );
     }
 }
