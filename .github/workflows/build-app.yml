@@ -1,4 +1,4 @@
-name: Build GraalVM Native Image
+name: Build App Image
 
 # กำหนดว่าจะให้ทำงานตอนไหน (เช่น ตอน Push โค้ดเข้า branch main)
 on:
