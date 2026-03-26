@@ -23,6 +23,7 @@ public class AppHints implements RuntimeHintsRegistrar {
 
     private static final String MAPPER_PACKAGE = "com.bekaku.api.spring.mybatis";
     private static final String DTO_PACKAGE = "com.bekaku.api.spring.dto";
+    private static final String MODEL_PACKAGE = "com.bekaku.api.spring.model";
 
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
@@ -38,16 +39,32 @@ public class AppHints implements RuntimeHintsRegistrar {
                 org.apache.ibatis.logging.slf4j.Slf4jImpl.class,
                 MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS
         );
+        hints.reflection().registerType(
+                org.apache.ibatis.session.Configuration.class,
+                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS
+        );
         registerMappers(hints);
-        registerMapperDtos(hints);
+        registerPackageForReflection(hints, DTO_PACKAGE);
+        registerPackageForReflection(hints, MODEL_PACKAGE);
     }
 
-    private void registerMapperDtos(RuntimeHints hints) {
-        hints.reflection().registerType(AppUserDto.class, MemberCategory.values());
-        hints.reflection().registerType(FileManagerDto.class, MemberCategory.values());
-        hints.reflection().registerType(FilesDirectoryDto.class, MemberCategory.values());
-        hints.reflection().registerType(Permission.class, MemberCategory.values());
+    private void registerPackageForReflection(RuntimeHints hints, String basePackage) {
+        var provider = new ClassPathScanningCandidateComponentProvider(false);
+        provider.addIncludeFilter((metadataReader, metadataReaderFactory) -> true);
+        for (BeanDefinition bd : provider.findCandidateComponents(basePackage)) {
+            try {
+                Class<?> clazz = Class.forName(bd.getBeanClassName());
+
+                hints.reflection().registerType(clazz, MemberCategory.values());
+
+            } catch (ClassNotFoundException e) {
+
+                throw new RuntimeException(e);
+
+            }
+        }
     }
+
     private void registerMappers(RuntimeHints hints) {
         var provider = new ClassPathScanningCandidateComponentProvider(false);
         provider.addIncludeFilter(new AnnotationTypeFilter(Mapper.class));
@@ -58,9 +75,7 @@ public class AppHints implements RuntimeHintsRegistrar {
 
                 hints.proxies().registerJdkProxy(
                         mapperClass,
-                        org.springframework.aop.SpringProxy.class,
-                        org.springframework.aop.framework.Advised.class,
-                        org.springframework.core.DecoratingProxy.class
+                        org.apache.ibatis.annotations.Mapper.class
                 );
 
             } catch (ClassNotFoundException e) {
