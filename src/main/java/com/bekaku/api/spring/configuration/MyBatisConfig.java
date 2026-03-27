@@ -8,12 +8,16 @@ import com.bekaku.api.spring.mybatis.FilesDirectoryMybatis;
 import com.bekaku.api.spring.mybatis.PermissionMybatis;
 import org.apache.ibatis.executor.loader.cglib.CglibProxyFactory;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.sql.DataSource;
 
 @Configuration(proxyBeanMethods = false)
 //@MapperScan("com.bekaku.api.spring.mybatis")
@@ -21,11 +25,26 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class MyBatisConfig {
 
     @Bean
-    ConfigurationCustomizer mybatisConfigurationCustomizer() {
-        return configuration -> {
-            configuration.setLazyLoadingEnabled(false);
-            configuration.setAggressiveLazyLoading(false);
-        };
+    public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+        SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
+        factoryBean.setDataSource(dataSource);
+
+        // Set config โดยตรง
+        org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration();
+        config.setLazyLoadingEnabled(false);
+        config.setAggressiveLazyLoading(false);
+        factoryBean.setConfiguration(config);
+
+        // Set mapper locations
+        factoryBean.setMapperLocations(
+                new PathMatchingResourcePatternResolver()
+                        .getResources("classpath:mybatis/**/*.xml")
+        );
+
+        // Set type aliases package
+        factoryBean.setTypeAliasesPackage("com.bekaku.api.spring.model");
+
+        return factoryBean.getObject();
     }
     @Bean
     public AccessTokenMybatis accessTokenMybatis(SqlSessionFactory sqlSessionFactory) throws Exception {
