@@ -43,9 +43,9 @@ public class AppHints implements RuntimeHintsRegistrar {
                 org.apache.ibatis.session.Configuration.class,
                 MemberCategory.INVOKE_DECLARED_CONSTRUCTORS
         );
-        registerMappers(hints);
-        registerPackageForReflection(hints, DTO_PACKAGE);
-        registerPackageForReflection(hints, MODEL_PACKAGE);
+//        registerMappers(hints);
+//        registerPackageForReflection(hints, DTO_PACKAGE);
+//        registerPackageForReflection(hints, MODEL_PACKAGE);
     }
 
     private void registerPackageForReflection(RuntimeHints hints, String basePackage) {
