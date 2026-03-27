@@ -33,8 +33,21 @@ public class MyBatisConfig {
         org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration();
         config.setLazyLoadingEnabled(false);
         config.setAggressiveLazyLoading(false);
-        factoryBean.setConfiguration(config);
+        config.setLogImpl(org.apache.ibatis.logging.slf4j.Slf4jImpl.class);
+        config.setCacheEnabled(true);
+        config.setDefaultStatementTimeout(3000);
+        config.setMapUnderscoreToCamelCase(true);
+        config.setUseGeneratedKeys(true);
 
+
+        config.addMapper(AccessTokenMybatis.class);
+        config.addMapper(AppRoleMybatis.class);
+        config.addMapper(AppUserMybatis.class);
+        config.addMapper(FileManagerMybatis.class);
+        config.addMapper(FilesDirectoryMybatis.class);
+        config.addMapper(PermissionMybatis.class);
+
+        factoryBean.setConfiguration(config);
         // Set mapper locations
         factoryBean.setMapperLocations(
                 new PathMatchingResourcePatternResolver()
