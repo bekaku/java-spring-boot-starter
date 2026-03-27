@@ -10,8 +10,8 @@ spring:
     keep-alive: true
   profiles:
     #active: prod
-    active: dev
-    #active: localdocker
+    #active: dev
+    active: localdocker
   jackson:
     serialization:
       FAIL_ON_EMPTY_BEANS: false
