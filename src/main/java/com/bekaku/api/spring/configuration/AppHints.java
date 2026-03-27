@@ -44,8 +44,8 @@ public class AppHints implements RuntimeHintsRegistrar {
                 MemberCategory.INVOKE_DECLARED_CONSTRUCTORS
         );
 //        registerMappers(hints);
-//        registerPackageForReflection(hints, DTO_PACKAGE);
-//        registerPackageForReflection(hints, MODEL_PACKAGE);
+        registerPackageForReflection(hints, DTO_PACKAGE);
+        registerPackageForReflection(hints, MODEL_PACKAGE);
     }
 
     private void registerPackageForReflection(RuntimeHints hints, String basePackage) {
