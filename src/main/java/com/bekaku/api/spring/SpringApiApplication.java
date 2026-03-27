@@ -1,6 +1,7 @@
 package com.bekaku.api.spring;
 
 import com.bekaku.api.spring.configuration.AppHints;
+import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,7 +13,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 //@EnableRabbit
 @EnableCaching
-@SpringBootApplication(scanBasePackages = "com.bekaku.api")
+@SpringBootApplication(
+        scanBasePackages = "com.bekaku.api",
+        exclude = {MybatisAutoConfiguration.class}
+)
 @EnableJpaAuditing
 //@EnableScheduling
 @ConfigurationPropertiesScan
