@@ -6,8 +6,10 @@ import com.bekaku.api.spring.mybatis.AppUserMybatis;
 import com.bekaku.api.spring.mybatis.FileManagerMybatis;
 import com.bekaku.api.spring.mybatis.FilesDirectoryMybatis;
 import com.bekaku.api.spring.mybatis.PermissionMybatis;
+import org.apache.ibatis.executor.loader.cglib.CglibProxyFactory;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.annotation.MapperScan;
+import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +19,14 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 //@MapperScan("com.bekaku.api.spring.mybatis")
 @EnableTransactionManagement
 public class MyBatisConfig {
+
+    @Bean
+    ConfigurationCustomizer mybatisConfigurationCustomizer() {
+        return configuration -> {
+            configuration.setLazyLoadingEnabled(false);
+            configuration.setAggressiveLazyLoading(false);
+        };
+    }
     @Bean
     public AccessTokenMybatis accessTokenMybatis(SqlSessionFactory sqlSessionFactory) throws Exception {
         MapperFactoryBean<AccessTokenMybatis> factoryBean = new MapperFactoryBean<>(AccessTokenMybatis.class);
