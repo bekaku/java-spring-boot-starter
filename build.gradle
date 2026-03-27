@@ -136,6 +136,7 @@ graalvmNative {
 //                    '-J-Xms4G',
                     // '-J-XX:ActiveProcessorCount=2',
                     "--initialize-at-run-time=org.springframework.security.config.annotation.method.configuration.AuthorizationProxyWebConfiguration",
+                    "-H:+ReportExceptionStackTraces",
             ])
         }
     }

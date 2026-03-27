@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Optional;
 
-@Mapper
+//@Mapper
 public interface FilesDirectoryMybatis {
 
     Optional<FilesDirectoryDto> findById(@Param("id") Long id);

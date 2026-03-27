@@ -5,9 +5,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
 
-@Mapper
+//@Mapper
 public interface AccessTokenMybatis {
     void updateLastestActive(@Param("lastestActive") LocalDateTime lastestActive,@Param("id") Long id);
-
-
 }
