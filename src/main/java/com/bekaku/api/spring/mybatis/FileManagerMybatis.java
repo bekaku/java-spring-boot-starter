@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Optional;
 
-//@Mapper
+@Mapper
 public interface FileManagerMybatis {
 
     Optional<FileManagerDto> findForPublicById(@Param("id") Long id);

@@ -13,10 +13,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 //@EnableRabbit
 @EnableCaching
-@SpringBootApplication(
-        scanBasePackages = "com.bekaku.api",
-        exclude = {MybatisAutoConfiguration.class}
-)
+@SpringBootApplication(scanBasePackages = "com.bekaku.api")
 @EnableJpaAuditing
 //@EnableScheduling
 @ConfigurationPropertiesScan

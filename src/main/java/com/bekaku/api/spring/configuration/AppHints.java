@@ -1,20 +1,9 @@
 package com.bekaku.api.spring.configuration;
 
-import com.bekaku.api.spring.dto.AppUserDto;
-import com.bekaku.api.spring.dto.FileManagerDto;
-import com.bekaku.api.spring.dto.FilesDirectoryDto;
-import com.bekaku.api.spring.model.Permission;
-import com.bekaku.api.spring.mybatis.AccessTokenMybatis;
-import com.bekaku.api.spring.mybatis.AppRoleMybatis;
-import com.bekaku.api.spring.mybatis.AppUserMybatis;
-import com.bekaku.api.spring.mybatis.FileManagerMybatis;
-import com.bekaku.api.spring.mybatis.FilesDirectoryMybatis;
-import com.bekaku.api.spring.mybatis.PermissionMybatis;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
-import org.springframework.aot.hint.TypeReference;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
