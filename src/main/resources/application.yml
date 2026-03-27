@@ -263,6 +263,8 @@ mybatis:
   # mybatis.mapper-locations=mybatis/*.xml
   mapperLocations: classpath:mybatis/*.xml
   configuration:
+    lazy-loading-enabled: false
+    aggressive-lazy-loading : false
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
     cache-enabled: true
     default-statement-timeout: 3000
