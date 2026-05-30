@@ -4,7 +4,7 @@ services:
     container_name: postgres
     image: "postgres:18-alpine"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql
       - ./log:/var/log/postgresql
       - ./conf/postgres.conf:/usr/local/share/postgresql/postgresql.conf
       - ./conf/pg_hba.conf:/usr/local/share/postgresql/pg_hba.conf
