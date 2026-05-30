@@ -67,3 +67,5 @@ spring-data/medias/*
 !spring-data/images/default-men-avatar.png
 !spring-data/images/default-women-avatar.png
 src/main/generated/*
+src/main/resources/application-dev.yml
+src/main/resources/log4j2-dev.xml
