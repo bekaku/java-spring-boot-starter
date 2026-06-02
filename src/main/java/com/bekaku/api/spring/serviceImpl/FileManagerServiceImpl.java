@@ -119,12 +119,12 @@ public class FileManagerServiceImpl implements FileManagerService {
         String path = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getFilePath(), null);
 
         if (fileManager.getThumbnailFile() != null) {
-            if (fileManager.getThumbnailFile().isUseThumbnail()) {
-                String tnPath = FileUtil.generateThumbnailName(fileManager.getThumbnailFile().getFilePath(), appProperties.uploadImage().getThumbnailExname());
-                thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), tnPath, null);
-            } else {
+//            if (fileManager.getThumbnailFile().isUseThumbnail()) {
+//                String tnPath = FileUtil.generateThumbnailName(fileManager.getThumbnailFile().getFilePath(), appProperties.uploadImage().getThumbnailExname());
+//                thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), tnPath, null);
+//            } else {
                 thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getThumbnailFile().getFilePath(), null);
-            }
+//            }
 
         } else if (fileMimeType.equals(FileMimeType.IMAGE)) {
             String tnPath = FileUtil.generateThumbnailName(fileManager.getFilePath(), appProperties.uploadImage().getThumbnailExname());

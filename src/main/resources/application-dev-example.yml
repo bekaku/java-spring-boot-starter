@@ -69,6 +69,23 @@ spring:
     port: 5672
     username: local_jobs
     password: 'pwd'
+#  ai:
+#    ollama:
+#      base-url: http://localhost:11434
+#      chat:
+#        options:
+#          model: qwen2.5:1.5b #scb10x/llama3.1-typhoon2-8b-instruct
+#          temperature: 0.3
+#      embedding:
+#        options:
+#          model: bge-m3
+#
+#    vectorstore:
+#      qdrant:
+#        host: localhost
+#        port: 6334
+#        collection-name: typhoon_documents
+#        initialize-schema: true
 
 logging:
   config: classpath:log4j2-dev.xml
@@ -79,6 +96,7 @@ logging:
     web: DEBUG
     com.bekaku.api.spring: DEBUG
     org.springframework.boot.web.embedded.undertow: DEBUG
+    io.qdrant.client.QdrantGrpcClient: ERROR
     io.undertow: DEBUG
     org.springframework.security: DEBUG
     org:
@@ -138,6 +156,10 @@ app:
     session-day: 30
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
+  rag:
+    chunk-size: 800
+    chunk-size-char: 350
+    chunk-length-embed: 5
 
 custom:
   config:

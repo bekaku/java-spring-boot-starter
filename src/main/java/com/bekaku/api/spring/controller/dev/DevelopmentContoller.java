@@ -382,6 +382,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("@Getter\n");
                 writer.append("@Setter\n");
                 writer.append("@JsonRootName(\"").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
+                writer.append("@JsonRootName(\"data\")\n");
 //                writer.append("//@AllArgsConstructor\n");
 //                writer.append("//@NoArgsConstructor\n");
                 writer.append("@JsonIgnoreProperties(ignoreUnknown = true)\n");
@@ -722,7 +723,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import lombok.extern.slf4j.Slf4j;\n");
                 writer.append("import lombok.RequiredArgsConstructor;\n");
 //                writer.append("import jakarta.servlet.http.HttpServletRequest;\n");
-                writer.append("import com.bekaku.api.spring.specification.SearchSpecification;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".specification.SearchSpecification;\n");
 //                writer.append("import org.springframework.beans.factory.annotation.Autowired;\n");
 //                writer.append("import org.springframework.http.HttpStatus;\n");
                 writer.append("import org.springframework.http.ResponseEntity;\n");
@@ -730,6 +731,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import org.springframework.security.access.prepost.PreAuthorize;\n");
 //                writer.append("import org.springframework.data.domain.PageRequest;\n");
                 writer.append("import org.springframework.data.domain.Pageable;\n");
+                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".util.ConstantData;\n");
                 writer.append("\n");
                 writer.append("import jakarta.validation.Valid;\n");
                 writer.append("import java.util.Optional;\n");
@@ -756,14 +758,14 @@ public class DevelopmentContoller extends BaseApiController {
 //                writer.append("                                          @RequestParam(value = \"limit\", defaultValue = \"20\") int limit) {\n");
 //                writer.append("    public ResponseEntity<Object> findAll(Pageable pageable) {\n");
                 if (haveDto) {
-                    writer.append("    public ResponseListDto<").append(entityName).append("Dto").append("> findAll(Pageable pageable) {\n");
+                    writer.append("    public ResponseListDto<").append(entityName).append("Dto").append("> findAll(Pageable pageable, @RequestParam(name = ConstantData.SEARCH_PARAMETER_ATT, required = false) String q) {\n");
                 } else {
-                    writer.append("    public ResponseListDto<").append(entityName).append("> findAll(Pageable pageable) {\n");
+                    writer.append("    public ResponseListDto<").append(entityName).append("> findAll(Pageable pageable, @RequestParam(name = ConstantData.SEARCH_PARAMETER_ATT, required = false) String q) {\n");
                 }
 //                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(new Paging(page, limit), ").append(entityName).append(".getSort()), HttpStatus.OK);\n");
 //                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :\n");
 //                writer.append("                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
-                writer.append("        SearchSpecification<").append(entityName).append("> specification = new SearchSpecification<>(getSearchCriteriaList());    \n");
+                writer.append("        SearchSpecification<").append(entityName).append("> specification = new SearchSpecification<>(getSearchCriteriaList(q));    \n");
 //                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithSearch(specification, getPageable(pageable, ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
                 writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithSearch(specification, getPageable(pageable, ").append(entityName).append(".getSort()));\n");
                 writer.append("    }\n");
@@ -1050,10 +1052,11 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("    crudName: '").append(entityName).append("',\n");
             writer.append("    apiEndpoint: '/api',\n");
             writer.append("    headers: headerItems,\n");
-            writer.append("    defaultSort: {\n");
-            writer.append("      column: 'id',\n");
-            writer.append("      mode: 'desc'\n");
-            writer.append("    }\n");
+            writer.append("    defaultSorts: [{ column: 'id', mode: 'desc' }],\n");
+//            writer.append("    defaultSort: {\n");
+//            writer.append("      column: 'id',\n");
+//            writer.append("      mode: 'desc'\n");
+//            writer.append("    }\n");
             writer.append("  },\n");
             writer.append(");\n");
             writer.append("</script>\n");

@@ -170,6 +170,7 @@ public class PermissionController extends BaseApiController {
         return this.responseDeleteMessage();
     }
 
+    @SuppressWarnings("unchecked")
     @GetMapping("/userAcl")
     public ResponseEntity<Object> userAcl(@AuthenticationPrincipal AppUserDto userAuthen,
                                           @RequestParam(value = "getMenuList", required = false, defaultValue = "0") boolean getMenuList) {

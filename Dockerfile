@@ -5,6 +5,9 @@ WORKDIR /build
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle settings.gradle ./
+
+RUN sed -i 's/\r$//' gradlew
+
 RUN chmod +x gradlew && ./gradlew build -x test --stacktrace || return 0
 
 COPY src src
@@ -14,12 +17,12 @@ RUN ./gradlew bootJar -x test
 FROM eclipse-temurin:25-jdk-alpine
 
 # 1. Setup User & Group (ทำก่อนเพื่อความปลอดภัย)
-#RUN addgroup -g 1001 springgroup && \
-#    adduser -D -u 1001 -G springgroup springuser
+RUN addgroup -g 1001 springgroup && \
+    adduser -D -u 1001 -G springgroup springuser
 
 
 # Make sure heapdump path exists and is writable
-# RUN mkdir -p /usr/spring-data/logs && chown -R springuser:springgroup /usr/spring-data
+ RUN mkdir -p /usr/spring-data/logs && chown -R springuser:springgroup /usr/spring-data
 
 ENV TZ=Asia/Bangkok \
     JAVA_OPTS="-Xms1G -Xmx1G -Xss256k -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=75.0 -XX:MaxGCPauseMillis=100 -XX:+ParallelRefProcEnabled -XX:+UseCompressedOops -XX:+UseCompressedClassPointers -XX:+AlwaysPreTouch -XX:+TieredCompilation -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof"
@@ -32,11 +35,14 @@ WORKDIR /app
 
 
 # 2. Copy ไฟล์ JAR และเปลี่ยนเจ้าของเป็น springuser ทันที
-COPY --from=builder /build/build/libs/*.jar app.jar
-#COPY --from=builder --chown=springuser:springgroup /build/build/libs/*.jar app.jar
+#COPY --from=builder /build/build/libs/*.jar app.jar
+COPY --from=builder --chown=springuser:springgroup /build/build/libs/*.jar app.jar
 
 # 3. สลับไปใช้ non-root user
-#USER springuser
+USER springuser
+
+#go to host and change owner to 1001 for access read write delete
+# sudo chown -R 1001:1001 /mnt/cdn/data
 
 EXPOSE 8080
 

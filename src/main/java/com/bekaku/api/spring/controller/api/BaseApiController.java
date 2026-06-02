@@ -30,19 +30,19 @@ public class BaseApiController extends BaseResponseException {
     @Autowired
     private I18n i18n;
 
-    public <K> ResponseEntity<K> responseEntityBy(@Nullable K o) {
+    public <K> ResponseEntity<K> responseEntityBy(K o) {
         return new ResponseEntity<>(o, HttpStatus.OK);
     }
 
-    public <K> ResponseEntity<K> responseEntityBy(@Nullable K o, HttpStatus status) {
+    public <K> ResponseEntity<K> responseEntityBy(K o, HttpStatus status) {
         return new ResponseEntity<>(o, status);
     }
 
-    public ResponseEntity<Object> responseEntity(@Nullable Object o, HttpStatus status) {
+    public ResponseEntity<Object> responseEntity(Object o, HttpStatus status) {
         return new ResponseEntity<>(o, status);
     }
 
-    public ResponseEntity<Object> responseEntity(@Nullable Object o) {
+    public ResponseEntity<Object> responseEntity(Object o) {
         return new ResponseEntity<>(o, HttpStatus.OK);
     }
 
@@ -62,15 +62,15 @@ public class BaseApiController extends BaseResponseException {
         return this.responseServerMessage(i18n.getMessage("success"), HttpStatus.OK);
     }
 
-    public ResponseEntity<Object> responseEntity(@Nullable Object o, HttpStatus status, String viewPermission, String managePermission) {
+    public ResponseEntity<Object> responseEntity(Object o, HttpStatus status, String viewPermission, String managePermission) {
         return new ResponseEntity<>(o, status);
     }
 
-    public ResponseEntity<Object> responseServerMessage(@Nullable String o) {
+    public ResponseEntity<Object> responseServerMessage(String o) {
         return responseServerMessage(o, HttpStatus.OK);
     }
 
-    public ResponseEntity<Object> responseServerMessage(@Nullable String o, HttpStatus status) {
+    public ResponseEntity<Object> responseServerMessage(String o, HttpStatus status) {
         return responseEntity(new HashMap<String, Object>() {{
             put(ConstantData.SERVER_MESSAGE, o);
             put(ConstantData.SERVER_STATUS, status);
@@ -78,7 +78,7 @@ public class BaseApiController extends BaseResponseException {
         }}, HttpStatus.OK);
     }
 
-    public ResponseEntity<Object> responseServerMessage(@Nullable String o, HttpStatus status, boolean success) {
+    public ResponseEntity<Object> responseServerMessage(String o, HttpStatus status, boolean success) {
         return responseEntity(new HashMap<String, Object>() {{
             put(ConstantData.SERVER_MESSAGE, o);
             put(ConstantData.SERVER_STATUS, status);
@@ -176,6 +176,10 @@ public class BaseApiController extends BaseResponseException {
 
     public List<SearchCriteria> getSearchCriteriaList() {
         return ControllerUtil.getSearchCriteriaList(request);
+    }
+
+    public List<SearchCriteria> getSearchCriteriaList(String q) {
+        return ControllerUtil.getSearchCriteriaList(q);
     }
 
 }

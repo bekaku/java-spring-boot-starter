@@ -192,6 +192,7 @@ public class TestController extends BaseApiController {
             put("list-properties", appProperties != null ? appProperties.defaultRecipients() : null);
             put("map-Properties", appProperties != null ? appProperties.additionalHeaders() : null);
             put("object-list-properties", appProperties != null ? appProperties.menus() : null);
+            put("rag", appProperties != null ? appProperties.rag() : null);
         }}, HttpStatus.OK);
     }
 

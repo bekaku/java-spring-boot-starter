@@ -3,12 +3,15 @@ package com.bekaku.api.spring.model;
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.model.superclass.Auditable;
 
+import com.bekaku.api.spring.model.superclass.SoftDeletedAuditable;
 import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.util.SnowflakeIdHolder;
 import jakarta.persistence.*;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
@@ -23,7 +26,9 @@ import java.util.Set;
         @Index(columnList = "updated_user"),
         @Index(columnList = "created_user"),
 })
-public class FilesDirectory extends Auditable<Long> {
+@SQLDelete(sql = "UPDATE files_directory SET deleted = true null WHERE id=?")
+@SQLRestriction("deleted=false")
+public class FilesDirectory extends SoftDeletedAuditable<Long> {
 
 
     public void onUpdate(String name) {

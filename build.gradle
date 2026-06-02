@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.1'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'org.graalvm.buildtools.native' version '0.11.5'
+//    id 'org.graalvm.buildtools.native' version '0.11.5'
 }
 
 group = 'com.bekaku.api.spring'
@@ -33,8 +33,17 @@ configurations {
 }
 repositories {
     mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+    maven { url 'https://repo.spring.io/snapshot' }
 }
-
+//ext {
+//    set('springAiVersion', "2.0.0-M4" )
+//}
+//dependencyManagement {
+//    imports {
+//        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+//    }
+//}
 dependencies {
 //    Spring and Spring Boot dependencies
     implementation 'org.springframework.boot:spring-boot-starter'
@@ -111,6 +120,16 @@ dependencies {
 
     implementation 'org.jsoup:jsoup:1.22.1'
 
+    // Spring AI
+    implementation 'org.springframework.ai:spring-ai-starter-model-ollama:2.0.0-M4'
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-qdrant:2.0.0-M4'
+    implementation 'org.springframework.ai:spring-ai-pdf-document-reader:2.0.0-M4'
+    implementation 'org.springframework.ai:spring-ai-advisors-vector-store:2.0.0-M4'
+
+//    implementation("org.springframework.boot:spring-boot-starter-webflux")
+//    implementation 'org.apache.pdfbox:pdfbox:3.0.7'
+
+
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
@@ -123,7 +142,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:6.1.0-M1'
 }
 
-
+/*
 graalvmNative {
     binaries {
         main {
@@ -140,6 +159,7 @@ graalvmNative {
         }
     }
 }
+ */
 tasks.named('test') {
     useJUnitPlatform()
 }

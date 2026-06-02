@@ -317,8 +317,15 @@ public class FileManagerController extends BaseApiController {
                 }
             }
 
-            Optional<FileMime> mime = fileMimeService.findByName(mimeType.toLowerCase());
-            FileMime fileMimeForSave = mime.orElseGet(() -> fileMimeService.save(new FileMime(mimeType.toLowerCase())));
+            //mime type validate
+            File fileValidate = new File(uploadPath + dto.getChunkFilename());
+            String mimeTypeValidate = FileUtil.getMimeType(fileValidate);
+            if (mimeTypeValidate != null) {
+                mimeType = mimeTypeValidate;
+            }
+            final String meme = mimeType;
+            Optional<FileMime> mime = fileMimeService.findByName(meme.toLowerCase());
+            FileMime fileMimeForSave = mime.orElseGet(() -> fileMimeService.save(new FileMime(meme.toLowerCase())));
             FileManager f = new FileManager(null, dto.getOriginalFilename(), fileSize, fileMimeForSave, yearMonthFolder + dto.getChunkFilename());
             if (dto.getDuration() != null) {
                 f.setDuration(dto.getDuration());

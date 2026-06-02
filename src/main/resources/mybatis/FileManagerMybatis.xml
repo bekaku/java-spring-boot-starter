@@ -10,7 +10,7 @@
         f.file_size fileSize,
         0 AS fileCount,
         f.created_date createdDate,
-        f.created_date updatedDate,
+        f.updated_date updatedDate,
         f.owner ownerId,
         NULL updatedUser,
         f.duration,

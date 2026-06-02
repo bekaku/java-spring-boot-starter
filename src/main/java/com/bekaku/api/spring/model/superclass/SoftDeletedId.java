@@ -12,6 +12,8 @@ import java.io.Serializable;
 @Getter
 @Setter
 public class SoftDeletedId extends Id implements Serializable {
+
     @JsonIgnore
+    @Column(columnDefinition = "boolean default false")
     private Boolean deleted = false;
 }

@@ -5,6 +5,9 @@ WORKDIR /build
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle settings.gradle ./
+
+RUN sed -i 's/\r$//' gradlew
+
 RUN chmod +x gradlew && ./gradlew build -x test --stacktrace || return 0
 
 COPY src src

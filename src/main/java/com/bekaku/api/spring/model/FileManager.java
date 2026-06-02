@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
+import com.bekaku.api.spring.model.superclass.SoftDeletedAuditable;
 import com.bekaku.api.spring.model.superclass.SoftDeletedAuditableCreated;
 import com.bekaku.api.spring.util.FileUtil;
 import jakarta.persistence.*;
@@ -22,7 +23,7 @@ import org.springframework.data.domain.Sort;
 })
 @SQLDelete(sql = "UPDATE file_manager SET deleted = true, files_directory_id = null WHERE id=?")
 @SQLRestriction("deleted=false")
-public class FileManager extends SoftDeletedAuditableCreated<Long> {
+public class FileManager extends SoftDeletedAuditable<Long> {
 
     public FileManager(String fileName, String originalFileName, long fileSize, FileMime fileMime, String filePath) {
         this.fileName = fileName;

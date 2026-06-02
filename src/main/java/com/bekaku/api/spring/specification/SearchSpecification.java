@@ -20,7 +20,6 @@ import java.util.Locale;
 public class SearchSpecification<T> implements Specification<T> {
 
     private List<SearchCriteria> list;
-    Logger logger = LoggerFactory.getLogger(SearchSpecification.class);
 
     private HttpServletRequest request;
 

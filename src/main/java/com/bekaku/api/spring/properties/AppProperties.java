@@ -23,7 +23,8 @@ public record AppProperties(
         String port,
         String cdnUrl,
         String cdnPort,
-        List<String> allowMimes         // app.allow-mimes
+        List<String> allowMimes,         // app.allow-mimes
+        RagConfig rag
 ) {
 
     // 2. วิธีจัดการกับ Default Value (แทนที่ = new ArrayList<>())

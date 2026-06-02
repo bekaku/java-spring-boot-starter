@@ -246,6 +246,7 @@ logging:
     root: WARN
     web: WARN
     com.bekaku.api.spring: INFO
+    io.qdrant.client.QdrantGrpcClient: ERROR
     org:
       apache:
         catalina:

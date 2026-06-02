@@ -14,10 +14,13 @@ import java.util.Locale;
 public class ControllerUtil {
     static Logger logger = LoggerFactory.getLogger(ControllerUtil.class);
 
-
     public static List<SearchCriteria> getSearchCriteriaList(HttpServletRequest request) {
-        List<SearchCriteria> list = new ArrayList<>();
         String searchParameter = request.getParameter(ConstantData.SEARCH_PARAMETER_ATT);
+        return getSearchCriteriaList(searchParameter);
+    }
+
+    public static List<SearchCriteria> getSearchCriteriaList(String searchParameter) {
+        List<SearchCriteria> list = new ArrayList<>();
         if (searchParameter != null) {
             String[] splitParams = searchParameter.split(ConstantData.SEARCH_SEPARATOR_ATT);
             String param;

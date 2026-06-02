@@ -1,23 +1,23 @@
 package com.bekaku.api.spring.specification;
 
 import com.bekaku.api.spring.util.ControllerUtil;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class BaseSpecification {
-    private final HttpServletRequest request;
+    @Getter
     private final HashMap<String, Object> searchCriteria = new HashMap<>();
+    public final String searchQueryParam;
 
-    public BaseSpecification(HttpServletRequest request) {
-        this.request = request;
-        setSearchCriteriaMap();
+    public BaseSpecification(String queryParam) {
+        this.searchQueryParam = queryParam;
+        setSearchCriteriaMap(true);
     }
 
     public Predicate getSearchPredicate(CriteriaBuilder builder, List<SearchSepecificationKey> keys, boolean isOr) {
@@ -55,19 +55,18 @@ public class BaseSpecification {
                 }
             }
         }
-        return predicates.size() > 0 ? isOr ?
+        return !predicates.isEmpty() ? isOr ?
                 builder.or(predicates.toArray(new Predicate[0])) : builder.and(predicates.toArray(new Predicate[0]))
                 : null;
     }
 
-    public void setSearchCriteriaMap() {
-        List<SearchCriteria> list = ControllerUtil.getSearchCriteriaList(request);
+    public void setSearchCriteriaMap(boolean isQuearyString) {
+        List<SearchCriteria> list = ControllerUtil.getSearchCriteriaList(searchQueryParam);
         for (SearchCriteria criteria : list) {
-            searchCriteria.put(criteria.getKey(), criteria);
+            if (criteria.getValue() != null) {
+                searchCriteria.put(criteria.getKey(), criteria);
+            }
         }
     }
 
-    public HashMap<String, Object> getSearchCriteria() {
-        return searchCriteria;
-    }
 }
