@@ -2,12 +2,17 @@ package com.bekaku.api.spring.configuration;
 
 import com.bekaku.api.spring.properties.AppCorsProperties;
 import com.bekaku.api.spring.util.ConstantData;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration(proxyBeanMethods = false)
+import java.util.Arrays;
+import java.util.List;
+
+@Slf4j
+//@Configuration(proxyBeanMethods = false)
 public class CORSConfig implements WebMvcConfigurer {
 
     @Autowired
@@ -15,17 +20,21 @@ public class CORSConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+
+
+        log.info("CORSConfig addCorsMappings:{}", appCorsProperties);
         registry.addMapping("/**")
                 .allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS")
-                .allowedHeaders(
-                        ConstantData.CACHE_CONTROL,
-                        ConstantData.CONTENT_TYPE,
-                        ConstantData.AUTHORIZATION,
-                        ConstantData.ACCEPT_LANGUGE,
-                        ConstantData.ACCEPT_APIC_LIENT,
-                        ConstantData.X_SYNC_ACTIVE,
-                        ConstantData.X_USER_ID
-                )
+//                .allowedHeaders(
+//                        ConstantData.CACHE_CONTROL,
+//                        ConstantData.CONTENT_TYPE,
+//                        ConstantData.AUTHORIZATION,
+//                        ConstantData.ACCEPT_LANGUGE,
+//                        ConstantData.ACCEPT_APIC_LIENT,
+//                        ConstantData.X_SYNC_ACTIVE,
+//                        ConstantData.X_USER_ID
+//                )
+                .allowedHeaders(String.valueOf(List.of("*")))
                 .exposedHeaders(ConstantData.CONTENT_DISPOSITION, "Set-Cookie")
                 .allowCredentials(true)
                 .allowedOrigins(appCorsProperties.allowedOrigins().toArray(new String[0]))

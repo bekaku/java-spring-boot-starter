@@ -56,7 +56,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-//        logger.info("JwtTokenFilter > doFilterInternal");
+        log.info("JwtTokenFilter > doFilterInternal: {}", request.getMethod());
         String requestURI = request.getRequestURI();
         boolean isStreamingEndpoint = STREAMING_ENDPOINTS.stream()
                 .anyMatch(requestURI::contains);

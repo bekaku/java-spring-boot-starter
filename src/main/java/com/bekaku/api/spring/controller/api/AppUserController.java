@@ -82,6 +82,7 @@ public class AppUserController extends BaseApiController {
                                       @RequestHeader(value = ConstantData.X_USER_ID) String currentUserId) {
 //    public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen, @CookieValue(name = "jwt_token", required = false) String jwtRefreshTokenCookie) {
 
+        log.info("currentUserData");
         if (userAuthen == null) {
             throw this.responseErrorUnauthorized();
         }

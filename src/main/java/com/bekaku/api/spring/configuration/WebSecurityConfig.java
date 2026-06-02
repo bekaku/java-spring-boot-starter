@@ -1,5 +1,9 @@
 package com.bekaku.api.spring.configuration;
 
+import com.bekaku.api.spring.properties.AppCorsProperties;
+import com.bekaku.api.spring.util.ConstantData;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +22,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+import java.util.List;
+
+
+@Slf4j
 @Configuration(proxyBeanMethods = false)
 //@EnableWebSecurity
 //@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
@@ -30,6 +42,9 @@ public class WebSecurityConfig {
 
     @Value("${environments.production:false}")
     boolean isProduction;
+
+    @Autowired
+    private AppCorsProperties appCorsProperties;
 
     @Bean
     public JwtTokenFilter jwtTokenFilter() {
@@ -124,5 +139,39 @@ public class WebSecurityConfig {
                 new DefaultMethodSecurityExpressionHandler();
         expressionHandler.setPermissionEvaluator(new CustomPermissionEvaluator());
         return expressionHandler;
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        log.info("WebSecurityConfig corsConfigurationSource:{}", appCorsProperties);
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // ใส่โดเมนที่อนุญาต (เอาตาม app.cors.allowed-origins ของคุณ)
+        configuration.setAllowedOrigins(appCorsProperties.allowedOrigins());
+
+        // อนุญาต Method ทั้งหมด รวมเทิง OPTIONS ด้วย
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+
+        // อนุญาต Header ทั้งหมดไปก่อน เพื่อแก้ปัญหาเบื้องต้น
+//        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of(
+                ConstantData.CACHE_CONTROL,
+                ConstantData.CONTENT_TYPE,
+                ConstantData.AUTHORIZATION,
+                ConstantData.ACCEPT_LANGUGE,
+                ConstantData.ACCEPT_APIC_LIENT,
+                ConstantData.X_SYNC_ACTIVE,
+                ConstantData.X_USER_ID));
+
+        configuration.setExposedHeaders(Arrays.asList("Content-Disposition", "Set-Cookie"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+
+        // นำ Configuration นี้ไปใช้กับทุกๆ API Path (/**)
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }
