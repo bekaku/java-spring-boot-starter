@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Data
 public class FileManagerDto {
     public void assign(Long id, String fileMime, String fileName, String filePath, String fileThumbnailPath,
-                       String fileSize, LocalDateTime createdDate,LocalDateTime updatedDate, FileMimeType fileMimeType) {
+                       String fileSize, LocalDateTime createdDate, LocalDateTime updatedDate, FileMimeType fileMimeType, String streamPath) {
         this.id = id;
         this.fileMime = fileMime;
         this.fileName = fileName;
@@ -21,6 +21,7 @@ public class FileManagerDto {
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
         this.fileMimeType = fileMimeType;
+        this.streamPath = streamPath;
     }
 
     private Long id;
@@ -37,6 +38,8 @@ public class FileManagerDto {
     private String title;
     private String description;
     private boolean useThumbnail;
+    private String uniqueId;
+    private String streamPath;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;

@@ -829,15 +829,15 @@ public class FileManagerController extends BaseApiController {
         return webAsyncTask;
     }
 
-    @GetMapping("/files/stream")
+    @GetMapping("/files/stream/{id}")
     public ResponseEntity<StreamingResponseBody> streamFile(
-            @RequestParam("path") String filePath,
+            @PathVariable("id") Long id,
             @RequestParam(defaultValue = "8192") int chunkSize,
             @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
             @RequestHeader(value = ConstantData.AUTHORIZATION) String authorization
     ) {
 
-        log.info("streamFile:{}, chunkSize:{}, apiClientName:{}, authorization:{}", filePath, chunkSize, apiClientName, authorization);
+        log.info("streamFile:{}, chunkSize:{}, apiClientName:{}, authorization:{}", id, chunkSize, apiClientName, authorization);
         //        Optional<AppUserDto> userAuthen = jwtService.jwtVerify(
 //                apiClientName,
 //                request.getHeader(ConstantData.AUTHORIZATION),
@@ -847,7 +847,11 @@ public class FileManagerController extends BaseApiController {
         if (jwtSub.isEmpty()) {
             throw this.responseErrorForbidden();
         }
-        return streamFileByFilePath(filePath, chunkSize);
+        Optional<FileManager> fileManager = fileManagerService.findById(id);
+        if (fileManager.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        return streamFileByFilePath(fileManager.get().getFilePath(), chunkSize);
 //        return streamRateLimitFileByFilePath(filePath, chunkSize);
     }
 
@@ -1080,10 +1084,15 @@ public class FileManagerController extends BaseApiController {
   */
     @GetMapping("/video/stream")
     public ResponseEntity<StreamingResponseBody> streamVideo(
-            @RequestParam("path") String filePath,
+            @RequestParam("file") String file,
             @RequestParam(defaultValue = "8192") int chunkSize,
             @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader) {
-        return streamingVideoByFilePath(filePath, chunkSize, rangeHeader);
+        if (AppUtil.isEmpty(file)) {
+            throw this.responseErrorNotfound();
+        }
+        String path = ConstantData.MEDIAS + file;
+        log.info("/video/stream:{}", path);
+        return streamingVideoByFilePath(path, chunkSize, rangeHeader);
     }
 
     @SuppressWarnings("UnstableApiUsage")

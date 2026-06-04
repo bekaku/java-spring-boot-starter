@@ -13,6 +13,7 @@ import com.bekaku.api.spring.repository.FileManagerRepository;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
+import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.FileUtil;
 import com.bekaku.api.spring.vo.Paging;
 import lombok.RequiredArgsConstructor;
@@ -123,7 +124,7 @@ public class FileManagerServiceImpl implements FileManagerService {
 //                String tnPath = FileUtil.generateThumbnailName(fileManager.getThumbnailFile().getFilePath(), appProperties.uploadImage().getThumbnailExname());
 //                thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), tnPath, null);
 //            } else {
-                thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getThumbnailFile().getFilePath(), null);
+            thumbnailPath = FileUtil.generateCdnPath(appProperties.getCdnForPublic(), fileManager.getThumbnailFile().getFilePath(), null);
 //            }
 
         } else if (fileMimeType.equals(FileMimeType.IMAGE)) {
@@ -135,6 +136,7 @@ public class FileManagerServiceImpl implements FileManagerService {
                 thumbnailPath = path;
             }
         }
+        String streamPath = getStreamPath(fileMimeType, fileManager.getFilePath(), fileManager.getId());
         dto.assign(fileManager.getId(),
                 mimeType,
                 fileManager.getOriginalFileName(),
@@ -143,7 +145,8 @@ public class FileManagerServiceImpl implements FileManagerService {
                 FileUtil.humanReadableByteCountSI(fileManager.getFileSize()),
                 fileManager.getCreatedDate(),
                 fileManager.getCreatedDate(),
-                fileMimeType);
+                fileMimeType,
+                streamPath);
 
         return dto;
     }
@@ -230,11 +233,23 @@ public class FileManagerServiceImpl implements FileManagerService {
                 thumbnailPath = path;
             }
         }
+        //set stream path
+        vo.setStreamPath(getStreamPath(fileMimeType, vo.getFilePath(), vo.getId()));
         vo.setFilePath(path);
         vo.setFileThumbnailPath(thumbnailPath);
         vo.setFileSize(FileUtil.humanReadableByteCountSI(vo.getFileSizeNo()));
         vo.setFileMimeType(fileMimeType);
         return vo;
+    }
+
+    private String getStreamPath(FileMimeType fileMimeType, String path, Long id) {
+        String streamPath = null;
+        if (fileMimeType.equals(FileMimeType.VIDEO)) {
+            streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/video/stream?file=" + path.replace(ConstantData.MEDIAS, "");
+        } else {
+            streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/files/stream/" + id;
+        }
+        return streamPath;
     }
 
     @Override
@@ -248,7 +263,8 @@ public class FileManagerServiceImpl implements FileManagerService {
                 FileUtil.humanReadableByteCountSI(filesDirectory.getFileSize()),
                 filesDirectory.getCreatedDate(),
                 filesDirectory.getLatestUpdated(),
-                FileMimeType.DIRECTORY
+                FileMimeType.DIRECTORY,
+                null
         );
         return dto;
     }

@@ -56,4 +56,8 @@ public record AppProperties(
                 ConstantData.BACK_SLACK +
                 cdnPathAlias;
     }
+
+    public String getCdnIpForPublic() {
+        return cdnUrl + (cdnPort.equalsIgnoreCase("80") || cdnPort.equalsIgnoreCase("443") ? "" : ConstantData.COLON + cdnPort);
+    }
 }
