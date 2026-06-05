@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,9 @@ import javax.sql.DataSource;
 @Slf4j
 @Component
 public class PerformanceMonitor {
+
+    @Value("${app.version}")
+    String appVersion;
 
     @Autowired
     private DataSource dataSource;
@@ -24,9 +28,10 @@ public class PerformanceMonitor {
         long freeMemory = runtime.freeMemory();
         long usedMemory = totalMemory - freeMemory;
 
+        log.info("App Version: {}", appVersion);
         log.info("Memory usage: {}MB", usedMemory / 1024 / 1024);
-        log.info("Startup time: {}ms",
-                System.currentTimeMillis() - startTime);
+        log.info("Startup time: {}ms", System.currentTimeMillis() - startTime);
+
     }
 
     @PostConstruct

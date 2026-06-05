@@ -1,16 +1,15 @@
 package com.bekaku.api.spring.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
-
-import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 @Getter
 @Setter
 public class DtoId {
-//    @JsonSerialize(using = ToStringSerializer.class)
+    //    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
 }
