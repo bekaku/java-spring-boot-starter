@@ -118,7 +118,7 @@ spring:
         max-page-size: 50
   mvc:
     async:
-      request-timeout: 30000  # 30000=30 seconds timeout for async requests, -1 is no limit
+      request-timeout: 30000  #ms 30000=30 seconds timeout for async requests, 3600000=1hour, -1 is no limit , for streamming server set to -1 or 3600000
     #setting to default locale th_TH, en_US
     locale: th_TH
     #force locale resolver to spring boot reconized your settings
