@@ -245,7 +245,8 @@ public class FileManagerServiceImpl implements FileManagerService {
     private String getStreamPath(FileMimeType fileMimeType, String path, Long id) {
         String streamPath = null;
         if (fileMimeType.equals(FileMimeType.VIDEO)) {
-            streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/video/stream?file=" + path.replace(ConstantData.MEDIAS, "")+"&id="+id;
+            streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/video/stream?file=" + path+"&id="+id;
+//            streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/video/stream?file=" + path.replace(ConstantData.MEDIAS, "")+"&id="+id;
         } else {
             streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/files/stream/" + id;
         }

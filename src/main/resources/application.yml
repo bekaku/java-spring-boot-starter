@@ -389,6 +389,7 @@ app:
     - application/pdf
     - application/vnd.rar
     - application/zip
+    - application/x-matroska
     - image/jpeg
     - image/png
     - image/gif

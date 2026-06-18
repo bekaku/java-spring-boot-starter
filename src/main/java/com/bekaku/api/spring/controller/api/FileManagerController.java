@@ -1090,9 +1090,9 @@ public class FileManagerController extends BaseApiController {
         if (AppUtil.isEmpty(file)) {
             throw this.responseErrorNotfound();
         }
-        String path = ConstantData.MEDIAS + file;
-        log.info("/video/stream:{}", path);
-        return streamingVideoByFilePath(path, chunkSize, rangeHeader);
+//        String path = ConstantData.MEDIAS + file;
+//        log.info("/video/stream:{}", path);
+        return streamingVideoByFilePath(file, chunkSize, rangeHeader);
     }
 
     @SuppressWarnings("UnstableApiUsage")
