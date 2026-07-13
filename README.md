@@ -69,6 +69,7 @@ This starter template provides a robust foundation for Java-based REST API devel
 
 This API is designed to work seamlessly with modern frontend frameworks:
 
+- **[Nuxt.js + Nuxt Ui](https://github.com/bekaku/nuxt-ui-starter)** - Server-side rendered Vue.js application
 - **[Nuxt.js + Quasar](https://github.com/bekaku/nuxt-quasar-example-app)** - Server-side rendered Vue.js application
 - **[Vue.js 3 + Quasar 2+](https://github.com/bekaku/quasar-starter-template)** - Modern Vue.js SPA & SSR
 - **[Vue.js 3 + Ionic 8](https://github.com/bekaku/vue-ionic-example-app)** - Mobile-first application
