@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:122.155.208.143}:13537/spring_starter?allowPublicKeyRetrieval=true&useSSL=false
-    username: mysql_user
-    password: mysql_pwd
+    url: jdbc:postgresql://localhost:5432/spring_starter_postgres
+    username: db_user
+    password: db_pwd
   mail:
     host: your-mail-server.com
     port: 465

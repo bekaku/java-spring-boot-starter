@@ -139,22 +139,34 @@ public class DevelopmentContoller extends BaseApiController {
         permissonService.saveAll(Arrays.asList(
                 new Permission("api_client_list"),
                 new Permission("api_client_view"),
-                new Permission("api_client_manage"),
+                new Permission("api_client_add"),
+                new Permission("api_client_edit"),
+                new Permission("api_client_delete"),
                 new Permission("permission_list"),
                 new Permission("permission_view"),
-                new Permission("permission_manage"),
+                new Permission("permission_add"),
+                new Permission("permission_edit"),
+                new Permission("permission_delete"),
                 new Permission("role_list"),
                 new Permission("role_view"),
-                new Permission("role_manage"),
+                new Permission("role_add"),
+                new Permission("role_edit"),
+                new Permission("role_delete"),
                 new Permission("user_list"),
                 new Permission("user_view"),
-                new Permission("user_manage"),
+                new Permission("user_add"),
+                new Permission("user_edit"),
+                new Permission("user_delete"),
                 new Permission("files_directory_list"),
                 new Permission("files_directory_view"),
-                new Permission("files_directory_manage"),
+                new Permission("files_directory_add"),
+                new Permission("files_directory_edit"),
+                new Permission("files_directory_delete"),
                 new Permission("file_manager_list"),
                 new Permission("file_manager_view"),
-                new Permission("file_manager_manage")
+                new Permission("file_manager_add"),
+                new Permission("file_manager_edit"),
+                new Permission("file_manager_delete")
         ));
     }
 
@@ -300,13 +312,21 @@ public class DevelopmentContoller extends BaseApiController {
                         if (permissonService.findByCode(table.getName() + "_view").isEmpty()) {
                             permissonService.save(new Permission(table.getName() + "_view"));
                         }
-                        if (permissonService.findByCode(table.getName() + "_manage").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_manage"));
+                        if (permissonService.findByCode(table.getName() + "_add").isEmpty()) {
+                            permissonService.save(new Permission(table.getName() + "_add"));
+                        }
+                        if (permissonService.findByCode(table.getName() + "_edit").isEmpty()) {
+                            permissonService.save(new Permission(table.getName() + "_edit"));
+                        }
+                        if (permissonService.findByCode(table.getName() + "_delete").isEmpty()) {
+                            permissonService.save(new Permission(table.getName() + "_delete"));
                         }
 //                        permissonService.saveAll(Arrays.asList(
-//                                new Permission(table.getName()+"_list", table.getName()+"_list", table.getName()+"_list", false),
-//                                new Permission(table.getName()+"_view", table.getName()+"_view", table.getName()+"_view", false),
-//                                new Permission(table.getName()+"_manage", table.getName()+"_manage", table.getName()+"_manage", false)
+//                                new Permission(table.getName()+"_list", table.getName()+"_list", table.getName()+"_list"),
+//                                new Permission(table.getName()+"_view", table.getName()+"_view", table.getName()+"_view"),
+//                                new Permission(table.getName()+"_manage", table.getName()+"_manage", table.getName()+"_add")
+//                                new Permission(table.getName()+"_manage", table.getName()+"_manage", table.getName()+"_edit")
+//                                new Permission(table.getName()+"_manage", table.getName()+"_manage", table.getName()+"_delete")
 //                        ));
                     }
                 }
@@ -772,7 +792,7 @@ public class DevelopmentContoller extends BaseApiController {
                 //create
                 writer.append("\n");
                 if (havePermission) {
-                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_add')\")\n");
                 }
                 writer.append("    @PostMapping\n");
                 if (haveDto) {
@@ -799,7 +819,7 @@ public class DevelopmentContoller extends BaseApiController {
                 //update
                 writer.append("\n");
                 if (havePermission) {
-                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_edit')\")\n");
                 }
                 writer.append("    @PutMapping(\"/{id}\")\n");
                 if (haveDto) {
@@ -850,7 +870,7 @@ public class DevelopmentContoller extends BaseApiController {
                 //delete
                 writer.append("\n");
                 if (havePermission) {
-                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_manage')\")\n");
+                    writer.append("    @PreAuthorize(\"@permissionChecker.hasPermission('").append(AppUtil.camelToSnake(entityName)).append("_delete')\")\n");
                 }
                 writer.append("    @DeleteMapping(\"/{id}\")\n");
                 writer.append("    public ResponseEntity<Object> delete(@PathVariable(\"id\") Long id) {\n");
@@ -895,11 +915,11 @@ public class DevelopmentContoller extends BaseApiController {
         }
         if (!FileUtil.fileExists(listName)) {
             log.warn("listName :{}, created", listName);
-            generateNux3QuasarFrontList(listName, entityName, tableName);
+            generateNuxQuasarFrontList(listName, entityName, tableName);
         }
         if (!FileUtil.fileExists(formName)) {
             log.warn("formName :{}, created", formName);
-            generateNux3QuasarFrontForm(formName, entityName, tableName);
+            generateNuxQuasarFrontForm(formName, entityName, tableName);
         }
         if (!FileUtil.fileExists(apiName)) {
             log.warn("apiName :{}, created", apiName);
@@ -907,7 +927,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateNux3QuasarFrontList(String filePathName, String entityName, String tableName) {
+    private void generateNuxQuasarFrontList(String filePathName, String entityName, String tableName) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -952,14 +972,14 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("\n");
 
             //Permission
-            writer.append("/* move this object to /app/libs/appPermissions.ts \n");
-            writer.append("export const ").append(entityName).append("Permission= {\n");
-            writer.append("  view: '").append(tableName).append("_view',\n");
-            writer.append("  list: '").append(tableName).append("_list',\n");
-            writer.append("  manage: '").append(tableName).append("_manage'\n");
-            writer.append("}\n");
-            writer.append("*/\n");
-            writer.append("\n");
+//            writer.append("/* move this object to /app/libs/appPermissions.ts \n");
+//            writer.append("export const ").append(entityName).append("Permission= {\n");
+//            writer.append("  view: '").append(tableName).append("_view',\n");
+//            writer.append("  list: '").append(tableName).append("_list',\n");
+//            writer.append("  manage: '").append(tableName).append("_manage'\n");
+//            writer.append("}\n");
+//            writer.append("*/\n");
+//            writer.append("\n");
 
             //message
             writer.append("/* move this message object to /app/i18n/th/model.ts and /app/i18n/en/model.ts under model:{}  \n");
@@ -976,11 +996,11 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("import { biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
             writer.append("import { CrudListDataType, ICrudListHeaderOptionSearchType, type ICrudListHeader } from '~/types/common';\n");
             writer.append("import type { ").append(entityName).append(" } from '~/types/models';\n");
-            writer.append("import { ").append(entityName).append("Permission } from '~/libs/appPermissions';\n");
+//            writer.append("import { ").append(entityName).append("Permission } from '~/libs/appPermissions';\n");
 
             writer.append("definePageMeta({ \n");
             writer.append("  pageName: 'model.").append(entityNameLowerFirst).append(".table', \n");
-            writer.append("  requiresPermission: [").append(entityName).append("Permission.list], \n");
+            writer.append("  requiresPermission: ['").append(tableName).append("_list'], \n");
             writer.append("}) \n");
             writer.append("useInitPage(); \n");
             writer.append("const { t }=useLang(); \n");
@@ -1090,8 +1110,20 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      :sort=\"sort\" \n");
             writer.append("      :list=\"dataList\" \n");
             writer.append("      show-search-text-box \n");
-            writer.append("      :view-permission=\"[").append(entityName).append("Permission.view]\"\n");
-            writer.append("      :manage-permission=\"[").append(entityName).append("Permission.manage]\"\n");
+
+//            writer.append("      :view-permission=\"{ \n");
+//            writer.append("        permissions: ['").append(tableName).append("_view'] \n");
+//            writer.append("      }\"\n");
+//            writer.append("      :add-permission=\"{ \n");
+//            writer.append("        permissions: ['").append(tableName).append("_add'] \n");
+//            writer.append("      }\"\n");
+//            writer.append("      :edit-permission=\"{ \n");
+//            writer.append("        permissions: ['").append(tableName).append("_edit'] \n");
+//            writer.append("      }\"\n");
+//            writer.append("      :delete-permission=\"{ \n");
+//            writer.append("        permissions: ['").append(tableName).append("_delete'] \n");
+//            writer.append("      }\"\n");
+
             writer.append("      @on-item-click=\"onItemClick\" \n");
             writer.append("      @on-item-copy=\"onItemCopy\" \n");
             writer.append("      @on-page-no-change=\"onPageNoChange\" \n");
@@ -1127,7 +1159,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateNux3QuasarFrontForm(String filePathName, String entityName, String tableName) {
+    private void generateNuxQuasarFrontForm(String filePathName, String entityName, String tableName) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -1138,7 +1170,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("<script setup lang=\"ts\">\n");
             writer.append("import { biFileEarmark } from '@quasar/extras/bootstrap-icons';\n");
             writer.append("import { ").append(entityName).append("FormBreadcrumb } from '~/libs/appBreadcrumbs';\n");
-            writer.append("import { ").append(entityName).append("Permission } from '~/libs/appPermissions';\n");
+//            writer.append("import { ").append(entityName).append("Permission } from '~/libs/appPermissions';\n");
             writer.append("import type { ").append(entityName).append(" } from '~/types/models';\n");
 
             writer.append("const { t } = useLang();\n");
@@ -1146,7 +1178,7 @@ public class DevelopmentContoller extends BaseApiController {
 
             writer.append("definePageMeta({ \n");
             writer.append("  pageName: 'model.").append(entityNameLowerFirst).append(".table', \n");
-            writer.append("  requiresPermission: [").append(entityName).append("Permission.view], \n");
+            writer.append("  requiresPermission: ['").append(tableName).append("_view'], \n");
             writer.append("  breadcrumbs: ").append(entityName).append("FormBreadcrumb,\n");
             writer.append("}) \n");
             writer.append("useInitPage(); \n");
@@ -1199,8 +1231,18 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      :crud-action=\"crudAction\"\n");
             writer.append("      :crud-entity=\"crudEntity\"\n");
             writer.append("      :full-width=\"false\"\n");
-            writer.append("      :list-permission=\"[").append(entityName).append("Permission.list]\"\n");
-            writer.append("      :manage-permission=\"[").append(entityName).append("Permission.manage]\"\n");
+            //            writer.append("      :list-permission=\"{ \n");
+//            writer.append("        permissions: ['").append(tableName).append("_list'] \n");
+//            writer.append("      }\"\n");
+//            writer.append("      :add-permission=\"{ \n");
+//            writer.append("        permissions: ['").append(tableName).append("_add'] \n");
+//            writer.append("      }\"\n");
+//            writer.append("      :edit-permission=\"{ \n");
+//            writer.append("        permissions: ['").append(tableName).append("_edit'] \n");
+//            writer.append("      }\"\n");
+//            writer.append("      :delete-permission=\"{ \n");
+//            writer.append("        permissions: ['").append(tableName).append("_delete'] \n");
+//            writer.append("      }\"\n");
             writer.append("      :loading=\"loading\"\n");
             writer.append("      @on-back=\"onBack\"\n");
             writer.append("      @on-submit=\"onSubmit\"\n");

@@ -1,5 +1,7 @@
 package com.bekaku.api.spring.util;
 
+import java.io.Serial;
+import java.util.HashMap;
 import java.util.List;
 
 public class ConstantData {
@@ -137,5 +139,17 @@ public class ConstantData {
 
     public static final String PART_SEPARATOR = ",";
     public static final String DEFAULT_FRONTEND_GENERATE_DIRECTORY = "build/generated/frontend";
+    public static HashMap<String, String> defaultHttpHeaders() {
+        return new HashMap<>() {
+            @Serial
+            private static final long serialVersionUID = 1L;
+
+            {
+                put("Content-Type", "application/json; charset=UTF-8");
+                put("Accept", "application/json");
+                put("Accept-Apiclient", "default");
+            }
+        };
+    }
 
 }

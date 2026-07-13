@@ -328,8 +328,8 @@ public class AuthController extends BaseApiController {
                                                   @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                                   @RequestHeader(value = ConstantData.X_USER_ID, required = false, defaultValue = "0") Long currentUserId) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
-        String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
-//        String refreshTokenKey = refreshTokenRequest.getRefreshToken();
+//        String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
+        String refreshTokenKey = refreshTokenRequest.getRefreshToken();
         if (apiClient.isPresent() && !AppUtil.isEmpty(refreshTokenKey)) {
             Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
             if (tokenKey.isPresent()) {

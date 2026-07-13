@@ -37,6 +37,9 @@ public class AiRagServiceImpl implements AiRagService {
 
     private final String TEST_COMPANY= "GATS";
 
+    @Value("classpath:prompts/system-rag.txt")
+    private Resource systemPromptResource;
+
     @Transactional
     public void ingestPdf(Resource resource, String originalFileName) {
         // 1. จัดการข้อมูลเก่า (ถ้ามีไฟล์ชื่อซ้ำ ให้ลบของเก่าทิ้งให้คลีนก่อน)
@@ -119,6 +122,7 @@ public class AiRagServiceImpl implements AiRagService {
                         .build())
                 .build()
                 .prompt()
+                .system(systemPromptResource)
                 .user(question)
                 .stream()
                 .content();

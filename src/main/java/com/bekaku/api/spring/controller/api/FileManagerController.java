@@ -144,7 +144,7 @@ public class FileManagerController extends BaseApiController {
         return fileManagerService.findAllFileByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('file_manager_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_create')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody FileManagerDto dto) {
         FileManager fileManager = fileManagerService.convertDtoToEntity(dto);
@@ -152,7 +152,7 @@ public class FileManagerController extends BaseApiController {
         return this.responseEntity(fileManagerService.convertEntityToDto(fileManager), HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('file_manager_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_edit')")
     @PutMapping
     public ResponseEntity<Object> update(@Valid @RequestBody FileManagerDto dto) {
         FileManager fileManager = fileManagerService.convertDtoToEntity(dto);
@@ -175,7 +175,7 @@ public class FileManagerController extends BaseApiController {
         return this.responseEntity(fileManagerService.convertEntityToDto(fileManager.get()), HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('file_manager_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_delete')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id) throws IOException {
         Optional<FileManager> fileManager = fileManagerService.findById(id);

@@ -16,7 +16,7 @@ RUN ./gradlew bootJar -x test
 # --- Stage 2: Run Stage ---
 FROM eclipse-temurin:25-jdk-alpine
 
-# 1. Setup User & Group (ทำก่อนเพื่อความปลอดภัย)
+# 1.Set up User & Group (Do this first for security reasons)
 RUN addgroup -g 1001 springgroup && \
     adduser -D -u 1001 -G springgroup springuser
 
@@ -34,11 +34,11 @@ RUN apk --no-cache add curl tzdata && \
 WORKDIR /app
 
 
-# 2. Copy ไฟล์ JAR และเปลี่ยนเจ้าของเป็น springuser ทันที
+#2. Copy the JAR file and immediately change the ownership to springuser.
 #COPY --from=builder /build/build/libs/*.jar app.jar
 COPY --from=builder --chown=springuser:springgroup /build/build/libs/*.jar app.jar
 
-# 3. สลับไปใช้ non-root user
+# 3. Switch to non-root user.
 USER springuser
 
 #go to host and change owner to 1001 for access read write delete

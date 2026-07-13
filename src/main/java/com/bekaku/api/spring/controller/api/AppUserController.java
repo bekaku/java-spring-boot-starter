@@ -181,7 +181,7 @@ public class AppUserController extends BaseApiController {
         return this.responseEntity(appUserService.findAllWithSearch(specification, getPageable(pageable, AppUser.getSort())), HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('app_user_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_add')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody UserRegisterRequest dto) {
         return this.responseEntity(ceateUserProcess(dto), HttpStatus.CREATED);
@@ -227,7 +227,7 @@ public class AppUserController extends BaseApiController {
         return this.responseEntity(appUserService.convertEntityToDto(user.get()), HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('app_user_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_edit')")
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateUser(@Valid @RequestBody UserUpdateRequest dto, @PathVariable("id") Long id) {
         Optional<AppUser> user = appUserService.findById(id);
@@ -254,7 +254,7 @@ public class AppUserController extends BaseApiController {
         return appUserService.convertEntityToDto(appUser);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('app_user_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_edit')")
     @PutMapping("/updateUserPassword/{id}")
     public ResponseEntity<Object> updateUserPassword(@PathVariable("id") Long id, @Valid @RequestBody UserChangePasswordRequest dto) {
         Optional<AppUser> user = appUserService.findById(id);
@@ -280,7 +280,7 @@ public class AppUserController extends BaseApiController {
     }
 
 
-    @PreAuthorize("@permissionChecker.hasPermission('app_user_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_user_delete')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteUser(@PathVariable("id") Long id) {
         Optional<AppUser> user = appUserService.findById(id);

@@ -1,23 +1,23 @@
 name: Build App Image
 
-# กำหนดว่าจะให้ทำงานตอนไหน (เช่น ตอน Push โค้ดเข้า branch main)
+# Specify when the code should run (e.g., when pushing code to the main branch).
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch: # อนุญาตให้กดสั่งรันแบบ Manual ได้บนหน้าเว็บ GitHub
+  workflow_dispatch: # Manual execution is permitted on the GitHub website.
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest # ใช้ Ubuntu runner ของ GitHub (เร็วและฟรี)
+    runs-on: ubuntu-latest # Use Ubuntu as a GitHub runner (fast and free).
 
     steps:
-      # 1. ดึง Source Code ล่าสุด
+      # 1. Pull the latest source code.
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. ติดตั้ง Docker Buildx (จำเป็นสำหรับการใช้ --mount=type=cache ใน Dockerfile)
+      # 2. Install Docker Buildx (required for using --mount=type=cache in the Dockerfile).
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -33,10 +33,10 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          push: true # เปลี่ยนเป็น true ถ้าต้องการ Push ขึ้น Registry (เช่น Docker Hub)
+          push: true # Change to true if you want to push to the Registry (e.g., Docker Hub).
           tags: |
             baekaku/spring-api-service:latest
             baekaku/spring-api-service:${{ github.sha }}
-          # 4. เวทมนตร์จัดการ Cache! ให้ GitHub เก็บ Cache ของ Gradle และ GraalVM ไว้ข้ามรอบการ Build
+          # 4. Magical caching! Let GitHub cache your Gradle and GraalVM builds across build iterations.
           cache-from: type=gha
           cache-to: type=gha,mode=max

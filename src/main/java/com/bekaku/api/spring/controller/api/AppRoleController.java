@@ -60,7 +60,7 @@ public class AppRoleController extends BaseApiController {
                 HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('app_role_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_add')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody AppRoleDto dto) {
         return this.responseEntity(createProcess(dto), HttpStatus.CREATED);
@@ -85,7 +85,7 @@ public class AppRoleController extends BaseApiController {
         }
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('app_role_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_edit')")
     @PutMapping("/{id}")
     public ResponseEntity<Object> update(@Valid @RequestBody AppRoleDto dto, @PathVariable("id") long id) {
         Optional<AppRole> role = appRoleService.findById(id);
@@ -127,7 +127,7 @@ public class AppRoleController extends BaseApiController {
         return this.responseEntity(appRoleDto, HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('app_role_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('app_role_delete')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id) {
         Optional<AppRole> role = appRoleService.findById(id);

@@ -47,7 +47,7 @@ public class FilesDirectoryController extends BaseApiController {
         return this.responseEntity(filesDirectoryService.findAllWithSearch(specification, getPageable(pageable, FilesDirectory.getSort())), HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('files_directory_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('files_directory_add')")
     @PostMapping
     public FileManagerDto create(@Valid @RequestBody FilesDirectoryDto dto, @AuthenticationPrincipal AppUserDto user) {
 
@@ -85,7 +85,7 @@ public class FilesDirectoryController extends BaseApiController {
         filesDirectoryPathService.save(new FilesDirectoryPath(pathId, level));
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('files_directory_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('files_directory_edit')")
     @PutMapping("/{id}")
     public FileManagerDto update(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user, @Valid @RequestBody FilesDirectoryDto dto) {
         Optional<FilesDirectory> oldData = filesDirectoryService.findByIdAndOwnerId(id, user.getId());
@@ -107,7 +107,7 @@ public class FilesDirectoryController extends BaseApiController {
         return this.responseEntity(directoryDto.get(), HttpStatus.OK);
     }
 
-    @PreAuthorize("@permissionChecker.hasPermission('files_directory_manage')")
+    @PreAuthorize("@permissionChecker.hasPermission('files_directory_delete')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable("id") long id, @AuthenticationPrincipal AppUserDto user) throws IOException {
         Optional<FilesDirectory> filesDirectory = filesDirectoryService.findByIdAndOwnerId(id, user.getId());
