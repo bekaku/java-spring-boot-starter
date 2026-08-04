@@ -53,17 +53,17 @@ This starter template provides a robust foundation for Java-based REST API devel
 
 ## 🛠 Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| **Framework** | Spring Boot 4.x |
-| **Build Tool** | Gradle 8.x |
-| **Language** | Java 17+ |
-| **Database** | H2, MySQL 8+, PostgreSQL |
+| Category | Technology                 |
+|----------|----------------------------|
+| **Framework** | Spring Boot 4.x            |
+| **Build Tool** | Gradle 8.x                 |
+| **Language** | Java 17+                   |
+| **Database** | PostgreSQL, MySQL 8+,   |
 | **ORM** | Hibernate (Spring Data JPA) |
-| **Security** | Spring Security + JWT |
-| **Documentation** | OpenAPI 3 (Swagger) |
-| **Testing** | JUnit 5, Mockito |
-| **Containerization** | Docker |
+| **Security** | Spring Security + JWT      |
+| **Documentation** | OpenAPI 3 (Swagger)        |
+| **Testing** | JUnit 5, Mockito           |
+| **Containerization** | Docker                     |
 
 ## 🎨 Compatible Frontend Applications
 

@@ -25,7 +25,9 @@ public record AppProperties(
         String cdnUrl,
         String cdnPort,
         List<String> allowMimes,         // app.allow-mimes
-        RagConfig rag
+        RagConfig rag,
+        AppCronProperties cron
+
 ) {
 
     // 2. วิธีจัดการกับ Default Value (แทนที่ = new ArrayList<>())

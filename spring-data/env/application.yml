@@ -21,6 +21,6 @@ spring:
       port: 6379
       password: redis_pwd
 app:
-  secret: jwt_secret
+  secret: k2BD/iw1FeiQzYYvIBjh1N1x1SocKeYWTpa1lFv8AlQ=
   cron:
-    enable: true
+    clean-old-file: true

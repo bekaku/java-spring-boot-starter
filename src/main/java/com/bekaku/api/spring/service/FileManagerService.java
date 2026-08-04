@@ -37,4 +37,6 @@ public interface FileManagerService extends BaseService<FileManager, FileManager
     void deleteAllFileByFilesDirectory(FilesDirectory filesDirectory);
 
     void deleteFileBy(FileManager fileManager);
+
+    void cleanupOldFiles();
 }

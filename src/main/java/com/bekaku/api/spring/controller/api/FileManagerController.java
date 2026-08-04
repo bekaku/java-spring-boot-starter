@@ -305,7 +305,7 @@ public class FileManagerController extends BaseApiController {
             boolean useThumbnail = false;
             //resize image
             if (fileMimeType.equals(FileMimeType.IMAGE)) {
-                ImageDto imgInfo = getImageInfo(uploadPath + dto.getChunkFilename());
+                ImageDto imgInfo = getImageInfo(uploadPath + dto.getChunkFilename(), mimeType);
                 if (dto.isResizeImage() && canResize(imgInfo)) {
                     thumbnailatorResize(uploadPath, dto.getChunkFilename());
                 }
@@ -357,7 +357,7 @@ public class FileManagerController extends BaseApiController {
     }
 
 
-    private ImageDto getImageInfo(String path) {
+    private ImageDto getImageInfo(String path, String mimeType) {
         File file = new File(path);
 
         if (!file.exists() || !file.isFile()) {
@@ -387,7 +387,7 @@ public class FileManagerController extends BaseApiController {
                 }
             }
             log.info("File Info:  {}", String.format("Size: %d bytes, Width: %d px, Height: %d px", fileSize, width, height));
-            return new ImageDto(fileSize, width, height);
+            return new ImageDto(fileSize, width, height, mimeType);
         } catch (IOException e) {
             log.error(e.getMessage());
             return null;
@@ -497,7 +497,7 @@ public class FileManagerController extends BaseApiController {
         }
         //resize image
         if (isImage) {
-            ImageDto imgInfo = getImageInfo(uploadPath + newName);
+            ImageDto imgInfo = getImageInfo(uploadPath + newName, mimeType);
             if (isResizeImage && canResize(imgInfo)) {
                 thumbnailatorResize(uploadPath, newName);
             }
@@ -579,8 +579,18 @@ public class FileManagerController extends BaseApiController {
         return (imageWidth > limitWidth || imageHeight > limitHeight) && (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
+    private boolean isBlockedMimeType(String mimeType) {
+        if (mimeType == null) {
+            return false;
+        }
+        return switch (mimeType.toLowerCase()) {
+            case "image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence" -> true;
+            default -> false;
+        };
+    }
+
     private boolean canResize(ImageDto imageDto) {
-        if (imageDto == null) {
+        if (imageDto == null || isBlockedMimeType(imageDto.getMimeType())) {
             return false;
         }
         long imageWidth = imageDto.getWidth();
@@ -591,15 +601,9 @@ public class FileManagerController extends BaseApiController {
         return (imageWidth > limitWidth || imageHeight > limitHeight) && (imageWidth <= maxResolution && imageHeight <= maxResolution);
     }
 
-    private boolean canCreateThumnail(BufferedImage originalImage) {
-        int imageWidth = originalImage.getWidth();
-        int imageHeight = originalImage.getHeight();
-        int maxResolution = appProperties.uploadImage().getMaxResolution();
-        return (imageWidth <= maxResolution && imageHeight <= maxResolution);
-    }
 
     private boolean canCreateThumnail(ImageDto imageDto) {
-        if (imageDto == null) {
+        if (imageDto == null || isBlockedMimeType(imageDto.getMimeType())) {
             return false;
         }
         long imageWidth = imageDto.getWidth();
@@ -618,11 +622,9 @@ public class FileManagerController extends BaseApiController {
                 File inputFile = new File(filePath);
                 BufferedImage originalImage = ImageIO.read(inputFile);
                 if (originalImage != null) {
-                    if (canCreateThumnail(originalImage)) {
-                        originalImage = FileUtil.correctOrientation(originalImage, inputFile);
-                        BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.uploadImage().getThumbnailWidth(), appProperties.uploadImage().getThumbnailWidth(), 1);
-                        ImageIO.write(outputImage, "jpg", new File(fileThumnailPath));
-                    }
+                    originalImage = FileUtil.correctOrientation(originalImage, inputFile);
+                    BufferedImage outputImage = FileUtil.thumbnailatorResizeImage(originalImage, appProperties.uploadImage().getThumbnailWidth(), appProperties.uploadImage().getThumbnailWidth(), 1);
+                    ImageIO.write(outputImage, "jpg", new File(fileThumnailPath));
                 }
 
             } catch (IOException e) {

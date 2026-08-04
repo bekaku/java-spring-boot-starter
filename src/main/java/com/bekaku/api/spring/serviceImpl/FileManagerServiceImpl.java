@@ -17,10 +17,12 @@ import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.FileUtil;
 import com.bekaku.api.spring.vo.Paging;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
+@Slf4j
 @Transactional
 @RequiredArgsConstructor
 @Service
@@ -245,7 +249,7 @@ public class FileManagerServiceImpl implements FileManagerService {
     private String getStreamPath(FileMimeType fileMimeType, String path, Long id) {
         String streamPath = null;
         if (fileMimeType.equals(FileMimeType.VIDEO)) {
-            streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/video/stream?file=" + path+"&id="+id;
+            streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/video/stream?file=" + path + "&id=" + id;
 //            streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/video/stream?file=" + path.replace(ConstantData.MEDIAS, "")+"&id="+id;
         } else {
             streamPath = appProperties.getCdnIpForPublic() + "/api/fileManager/files/stream/" + id;
@@ -317,6 +321,24 @@ public class FileManagerServiceImpl implements FileManagerService {
     public void deleteFileBy(FileManager fileManager) {
         deleteFileFromPath(fileManager);
         delete(fileManager);
+    }
+
+    // 0 = 0 seconds
+    // 30 = 30 minutes
+    // 23 = 23 hours (11 PM)
+    // * = Every day
+    // * = Every month
+    // ? = No day of the week specified (always used with dates marked with an asterisk in Spring)
+    @Override
+    @Scheduled(cron = "${app.cron.test-expression}")
+    @Transactional
+    public void cleanupOldFiles() {
+        if (appProperties.cron().cleanOldFile()) {
+            List<FileManager> files = fileManagerRepository.findAll();
+            for (FileManager file : files) {
+                deleteFileFromPath(file);
+            }
+        }
     }
 
     private void deleteFileFromPath(FileManager fileManager) {

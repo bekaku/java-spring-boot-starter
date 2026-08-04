@@ -9,12 +9,13 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 //@EnableRabbit
 @EnableCaching
 @SpringBootApplication(scanBasePackages = "com.bekaku.api")
 @EnableJpaAuditing
-//@EnableScheduling
+@EnableScheduling
 @ConfigurationPropertiesScan
 @ImportRuntimeHints(AppHints.class)
 @EnableAsync

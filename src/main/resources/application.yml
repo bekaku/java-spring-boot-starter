@@ -264,8 +264,8 @@ mybatis:
   # mybatis.mapper-locations=mybatis/*.xml
   mapperLocations: classpath:mybatis/*.xml
   configuration:
-#    lazy-loading-enabled: false
-#    aggressive-lazy-loading : false
+    #    lazy-loading-enabled: false
+    #    aggressive-lazy-loading : false
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
     cache-enabled: true
     default-statement-timeout: 3000
@@ -287,7 +287,7 @@ management:
     web:
       exposure:
         include: health,prometheus,info
-#        include: health,metrics,prometheus,info,startup
+  #        include: health,metrics,prometheus,info,startup
   metrics:
     enable:
       hikari: true
@@ -340,7 +340,7 @@ app:
     same-site: Lax
   jwt:
     # SHA 512-bit Key
-    secret: cnje/akyCjmaLQ//A85mc488lyFTPH9X3bUvY5VtbDE=
+    secret: TzIGu7DC5IhL/hYNpQi7V0CATXCVaDcoHNExNef9H70=
     #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes
     session-time: 86400
     session-refresh-time: 604800
@@ -399,6 +399,10 @@ app:
     - image/png
     - image/gif
     - image/webp
+    - image/heic
+    - image/heif
+    - image/heif-sequence
+    - image/heic-sequence
     - text/plain
     - text/csv
     - video/mpeg
@@ -418,7 +422,10 @@ app:
     - audio/mp4
 
   cron:
-    test-expression: 0 */2 * * * *
+    enable: false
+    test-expression: 0 */2 * * * * #every 2 minutes
+    clean-file-expression: 0 30 23 * * ? #every day 11:30 PM
+    clean-old-file: false
   worker:
     id: ${WORKER_ID:1} # fallback to 1 if not set
 custom:
