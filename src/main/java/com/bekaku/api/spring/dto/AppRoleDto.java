@@ -19,5 +19,5 @@ public class AppRoleDto extends DtoId {
     @Size(min = 3, max = 100, message = "{error.Size3Limit100}")
     private String name;
     private boolean active;
-    private Long[] selectdPermissions = new Long[]{};
+    private String[] selectdPermissions = new String[]{};
 }

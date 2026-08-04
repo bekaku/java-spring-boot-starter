@@ -4,6 +4,7 @@ import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.LoginRequest;
 import com.bekaku.api.spring.dto.RefreshTokenResponse;
 import com.bekaku.api.spring.enumtype.JwtType;
+import com.bekaku.api.spring.enumtype.LoginLogType;
 import com.bekaku.api.spring.exception.AppException;
 import com.bekaku.api.spring.model.*;
 import com.bekaku.api.spring.service.*;
@@ -61,17 +62,26 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public RefreshTokenResponse login(AppUser appUser, LoginRequest loginRequest, ApiClient apiClient, String userAgent, IpAddress ipAddress) {
+        return loingProcess(appUser, apiClient, userAgent, ipAddress, loginRequest.getDeviceId(), loginRequest.getLoginFrom(), loginRequest.getFcmToken());
+    }
+
+    private RefreshTokenResponse loingProcess(AppUser appUser, ApiClient apiClient, String userAgent, IpAddress ipAddress, String deviceId, LoginLogType loginFrom, String fcmToken) {
         Optional<UserAgent> findAgent = userAgentService.findByAgent(userAgent);
         UserAgent agent = findAgent.orElseGet(() -> userAgentService.save(new UserAgent(userAgent)));
-        LoginLog loginLog = loginLogService.save(new LoginLog(loginRequest.getLoginFrom(), appUser, ipAddress, loginRequest.getDeviceId(), agent));
-        AccessToken token = accessTokenService.generateRefreshToken(appUser, apiClient, loginLog, loginRequest.getFcmToken());
+        LoginLog loginLog = loginLogService.save(new LoginLog(loginFrom, appUser, ipAddress, deviceId, agent));
+        AccessToken token = accessTokenService.generateRefreshToken(appUser, apiClient, loginLog, fcmToken);
         return RefreshTokenResponse.builder()
                 .userId(appUser.getId())
                 .authenticationToken(jwtService.toToken(appUser, token.getToken(), apiClient, jwtService.expireJwtTimeFromNow(), JwtType.Authen))
-                .refreshToken(jwtService.toToken(appUser, token.getToken(), apiClient, jwtService.expireRefreshTokenTimeFromNow(), JwtType.Refresh))
+//                .refreshToken(jwtService.toToken(appUser, token.getToken(), apiClient, jwtService.expireRefreshTokenTimeFromNow(), JwtType.Refresh))
+                .refreshToken(token.getToken())
                 .expiresAt(jwtService.expireJwtTimeFromNow())
-                .refreshTokenKey(token.getToken())
                 .build();
+    }
+
+    @Override
+    public RefreshTokenResponse login(AppUser appUser, ApiClient apiClient, String userAgent, IpAddress ipAddress) {
+        return loingProcess(appUser, apiClient, userAgent, ipAddress, null, null, null);
     }
 
 
@@ -85,10 +95,10 @@ public class AuthServiceImpl implements AuthService {
         AppUser appUser = accessToken.getAppUser();
         return RefreshTokenResponse.builder()
                 .authenticationToken(jwtService.toToken(appUser, token, apiClient, jwtService.expireJwtTimeFromNow(), JwtType.Authen))
-                .refreshToken(jwtService.toToken(appUser, token, apiClient, jwtService.expireRefreshTokenTimeFromNow(),JwtType.Refresh))
+                .refreshToken(token)
+//                .refreshToken(jwtService.toToken(appUser, token, apiClient, jwtService.expireRefreshTokenTimeFromNow(),JwtType.Refresh))
                 .expiresAt(jwtService.expireJwtTimeFromNow())
                 .userId(appUser.getId())
-                .refreshTokenKey(token)
                 .build();
     }
 

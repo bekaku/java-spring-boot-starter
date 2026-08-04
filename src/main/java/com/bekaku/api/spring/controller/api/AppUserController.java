@@ -80,17 +80,15 @@ public class AppUserController extends BaseApiController {
 
     @GetMapping("/currentUserData")
     public ResponseEntity<AppUserDto> currentUserData(@AuthenticationPrincipal AppUserDto userAuthen,
-                                      HttpServletRequest request,
-                                      @RequestHeader(value = ConstantData.X_USER_ID, required = false) String currentUserId) {
-//    public UserDto currentUserData(@AuthenticationPrincipal UserDto userAuthen, @CookieValue(name = "jwt_token", required = false) String jwtRefreshTokenCookie) {
+                                                      HttpServletRequest request) {
 
         if (userAuthen == null) {
             throw this.responseErrorForbidden();
         }
-//        log.info("request.getCookies() :{}", (Object) request.getCookies());
-        String jwtRefreshTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.refreshTokenName() + UNDER_SCORE + currentUserId);
-        String jwtTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.tokenName() + UNDER_SCORE + currentUserId);
-        log.info("jwtTokenCookie: {}, currentJwtRefreshTokenCookie :{}", jwtTokenCookie, jwtRefreshTokenCookie);
+        String ckUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
+        String jwtRefreshTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.refreshTokenName() + ckUserId);
+        String jwtTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.tokenName() + ckUserId);
+        log.info("ckUserId :{}, jwtTokenCookie: {}, currentJwtRefreshTokenCookie :{}", ckUserId, jwtTokenCookie, jwtRefreshTokenCookie);
         AppUser user = appUserService.findAndValidateAppUserBy(userAuthen);
         AppUserDto dto = appUserService.convertEntityToDto(user);
         if (userAuthen.getAccessTokenId() != null) {
@@ -104,7 +102,7 @@ public class AppUserController extends BaseApiController {
 
     @GetMapping("/findAllLoginedProfile")
     public ResponseEntity<List<LoginedProfileItemDto>> findAllLoginedProfile(HttpServletRequest request,
-                                                             @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+                                                                             @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
 
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
@@ -116,7 +114,7 @@ public class AppUserController extends BaseApiController {
             return this.responseEntity(loginedUsers, HttpStatus.OK);
         }
 
-        String refreshCookiePrefix = jwtProperties.refreshTokenName() + "_";
+        String refreshCookiePrefix = jwtProperties.refreshTokenName();
 
         for (Cookie cookie : request.getCookies()) {
             if (cookie.getName().startsWith(refreshCookiePrefix)) {
@@ -133,6 +131,7 @@ public class AppUserController extends BaseApiController {
         return this.responseEntity(loginedUsers, HttpStatus.OK);
 
     }
+
     private LoginedProfileItemDto getLoginedProfileProcess(String refreshToken) {
         Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(refreshToken, false);
         if (accessToken.isEmpty()) {
@@ -163,7 +162,7 @@ public class AppUserController extends BaseApiController {
 
     @PostMapping("/findLoginedProfile")
     public ResponseEntity<LoginedProfileItemDto> findLoginedProfile(@Valid @RequestBody RefreshTokenRequest dto,
-                                                    @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+                                                                    @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
             return null;
@@ -240,16 +239,17 @@ public class AppUserController extends BaseApiController {
         }
     }
 
-    private void setUserImage(Long avatarId, Long coverId, AppUser appUser){
-        if(!AppUtil.isEmpty(avatarId)){
+    private void setUserImage(Long avatarId, Long coverId, AppUser appUser) {
+        if (!AppUtil.isEmpty(avatarId)) {
             Optional<FileManager> avatar = fileManagerService.findById(avatarId);
             avatar.ifPresent(appUser::setAvatarFile);
         }
-        if(!AppUtil.isEmpty(coverId)){
+        if (!AppUtil.isEmpty(coverId)) {
             Optional<FileManager> cover = fileManagerService.findById(coverId);
             cover.ifPresent(appUser::setCoverFile);
         }
     }
+
     @PreAuthorize("@permissionChecker.hasPermission('app_user_view')")
     @GetMapping("/{id}")
     public ResponseEntity<AppUserDto> findOne(@PathVariable("id") Long id) {
@@ -475,7 +475,7 @@ public class AppUserController extends BaseApiController {
 
     @PutMapping("/refreshFcmToken")
     public ResponseEntity<?> refreshFcmToken(@AuthenticationPrincipal AppUserDto userAuthen,
-                                                  @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+                                             @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
         Optional<AccessToken> accessToken = accessTokenService.findByToken(userAuthen.getToken());
         if (accessToken.isPresent() && refreshTokenRequest.getFcmToken() != null) {
             //update null to other device in the same fcm token
@@ -488,7 +488,7 @@ public class AppUserController extends BaseApiController {
 
     @PutMapping("/updateFcmSetting")
     public ResponseEntity<?> updateFcmSetting(@AuthenticationPrincipal AppUserDto userAuthen,
-                                                   @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+                                              @Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
         Optional<AccessToken> accessToken = accessTokenService.findByToken(userAuthen.getToken());
         if (accessToken.isPresent() && refreshTokenRequest.getFcmToken() != null) {
             accessToken.get().setFcmEnable(refreshTokenRequest.isFcmEnable());
@@ -509,7 +509,7 @@ public class AppUserController extends BaseApiController {
 
     @PostMapping("/verifyUserByEmailOrUsername")
     public ResponseEntity<RefreshTokenResponse> verifyUserByEmailOrUsername(@Valid @RequestBody EmailOrUsernameRequest usernameRequest,
-                                                            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+                                                                            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
 
         if (apiClient.isEmpty()) {

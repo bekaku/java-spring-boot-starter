@@ -21,7 +21,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
-@GenSourceableTable()
+@GenSourceableTable(createController = false)
 @SQLRestriction("deleted = false")
 @SQLDelete(sql = "UPDATE ai_document_meta SET deleted = true WHERE id = ?")
 @Table(name = "ai_document_meta")

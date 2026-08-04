@@ -26,4 +26,5 @@ public class LoginRequest extends EmailOrUsernameRequest {
     private String fcmToken;
     private String deviceId;
     private LoginLogType loginFrom;
+    private Long targetUserId;
 }

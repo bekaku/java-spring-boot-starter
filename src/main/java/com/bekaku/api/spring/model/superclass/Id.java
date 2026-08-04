@@ -1,13 +1,10 @@
 package com.bekaku.api.spring.model.superclass;
 
 import com.bekaku.api.spring.util.SnowflakeIdHolder;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 

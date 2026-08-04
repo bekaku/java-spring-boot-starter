@@ -96,8 +96,11 @@ public class WebSecurityConfig {
                             // Public auth endpoints
                             .requestMatchers(HttpMethod.POST,
                                     "/api/auth/login",
+                                    "/api/auth/loginApi",
                                     "/api/auth/logout",
+                                    "/api/auth/logoutApi",
                                     "/api/auth/refreshToken",
+                                    "/api/auth/refreshTokenApi",
                                     "/api/auth/requestVerifyCodeToResetPwd",
                                     "/api/auth/sendVerifyCodeToResetPwd",
                                     "/api/auth/resetPassword"

@@ -4,14 +4,17 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
+@Getter
+@Setter
 @JsonRootName("data")
-@Data
 @NoArgsConstructor
-public class ApiClientDto {
+public class ApiClientDto extends DtoId {
 
     private Long id;
 

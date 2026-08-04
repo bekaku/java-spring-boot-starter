@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.node.StringNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,9 +123,9 @@ public class AppUserServiceImpl extends BaseResponseException implements AppUser
             imageDto.ifPresent(dto::setCover);
         }
         if (!appUser.getAppRoles().isEmpty()) {
-            List<Long> rolesId = new ArrayList<>();
+            List<String> rolesId = new ArrayList<>();
             for (AppRole r : appUser.getAppRoles()) {
-                rolesId.add(r.getId());
+                rolesId.add(r.getId().toString());
             }
             dto.setSelectedRoles(rolesId);
         }

@@ -15,6 +15,7 @@ public interface AuthService {
     void fetchUserAndEnable(AccessToken verificationToken);
 
     RefreshTokenResponse login(AppUser appUser, LoginRequest loginRequest, ApiClient apiClient, String userAgent, IpAddress ipAddress);
+    RefreshTokenResponse login(AppUser appUser, ApiClient apiClient, String userAgent, IpAddress ipAddress);
 
     RefreshTokenResponse refreshToken(AccessToken accessToken, ApiClient apiClient, String userAgent);
 

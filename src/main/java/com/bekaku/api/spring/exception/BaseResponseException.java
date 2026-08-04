@@ -69,4 +69,8 @@ public class BaseResponseException {
     public ApiException responseError(HttpStatus status, String message, String... errors) {
         return new ApiException(new ApiError(status, message != null ? message : i18n.getMessage("error.error"), errors));
     }
+
+    public ApiException responseError(HttpStatus status, String message) {
+        return new ApiException(new ApiError(status, message != null ? message : i18n.getMessage("error.error")));
+    }
 }

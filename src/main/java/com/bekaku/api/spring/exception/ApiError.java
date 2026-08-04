@@ -40,6 +40,11 @@ public class ApiError {
         this.message = message;
         errors = Collections.singletonList(error);
     }
+    public ApiError(HttpStatus status, String message) {
+        super();
+        this.status = status;
+        this.message = message;
+    }
     public boolean isHasError(){
         return !errors.isEmpty();
     }

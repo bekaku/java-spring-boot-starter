@@ -79,8 +79,8 @@ public class AppRoleController extends BaseApiController {
     private void setRolePermission(AppRoleDto dto, AppRole appRole) {
         if (dto.getSelectdPermissions().length > 0) {
             Optional<Permission> permission;
-            for (long permissionId : dto.getSelectdPermissions()) {
-                permission = permissionService.findById(permissionId);
+            for (String permissionId : dto.getSelectdPermissions()) {
+                permission = permissionService.findById(Long.valueOf(permissionId));
                 permission.ifPresent(value -> appRole.getPermissions().add(value));
             }
         }
@@ -123,7 +123,10 @@ public class AppRoleController extends BaseApiController {
         AppRoleDto appRoleDto = appRoleService.convertEntityToDto(role.get());
         List<Long> permissonSelectedList = permissionService.findAllPermissionIdByRoleId(id);
         if (!permissonSelectedList.isEmpty()) {
-            appRoleDto.setSelectdPermissions(permissonSelectedList.toArray(new Long[0]));
+            String[] stringPermissions = permissonSelectedList.stream()
+                    .map(String::valueOf) // แปลง Long -> String
+                    .toArray(String[]::new); // คืนค่าเป็น String[]
+            appRoleDto.setSelectdPermissions(stringPermissions);
         }
         return this.responseEntity(appRoleDto, HttpStatus.OK);
     }

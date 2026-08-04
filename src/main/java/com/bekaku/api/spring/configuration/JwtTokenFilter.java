@@ -71,13 +71,14 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
 
 
-                String requestUserId = AppUtil.getCookieByName(request.getCookies(), "_current_user");
+                String requestUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
+
+                log.info("key:{}, ,id:{}", jwtProperties.currentUserKey(), requestUserId);
                 if (AppUtil.isEmpty(requestUserId)) {
                     requestUserId = request.getHeader(ConstantData.X_USER_ID);
                 }
 
-                String jwtToken = AppUtil.getCookieByName(request.getCookies(), jwtProperties.tokenName() + UNDER_SCORE + requestUserId);
-                log.info("requestUserId: {}, jwtTokenCookie:{}", requestUserId, jwtToken);
+                String jwtToken = AppUtil.getCookieByName(request.getCookies(), jwtProperties.tokenName() + requestUserId);
                 if (AppUtil.isEmpty(jwtToken)) {
                     Optional<String> jwtTokenHeader = jwtService.getAuthorizatoinTokenString(request.getHeader(ConstantData.AUTHORIZATION));
                     if (jwtTokenHeader.isPresent()) {

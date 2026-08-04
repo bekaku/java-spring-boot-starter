@@ -7,17 +7,21 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @JsonRootName("data")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class AccessTokenDto {
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
     private String ipAddredd;
     private String hostName;

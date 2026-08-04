@@ -49,18 +49,7 @@ public class AuthController extends BaseApiController {
     private final JwtService jwtService;
     private final I18n i18n;
     private final AppProperties appProperties;
-
-    @Value("${app.defaults.image}")
-    String defaultImage;
-
-    @Value("${app.defaults.role}")
-    Long defaultRole;
-
-    @Value("${environments.production}")
-    boolean isProduction;
-
-    @Value("${app.domain}")
-    String appDomain;
+    private final IdentityLinkService identityLinkService;
     private final JwtProperties jwtProperties;
 
     @PostMapping("/signup")
@@ -116,6 +105,15 @@ public class AuthController extends BaseApiController {
                                       @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                       @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
+        ApiClient apiClient = validateApiClient(apiClientName);
+        AppUser user = validateLogin(loginRequest);
+        RefreshTokenResponse tokenResponse = authService.login(user, loginRequest, apiClient, userAgent, AppUtil.getIpaddress(request));
+        setRefreshTokenCookie(response, tokenResponse);
+        return tokenResponse;
+//        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+    }
+
+    private ApiClient validateApiClient(String apiClientName) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
 
         if (apiClient.isEmpty()) {
@@ -123,11 +121,7 @@ public class AuthController extends BaseApiController {
                     i18n.getMessage("error.apiClientNotFound")));
         }
 
-        AppUser user = validateLogin(loginRequest);
-        RefreshTokenResponse tokenResponse = authService.login(user, loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
-        setRefreshTokenCookie(response, tokenResponse);
-        return tokenResponse;
-//        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+        return apiClient.get();
     }
 
     @PostMapping("/loginApi")
@@ -137,15 +131,80 @@ public class AuthController extends BaseApiController {
                                          @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                          @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
-        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
-
-        if (apiClient.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
-                    i18n.getMessage("error.apiClientNotFound")));
-        }
+        ApiClient apiClient = validateApiClient(apiClientName);
 
         AppUser user = validateLogin(loginRequest);
-        return authService.login(user, loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
+        return authService.login(user, loginRequest, apiClient, userAgent, AppUtil.getIpaddress(request));
+    }
+
+    @PostMapping("/linkedAccounts")
+    public ResponseEntity<List<AppUserDto>> getLinkedAccounts(@AuthenticationPrincipal AppUserDto currentUser) {
+        Optional<AppUser> current = appUserService.findById(currentUser.getId());
+        if (current.isEmpty()) {
+            throw this.responseErrorForbidden();
+        }
+        List<AppUserDto> accounts = identityLinkService.getLinkedAccounts(current.get());
+        return this.responseEntity(accounts, HttpStatus.OK);
+    }
+
+    @PostMapping("/linkAccount")
+    public ResponseEntity<RefreshTokenResponse> linkAccount(@AuthenticationPrincipal AppUserDto currentUser,
+                                                            @RequestBody LoginRequest loginRequest,
+                                                            HttpServletRequest request,
+                                                            HttpServletResponse response,
+                                                            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+                                                            @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
+
+        Optional<AppUser> current = appUserService.findById(currentUser.getId());
+        if (current.isEmpty()) {
+            throw this.responseErrorForbidden();
+        }
+        ApiClient apiClient = validateApiClient(apiClientName);
+        AppUser targetUser = validateLogin(loginRequest);
+        identityLinkService.linkAccount(current.get(), targetUser);
+        RefreshTokenResponse tokenResponse = authService.login(targetUser, apiClient, userAgent, AppUtil.getIpaddress(request));
+        setRefreshTokenCookie(response, tokenResponse);
+        return this.responseEntity(tokenResponse, HttpStatus.OK);
+    }
+
+    @PostMapping("/switchAccount/{targetUserId}")
+    public ResponseEntity<?> switchAccount(@AuthenticationPrincipal AppUserDto currentUser,
+                                           @PathVariable("targetUserId") Long targetUserId,
+                                           HttpServletRequest request,
+                                           HttpServletResponse response,
+                                           @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+                                           @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
+        String targetRefreshCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.refreshTokenName() + targetUserId);
+        if (!AppUtil.isEmpty(targetRefreshCookie)) {
+            var accessTokenOpt = accessTokenService.findByToken(targetRefreshCookie);
+            if (accessTokenOpt.isPresent()) {
+
+                if (!accessTokenService.isTokenExpired(accessTokenOpt.get())) {
+                    setCookieByName(response, jwtProperties.currentUserKey(), targetUserId.toString(), jwtService.expireRefreshSecond(), false);
+                    return this.responseEntity(HttpStatus.OK);
+                } else {
+                    accessTokenService.delete(accessTokenOpt.get());
+                }
+            }
+        }
+
+        identityLinkService.validateSwitchAccount(currentUser.getId(), targetUserId);
+        AppUser targetUser = appUserService.findById(targetUserId).orElseThrow();
+        ApiClient apiClient = validateApiClient(apiClientName);
+        RefreshTokenResponse tokenResponse = authService.login(targetUser, apiClient, userAgent, AppUtil.getIpaddress(request));
+        setRefreshTokenCookie(response, tokenResponse);
+
+        return this.responseEntity(tokenResponse, HttpStatus.OK);
+    }
+
+    @PostMapping("/removeLinkAccount/{targetUserId}")
+    public ResponseEntity<?> removeLinkAccount(@AuthenticationPrincipal AppUserDto currentUser,
+                                               @PathVariable("targetUserId") Long targetUserId,
+                                               HttpServletRequest request,
+                                               HttpServletResponse response) {
+        identityLinkService.removeLinkAccount(currentUser.getId(), targetUserId);
+        deleteCookie(request, response, targetUserId, currentUser.getId().equals(targetUserId));
+        return this.responseEntity(HttpStatus.OK);
     }
 
     private AppUser validateLogin(LoginRequest loginRequest) {
@@ -172,27 +231,26 @@ public class AuthController extends BaseApiController {
         if (currentUserId == null) {
             return null;
         }
-        return jwtProperties.refreshTokenName() + UNDER_SCORE + currentUserId;
-    }
-
-    private String getCurrentUserKeyBy() {
-        return jwtProperties.currentUserKey();
+        return jwtProperties.refreshTokenName() + currentUserId;
     }
 
     private String getJwtKeyBy(Long currentUserId) {
         if (currentUserId == null) {
             return null;
         }
-        return jwtProperties.tokenName() + UNDER_SCORE + currentUserId;
+        return jwtProperties.tokenName() + currentUserId;
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
         setCookieByName(response, getJwtKeyBy(tokenResponse.getUserId()), tokenResponse.getAuthenticationToken(), jwtService.expireJwtSecond(), true);
-        setCookieByName(response, getRefreshKeyBy(tokenResponse.getUserId()), tokenResponse.getRefreshTokenKey(), jwtService.expireRefreshSecond(), true);
-        setCookieByName(response, getCurrentUserKeyBy(), tokenResponse.getUserId().toString(), jwtService.expireRefreshSecond(), false);
+        setCookieByName(response, getRefreshKeyBy(tokenResponse.getUserId()), tokenResponse.getRefreshToken(), jwtService.expireRefreshSecond(), true);
+        setCookieByName(response, jwtProperties.currentUserKey(), tokenResponse.getUserId().toString(), jwtService.expireRefreshSecond(), false);
     }
 
     private void setCookieByName(HttpServletResponse response, String cookieName, String value, long maxAgeSeconds, boolean httponly) {
+        if (AppUtil.isEmpty(cookieName)) {
+            return;
+        }
         ResponseCookie jwtCookie = ResponseCookie.from(cookieName, value)
                 .httpOnly(httponly)
                 .secure(appProperties.cookie().secure()) // true in prod (HTTPS), false in dev
@@ -203,16 +261,22 @@ public class AuthController extends BaseApiController {
         response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
     }
 
-    private void deleteCookie(HttpServletRequest request, HttpServletResponse response, Long currentUserId) {
+    private void deleteCookie(HttpServletRequest request, HttpServletResponse response, Long currentUserId, boolean setCurrentToAnothor) {
         if (currentUserId != null) {
             deleteCookieByName(response, getJwtKeyBy(currentUserId), true);
             deleteCookieByName(response, getRefreshKeyBy(currentUserId), true);
-            deleteCookieByName(response, getCurrentUserKeyBy(), false);
-            setCurrentUserToAnother(request, response, currentUserId);
+            deleteCookieByName(response, jwtProperties.currentUserKey(), false);
+            if (setCurrentToAnothor) {
+                setCurrentUserToAnother(request, response, currentUserId);
+            }
+
         }
     }
 
     private void deleteCookieByName(HttpServletResponse response, String cookieName, boolean httponly) {
+        if (AppUtil.isEmpty(cookieName)) {
+            return;
+        }
         ResponseCookie cookie = ResponseCookie.from(cookieName, "")
                 .httpOnly(httponly)
                 .secure(appProperties.cookie().secure())
@@ -226,7 +290,7 @@ public class AuthController extends BaseApiController {
     private void setCurrentUserToAnother(HttpServletRequest request, HttpServletResponse response, Long loggedOutUserId) {
         if (request.getCookies() == null) return;
 
-        String refreshCookiePrefix = jwtProperties.refreshTokenName() + "_";
+        String refreshCookiePrefix = jwtProperties.refreshTokenName();
         boolean isCurrentUserSet = false;
 
         for (Cookie cookie : request.getCookies()) {
@@ -251,7 +315,7 @@ public class AuthController extends BaseApiController {
 
                 if (accessToken.isPresent() && !accessTokenService.isTokenExpired(accessToken.get())) {
                     if (!isCurrentUserSet) {
-                        setCookieByName(response, getCurrentUserKeyBy(), otherUserIdStr, jwtService.expireRefreshSecond(), false);
+                        setCookieByName(response, jwtProperties.currentUserKey(), otherUserIdStr, jwtService.expireRefreshSecond(), false);
                         isCurrentUserSet = true;
                     }
                 } else {
@@ -267,30 +331,33 @@ public class AuthController extends BaseApiController {
     public RefreshTokenResponse refreshToken(HttpServletRequest request,
                                              HttpServletResponse response,
                                              @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
-                                             @RequestHeader(value = ConstantData.USER_AGENT) String userAgent,
-                                             @RequestHeader(value = ConstantData.X_USER_ID, required = false, defaultValue = "0") Long currentUserId) {
+                                             @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
+        String ckUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
+        if (AppUtil.isEmpty(ckUserId)) {
+            throwUnauthorizes();
+        }
+        Long currentUserId = Long.valueOf(ckUserId);
         String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
-        log.info("currentUserId: {}, refreshTokenCookie: {}", currentUserId, refreshTokenKey);
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
-            deleteCookie(request, response, currentUserId);
+            deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
         if (AppUtil.isEmpty(refreshTokenKey)) {
-            deleteCookie(request, response, currentUserId);
+            deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
         Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(refreshTokenKey, false);
         if (accessToken.isEmpty()) {
-            deleteCookie(request, response, currentUserId);
+            deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
 
         //validate expred token
         boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
         if (isExpired) {
-            deleteCookie(request, response, currentUserId);
+            deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
         RefreshTokenResponse tokenResponse = authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
@@ -313,11 +380,11 @@ public class AuthController extends BaseApiController {
             throwUnauthorizes();
         }
         log.info("dto.getRefreshToken() :{}", refreshTokenKey);
-        Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
-        if (tokenKey.isEmpty()) {
-            throwUnauthorizes();
-        }
-        Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(tokenKey.get(), false);
+//        Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
+//        if (tokenKey.isEmpty()) {
+//            throwUnauthorizes();
+//        }
+        Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(refreshTokenKey, false);
         if (accessToken.isEmpty()) {
             throwUnauthorizes();
         }
@@ -406,35 +473,32 @@ public class AuthController extends BaseApiController {
     @PostMapping("/logout")
     public ResponseEntity<ResponseMessage> logout(HttpServletResponse response,
                                                   HttpServletRequest request,
-                                                  @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
-                                                  @RequestHeader(value = ConstantData.X_USER_ID, required = false, defaultValue = "0") Long currentUserId) {
-        Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
-        String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
-        if (apiClient.isPresent() && !AppUtil.isEmpty(refreshTokenKey)) {
-            Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
-            if (tokenKey.isPresent()) {
-                Optional<AccessToken> accessToken = accessTokenService.findByToken(tokenKey.get());
+                                                  @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
+
+        String ckUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
+        if (!AppUtil.isEmpty(ckUserId)) {
+            Long currentUserId = Long.valueOf(ckUserId);
+            Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
+            String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
+            if (apiClient.isPresent() && !AppUtil.isEmpty(refreshTokenKey)) {
+                Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenKey);
                 accessToken.ifPresent(this::logoutProcess);
             }
+            deleteCookie(request, response, currentUserId, true);
         }
-        deleteCookie(request, response, currentUserId);
         return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }
 
     @PostMapping("/logoutApi")
-    public ResponseEntity<ResponseMessage> logoutApi(HttpServletResponse response,
-                                                     HttpServletRequest request,
-                                                     @Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
-                                                     @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
-                                                     @RequestHeader(value = ConstantData.X_USER_ID, required = false, defaultValue = "0") Long currentUserId) {
+    public ResponseEntity<ResponseMessage> logoutApi(
+            @Valid @RequestBody RefreshTokenRequest refreshTokenRequest,
+            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
+            @RequestHeader(value = ConstantData.X_USER_ID, required = false, defaultValue = "0") Long currentUserId) {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         String refreshTokenKey = refreshTokenRequest.getRefreshToken();
         if (apiClient.isPresent() && !AppUtil.isEmpty(refreshTokenKey)) {
-            Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
-            if (tokenKey.isPresent()) {
-                Optional<AccessToken> accessToken = accessTokenService.findByToken(tokenKey.get());
-                accessToken.ifPresent(this::logoutProcess);
-            }
+            Optional<AccessToken> accessToken = accessTokenService.findByToken(refreshTokenKey);
+            accessToken.ifPresent(this::logoutProcess);
         }
         return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }

@@ -345,8 +345,8 @@ app:
     session-time: 86400
     session-refresh-time: 604800
     session-day: 30
-    token-name: _server_jwt
-    refresh-token-name: _server_refresh
+    token-name: _server_jwt_
+    refresh-token-name: _server_refresh_
     current-user-key: _current_user
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
