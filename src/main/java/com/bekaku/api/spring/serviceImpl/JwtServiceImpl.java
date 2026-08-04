@@ -35,7 +35,7 @@ public class JwtServiceImpl implements JwtService {
     //    private final String secret;
 //    private final int sessionTime;
 //    private final int sessionRefershTime;
-    private final String UUID = "uuid";
+    private final String UID = "uid";
 
     private final ApiClientService apiClientService;
     private final AppUserService appUserService;
@@ -71,14 +71,14 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String toToken(AppUser appUser, String token, ApiClient apiClient, Date expired, JwtType jwtType) {
         Map<String, String> claims = new HashMap<>();
-        claims.put(UUID, appUser.getSalt());
+        claims.put(UID, appUser.getId().toString());
         claims.put(JWT_TYPE_ATT, jwtType.name());
         return toTokenBy(token, apiClient, expired, claims);
     }
 
-    private String toTokenBy(String token, ApiClient apiClient, Date expireTime, Map<String, ?> claims) {
+    private String toTokenBy(String sub, ApiClient apiClient, Date expireTime, Map<String, ?> claims) {
         return Jwts.builder()
-                .subject(token)
+                .subject(sub)
                 .issuedAt(new Date())
                 .claims(claims)
                 .expiration(expireTime)
@@ -111,10 +111,10 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Optional<String> getUUIDFromToken(String token, ApiClient apiClient) {
+    public Optional<String> getUIDFromToken(String token, ApiClient apiClient) {
         try {
             Optional<Claims> claims = getClaimsFromToken(token, apiClient);
-            return claims.map(value -> value.get(UUID).toString());
+            return claims.map(value -> value.get(UID).toString());
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -154,25 +154,34 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Optional<AppUserDto> jwtVerify(String apiclientName, String authorization, String syncActiveHeader) {
+    public Optional<AppUserDto> jwtVerify(String apiclientName, String jwtToken, String syncActiveHeader) {
         AtomicReference<Optional<AppUserDto>> dto = new AtomicReference<>(Optional.empty());
 //        Optional<ApiClient> apiClient = verifyApiClient(apiclientName);
-        if (!AppUtil.isEmpty(apiclientName)) {
+        if (!AppUtil.isEmpty(apiclientName) && !AppUtil.isEmpty(jwtToken)) {
 //        if (apiClient.isPresent()) {
-            Optional<String> authToken = getTokenString(authorization);
-            if (authToken.isPresent()) {
 //                Optional<String> sub = getSubFromToken(authToken.get(), apiClient.get());
 //                Optional<Claims> claims = getClaimsFromToken(authToken.get(), apiClient.get());
-                // TODO verify apiClient later
-                Optional<Claims> claims = getClaimsFromToken(authToken.get(), null);
-                if (claims.isPresent()) {
+            // TODO verify apiClient later
+            Optional<Claims> claims = getClaimsFromToken(jwtToken, null);
+            if (claims.isPresent()) {
 //                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    String sub = claims.get().getSubject();
+                String sub = claims.get().getSubject();
 //                        String userUuid = (String) claims.get().get(UUID);
-                    String jwtTypeString = (String) claims.get().get(JWT_TYPE_ATT);
-                    if (!AppUtil.isEmpty(sub) && !AppUtil.isEmpty(jwtTypeString)) {
-                        JwtType jwtType = JwtType.valueOf(jwtTypeString);
-                        if (jwtType.equals(JwtType.Authen)) {
+                String jwtTypeString = (String) claims.get().get(JWT_TYPE_ATT);
+                String userID = (String) claims.get().get(UID);
+                if (!AppUtil.isEmpty(sub) && !AppUtil.isEmpty(jwtTypeString)) {
+                    JwtType jwtType = JwtType.valueOf(jwtTypeString);
+                    if (jwtType.equals(JwtType.Authen)) {
+
+                        //stateless
+                        AppUserDto userDto = new AppUserDto();
+                        userDto.setId(Long.valueOf(userID));
+                        userDto.setToken(sub);
+                        dto.set(Optional.of(userDto));
+
+                        //Hit database every time
+
+                            /*
                             Optional<AppUserDto> userDto = accessTokenService.findByAccessTokenKey(sub);
                             if (userDto.isPresent()) {
 
@@ -183,10 +192,11 @@ public class JwtServiceImpl implements JwtService {
                                 userDto.get().setToken(sub);
                                 dto.set(userDto);
                             }
-                        }
+                             */
+
                     }
-//                    }
                 }
+//                    }
             }
         }
 
@@ -295,6 +305,10 @@ public class JwtServiceImpl implements JwtService {
         return this.jwtProperties.sessionTime() * 1000L;
     }
 
+    @Override
+    public Long expireJwtSecond() {
+        return (long) this.jwtProperties.sessionTime();
+    }
     @Override
     public Long expireRefreshSecond() {
         return (long) this.jwtProperties.sessionRefreshTime();

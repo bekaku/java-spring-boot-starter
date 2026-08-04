@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
+import com.bekaku.api.spring.dto.BaseResponseEntity;
 import com.bekaku.api.spring.exception.BaseResponseException;
 import com.bekaku.api.spring.specification.SearchCriteria;
 import com.bekaku.api.spring.util.ConstantData;
@@ -30,17 +31,13 @@ public class BaseApiController extends BaseResponseException {
     @Autowired
     private I18n i18n;
 
-    public <K> ResponseEntity<K> responseEntityBy(K o) {
-        return new ResponseEntity<>(o, HttpStatus.OK);
-    }
-
-    public <K> ResponseEntity<K> responseEntityBy(K o, HttpStatus status) {
+    public <K> ResponseEntity<K> responseEntity(K o, HttpStatus status) {
         return new ResponseEntity<>(o, status);
     }
 
-    public ResponseEntity<Object> responseEntity(Object o, HttpStatus status) {
-        return new ResponseEntity<>(o, status);
-    }
+//    public ResponseEntity<Object> responseEntity(Object o, HttpStatus status) {
+//        return new ResponseEntity<>(o, status);
+//    }
 
     public ResponseEntity<Object> responseEntity(Object o) {
         return new ResponseEntity<>(o, HttpStatus.OK);
@@ -60,10 +57,6 @@ public class BaseApiController extends BaseResponseException {
 
     public ResponseEntity<Object> responseSuccessMessage() {
         return this.responseServerMessage(i18n.getMessage("success"), HttpStatus.OK);
-    }
-
-    public ResponseEntity<Object> responseEntity(Object o, HttpStatus status, String viewPermission, String managePermission) {
-        return new ResponseEntity<>(o, status);
     }
 
     public ResponseEntity<Object> responseServerMessage(String o) {

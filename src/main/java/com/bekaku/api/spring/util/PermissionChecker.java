@@ -28,7 +28,6 @@ public class PermissionChecker {
 //        if (user == null) return false;
         Long userID = authHelper.getAuthenticatedUser();
         if (userID == null) return false;
-        log.info("PermissionChecker > hasPermission > permisson:{}, userID:{}", permission, userID);
         return validatePermit(userID, permission);
     }
 

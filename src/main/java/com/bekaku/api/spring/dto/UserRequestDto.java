@@ -22,5 +22,7 @@ public class UserRequestDto {
     private boolean active = true;
 
     private Long[] selectedRoles = new Long[]{};
+    private Long avatarFileId;
+    private Long coverFileId;
 
 }

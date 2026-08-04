@@ -16,6 +16,7 @@ public record AppProperties(
         Map<String, String> additionalHeaders, // app.additional-headers
         List<MenuConfig> menus,         // app.menus
         JwtProperties jwt,
+        CookieProperties cookie,
         QueueConfig queue,
         String cdnPath,
         String cdnPathAlias,

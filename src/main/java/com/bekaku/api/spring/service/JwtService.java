@@ -16,13 +16,13 @@ public interface JwtService {
     Optional<String> getSubFromToken(String token, ApiClient apiClient);
     Optional<String> getSubFromAuthorizationHeader(String authorization, ApiClient apiClient);
 
-    Optional<String> getUUIDFromToken(String token, ApiClient apiClient);
+    Optional<String> getUIDFromToken(String token, ApiClient apiClient);
 
     Optional<JwtType> getJwtTypeFromToken(String token, ApiClient apiClient);
 
     Optional<String> getExpiredSubFromToken(String token, ApiClient apiClient);
 
-    Optional<AppUserDto> jwtVerify(String apiclientName, String authorization, String syncActiveHeader);
+    Optional<AppUserDto> jwtVerify(String apiclientName, String jwtToken, String syncActiveHeader);
 
     Optional<String> getAuthorizatoinTokenString(String header);
 
@@ -40,6 +40,7 @@ public interface JwtService {
 
     Long expireMillisec();
 
+    Long expireJwtSecond();
     Long expireRefreshSecond();
 
     Long expireRefreshMillisec();

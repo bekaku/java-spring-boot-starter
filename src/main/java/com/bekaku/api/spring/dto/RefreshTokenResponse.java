@@ -17,4 +17,5 @@ public class RefreshTokenResponse {
     private String authenticationToken;
     private String refreshToken;
     private Date expiresAt;
+    private String refreshTokenKey;
 }

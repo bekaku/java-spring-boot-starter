@@ -2,6 +2,7 @@ package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.AppRoleDto;
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.AppRole;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.PermissionService;
@@ -46,13 +47,13 @@ public class AppRoleController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('app_role_list')")
     @GetMapping
-    public ResponseEntity<Object> findAll(Pageable pageable) {
+    public ResponseEntity<ResponseListDto<AppRoleDto>> findAll(Pageable pageable) {
         SearchSpecification<AppRole> specification = new SearchSpecification<>(getSearchCriteriaList());
         return this.responseEntity(appRoleService.findAllWithSearch(specification, getPageable(pageable, AppRole.getSort())), HttpStatus.OK);
     }
 
     @GetMapping("/findAll")
-    public ResponseEntity<Object> findAll() {
+    public ResponseEntity<List<AppRoleDto>> findAll() {
         return this.responseEntity(appRoleService.findAllByOrderByNameAsc()
                         .stream()
                         .map(appRoleService::convertEntityToDto)
@@ -62,7 +63,7 @@ public class AppRoleController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('app_role_add')")
     @PostMapping
-    public ResponseEntity<Object> create(@Valid @RequestBody AppRoleDto dto) {
+    public ResponseEntity<AppRoleDto> create(@Valid @RequestBody AppRoleDto dto) {
         return this.responseEntity(createProcess(dto), HttpStatus.CREATED);
     }
 
@@ -87,7 +88,7 @@ public class AppRoleController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('app_role_edit')")
     @PutMapping("/{id}")
-    public ResponseEntity<Object> update(@Valid @RequestBody AppRoleDto dto, @PathVariable("id") long id) {
+    public ResponseEntity<AppRoleDto> update(@Valid @RequestBody AppRoleDto dto, @PathVariable("id") long id) {
         Optional<AppRole> role = appRoleService.findById(id);
         if (role.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -114,7 +115,7 @@ public class AppRoleController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('app_role_view')")
     @GetMapping("/{id}")
-    public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
+    public ResponseEntity<AppRoleDto> findOne(@PathVariable("id") long id) {
         Optional<AppRole> role = appRoleService.findById(id);
         if (role.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -129,7 +130,7 @@ public class AppRoleController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('app_role_delete')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") long id) {
+    public ResponseEntity<?> delete(@PathVariable("id") long id) {
         Optional<AppRole> role = appRoleService.findById(id);
         if (role.isEmpty()) {
             throw this.responseErrorNotfound();

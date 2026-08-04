@@ -27,3 +27,6 @@ app:
   cdn-path-alias: cdn
   cdn-url: ${app.url}
   cdn-port: ${app.port}
+  cookie:
+    secure: false
+    same-site: Lax

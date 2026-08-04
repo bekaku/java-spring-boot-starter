@@ -5,14 +5,17 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Data
-public class FileManagerDto {
+@Setter
+@Getter
+public class FileManagerDto extends  DtoId {
     public void assign(Long id, String fileMime, String fileName, String filePath, String fileThumbnailPath,
                        String fileSize, LocalDateTime createdDate, LocalDateTime updatedDate, FileMimeType fileMimeType, String streamPath) {
-        this.id = id;
+        this.setId(id);
         this.fileMime = fileMime;
         this.fileName = fileName;
         this.filePath = filePath;
@@ -24,14 +27,17 @@ public class FileManagerDto {
         this.streamPath = streamPath;
     }
 
-    private Long id;
     private String fileMime;
     private String fileName;
     private String filePath;
     private String fileThumbnailPath;
     private String fileSize;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long fileSizeNo;
     private Long fileCount;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long functionId;
     private FileMimeType fileMimeType;
     private int duration;

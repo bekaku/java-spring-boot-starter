@@ -70,6 +70,7 @@ public class AuthServiceImpl implements AuthService {
                 .authenticationToken(jwtService.toToken(appUser, token.getToken(), apiClient, jwtService.expireJwtTimeFromNow(), JwtType.Authen))
                 .refreshToken(jwtService.toToken(appUser, token.getToken(), apiClient, jwtService.expireRefreshTokenTimeFromNow(), JwtType.Refresh))
                 .expiresAt(jwtService.expireJwtTimeFromNow())
+                .refreshTokenKey(token.getToken())
                 .build();
     }
 
@@ -87,6 +88,7 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(jwtService.toToken(appUser, token, apiClient, jwtService.expireRefreshTokenTimeFromNow(),JwtType.Refresh))
                 .expiresAt(jwtService.expireJwtTimeFromNow())
                 .userId(appUser.getId())
+                .refreshTokenKey(token)
                 .build();
     }
 

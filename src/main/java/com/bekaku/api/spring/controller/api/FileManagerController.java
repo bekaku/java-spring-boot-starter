@@ -103,7 +103,7 @@ public class FileManagerController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
     @GetMapping
-    public List<FileManagerDto> findAll(
+    public ResponseEntity<List<FileManagerDto>> findAll(
             Pageable pageable,
             @RequestParam(value = "directoryId", defaultValue = "0") long directoryId,
             @AuthenticationPrincipal AppUserDto auth) {
@@ -115,38 +115,38 @@ public class FileManagerController extends BaseApiController {
 //                                          @RequestParam(value = "directoryId", defaultValue = "0") long directoryId,
 //                                          HttpServletRequest request) {
 
-//        return this.responseEntity(fileManagerService.findAllFolderAndFileByParentFolder(new Paging(page, size, sort), directoryId > 0 ? directoryId : null), HttpStatus.OK);
-        return fileManagerService.findAllFolderAndFileByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
-//        return this.responseEntity(getPaging(pageable), HttpStatus.OK);
-
-//        return this.responseEntity(new HashMap<String, Object>() {{
-//            put("page", page);
-//            put("size", size);
-//            put("sort", sort);
-//        }}, HttpStatus.OK);
+        return this.responseEntity(
+                fileManagerService.findAllFolderAndFileByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId()),
+                HttpStatus.OK);
     }
+
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
     @GetMapping("/findAllFolder")
-    public List<FileManagerDto> findAllFolder(
+    public ResponseEntity<List<FileManagerDto>> findAllFolder(
             Pageable pageable,
             @RequestParam(value = "directoryId", defaultValue = "0") long directoryId,
             @AuthenticationPrincipal AppUserDto auth) {
-        return fileManagerService.findAllFolderByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
+        return this.responseEntity(
+                fileManagerService.findAllFolderByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId()),
+                HttpStatus.OK);
+
     }
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
     @GetMapping("/findAllFile")
-    public List<FileManagerDto> findAllFile(
+    public ResponseEntity<List<FileManagerDto>> findAllFile(
             Pageable pageable,
             @RequestParam(value = "directoryId", defaultValue = "0") long directoryId,
             @AuthenticationPrincipal AppUserDto auth) {
-        return fileManagerService.findAllFileByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId());
+        return this.responseEntity(
+                fileManagerService.findAllFileByParentFolderAndOwnerId(getPaging(pageable, sortProperties), directoryId > 0 ? directoryId : null, auth.getId()),
+                HttpStatus.OK);
     }
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_create')")
     @PostMapping
-    public ResponseEntity<Object> create(@Valid @RequestBody FileManagerDto dto) {
+    public ResponseEntity<FileManagerDto> create(@Valid @RequestBody FileManagerDto dto) {
         FileManager fileManager = fileManagerService.convertDtoToEntity(dto);
         fileManagerService.save(fileManager);
         return this.responseEntity(fileManagerService.convertEntityToDto(fileManager), HttpStatus.OK);
@@ -154,7 +154,7 @@ public class FileManagerController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_edit')")
     @PutMapping
-    public ResponseEntity<Object> update(@Valid @RequestBody FileManagerDto dto) {
+    public ResponseEntity<FileManagerDto> update(@Valid @RequestBody FileManagerDto dto) {
         FileManager fileManager = fileManagerService.convertDtoToEntity(dto);
         Optional<FileManager> oldData = fileManagerService.findById(dto.getId());
         if (oldData.isEmpty()) {
@@ -166,18 +166,17 @@ public class FileManagerController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_view')")
     @GetMapping("/{id}")
-    public ResponseEntity<Object> findOne(@PathVariable("id") long id) {
+    public ResponseEntity<FileManagerDto> findOne(@PathVariable("id") long id) {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-//        return this.responseEntity(fileManager.get(), HttpStatus.OK);
         return this.responseEntity(fileManagerService.convertEntityToDto(fileManager.get()), HttpStatus.OK);
     }
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_delete')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") long id) throws IOException {
+    public ResponseEntity<?> delete(@PathVariable("id") long id) throws IOException {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -187,7 +186,7 @@ public class FileManagerController extends BaseApiController {
     }
 
     @DeleteMapping("/deleteFileApi/{id}")
-    public ResponseEntity<Object> deleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal AppUserDto auth) {
+    public ResponseEntity<?> deleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal AppUserDto auth) {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -198,7 +197,7 @@ public class FileManagerController extends BaseApiController {
     }
 
     @DeleteMapping("/internalDeleteFileApi/{id}")
-    public ResponseEntity<Object> internalDeleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal AppUserDto auth, HttpServletRequest request) {
+    public ResponseEntity<?> internalDeleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal AppUserDto auth, HttpServletRequest request) {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
@@ -264,7 +263,7 @@ public class FileManagerController extends BaseApiController {
         log.info("mergeChunkApi > totalChunks:{}, fileMime:{}, originalFilename:{}, chunkFilename:{}, fileDirectoryId:{}",
                 dto.getTotalChunks(), dto.getFileMime(), dto.getOriginalFilename(), dto.getChunkFilename(), dto.getFileDirectoryId());
 
-        log.info("hidden:{}" , dto.isHidden());
+        log.info("hidden:{}", dto.isHidden());
         if (AppUtil.isEmpty(dto.getChunkFilename()) || dto.getTotalChunks() == 0) {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required parameters.");
         }
@@ -303,7 +302,7 @@ public class FileManagerController extends BaseApiController {
             Path finalFilePath = finalUploadDir.resolve(dto.getChunkFilename());
             // Move merged file to final upload folder
             Files.move(mergedTempFilePath, finalFilePath, StandardCopyOption.REPLACE_EXISTING);
-            boolean useThumbnail=false;
+            boolean useThumbnail = false;
             //resize image
             if (fileMimeType.equals(FileMimeType.IMAGE)) {
                 ImageDto imgInfo = getImageInfo(uploadPath + dto.getChunkFilename());
@@ -312,7 +311,7 @@ public class FileManagerController extends BaseApiController {
                 }
                 //create thumbnail
                 if (appProperties.uploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
-                    useThumbnail=true;
+                    useThumbnail = true;
                     thumbnailatorCreateThumnail(uploadPath, dto.getChunkFilename());
                 }
             }
@@ -336,7 +335,7 @@ public class FileManagerController extends BaseApiController {
             if (!AppUtil.isEmpty(dto.getDescription())) {
                 f.setDescription(dto.getDescription());
             }
-            if(dto.getThumbnailFileId() != null){
+            if (dto.getThumbnailFileId() != null) {
                 Optional<FileManager> thumbnailFile = fileManagerService.findById(dto.getThumbnailFileId());
                 thumbnailFile.ifPresent(f::setThumbnailFile);
             }

@@ -8,6 +8,8 @@ public record JwtProperties(
         int sessionTime,
         int sessionRefreshTime,
         String tokenName,
-        String refreshTokenName) {
+        String refreshTokenName,
+        String currentUserKey
+) {
 
 }

@@ -3,6 +3,8 @@ package com.bekaku.api.spring.configuration;
 
 import com.bekaku.api.spring.dto.AppUserDto;
 import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.properties.JwtProperties;
+import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.service.JwtService;
 import jakarta.servlet.FilterChain;
@@ -23,6 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
+
 @Slf4j
 @SuppressWarnings("SpringJavaAutowiringInspection")
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -30,6 +34,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private JwtProperties jwtProperties;
 
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
     private static final List<String> SKIP_PATHS = List.of(
@@ -62,9 +69,30 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 .anyMatch(requestURI::contains);
         try {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
+
+
+                String requestUserId = AppUtil.getCookieByName(request.getCookies(), "_current_user");
+                if (AppUtil.isEmpty(requestUserId)) {
+                    requestUserId = request.getHeader(ConstantData.X_USER_ID);
+                }
+
+                String jwtToken = AppUtil.getCookieByName(request.getCookies(), jwtProperties.tokenName() + UNDER_SCORE + requestUserId);
+                log.info("requestUserId: {}, jwtTokenCookie:{}", requestUserId, jwtToken);
+                if (AppUtil.isEmpty(jwtToken)) {
+                    Optional<String> jwtTokenHeader = jwtService.getAuthorizatoinTokenString(request.getHeader(ConstantData.AUTHORIZATION));
+                    if (jwtTokenHeader.isPresent()) {
+                        jwtToken = jwtTokenHeader.get();
+                    }
+                }
+                if (AppUtil.isEmpty(jwtToken)) {
+                    log.warn("Jwt token not found : {}", request.getRequestURI());
+                    sendUnauthorizedResponse(response, "Jwt token not found", isStreamingEndpoint, request.getRequestURI());
+                    return;
+                }
+
                 Optional<AppUserDto> userData = jwtService.jwtVerify(
                         request.getHeader(ConstantData.ACCEPT_APIC_LIENT),
-                        request.getHeader(ConstantData.AUTHORIZATION),
+                        jwtToken,
                         request.getHeader(ConstantData.X_SYNC_ACTIVE));
 //            logger.info("JwtVerify User data : {}", userData.<Object>map(UserDto::getEmail).orElse(null));
                 if (userData.isPresent()) {
@@ -77,25 +105,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 } else {
                     // Check if response is already committed (streaming has started)
-                    if (response.isCommitted()) {
-                        log.warn("Cannot send unauthorized response - response already committed for: {}",
-                                request.getRequestURI());
-                        return;
-                    }
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
-                    try {
-                        response.getWriter().write("{\"error\": \"Invalid or missing token\"}");
-                        response.getWriter().flush();
-                        return;
-                    } catch (IOException e) {
-                        if (isStreamingEndpoint) {
-                            log.info("Could not write unauthorized response for streaming endpoint: {}", e.getMessage());
-                        } else {
-                            log.error("Error writing unauthorized response: {}", e.getMessage());
-                            throw e;
-                        }
-                    }
+                    sendUnauthorizedResponse(response, "Invalid or missing token", isStreamingEndpoint, request.getRequestURI());
+                    return;
                 }
             }
             filterChain.doFilter(request, response);
@@ -108,6 +119,28 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 return;
             }
             throw e;
+        }
+    }
+
+    private void sendUnauthorizedResponse(HttpServletResponse response, String message, boolean isStreamingEndpoint, String requestURI) throws IOException {
+        if (response.isCommitted()) {
+            log.warn("Cannot send unauthorized response - response already committed for: {}", requestURI);
+            return;
+        }
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // ยิง 401 ออกไป
+        response.setContentType("application/json");
+
+        try {
+            response.getWriter().write("{\"error\": \"" + message + "\"}");
+            response.getWriter().flush();
+        } catch (IOException e) {
+            if (isStreamingEndpoint) {
+                log.info("Could not write unauthorized response for streaming endpoint: {}", e.getMessage());
+            } else {
+                log.error("Error writing unauthorized response: {}", e.getMessage());
+                throw e;
+            }
         }
     }
 

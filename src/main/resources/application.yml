@@ -334,15 +334,20 @@ app:
     user-topic: ${app.group}.fcm.user.
   loging:
     enable: true
+
+  cookie:
+    secure: true
+    same-site: Lax
   jwt:
     # SHA 512-bit Key
-    secret: 962a5d50f2ee9f987e8d45d0687a1ead3315f8255b65e914709952a5606a304f5a5a651e3cf4dc6d759b956081cc1c8cf85cd4606287e443ea11f3a555f33c0a
+    secret: cnje/akyCjmaLQ//A85mc488lyFTPH9X3bUvY5VtbDE=
     #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes
     session-time: 86400
-    session-refresh-time: 2592000
+    session-refresh-time: 604800
     session-day: 30
-    token-name: _server_jwt_key
-    refresh-token-name: _server_refresh_key
+    token-name: _server_jwt
+    refresh-token-name: _server_refresh
+    current-user-key: _current_user
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
   defaults:
