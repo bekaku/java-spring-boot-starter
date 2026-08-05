@@ -9,7 +9,9 @@ import com.bekaku.api.spring.mybatis.PermissionMybatis;
 import com.bekaku.api.spring.repository.PermissionRepository;
 import com.bekaku.api.spring.repository.PermissionRepositoryCustom;
 import com.bekaku.api.spring.service.PermissionService;
+import com.bekaku.api.spring.specification.DynamicFilterSpec;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.vo.Paging;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -41,6 +43,16 @@ public class PermissionServiceImpl implements PermissionService {
     private final PermissionRepositoryCustom permissionRepositoryCustom;
 
     private static final String I18N_PREFIX = "permission.";
+
+
+    public ResponseListDto<PermissionDto> crudList(String q, String keyword, Pageable pageable) {
+        // กำหนดคอลัมน์ที่ต้องการค้นหาเมื่อใช้ _keyword
+        List<String> searchColumns = List.of("code", "description", "module");
+        // สร้าง Specification
+        DynamicFilterSpec<Permission> spec = new DynamicFilterSpec<>(q, keyword, searchColumns);
+        Page<Permission> result = permissionRepository.findAll(spec, pageable);
+        return getListFromResult(result);
+    }
 
     @Transactional(readOnly = true)
     @Override
@@ -115,10 +127,13 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public PermissionDto convertEntityToDto(Permission permission) {
         PermissionDto dto = modelMapper.toDto(permission);
-        String message = i18n.getMessage(I18N_PREFIX + permission.getCode());
-        if (message != null) {
-            dto.setDescription(message);
+        if (AppUtil.isEmpty(dto.getDescription())) {
+            String message = i18n.getMessage(I18N_PREFIX + permission.getCode());
+            if (message != null) {
+                dto.setDescription(message);
+            }
         }
+
         return dto;
     }
 

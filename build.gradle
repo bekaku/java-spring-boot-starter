@@ -73,7 +73,7 @@ dependencies {
 //    Databases
 
     // Progres
-    runtimeOnly 'org.postgresql:postgresql:42.7.11'
+    runtimeOnly 'org.postgresql:postgresql'
     // MySql
 //    implementation 'com.mysql:mysql-connector-j:9.5.0'
     implementation 'com.zaxxer:HikariCP:7.1.0'

@@ -7,6 +7,8 @@ import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.ApiClientIp;
 import com.bekaku.api.spring.service.ApiClientIpService;
 import com.bekaku.api.spring.service.ApiClientService;
+import com.bekaku.api.spring.util.ControllerUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequestMapping(path = "/api/apiClient/{apiClientId}/apiClientIp")
@@ -30,14 +33,14 @@ public class ApiClientIpController extends BaseApiController {
 
     //api/apiClient/2/apiClientIp?page=0&size=2&sort=createdDate,desc
     @GetMapping
-    public ResponseEntity<Object> findAll(Pageable pageable, @PathVariable("apiClientId") long apiClientId) {
+    public ResponseEntity<Object> findAll(HttpServletRequest request, Pageable pageable, @PathVariable("apiClientId") long apiClientId) {
 
 //        return this.responseEntity(apiClientIpService.findPageByApiClient(apiClientId,
 //                !pageable.getSort().isEmpty() ? pageable :
 //                        PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), ApiClientIp.getSort())),
 //                HttpStatus.OK);
 
-        SearchSpecification<ApiClientIp> specification = new SearchSpecification<>(getSearchCriteriaList());
+        SearchSpecification<ApiClientIp> specification = ControllerUtil.buildSpecification(request, List.of());
         return this.responseEntity(apiClientIpService.findPageSearchByApiClient(specification, apiClientId, getPageable(pageable, ApiClientIp.getSort())), HttpStatus.OK);
 
 

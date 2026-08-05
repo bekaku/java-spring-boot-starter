@@ -63,7 +63,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info("JwtTokenFilter > doFilterInternal: {}", request.getMethod());
         String requestURI = request.getRequestURI();
         boolean isStreamingEndpoint = STREAMING_ENDPOINTS.stream()
                 .anyMatch(requestURI::contains);
@@ -72,8 +71,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
 
                 String requestUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
-
-                log.info("key:{}, ,id:{}", jwtProperties.currentUserKey(), requestUserId);
+//                log.info("key:{}, ,id:{}", jwtProperties.currentUserKey(), requestUserId);
                 if (AppUtil.isEmpty(requestUserId)) {
                     requestUserId = request.getHeader(ConstantData.X_USER_ID);
                 }

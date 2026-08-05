@@ -1,8 +1,8 @@
 package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.dto.AppUserDto;
-import com.bekaku.api.spring.dto.LoginRequest;
 import com.bekaku.api.spring.dto.ResponseListDto;
+import com.bekaku.api.spring.exception.BaseResponseException;
 import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.IdentityGroup;
 import com.bekaku.api.spring.model.IdentityLink;
@@ -10,23 +10,22 @@ import com.bekaku.api.spring.repository.IdentityGroupRepository;
 import com.bekaku.api.spring.repository.IdentityLinkRepository;
 import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.service.IdentityLinkService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Page;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Transactional
 @RequiredArgsConstructor
 @Service
-public class IdentityLinkServiceImpl implements IdentityLinkService {
+public class IdentityLinkServiceImpl extends BaseResponseException implements IdentityLinkService {
     private final IdentityLinkRepository identityLinkRepository;
     private final IdentityGroupRepository identityGroupRepository;
     private final AppUserService appUserService;
@@ -128,7 +127,7 @@ public class IdentityLinkServiceImpl implements IdentityLinkService {
     public void linkAccount(AppUser currentUser, AppUser targetUser) {
 
         if (currentUser.getId().equals(targetUser.getId())) {
-            throw new RuntimeException("Unable to link the account to myself.");
+            throw this.responseError(HttpStatus.BAD_REQUEST, "Unable to link the same account.");
         }
 
         Optional<IdentityLink> currentUserLinkOpt = identityLinkRepository.findByAppUserId(currentUser.getId());
@@ -149,7 +148,7 @@ public class IdentityLinkServiceImpl implements IdentityLinkService {
         Optional<IdentityLink> targetUserLinkOpt = identityLinkRepository.findByAppUserId(targetUser.getId());
         if (targetUserLinkOpt.isPresent()) {
             if (!targetUserLinkOpt.get().getIdentityGroup().getId().equals(group.getId())) {
-                throw new RuntimeException("The target account is already linked to another user group.");
+                throw this.responseError(HttpStatus.BAD_REQUEST, "The target account is already linked to another user group.");
             }
             return;
         }
@@ -165,13 +164,13 @@ public class IdentityLinkServiceImpl implements IdentityLinkService {
         if (currentUserId.equals(targetUserId)) return;
 
         IdentityLink currentLink = identityLinkRepository.findByAppUserId(currentUserId)
-                .orElseThrow(() -> new RuntimeException("My current account is not linked to any other accounts."));
+                .orElseThrow(() -> this.responseError(HttpStatus.BAD_REQUEST, "My current account is not linked to any other accounts."));
 
         IdentityLink targetLink = identityLinkRepository.findByAppUserId(targetUserId)
-                .orElseThrow(() -> new RuntimeException("The target account is not linked to any other accounts."));
+                .orElseThrow(() -> this.responseError(HttpStatus.BAD_REQUEST, "The target account is not linked to any other accounts."));
 
         if (!currentLink.getIdentityGroup().getId().equals(targetLink.getIdentityGroup().getId())) {
-            throw new RuntimeException("You cannot switch to an account that is not in the same group.");
+            throw this.responseError(HttpStatus.BAD_REQUEST, "You cannot switch to an account that is not in the same group.");
         }
     }
 

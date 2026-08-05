@@ -14,6 +14,7 @@ import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.LoginLog;
 import com.bekaku.api.spring.mybatis.AccessTokenMybatis;
 import com.bekaku.api.spring.mybatis.AppUserMybatis;
+import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.repository.AccessTokenRepository;
 import com.bekaku.api.spring.service.AccessTokenService;
 import com.bekaku.api.spring.service.ApiClientService;
@@ -22,6 +23,7 @@ import com.bekaku.api.spring.service.UserAgentService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
+import com.bekaku.api.spring.util.HashUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +35,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -51,17 +55,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     private final AppUserMybatis appUserMybatis;
     private final JwtService jwtService;
     private final ApiClientService apiClientService;
-
-    @Value("${app.jwt.session-time}")
-    int sessionTime;
-
-    @Value("${app.jwt.secret}")
-    String jwtSecret;
-
-    @Value("${app.jwt.session-day}")
-    Long sessionDay;
-
-    private final I18n i18n;
+    private final AppProperties appProperties;
 
     @Autowired
     public AccessTokenServiceImpl(@Lazy JwtService jwtService,
@@ -71,15 +65,15 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                                   AccessTokenMybatis accessTokenMybatis,
                                   AccessTokenMapper mapper,
                                   AppUserMybatis appUserMybatis,
-                                  I18n i18n) {
+                                  AppProperties appProperties) {
         this.jwtService = jwtService;
         this.accessTokenRepository = accessTokenRepository;
         this.userAgentService = userAgentService;
         this.accessTokenMybatis = accessTokenMybatis;
         this.mapper = mapper;
         this.appUserMybatis = appUserMybatis;
-        this.i18n = i18n;
         this.apiClientService = apiClientService;
+        this.appProperties = appProperties;
     }
 
     @Override
@@ -95,7 +89,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Override
     @Transactional(readOnly = true)
     public Optional<AccessToken> findByToken(String token) {
-        return accessTokenRepository.findByToken(token);
+        return accessTokenRepository.findByToken(HashUtil.sha256(token));
     }
 
     @Override
@@ -114,22 +108,23 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Transactional(readOnly = true)
     @Override
     public Optional<AccessToken> findAccessTokenByTokenAndUser(AppUser appUser, String token) {
-        return accessTokenRepository.findAccessTokenByTokenAndUser(appUser, token);
+        return accessTokenRepository.findAccessTokenByTokenAndUser(appUser, HashUtil.sha256(token));
     }
 
     @Transactional(readOnly = true)
     @Override
     public Optional<AccessToken> findAccessTokenByToken(String token, boolean revoked) {
-        return accessTokenRepository.findAccessTokenByToken(token, revoked);
+        return accessTokenRepository.findAccessTokenByToken(HashUtil.sha256(token), revoked);
     }
 
     @Override
     public AccessToken generateRefreshToken(AppUser appUser, ApiClient apiClient, LoginLog loginLog, String fcmToken) {
         //find user agent or create new if not found
-//        Date expires = new Date(System.currentTimeMillis() + (sessionTime > 0 ? sessionTime * 1000L : DateUtil.MILLS_IN_YEAR));
+        Instant now = Instant.now();
+        Date expires = Date.from(now.plus(appProperties.jwt().refreshTokenTtlDays(), ChronoUnit.DAYS));
         AccessToken accessToken = new AccessToken(
                 appUser,
-                jwtService.expireRefreshTokenTimeFromNow(),
+                expires,
                 false,
                 apiClient,
                 loginLog,
@@ -178,14 +173,14 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Transactional(readOnly = true)
     @Override
     public void validateRefreshToken(String token) {
-        accessTokenRepository.findByToken(token)
+        accessTokenRepository.findByToken(HashUtil.sha256(token))
                 .orElseThrow(() -> new ApiException(new ApiError(HttpStatus.NOT_FOUND, "Invalid refresh Token", "")));
     }
 
 
     @Override
     public void deleteRefreshToken(String token) {
-        accessTokenRepository.deleteByToken(token);
+        accessTokenRepository.deleteByToken(HashUtil.sha256(token));
     }
 
     @Override
@@ -201,18 +196,18 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Transactional(readOnly = true)
     @Override
     public Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked) {
-        return accessTokenRepository.findByTokenAndRevoked(token, revoked);
+        return accessTokenRepository.findByTokenAndRevoked(HashUtil.sha256(token), revoked);
     }
 
     @Transactional(readOnly = true)
     @Override
     public Optional<AppUserDto> findByAccessTokenKey(String token) {
-        return appUserMybatis.findByAccessTokenKey(token);
+        return appUserMybatis.findByAccessTokenKey(HashUtil.sha256(token));
     }
 
     @Override
     public Optional<AccessToken> findByActiveToken(String token) {
-        return accessTokenRepository.findByActiveToken(token);
+        return accessTokenRepository.findByActiveToken(HashUtil.sha256(token));
     }
 
     @Override

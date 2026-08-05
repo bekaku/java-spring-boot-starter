@@ -5,6 +5,7 @@ import com.bekaku.api.spring.enumtype.JwtType;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.service.AccessTokenService;
 import com.bekaku.api.spring.service.ApiClientService;
@@ -12,6 +13,7 @@ import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.DateUtil;
+import com.bekaku.api.spring.util.HashUtil;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -32,38 +34,28 @@ import static com.bekaku.api.spring.util.ConstantData.JWT_TYPE_ATT;
 @Component
 public class JwtServiceImpl implements JwtService {
     private final SecretKey signatureAlgorithm;
-    //    private final String secret;
-//    private final int sessionTime;
-//    private final int sessionRefershTime;
     private final String UID = "uid";
 
     private final ApiClientService apiClientService;
     private final AppUserService appUserService;
     private final AccessTokenService accessTokenService;
-    private final JwtProperties jwtProperties;
+    private final AppProperties appProperties;
 
 
     public JwtServiceImpl(ApiClientService apiClientService,
                           AppUserService appUserService,
                           AccessTokenService accessTokenService,
-                          JwtProperties jwtProperties) {
-//    @Autowired
-//    public JwtServiceImpl(@Value("${app.jwt.secret}") String secret,
-//                          @Value("${app.jwt.session-time}") int sessionTime,
-//                          @Value("${app.jwt.session-refresh-time}") int sessionRefershTime) {
-//        this.secret = secret;
-//        this.sessionTime = sessionTime;
-//        this.sessionRefershTime = sessionRefershTime;
+                          AppProperties appProperties) {
         this.apiClientService = apiClientService;
         this.appUserService = appUserService;
         this.accessTokenService = accessTokenService;
-        this.jwtProperties = jwtProperties;
+        this.appProperties = appProperties;
         signatureAlgorithm = Jwts.SIG.HS512.key().build();
     }
 
     public SecretKey getKey(ApiClient apiClient) {
 //        byte[] keyByte = Decoders.BASE64.decode(apiClient.getApiToken());
-        byte[] keyByte = Decoders.BASE64.decode(this.jwtProperties.secret());
+        byte[] keyByte = Decoders.BASE64.decode(this.appProperties.jwt().secret());
         return Keys.hmacShaKeyFor(keyByte);
     }
 
@@ -270,52 +262,4 @@ public class JwtServiceImpl implements JwtService {
         return Optional.empty();
     }
 
-    @Override
-    public Date expireRefreshTokenTimeFromNow() {
-        return new Date(System.currentTimeMillis() + expireRefreshMillisec());
-    }
-
-    @Override
-    public Date expireJwtTimeFromNow() {
-        return new Date(System.currentTimeMillis() + expireMillisec());
-    }
-
-    @Override
-    public Date expireTimeOneDay() {
-        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_DAY);
-    }
-
-    @Override
-    public Date expireTimeOneWeek() {
-        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_WEEK);
-    }
-
-    @Override
-    public Date expireTimeOneMonth() {
-        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_MONTH);
-    }
-
-    @Override
-    public Date ExpireTimeOneYear() {
-        return new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_YEAR);
-    }
-
-    @Override
-    public Long expireMillisec() {
-        return this.jwtProperties.sessionTime() * 1000L;
-    }
-
-    @Override
-    public Long expireJwtSecond() {
-        return (long) this.jwtProperties.sessionTime();
-    }
-    @Override
-    public Long expireRefreshSecond() {
-        return (long) this.jwtProperties.sessionRefreshTime();
-    }
-
-    @Override
-    public Long expireRefreshMillisec() {
-        return expireRefreshSecond() * 1000L;
-    }
 }

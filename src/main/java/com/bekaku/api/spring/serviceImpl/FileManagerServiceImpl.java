@@ -241,7 +241,7 @@ public class FileManagerServiceImpl implements FileManagerService {
         vo.setStreamPath(getStreamPath(fileMimeType, vo.getFilePath(), vo.getId()));
         vo.setFilePath(path);
         vo.setFileThumbnailPath(thumbnailPath);
-        vo.setFileSize(FileUtil.humanReadableByteCountSI(vo.getFileSizeNo()));
+        vo.setFileSize(String.valueOf(vo.getFileSizeNo()));
         vo.setFileMimeType(fileMimeType);
         return vo;
     }
@@ -265,7 +265,7 @@ public class FileManagerServiceImpl implements FileManagerService {
                 filesDirectory.getName(),
                 null,
                 null,
-                FileUtil.humanReadableByteCountSI(filesDirectory.getFileSize()),
+                String.valueOf(filesDirectory.getFileSize()),
                 filesDirectory.getCreatedDate(),
                 filesDirectory.getLatestUpdated(),
                 FileMimeType.DIRECTORY,

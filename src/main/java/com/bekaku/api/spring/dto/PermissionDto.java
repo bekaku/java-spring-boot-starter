@@ -24,6 +24,7 @@ public class PermissionDto extends DtoId {
     @NotEmpty(message = "{error.NotEmpty}")
     private String code;
     private String remark;
+    private String module;
     private String description;
     private PermissionType operationType;
 }

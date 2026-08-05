@@ -664,8 +664,8 @@ public class ResourceController extends BaseApiController {
     
     @PreAuthorize("@permissionChecker.hasPermission('resource_list')")
     @GetMapping
-    public ResponseEntity<Object> findAll(Pageable pageable) {
-        SearchSpecification<Resource> specification = new SearchSpecification<>(getSearchCriteriaList());
+    public ResponseEntity<Object> findAll(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<Resource> specification = ControllerUtil.buildSpecification(request, List.of());
         return this.responseEntity(
             resourceService.findAllWithSearch(specification, getPageable(pageable, Resource.getSort())), 
             HttpStatus.OK

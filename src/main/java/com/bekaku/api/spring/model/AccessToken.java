@@ -4,6 +4,7 @@ import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.model.superclass.Id;
 import com.bekaku.api.spring.util.DateUtil;
+import com.bekaku.api.spring.util.HashUtil;
 import com.bekaku.api.spring.util.UuidUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -36,7 +37,8 @@ public class AccessToken extends Id {
 
     public AccessToken(AppUser appUser, Date expiresAt, boolean revoked, ApiClient apiClient,
                        LoginLog loginLog, LocalDateTime createdDate, String fcmToken) {
-        this.token = UuidUtils.generateUUID().toString();
+        String rawString = UuidUtils.generateUUID().toString();
+        this.token = HashUtil.sha256(rawString);
         this.appUser = appUser;
         this.expiresAt = expiresAt;
         this.revoked = revoked;
@@ -46,9 +48,11 @@ public class AccessToken extends Id {
         this.fcmToken = fcmToken;
         this.fcmEnable = true;
         this.lastestActive = DateUtil.getLocalDateTimeNow();
+        this.rawToken = rawString;
     }
+
     public void onCreateToken(AppUser appUser, Date expiresAt, String token, AccessTokenServiceType service) {
-        this.token = token;
+        this.token = HashUtil.sha256(token);
         this.appUser = appUser;
         this.expiresAt = expiresAt;
         this.revoked = false;
@@ -56,6 +60,7 @@ public class AccessToken extends Id {
         this.fcmEnable = false;
         this.service = service;
         this.newToken = true;
+        this.rawToken = token;
     }
 
     //    @PrePersist
@@ -113,6 +118,10 @@ public class AccessToken extends Id {
 
     @Transient
     private boolean newToken;
+
+    @Transient
+    private String rawToken;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

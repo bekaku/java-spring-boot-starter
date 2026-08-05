@@ -20,75 +20,17 @@ import java.util.Locale;
 public class SearchSpecification<T> implements Specification<T> {
 
     private List<SearchCriteria> list;
+    private final String keyword;
+    private final List<String> keywordColumns;
 
-    private HttpServletRequest request;
-
-    //    public SearchSpecification(HttpServletRequest request) {
-    public SearchSpecification(List<SearchCriteria> list) {
-//        this.request = request;
+    public SearchSpecification(List<SearchCriteria> list, String keyword, List<String> keywordColumns) {
         this.list = list;
-//        initSearchParam();
+        this.keyword = keyword;
+        this.keywordColumns = keywordColumns;
     }
 
     public void add(SearchCriteria criteria) {
         list.add(criteria);
-    }
-
-    @Deprecated
-    public void initSearchParam() {
-        String searchParameter = this.request.getParameter(ConstantData.SEARCH_PARAMETER_ATT);
-        if (searchParameter != null) {
-            String[] splitParams = searchParameter.split(ConstantData.SEARCH_SEPARATOR_ATT);
-            String param;
-            for (String splitParam : splitParams) {
-                param = splitParam;
-                if (param != null) {
-                    String[] splitSearch;
-                    if (param.contains(ConstantData.SEARCH_SIGN_MATCH)) {
-                        splitSearch = param.split(ConstantData.SEARCH_SIGN_MATCH);
-                        addParam(splitSearch, SearchOperation.MATCH);
-                    } else if (param.contains(ConstantData.SEARCH_SIGN_GREATER_THAN_EQUA)) {
-                        splitSearch = param.split(ConstantData.SEARCH_SIGN_GREATER_THAN_EQUA);
-                        addParam(splitSearch, SearchOperation.GREATER_THAN_EQUAL);
-                    } else if (param.contains(ConstantData.SEARCH_SIGN_GREATER_THAN)) {
-                        splitSearch = param.split(ConstantData.SEARCH_SIGN_GREATER_THAN);
-                        addParam(splitSearch, SearchOperation.GREATER_THAN);
-                    } else if (param.contains(ConstantData.SEARCH_SIGN_LESS_THAN_EQUA)) {
-                        splitSearch = param.split(ConstantData.SEARCH_SIGN_LESS_THAN_EQUA);
-                        addParam(splitSearch, SearchOperation.LESS_THAN_EQUAL);
-                    } else if (param.contains(ConstantData.SEARCH_SIGN_LESS_THAN)) {
-                        splitSearch = param.split(ConstantData.SEARCH_SIGN_LESS_THAN);
-                        addParam(splitSearch, SearchOperation.LESS_THAN);
-                    } else if (param.contains(ConstantData.SEARCH_SIGN_NOT_EQUA)) {
-                        splitSearch = param.split(ConstantData.SEARCH_SIGN_NOT_EQUA);
-                        addParam(splitSearch, SearchOperation.NOT_EQUAL);
-                    } else if (param.contains(ConstantData.SEARCH_SIGN_EQUA)) {
-                        splitSearch = param.split(ConstantData.SEARCH_SIGN_EQUA);
-                        addParam(splitSearch, SearchOperation.EQUAL);
-                    }
-
-                }
-            }
-        }
-
-//        add(new SearchCriteria("code", "api_client", SearchOperation.MATCH));
-    }
-
-    @Deprecated
-    private void addParam(String[] splitSearch, SearchOperation operation) {
-        if (splitSearch.length == 2) {
-//                        add(new SearchCriteria("code", "api_client", SearchOperation.MATCH));
-            // convert boolean criteria
-            String s = splitSearch[1].toLowerCase(Locale.ROOT);
-            if ("true".equals(s) || "false".equals(s)) {
-                add(new SearchCriteria(splitSearch[0], Boolean.parseBoolean(s), operation));
-            } else if (DateUtil.isValidDate(s, DateTimeFormatter.ISO_LOCAL_DATE)) {
-                add(new SearchCriteria(splitSearch[0], DateUtil.parseDate(s, DateTimeFormatter.ISO_LOCAL_DATE), operation));
-            } else {
-                add(new SearchCriteria(splitSearch[0], splitSearch[1], operation));
-            }
-
-        }
     }
 
     @Override
@@ -171,6 +113,15 @@ public class SearchSpecification<T> implements Specification<T> {
             } else if (criteria.getOperation().equals(SearchOperation.IS_NOT_NULL)) {
                 predicates.add(builder.isNotNull(root.get(criteria.getKey())));
             }
+        }
+        if (keyword != null && !keyword.trim().isEmpty() && keywordColumns != null && !keywordColumns.isEmpty()) {
+            List<Predicate> keywordPredicates = new ArrayList<>();
+            for (String col : keywordColumns) {
+                // สร้างเงื่อนไข LIKE %keyword% สำหรับแต่ละคอลัมน์
+                keywordPredicates.add(builder.like(builder.lower(root.get(col).as(String.class)), "%" + keyword.toLowerCase() + "%"));
+            }
+            // นำเงื่อนไขย่อยมาทำ OR กัน แล้วยัดเข้า Predicate หลัก (ซึ่งจะเป็น AND กับเงื่อนไขข้อ 1)
+            predicates.add(builder.or(keywordPredicates.toArray(new Predicate[0])));
         }
         return builder.and(predicates.toArray(new Predicate[0]));
     }

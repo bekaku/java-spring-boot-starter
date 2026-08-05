@@ -9,7 +9,9 @@ import com.bekaku.api.spring.model.ApiClientIp;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.ApiClientIpService;
 import com.bekaku.api.spring.service.ApiClientService;
+import com.bekaku.api.spring.util.ControllerUtil;
 import com.bekaku.api.spring.util.UuidUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -36,10 +38,8 @@ public class ApiClientController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('api_client_list')")
     @GetMapping
-    public ResponseEntity<Object> findAll(Pageable pageable) {
-//        return this.responseEntity(apiClientService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
-//                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), ApiClient.getSort())), HttpStatus.OK);
-        SearchSpecification<ApiClient> specification = new SearchSpecification<>(getSearchCriteriaList());
+    public ResponseEntity<Object> findAll(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<ApiClient> specification = ControllerUtil.buildSpecification(request, List.of());
         return this.responseEntity(apiClientService.findAllWithSearch(specification, getPageable(pageable, Permission.getSort())), HttpStatus.OK);
     }
 

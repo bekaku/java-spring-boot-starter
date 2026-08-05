@@ -14,6 +14,8 @@ import com.bekaku.api.spring.model.FilesDirectoryPathId;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.service.FilesDirectoryPathService;
 import com.bekaku.api.spring.service.FilesDirectoryService;
+import com.bekaku.api.spring.util.ControllerUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,8 +44,8 @@ public class FilesDirectoryController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('files_directory_list')")
     @GetMapping
-    public ResponseEntity<Object> findAll(Pageable pageable) {
-        SearchSpecification<FilesDirectory> specification = new SearchSpecification<>(getSearchCriteriaList());
+    public ResponseEntity<Object> findAll(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<FilesDirectory> specification = ControllerUtil.buildSpecification(request, List.of());
         return this.responseEntity(filesDirectoryService.findAllWithSearch(specification, getPageable(pageable, FilesDirectory.getSort())), HttpStatus.OK);
     }
 

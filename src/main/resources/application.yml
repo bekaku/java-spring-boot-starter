@@ -341,13 +341,11 @@ app:
   jwt:
     # SHA 512-bit Key
     secret: TzIGu7DC5IhL/hYNpQi7V0CATXCVaDcoHNExNef9H70=
-    #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes
-    session-time: 86400
-    session-refresh-time: 604800
-    session-day: 30
-    token-name: _server_jwt_
-    refresh-token-name: _server_refresh_
-    current-user-key: _current_user
+    access-token-ttl-minutes: 15
+    refresh-token-ttl-days: 7
+    token-name: _session_
+    refresh-token-name: _slid_
+    current-user-key: _sid
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
   defaults:

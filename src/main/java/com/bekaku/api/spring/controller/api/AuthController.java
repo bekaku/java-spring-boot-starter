@@ -14,6 +14,8 @@ import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.service.*;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
+import com.bekaku.api.spring.util.CookieUtil;
+import com.bekaku.api.spring.util.HashUtil;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +32,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.*;
 
 import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
@@ -50,7 +54,7 @@ public class AuthController extends BaseApiController {
     private final I18n i18n;
     private final AppProperties appProperties;
     private final IdentityLinkService identityLinkService;
-    private final JwtProperties jwtProperties;
+    private final CookieUtil cookieUtil;
 
     @PostMapping("/signup")
     public ResponseEntity<ResponseMessage> signup(@Valid @RequestBody UserRegisterRequest registerDto) {
@@ -108,7 +112,7 @@ public class AuthController extends BaseApiController {
         ApiClient apiClient = validateApiClient(apiClientName);
         AppUser user = validateLogin(loginRequest);
         RefreshTokenResponse tokenResponse = authService.login(user, loginRequest, apiClient, userAgent, AppUtil.getIpaddress(request));
-        setRefreshTokenCookie(response, tokenResponse);
+        setAuthCookie(response, tokenResponse);
         return tokenResponse;
 //        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
     }
@@ -117,8 +121,8 @@ public class AuthController extends BaseApiController {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
 
         if (apiClient.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
-                    i18n.getMessage("error.apiClientNotFound")));
+            throw this.responseError(HttpStatus.BAD_REQUEST,
+                    i18n.getMessage("error.apiClientNotFound"));
         }
 
         return apiClient.get();
@@ -163,7 +167,7 @@ public class AuthController extends BaseApiController {
         AppUser targetUser = validateLogin(loginRequest);
         identityLinkService.linkAccount(current.get(), targetUser);
         RefreshTokenResponse tokenResponse = authService.login(targetUser, apiClient, userAgent, AppUtil.getIpaddress(request));
-        setRefreshTokenCookie(response, tokenResponse);
+        setAuthCookie(response, tokenResponse);
         return this.responseEntity(tokenResponse, HttpStatus.OK);
     }
 
@@ -174,13 +178,16 @@ public class AuthController extends BaseApiController {
                                            HttpServletResponse response,
                                            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                            @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
-        String targetRefreshCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.refreshTokenName() + targetUserId);
+        String targetRefreshCookie = AppUtil.getCookieByName(request.getCookies(), appProperties.jwt().refreshTokenName() + targetUserId);
         if (!AppUtil.isEmpty(targetRefreshCookie)) {
             var accessTokenOpt = accessTokenService.findByToken(targetRefreshCookie);
             if (accessTokenOpt.isPresent()) {
 
                 if (!accessTokenService.isTokenExpired(accessTokenOpt.get())) {
-                    setCookieByName(response, jwtProperties.currentUserKey(), targetUserId.toString(), jwtService.expireRefreshSecond(), false);
+
+                    ResponseCookie currentUserCookie = cookieUtil.setCookie(appProperties.jwt().currentUserKey(), targetUserId.toString(),
+                            Duration.ofDays(appProperties.jwt().refreshTokenTtlDays()), "/", true);
+                    response.addHeader(HttpHeaders.SET_COOKIE, currentUserCookie.toString());
                     return this.responseEntity(HttpStatus.OK);
                 } else {
                     accessTokenService.delete(accessTokenOpt.get());
@@ -192,7 +199,7 @@ public class AuthController extends BaseApiController {
         AppUser targetUser = appUserService.findById(targetUserId).orElseThrow();
         ApiClient apiClient = validateApiClient(apiClientName);
         RefreshTokenResponse tokenResponse = authService.login(targetUser, apiClient, userAgent, AppUtil.getIpaddress(request));
-        setRefreshTokenCookie(response, tokenResponse);
+        setAuthCookie(response, tokenResponse);
 
         return this.responseEntity(tokenResponse, HttpStatus.OK);
     }
@@ -231,66 +238,53 @@ public class AuthController extends BaseApiController {
         if (currentUserId == null) {
             return null;
         }
-        return jwtProperties.refreshTokenName() + currentUserId;
+        return appProperties.jwt().refreshTokenName() + currentUserId;
     }
 
     private String getJwtKeyBy(Long currentUserId) {
         if (currentUserId == null) {
             return null;
         }
-        return jwtProperties.tokenName() + currentUserId;
+        return appProperties.jwt().tokenName() + currentUserId;
     }
 
-    private void setRefreshTokenCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
-        setCookieByName(response, getJwtKeyBy(tokenResponse.getUserId()), tokenResponse.getAuthenticationToken(), jwtService.expireJwtSecond(), true);
-        setCookieByName(response, getRefreshKeyBy(tokenResponse.getUserId()), tokenResponse.getRefreshToken(), jwtService.expireRefreshSecond(), true);
-        setCookieByName(response, jwtProperties.currentUserKey(), tokenResponse.getUserId().toString(), jwtService.expireRefreshSecond(), false);
-    }
+    private void setAuthCookie(HttpServletResponse response, RefreshTokenResponse tokenResponse) {
 
-    private void setCookieByName(HttpServletResponse response, String cookieName, String value, long maxAgeSeconds, boolean httponly) {
-        if (AppUtil.isEmpty(cookieName)) {
-            return;
-        }
-        ResponseCookie jwtCookie = ResponseCookie.from(cookieName, value)
-                .httpOnly(httponly)
-                .secure(appProperties.cookie().secure()) // true in prod (HTTPS), false in dev
-                .path("/")
-                .sameSite(appProperties.cookie().sameSite()) // "Lax" for dev; "None" + secure for prod
-                .maxAge(maxAgeSeconds)
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
+        ResponseCookie accessToken = cookieUtil.setCookie(getJwtKeyBy(tokenResponse.getUserId()), tokenResponse.getAuthenticationToken(),
+                Duration.ofMinutes(appProperties.jwt().accessTokenTtlMinutes()), "/", true);
+        ResponseCookie refreshToken = cookieUtil.setCookie(getRefreshKeyBy(tokenResponse.getUserId()), tokenResponse.getRefreshToken(),
+                Duration.ofDays(appProperties.jwt().refreshTokenTtlDays()), "/", true);
+        ResponseCookie currentUser = cookieUtil.setCookie(appProperties.jwt().currentUserKey(), tokenResponse.getUserId().toString(),
+                Duration.ofDays(appProperties.jwt().refreshTokenTtlDays()), "/", true);
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessToken.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshToken.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, currentUser.toString());
     }
 
     private void deleteCookie(HttpServletRequest request, HttpServletResponse response, Long currentUserId, boolean setCurrentToAnothor) {
         if (currentUserId != null) {
-            deleteCookieByName(response, getJwtKeyBy(currentUserId), true);
-            deleteCookieByName(response, getRefreshKeyBy(currentUserId), true);
-            deleteCookieByName(response, jwtProperties.currentUserKey(), false);
+            deleteCookieByName(response, getJwtKeyBy(currentUserId), "/", true);
+            deleteCookieByName(response, getRefreshKeyBy(currentUserId), "/", true);
+            deleteCookieByName(response, appProperties.jwt().currentUserKey(), "/", false);
             if (setCurrentToAnothor) {
                 setCurrentUserToAnother(request, response, currentUserId);
             }
-
         }
     }
 
-    private void deleteCookieByName(HttpServletResponse response, String cookieName, boolean httponly) {
+    private void deleteCookieByName(HttpServletResponse response, String cookieName, String path, boolean httponly) {
         if (AppUtil.isEmpty(cookieName)) {
             return;
         }
-        ResponseCookie cookie = ResponseCookie.from(cookieName, "")
-                .httpOnly(httponly)
-                .secure(appProperties.cookie().secure())
-                .path("/")
-                .maxAge(0) // Deletes cookie
-                .sameSite(appProperties.cookie().sameSite()) // Must match how it was originally set
-                .build();
+        ResponseCookie cookie = cookieUtil.clearCookie(cookieName, path, httponly);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     private void setCurrentUserToAnother(HttpServletRequest request, HttpServletResponse response, Long loggedOutUserId) {
         if (request.getCookies() == null) return;
 
-        String refreshCookiePrefix = jwtProperties.refreshTokenName();
+        String refreshCookiePrefix = appProperties.jwt().refreshTokenName();
         boolean isCurrentUserSet = false;
 
         for (Cookie cookie : request.getCookies()) {
@@ -306,7 +300,7 @@ public class AuthController extends BaseApiController {
                 try {
                     otherUserId = Long.valueOf(otherUserIdStr);
                 } catch (NumberFormatException e) {
-                    deleteCookieByName(response, cookie.getName(), true);
+                    deleteCookieByName(response, cookie.getName(), "/api/auth", true);
                     continue;
                 }
 
@@ -315,12 +309,16 @@ public class AuthController extends BaseApiController {
 
                 if (accessToken.isPresent() && !accessTokenService.isTokenExpired(accessToken.get())) {
                     if (!isCurrentUserSet) {
-                        setCookieByName(response, jwtProperties.currentUserKey(), otherUserIdStr, jwtService.expireRefreshSecond(), false);
+
+                        ResponseCookie currentUserCokie = cookieUtil.setCookie(appProperties.jwt().currentUserKey(), otherUserIdStr,
+                                Duration.ofDays(appProperties.jwt().refreshTokenTtlDays()), "/", true);
+                        response.addHeader(HttpHeaders.SET_COOKIE, currentUserCokie.toString());
+
                         isCurrentUserSet = true;
                     }
                 } else {
-                    deleteCookieByName(response, getJwtKeyBy(otherUserId), true);
-                    deleteCookieByName(response, getRefreshKeyBy(otherUserId), true);
+                    deleteCookieByName(response, getJwtKeyBy(otherUserId), "/", true);
+                    deleteCookieByName(response, getRefreshKeyBy(otherUserId), "/api/auth", true);
                     accessToken.ifPresent(accessTokenService::delete);
                 }
             }
@@ -333,8 +331,8 @@ public class AuthController extends BaseApiController {
                                              @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                              @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
-        String ckUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
-        if (AppUtil.isEmpty(ckUserId)) {
+        String ckUserId = AppUtil.getCookieByName(request.getCookies(), appProperties.jwt().currentUserKey());
+        if (AppUtil.isEmpty(ckUserId) || !NumberUtils.isParsable(ckUserId)) {
             throwUnauthorizes();
         }
         Long currentUserId = Long.valueOf(ckUserId);
@@ -361,7 +359,7 @@ public class AuthController extends BaseApiController {
             throwUnauthorizes();
         }
         RefreshTokenResponse tokenResponse = authService.refreshToken(accessToken.get(), apiClient.get(), AppUtil.getUserAgent(userAgent));
-        setRefreshTokenCookie(response, tokenResponse);
+        setAuthCookie(response, tokenResponse);
         return tokenResponse;
     }
 
@@ -475,7 +473,7 @@ public class AuthController extends BaseApiController {
                                                   HttpServletRequest request,
                                                   @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName) {
 
-        String ckUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
+        String ckUserId = AppUtil.getCookieByName(request.getCookies(), appProperties.jwt().currentUserKey());
         if (!AppUtil.isEmpty(ckUserId)) {
             Long currentUserId = Long.valueOf(ckUserId);
             Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);

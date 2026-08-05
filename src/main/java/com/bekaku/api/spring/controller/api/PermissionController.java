@@ -7,13 +7,16 @@ import com.bekaku.api.spring.dto.PermissionDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.PermissionService;
+import com.bekaku.api.spring.specification.SearchCriteria;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.ControllerUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -68,12 +71,15 @@ public class PermissionController extends BaseApiController {
     //http://localhost:8084/api/permission?page=0&size=10&sort=code,asc&_q=code:permission_list,name:user_list,id>10,id>=20,id!=10,id<10,id<=10,id=1
     @PreAuthorize("@permissionChecker.hasPermission('permission_list')")
     @GetMapping
-    public ResponseListDto<PermissionDto> findAll(Pageable pageable) {
+    public ResponseListDto<PermissionDto> findAll(HttpServletRequest request, Pageable pageable) {
 //        if(pageable.getSort().isEmpty()){
 //            Pageable pageable1 = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Permission.getSort());
 //        }
 
-        SearchSpecification<Permission> specification = new SearchSpecification<>(getSearchCriteriaList());
+        SearchSpecification<Permission> specification = ControllerUtil.buildSpecification(request, List.of("code", "description", "module"));
+
+
+//        SearchSpecification<Permission> specification = new SearchSpecification<>(getSearchCriteriaList());
 //        specification.add(new SearchCriteria("code", "api_client", SearchOperation.MATCH));
         /*
         Page<Permission> result = permissonService.findAllWithSearchSpecification(specification, pageable);
@@ -95,6 +101,14 @@ public class PermissionController extends BaseApiController {
 //            put("datas", permissonService.findAllPaging(!pageable.getSort().isEmpty() ? pageable : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Permission.getSort())));
 //            put("pageable", pageable);
 //        }}, HttpStatus.OK);
+    }
+
+    @PreAuthorize("@permissionChecker.hasPermission('permission_list')")
+    @GetMapping("/crudList")
+    public ResponseEntity<ResponseListDto<PermissionDto>> crudList(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<Permission> spec = ControllerUtil.buildSpecification(request, List.of("code", "description", "module"));
+//        return permissionService.crudList(q, keyword, getPageable(pageable, Permission.getSort()));
+        return this.responseEntity(permissionService.findAllWithSearch(spec, getPageable(pageable, Permission.getSort())), HttpStatus.OK);
     }
 
     private static Sort getSort() {

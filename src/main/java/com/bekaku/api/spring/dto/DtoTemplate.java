@@ -131,6 +131,9 @@ public class DtoTemplate extends DtoId {
     @Column(name = "start_date", columnDefinition = "date")
     private LocalDate startDate;
 
+    @Transient // This field is not saved to the database table
+    private String temporaryToken;
+
     public static Sort getSort() {
         return Sort.by(Sort.Direction.ASC, "groupName");
     }

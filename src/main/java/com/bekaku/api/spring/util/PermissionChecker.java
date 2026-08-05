@@ -38,7 +38,6 @@ public class PermissionChecker {
 
         Long userID = authHelper.getAuthenticatedUser();
         if (userID == null) return false;
-        log.info("PermissionChecker > hasAnyPermission > permissions:{}, userID:{}", permissions, userID);
         for (String permission : permissions) {
             if (validatePermit(userID, permission)) {
                 return true;

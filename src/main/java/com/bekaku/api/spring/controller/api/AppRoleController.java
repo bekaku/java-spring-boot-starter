@@ -9,7 +9,9 @@ import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.service.AppRoleService;
 import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.ControllerUtil;
 import com.bekaku.api.spring.validator.RoleValidator;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,8 +49,8 @@ public class AppRoleController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('app_role_list')")
     @GetMapping
-    public ResponseEntity<ResponseListDto<AppRoleDto>> findAll(Pageable pageable) {
-        SearchSpecification<AppRole> specification = new SearchSpecification<>(getSearchCriteriaList());
+    public ResponseEntity<ResponseListDto<AppRoleDto>> findAll(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<AppRole> specification = ControllerUtil.buildSpecification(request, List.of());
         return this.responseEntity(appRoleService.findAllWithSearch(specification, getPageable(pageable, AppRole.getSort())), HttpStatus.OK);
     }
 

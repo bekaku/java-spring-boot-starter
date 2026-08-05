@@ -14,6 +14,7 @@ public interface JwtService {
     String toToken(AppUser appUser, String token, ApiClient apiClient, Date expired, JwtType jwtType);
 
     Optional<String> getSubFromToken(String token, ApiClient apiClient);
+
     Optional<String> getSubFromAuthorizationHeader(String authorization, ApiClient apiClient);
 
     Optional<String> getUIDFromToken(String token, ApiClient apiClient);
@@ -25,23 +26,4 @@ public interface JwtService {
     Optional<AppUserDto> jwtVerify(String apiclientName, String jwtToken, String syncActiveHeader);
 
     Optional<String> getAuthorizatoinTokenString(String header);
-
-    Date expireRefreshTokenTimeFromNow();
-
-    Date expireJwtTimeFromNow();
-
-    Date expireTimeOneDay();
-
-    Date expireTimeOneWeek();
-
-    Date expireTimeOneMonth();
-
-    Date ExpireTimeOneYear();
-
-    Long expireMillisec();
-
-    Long expireJwtSecond();
-    Long expireRefreshSecond();
-
-    Long expireRefreshMillisec();
 }

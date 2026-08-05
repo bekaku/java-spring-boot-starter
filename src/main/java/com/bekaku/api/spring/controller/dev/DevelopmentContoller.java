@@ -751,6 +751,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import org.springframework.security.access.prepost.PreAuthorize;\n");
 //                writer.append("import org.springframework.data.domain.PageRequest;\n");
                 writer.append("import org.springframework.data.domain.Pageable;\n");
+                writer.append("import com.bekaku.api.spring.util.ControllerUtil;\n");
+                writer.append("import jakarta.servlet.http.HttpServletRequest;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".util.ConstantData;\n");
                 writer.append("\n");
                 writer.append("import jakarta.validation.Valid;\n");
@@ -778,16 +780,17 @@ public class DevelopmentContoller extends BaseApiController {
 //                writer.append("                                          @RequestParam(value = \"limit\", defaultValue = \"20\") int limit) {\n");
 //                writer.append("    public ResponseEntity<Object> findAll(Pageable pageable) {\n");
                 if (haveDto) {
-                    writer.append("    public ResponseListDto<").append(entityName).append("Dto").append("> findAll(Pageable pageable, @RequestParam(name = ConstantData.SEARCH_PARAMETER_ATT, required = false) String q) {\n");
+                    writer.append("    public ResponseEntity<ResponseListDto<").append(entityName).append("Dto").append(">> findAll(HttpServletRequest request, Pageable pageable) {\n");
                 } else {
-                    writer.append("    public ResponseListDto<").append(entityName).append("> findAll(Pageable pageable, @RequestParam(name = ConstantData.SEARCH_PARAMETER_ATT, required = false) String q) {\n");
+                    writer.append("    public ResponseEntity<ResponseListDto<").append(entityName).append(">> findAll(HttpServletRequest request, Pageable pageable) {\n");
                 }
 //                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(new Paging(page, limit), ").append(entityName).append(".getSort()), HttpStatus.OK);\n");
 //                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :\n");
 //                writer.append("                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
-                writer.append("        SearchSpecification<").append(entityName).append("> specification = new SearchSpecification<>(getSearchCriteriaList(q));    \n");
+//                writer.append("        SearchSpecification<").append(entityName).append("> specification = new SearchSpecification<>(getSearchCriteriaList(q));    \n");
+                writer.append("        SearchSpecification<").append(entityName).append("> specification = ControllerUtil.buildSpecification(request, List.of());    \n");
 //                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithSearch(specification, getPageable(pageable, ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
-                writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithSearch(specification, getPageable(pageable, ").append(entityName).append(".getSort()));\n");
+                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithSearch(specification, getPageable(pageable, ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
                 writer.append("    }\n");
                 //create
                 writer.append("\n");

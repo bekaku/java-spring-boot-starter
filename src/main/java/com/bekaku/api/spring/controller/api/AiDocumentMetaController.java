@@ -1,22 +1,29 @@
-package com.bekaku.api.spring.controller.ai;
+package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.controller.api.BaseApiController;
-import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.dto.AiDocumentMetaDto;
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.AiDocumentMeta;
 import com.bekaku.api.spring.service.AiDocumentMetaService;
-import com.bekaku.api.spring.util.ConstantData;
-import lombok.extern.slf4j.Slf4j;
-import lombok.RequiredArgsConstructor;
 import com.bekaku.api.spring.specification.SearchSpecification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.data.domain.Pageable;
-
+import com.bekaku.api.spring.util.ControllerUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -30,8 +37,8 @@ public class AiDocumentMetaController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('ai_document_meta_list')")
     @GetMapping
-    public ResponseListDto<AiDocumentMetaDto> findAll(Pageable pageable, @RequestParam(name = ConstantData.SEARCH_PARAMETER_ATT, required = false) String q) {
-        SearchSpecification<AiDocumentMeta> specification = new SearchSpecification<>(getSearchCriteriaList(q));
+    public ResponseListDto<AiDocumentMetaDto> findAll(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<AiDocumentMeta> specification = ControllerUtil.buildSpecification(request, List.of());
         return aiDocumentMetaService.findAllWithSearch(specification, getPageable(pageable, AiDocumentMeta.getSort()));
     }
 

@@ -35,6 +35,8 @@ import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
+import com.bekaku.api.spring.util.ControllerUtil;
+import com.bekaku.api.spring.util.HashUtil;
 import com.bekaku.api.spring.validator.UserValidator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -196,8 +198,8 @@ public class AppUserController extends BaseApiController {
 
     @PreAuthorize("@permissionChecker.hasPermission('app_user_list')")
     @GetMapping
-    public ResponseEntity<ResponseListDto<AppUserDto>> findAll(Pageable pageable, HttpServletRequest request) {
-        SearchSpecification<AppUser> specification = new SearchSpecification<>(getSearchCriteriaList());
+    public ResponseEntity<ResponseListDto<AppUserDto>> findAll(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<AppUser> specification = ControllerUtil.buildSpecification(request, List.of());
         return this.responseEntity(appUserService.findAllWithSearch(specification, getPageable(pageable, AppUser.getSort())), HttpStatus.OK);
     }
 

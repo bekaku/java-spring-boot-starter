@@ -1,5 +1,6 @@
 package com.bekaku.api.spring.service;
 
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.PermissionDto;
 import com.bekaku.api.spring.vo.Paging;
@@ -16,6 +17,8 @@ import java.util.Optional;
 
 @Service
 public interface PermissionService extends BaseService<Permission, PermissionDto> {
+
+    ResponseListDto<PermissionDto> crudList(String q, String keyword, Pageable pageable);
 
     List<PermissionDto> findAllLikeByCode(String code,Pageable pageable);
 

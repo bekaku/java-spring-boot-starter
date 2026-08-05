@@ -70,11 +70,18 @@ spring:
     username: local_jobs
     password: 'pwd'
   ai:
+    openai:
+      base-url: https://api.openai.com/v1
+      api-key: ${OPENAI_API_KEY} # แนะนำให้อ่านจาก Environment Variable
+      chat:
+        options:
+          model: gpt-4o # หรือ gpt-3.5-turbo
+          temperature: 0.1
+          top-p: 0.9
     ollama:
       base-url: http://localhost:11434
       chat:
         options:
-          # หากใช้ Modelfile ที่เราดราฟท์กันไป สามารถเปลี่ยนเป็น my-rag-gemma ได้เลยครับ
           model: gemma4:12b
           temperature: 0.1
           top-p: 0.9
@@ -158,10 +165,8 @@ app:
 
   jwt:
     secret: eL2kRSFLRFicsrgtOISl1LKqrCChkzGS9UxrXep3b7z0OvkGoejNMbbyqCMVuDshBogW1Q1IqvsvSwMs78vLBn
-    #millisecond default is 2592000= 1 month, 86400 = 1 days, 604800=7 days, 3600=1 hour, 900=15 minutes, 600=10 minutes , 60 = 1 minute
-    session-time: 900
-    session-refresh-time: 604800
-    session-day: 30
+    access-token-ttl-minutes: 15
+    refresh-token-ttl-days: 7
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
 

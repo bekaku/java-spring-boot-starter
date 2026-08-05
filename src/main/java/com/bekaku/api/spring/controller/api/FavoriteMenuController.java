@@ -9,6 +9,8 @@ import com.bekaku.api.spring.model.FavoriteMenu;
 import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.service.FavoriteMenuService;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.ControllerUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +34,8 @@ public class FavoriteMenuController extends BaseApiController {
     private final I18n i18n;
 
     @GetMapping
-    public ResponseListDto<FavoriteMenuDto> findAll(Pageable pageable) {
-        SearchSpecification<FavoriteMenu> specification = new SearchSpecification<>(getSearchCriteriaList());
+    public ResponseListDto<FavoriteMenuDto> findAll(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<FavoriteMenu> specification = ControllerUtil.buildSpecification(request, List.of());
         return favoriteMenuService.findAllWithSearch(specification, getPageable(pageable, FavoriteMenu.getSort()));
     }
 
