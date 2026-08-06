@@ -32,7 +32,7 @@ public class Permission extends Id {
 
     private String module;
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     private PermissionType operationType = PermissionType.CRUD;
 
     @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)

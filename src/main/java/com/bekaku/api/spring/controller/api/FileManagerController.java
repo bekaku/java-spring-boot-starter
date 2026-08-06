@@ -6,6 +6,7 @@ import com.bekaku.api.spring.dto.FileManagerDto;
 import com.bekaku.api.spring.dto.FileUploadChunkMergeRequestDto;
 import com.bekaku.api.spring.dto.FileUploadChunkResponseDto;
 import com.bekaku.api.spring.dto.ImageDto;
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.dto.ResponseMessage;
 import com.bekaku.api.spring.dto.UploadRequest;
 import com.bekaku.api.spring.enumtype.FileMimeType;
@@ -13,6 +14,7 @@ import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.model.FileMime;
 import com.bekaku.api.spring.model.FilesDirectory;
+import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.properties.AppDefaultsProperties;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.service.AppUserService;
@@ -20,8 +22,10 @@ import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.service.FileMimeService;
 import com.bekaku.api.spring.service.FilesDirectoryService;
 import com.bekaku.api.spring.service.JwtService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
+import com.bekaku.api.spring.util.ControllerUtil;
 import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.util.FileUtil;
 import com.google.common.util.concurrent.RateLimiter;
@@ -100,6 +104,17 @@ public class FileManagerController extends BaseApiController {
     private final JwtService jwtService;
     private final List<String> sortProperties = List.of("fileName", "createdDate", "updatedDate", "fileSize", "fileMime");
     private final Executor executor = new ThreadPoolTaskExecutor();
+
+    @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
+    @GetMapping("/findAllByAdmin")
+    public ResponseEntity<ResponseListDto<FileManagerDto>> findAllByAdmin(
+            HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<FileManager> specification = ControllerUtil.buildSpecification(request, List.of("code", "description", "module"));
+        ResponseListDto<FileManagerDto> data = fileManagerService.findAllWithSearch(specification, getPageable(pageable, Permission.getSort()));
+        return this.responseEntity(
+                data,
+                HttpStatus.OK);
+    }
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
     @GetMapping

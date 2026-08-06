@@ -8,7 +8,6 @@ import lombok.Data;
 @JsonRootName("data")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserPersonalEditRequest {
-    private String fullName;
     private String email;
     private String username;
     private Long avatarFileId;

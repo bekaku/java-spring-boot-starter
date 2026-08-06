@@ -415,7 +415,7 @@ public class AppUserController extends BaseApiController {
             }
         }
 
-        return this.responseServerMessage(i18n.getMessage("success.updatePassword"), HttpStatus.OK);
+        return this.responseEntity(HttpStatus.OK);
     }
 
     @PutMapping("/updateEmail")

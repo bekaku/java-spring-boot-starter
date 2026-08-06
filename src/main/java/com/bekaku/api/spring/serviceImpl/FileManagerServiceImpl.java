@@ -146,7 +146,7 @@ public class FileManagerServiceImpl implements FileManagerService {
                 fileManager.getOriginalFileName(),
                 path,
                 thumbnailPath,
-                FileUtil.humanReadableByteCountSI(fileManager.getFileSize()),
+                String.valueOf(fileManager.getFileSize()),
                 fileManager.getCreatedDate(),
                 fileManager.getCreatedDate(),
                 fileMimeType,

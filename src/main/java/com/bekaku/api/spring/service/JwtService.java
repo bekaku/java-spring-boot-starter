@@ -26,4 +26,7 @@ public interface JwtService {
     Optional<AppUserDto> jwtVerify(String apiclientName, String jwtToken, String syncActiveHeader);
 
     Optional<String> getAuthorizatoinTokenString(String header);
+
+    Date getAccessTokenExpire();
+    Date getRefreshTokenExpire();
 }

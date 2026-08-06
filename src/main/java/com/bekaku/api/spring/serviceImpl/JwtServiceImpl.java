@@ -22,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -260,6 +262,16 @@ public class JwtServiceImpl implements JwtService {
             }
         }
         return Optional.empty();
+    }
+
+    public Date getAccessTokenExpire() {
+        Instant now = Instant.now();
+        return Date.from(now.plus(appProperties.jwt().accessTokenTtlMinutes(), ChronoUnit.MINUTES));
+    }
+
+    public Date getRefreshTokenExpire() {
+        Instant now = Instant.now();
+        return Date.from(now.plus(appProperties.jwt().refreshTokenTtlDays(), ChronoUnit.DAYS));
     }
 
 }

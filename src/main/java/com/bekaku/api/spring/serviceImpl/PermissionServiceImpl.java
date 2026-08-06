@@ -45,15 +45,6 @@ public class PermissionServiceImpl implements PermissionService {
     private static final String I18N_PREFIX = "permission.";
 
 
-    public ResponseListDto<PermissionDto> crudList(String q, String keyword, Pageable pageable) {
-        // กำหนดคอลัมน์ที่ต้องการค้นหาเมื่อใช้ _keyword
-        List<String> searchColumns = List.of("code", "description", "module");
-        // สร้าง Specification
-        DynamicFilterSpec<Permission> spec = new DynamicFilterSpec<>(q, keyword, searchColumns);
-        Page<Permission> result = permissionRepository.findAll(spec, pageable);
-        return getListFromResult(result);
-    }
-
     @Transactional(readOnly = true)
     @Override
     public ResponseListDto<PermissionDto> findAllWithPaging(Pageable pageable) {

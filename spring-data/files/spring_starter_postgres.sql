@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict vVWOxoFdHyaGoORtewflTBvIbqBNasD7QeT9JIy3Kus1PaCdfNrF9U3CcqjPEhF
+\restrict XykcktfzIr8BTRjJKq6sMNrVNNBlNuoKv4iXiYbbIOC4FsPaKEt4k7468IcIuvb
 
 -- Dumped from database version 18.0
 -- Dumped by pg_dump version 18.0
@@ -327,6 +327,35 @@ CREATE TABLE public.files_directory_path (
 ALTER TABLE public.files_directory_path OWNER TO postgres_user;
 
 --
+-- Name: identity_group; Type: TABLE; Schema: public; Owner: postgres_user
+--
+
+CREATE TABLE public.identity_group (
+    id bigint NOT NULL,
+    created_date timestamp(6) without time zone,
+    created_user bigint
+);
+
+
+ALTER TABLE public.identity_group OWNER TO postgres_user;
+
+--
+-- Name: identity_link; Type: TABLE; Schema: public; Owner: postgres_user
+--
+
+CREATE TABLE public.identity_link (
+    id bigint NOT NULL,
+    deleted boolean DEFAULT false,
+    created_date timestamp(6) without time zone,
+    created_user bigint,
+    app_user bigint NOT NULL,
+    identity_group bigint NOT NULL
+);
+
+
+ALTER TABLE public.identity_link OWNER TO postgres_user;
+
+--
 -- Name: login_log; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -388,10 +417,10 @@ ALTER VIEW public.performance_dashboard OWNER TO postgres_user;
 CREATE TABLE public.permission (
     id bigint NOT NULL,
     code character varying(125) NOT NULL,
-    operation_type smallint,
     module character varying(255),
     description text,
-    CONSTRAINT permission_operation_type_check CHECK (((operation_type >= 0) AND (operation_type <= 2)))
+    operation_type character varying(255),
+    CONSTRAINT permission_operation_type_check CHECK (((operation_type)::text = ANY ((ARRAY['CRUD'::character varying, 'REPORT'::character varying, 'OTHER'::character varying, 'FEATURE'::character varying])::text[])))
 );
 
 
@@ -480,7 +509,6 @@ ALTER TABLE public.user_agent OWNER TO postgres_user;
 --
 
 COPY public.access_token (id, created_date, expires_at, fcm_enable, fcm_token, lastest_active, logouted_date, revoked, service, token, api_client, app_user, login_log) FROM stdin;
-467265176412884992	2026-07-13 16:44:59.423046	2026-08-12 16:44:59.423	t	\N	2026-07-13 16:44:59.872429	\N	f	1	019f5add-971f-70ba-a958-0f2ba5d71a25	350921408848597000	350885844724224000	467265176408690688
 \.
 
 
@@ -552,51 +580,6 @@ COPY public.app_user_role (app_user, app_role) FROM stdin;
 --
 
 COPY public.audit_log (id, action, details, entity_id, entity_name, ip_address, "timestamp", username) FROM stdin;
-351972435110662144	CREATE	Permission{code='files_directory_list', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:12:47.860243	350885844724224000
-351972465980739584	CREATE	Permission{code='files_directory_view', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:12:55.221027	350885844724224000
-351972492656513024	CREATE	Permission{code='files_directory_manage', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:13:01.582505	350885844724224000
-351972526756204544	CREATE	Permission{code='file_manager_list', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:13:09.712709	350885844724224000
-351972551611650048	CREATE	Permission{code='file_manager_view', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:13:15.638051	350885844724224000
-351972582246846464	CREATE	Permission{code='file_manager_manage', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-08-29 13:13:22.942581	350885844724224000
-351972752585920512	UPDATE	Role{name='Developer', active=true, id=350888314967953409}	350888314967953409	AppRole	192.168.7.39	2025-08-29 13:14:03.554057	350885844724224000
-357097662681452544	CREATE	Permission{code='Test permit', description='Permit description', operationType=CRUD, id=null}	\N	Permission	192.168.7.39	2025-09-12 16:38:37.335543	350885844724224000
-428493750956724224	CREATE	Permission{code='ai_document_meta_list', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.112	2026-03-28 17:01:11.256494	null
-428493751619424256	CREATE	Permission{code='ai_document_meta_view', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.112	2026-03-28 17:01:11.414833	null
-428493751757836288	CREATE	Permission{code='ai_document_meta_manage', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.112	2026-03-28 17:01:11.4485	null
-467232497541844992	CREATE	Permission{code='api_client_add', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:08.172538	350885844724224000
-467232539430359040	CREATE	Permission{code='api_client_edit', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:18.160505	350885844724224000
-467232558166315008	CREATE	Permission{code='api_client_delete', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:22.627489	350885844724224000
-467232582635884544	CREATE	Permission{code='permission_add', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:28.462139	350885844724224000
-467232607294197760	CREATE	Permission{code='permission_edit', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:34.341409	350885844724224000
-467232628777422848	CREATE	Permission{code='permission_delete', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:39.463019	350885844724224000
-467232655738408960	CREATE	Permission{code='app_role_add', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:45.8908	350885844724224000
-467232678135992320	CREATE	Permission{code='app_role_edit', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:51.231459	350885844724224000
-467232697450762240	CREATE	Permission{code='app_role_delete', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:35:55.836814	350885844724224000
-467232723019239424	CREATE	Permission{code='app_user_add', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:01.931541	350885844724224000
-467232741205741568	CREATE	Permission{code='app_user_edit', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:06.267302	350885844724224000
-467232760323379200	CREATE	Permission{code='app_user_delete', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:10.826315	350885844724224000
-467232795056410624	CREATE	Permission{code='files_directory_add', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:19.106002	350885844724224000
-467232816996814848	CREATE	Permission{code='files_directory_edit', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:24.337564	350885844724224000
-467232842133278720	CREATE	Permission{code='files_directory_delete', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:30.330975	350885844724224000
-467232864035934208	CREATE	Permission{code='file_manager_add', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:35.553896	350885844724224000
-467232885200392192	CREATE	Permission{code='file_manager_edit', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:40.598616	350885844724224000
-467232954750341120	CREATE	Permission{code='file_manager_delete', description='null', operationType=CRUD, id=null}	\N	Permission	192.168.7.120	2026-07-13 14:36:57.180842	350885844724224000
-467246443770417152	UPDATE	Role{name='Developer', active=true, id=350888314967953409}	350888314967953409	AppRole	192.168.7.120	2026-07-13 15:30:33.210135	350885844724224000
-467246445347475456	UPDATE	Role{name='Developer', active=true, id=350888314967953409}	350888314967953409	AppRole	192.168.7.120	2026-07-13 15:30:33.589819	350885844724224000
-467247545882513408	DELETE	Permission{code='ai_document_meta_manage', description='null', operationType=CRUD, id=428493751757836289}	428493751757836289	Permission	192.168.7.120	2026-07-13 15:34:55.974749	350885844724224000
-467250121831092224	DELETE	Permission{code='ai_document_meta_list', description='null', operationType=CRUD, id=428493751057387520}	428493751057387520	Permission	192.168.7.120	2026-07-13 15:45:10.131748	350885844724224000
-467250132237160448	DELETE	Permission{code='ai_document_meta_view', description='null', operationType=CRUD, id=428493751619424257}	428493751619424257	Permission	192.168.7.120	2026-07-13 15:45:12.613058	350885844724224000
-467254933171736576	DELETE	Permission{code='api_client_manage', description='', operationType=CRUD, id=350898678438825984}	350898678438825984	Permission	192.168.7.120	2026-07-13 16:04:17.244434	350885844724224000
-467254948527083520	DELETE	Permission{code='app_role_manage', description='', operationType=CRUD, id=350899010636091393}	350899010636091393	Permission	192.168.7.120	2026-07-13 16:04:20.906002	350885844724224000
-467254964989726720	DELETE	Permission{code='app_user_manage', description='', operationType=CRUD, id=350899073227689985}	350899073227689985	Permission	192.168.7.120	2026-07-13 16:04:24.831074	350885844724224000
-467255257450156032	DELETE	Permission{code='permission_manage', description='', operationType=CRUD, id=350898947750891521}	350898947750891521	Permission	192.168.7.120	2026-07-13 16:05:34.559397	350885844724224000
-467255275640852480	DELETE	Permission{code='files_directory_manage', description='null', operationType=CRUD, id=351972492660707328}	351972492660707328	Permission	192.168.7.120	2026-07-13 16:05:38.896034	350885844724224000
-467255353596186624	DELETE	Permission{code='file_manager_manage', description='null', operationType=CRUD, id=351972582251040768}	351972582251040768	Permission	192.168.7.120	2026-07-13 16:05:57.482793	350885844724224000
-467255802483183616	CREATE	Role{name='Admin', active=true, id=null}	\N	AppRole	192.168.7.120	2026-07-13 16:07:44.505343	350885844724224000
-467261782780547072	UPDATE	Role{name='Admin', active=true, id=467255802483183617}	467255802483183617	AppRole	192.168.7.120	2026-07-13 16:31:30.317654	350885844724224000
-467261783808151552	UPDATE	Role{name='Admin', active=true, id=467255802483183617}	467255802483183617	AppRole	192.168.7.120	2026-07-13 16:31:30.56392	350885844724224000
-467264758341439488	UPDATE	Role{name='Admin', active=true, id=467255802483183617}	467255802483183617	AppRole	192.168.7.120	2026-07-13 16:43:19.74792	350885844724224000
-467264759025111040	UPDATE	Role{name='Admin', active=true, id=467255802483183617}	467255802483183617	AppRole	192.168.7.120	2026-07-13 16:43:19.911735	350885844724224000
 \.
 
 
@@ -622,22 +605,6 @@ COPY public.favorite_menu (id, url, app_user) FROM stdin;
 --
 
 COPY public.file_manager (id, deleted, created_date, created_user, file_name, file_path, file_size, hidden, locked, original_file_name, readable, writeable, file_mime_id, files_directory_id, owner, description, duration, title, thumbnail_file, use_thumbnail, updated_date, updated_user) FROM stdin;
-362136662941110272	f	2025-09-26 14:21:48.618986	350885844724224000	\N	images/202509/350885844724224000_1758871305107_019984e63b947933822c960e457b2221.jpg	378525	t	f	microsoft-edge-6CNB3iD8M4E-unsplash.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:45	\N
-362138464176574464	f	2025-09-26 14:28:58.067448	350885844724224000	\N	medias/202509/350885844724224000_1758871737365_019984ecd41575eaabbdafd8856a8a9a.mp4	13131188	f	f	12052b2d-a1ca-4bfe-9c4c-53ab47a2fcbf.mp4	t	t	362072620180443136	\N	350885844724224000	This is my son	55	my boy	362138459625754624	f	2026-04-10 14:21:48	\N
-359223407708999680	f	2025-09-18 13:25:34.445353	350885844724224000	\N	images/202509/350885844724224000_1758176733310_01995b7fe8b77173a891df46c929e7c8.jpg	77530	f	f	121375.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:09	\N
-362138459625754624	f	2025-09-26 14:28:56.981401	350885844724224000	\N	images/202509/350885844724224000_1758871735876_019984ecce7678f8ba5e47565b622d89.jpg	94621	t	f	thumb_0.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:50	\N
-359620755450761216	f	2025-09-19 15:44:29.523119	350885844724224000	\N	images/202509/350885844724224000_1758271467692_01996125710a7283bd4d24182593a34a.jpg	213031	f	f	27196_0.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:12	\N
-359620757371752448	f	2025-09-19 15:44:29.988461	350885844724224000	\N	images/202509/350885844724224000_1758271469793_0199612578e170879eb5504e57d2c7e0.jpg	72862	f	f	29884.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:15	\N
-359620758734901248	f	2025-09-19 15:44:30.313353	350885844724224000	\N	images/202509/350885844724224000_1758271470064_0199612579f07e87abf74507d2b42b71.jpg	81098	f	f	29885_0.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:18	\N
-359620759988998144	f	2025-09-19 15:44:30.612291	350885844724224000	\N	images/202509/350885844724224000_1758271470386_019961257b327914a5667338d8ab0e35.jpg	80265	f	f	29886_0.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:20	\N
-362074448804712448	f	2025-09-26 10:14:35.613363	350885844724224000	\N	medias/202509/350885844724224000_1758856474614_01998403eff673c3aa5d1b15d3338b85.mp4	4382542	f	f	c0691557-5c2c-445b-b92c-0388bc2a4ccd.mp4	t	t	362072620180443136	\N	350885844724224000	This is video description	26	This is video title	362074442576171008	f	2026-04-10 14:21:23	\N
-362076099674378240	f	2025-09-26 10:21:09.211619	350885844724224000	\N	images/202509/350885844724224000_1758856866883_01998409ec43779c97445ae57f0d4c54.jpg	430932	f	f	anamnesis33-aQBX9fUejQs-unsplash.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:26	\N
-362074442576171008	f	2025-09-26 10:14:34.122985	350885844724224000	\N	images/202509/350885844724224000_1758856471838_01998403e54d79d2b2dcad9dec84a5e8.jpg	91210	t	f	thumb_0.jpg	t	t	359223407159545856	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:28	\N
-362098026635857920	f	2025-09-26 11:48:17.005048	350885844724224000	\N	files/202509/350885844724224000_1758862096213_01998459b7857beea31341358dc6436c.pptx	2893973	f	f	Springboot_Vue_Training.pptx	t	t	354547531843112960	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:31	\N
-362098027478913024	f	2025-09-26 11:48:17.207345	350885844724224000	\N	files/202509/350885844724224000_1758862097133_01998459baed7a4e8033ca809936674e.xlsx	12994	f	f	แบบฟอร์มสำหรับให้เกรดพนักงาน.xlsx	t	t	354547531843112960	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:34	\N
-362098846118973440	f	2025-09-26 11:51:32.386114	350885844724224000	\N	files/202509/350885844724224000_1758862292314_0199845cb55a70c09d1361c7d2f67407.docx	17900	f	f	JD-DEV-I-Software Development Manager-20230721-R02.docx	t	t	354547531843112960	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:37	\N
-362098847515676672	f	2025-09-26 11:51:32.71943	350885844724224000	\N	files/202509/350885844724224000_1758862292466_0199845cb5f27bd590fbc46e21833aef.pdf	1533584	f	f	JD-DEV-I-Software Development Manager-20230831-R02.pdf	t	t	354547680808013824	\N	350885844724224000	\N	0	\N	\N	f	2026-04-10 14:21:39	\N
-362136776816463872	f	2025-09-26 14:22:15.768866	350885844724224000	\N	medias/202509/350885844724224000_1758871308930_019984e64a827a0d8d25ba5ee9f552ab.MP4	222134352	f	f	2022_1204_140014.MP4	t	t	362136776397033472	\N	350885844724224000	acident from road can happen everytime. Becareful when you drive away/	120	Image from dash camera	362136662941110272	f	2026-04-10 14:21:42	\N
 \.
 
 
@@ -660,14 +627,6 @@ COPY public.file_mime (id, name) FROM stdin;
 --
 
 COPY public.files_directory (id, created_date, created_user, updated_date, updated_user, active, name, files_directory_parent, file_size, latest_updated, owner, file_count, deleted) FROM stdin;
-353433118524313600	2025-09-02 13:57:01.926794	350885844724224000	2025-09-02 13:57:01.926794	350885844724224000	t	My Kid	353432953566531584	0	2025-09-03 11:58:10	350885844724224000	0	f
-353433203224088576	2025-09-02 13:57:22.120965	350885844724224000	2025-09-02 13:57:22.120965	350885844724224000	t	Family	353432953566531584	0	2025-09-03 11:58:14	350885844724224000	0	f
-353433274615336960	2025-09-02 13:57:39.141123	350885844724224000	2025-09-02 13:57:39.141123	350885844724224000	t	Work	353432953566531584	0	2025-09-03 11:58:19	350885844724224000	0	f
-353765864903806976	2025-09-03 11:59:14.844627	350885844724224000	2025-09-03 11:59:14.844627	350885844724224000	t	Documents	\N	0	2025-09-03 11:59:14.849357	350885844724224000	0	f
-353432953566531584	2025-09-02 13:56:22.593865	350885844724224000	2025-09-03 17:05:58.35763	350885844724224000	t	Images	\N	0	2025-09-03 17:05:58.356483	350885844724224000	0	f
-433159884750458880	2026-04-10 14:02:44.238209	350885844724224000	2026-04-10 14:02:44.238209	350885844724224000	t	code	353765864903806976	0	2026-04-10 14:02:44.250412	350885844724224000	0	f
-433162205135900672	2026-04-10 14:11:57.467853	350885844724224000	2026-04-10 14:11:57.467853	350885844724224000	t	my work	353765864903806976	0	2026-04-10 14:11:57.469402	350885844724224000	0	f
-433162585206951936	2026-04-10 14:13:28.085849	350885844724224000	2026-04-10 14:13:28.085849	350885844724224000	t	Videoes	\N	0	2026-04-10 14:13:28.085849	350885844724224000	0	f
 \.
 
 
@@ -676,19 +635,22 @@ COPY public.files_directory (id, created_date, created_user, updated_date, updat
 --
 
 COPY public.files_directory_path (files_directory, files_directory_parent, level) FROM stdin;
-353432953566531584	353432953566531584	0
-353433118524313600	353432953566531584	0
-353433118524313600	353433118524313600	1
-353433203224088576	353432953566531584	0
-353433203224088576	353433203224088576	1
-353433274615336960	353432953566531584	0
-353433274615336960	353433274615336960	1
-353765864903806976	353765864903806976	0
-433159884750458880	353765864903806976	0
-433159884750458880	433159884750458880	1
-433162205135900672	353765864903806976	0
-433162205135900672	433162205135900672	1
-433162585206951936	433162585206951936	0
+\.
+
+
+--
+-- Data for Name: identity_group; Type: TABLE DATA; Schema: public; Owner: postgres_user
+--
+
+COPY public.identity_group (id, created_date, created_user) FROM stdin;
+\.
+
+
+--
+-- Data for Name: identity_link; Type: TABLE DATA; Schema: public; Owner: postgres_user
+--
+
+COPY public.identity_link (id, deleted, created_date, created_user, app_user, identity_group) FROM stdin;
 \.
 
 
@@ -697,9 +659,6 @@ COPY public.files_directory_path (files_directory, files_directory_parent, level
 --
 
 COPY public.login_log (id, created_at, device_id, host_name, ip, login_from, app_user, user_agent) FROM stdin;
-467221827618344960	2026-07-13 13:52:44.448	59fa4d75-6237-4564-a3d8-bf4cf670805d	bekaku	192.168.7.120	0	350885844724224000	467221827538653184
-467264822560428032	2026-07-13 16:43:35.109	59fa4d75-6237-4564-a3d8-bf4cf670805d	bekaku	192.168.7.120	0	467262738419159040	467221827538653184
-467265176408690688	2026-07-13 16:44:59.427	59fa4d75-6237-4564-a3d8-bf4cf670805d	bekaku	192.168.7.120	0	350885844724224000	467221827538653184
 \.
 
 
@@ -707,38 +666,43 @@ COPY public.login_log (id, created_at, device_id, host_name, ip, login_from, app
 -- Data for Name: permission; Type: TABLE DATA; Schema: public; Owner: postgres_user
 --
 
-COPY public.permission (id, code, operation_type, module, description) FROM stdin;
-350897401642356736	api_client_list	0	\N	
-350897732065431552	api_client_view	0	\N	
-350898898232938496	permission_list	0	\N	
-350898969737433089	app_role_list	0	\N	
-350898990360825856	app_role_view	0	\N	
-350899032308060160	app_user_list	0	\N	
-350899050880438273	app_user_view	0	\N	
-350945166250479600	login	0	\N	\N
-350898930604576768	permission_view	0	\N	Permission(View)
-351972435173576704	files_directory_list	0	\N	\N
-351972466005905408	files_directory_view	0	\N	\N
-351972526756204545	file_manager_list	0	\N	\N
-351972551611650049	file_manager_view	0	\N	\N
-467232497546039296	api_client_add	0	\N	\N
-467232539430359041	api_client_edit	0	\N	\N
-467232558166315009	api_client_delete	0	\N	\N
-467232582640078848	permission_add	0	\N	\N
-467232607294197761	permission_edit	0	\N	\N
-467232628781617152	permission_delete	0	\N	\N
-467232655738408961	app_role_add	0	\N	\N
-467232678140186624	app_role_edit	0	\N	\N
-467232697450762241	app_role_delete	0	\N	\N
-467232723019239425	app_user_add	0	\N	\N
-467232741209935872	app_user_edit	0	\N	\N
-467232760323379201	app_user_delete	0	\N	\N
-467232795056410625	files_directory_add	0	\N	\N
-467232816996814849	files_directory_edit	0	\N	\N
-467232842133278721	files_directory_delete	0	\N	\N
-467232864040128512	file_manager_add	0	\N	\N
-467232885200392193	file_manager_edit	0	\N	\N
-467232954750341121	file_manager_delete	0	\N	\N
+COPY public.permission (id, code, module, description, operation_type) FROM stdin;
+350898990360825856	app_role_view	app_role		CRUD
+350898969737433089	app_role_list	app_role		CRUD
+350898898232938496	permission_list	permission		CRUD
+350945166250479600	login	\N	\N	OTHER
+475233596676771840	ai_document_meta_list	\N	\N	CRUD
+475233597041676289	ai_document_meta_view	\N	\N	CRUD
+475233597133950977	ai_document_meta_add	\N	\N	CRUD
+475233597247197184	ai_document_meta_edit	\N	\N	CRUD
+475233597343666177	ai_document_meta_delete	\N	\N	CRUD
+350897401642356736	api_client_list	api_client		CRUD
+350897732065431552	api_client_view	api_client		CRUD
+467232954750341121	file_manager_delete	file_manager	\N	CRUD
+467232885200392193	file_manager_edit	file_manager	\N	CRUD
+467232864040128512	file_manager_add	file_manager	\N	CRUD
+467232842133278721	files_directory_delete	files_directory	\N	CRUD
+467232816996814849	files_directory_edit	files_directory	\N	CRUD
+467232795056410625	files_directory_add	files_directory	\N	CRUD
+467232760323379201	app_user_delete	app_user	\N	CRUD
+467232741209935872	app_user_edit	app_user	\N	CRUD
+467232723019239425	app_user_add	app_user	\N	CRUD
+467232697450762241	app_role_delete	app_role	\N	CRUD
+467232678140186624	app_role_edit	app_role	\N	CRUD
+467232655738408961	app_role_add	app_role	\N	CRUD
+467232628781617152	permission_delete	permission	\N	CRUD
+467232607294197761	permission_edit	permission	\N	CRUD
+467232582640078848	permission_add	permission	\N	CRUD
+467232558166315009	api_client_delete	api_client	\N	CRUD
+467232539430359041	api_client_edit	api_client	\N	CRUD
+467232497546039296	api_client_add	api_client	\N	CRUD
+351972551611650049	file_manager_view	file_manager	\N	CRUD
+351972526756204545	file_manager_list	file_manager	\N	CRUD
+351972466005905408	files_directory_view	files_directory	\N	CRUD
+351972435173576704	files_directory_list	files_directory	\N	CRUD
+350898930604576768	permission_view	permission	Permission(View)	CRUD
+350899050880438273	app_user_view	app_user		CRUD
+350899032308060160	app_user_list	app_user		CRUD
 \.
 
 
@@ -832,6 +796,7 @@ COPY public.system_activity_logs (id, action_date_time, description, user_id) FR
 
 COPY public.user_agent (id, agent) FROM stdin;
 467221827538653184	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36
+475207234947649536	PostmanRuntime/7.56.0
 \.
 
 
@@ -948,6 +913,22 @@ ALTER TABLE ONLY public.files_directory
 
 
 --
+-- Name: identity_group identity_group_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.identity_group
+    ADD CONSTRAINT identity_group_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: identity_link identity_link_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.identity_link
+    ADD CONSTRAINT identity_link_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: login_log login_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres_user
 --
 
@@ -1044,6 +1025,14 @@ ALTER TABLE ONLY public.access_token
 
 
 --
+-- Name: identity_link ukvfksfaep0ifm857igdfjvolq; Type: CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.identity_link
+    ADD CONSTRAINT ukvfksfaep0ifm857igdfjvolq UNIQUE (app_user);
+
+
+--
 -- Name: user_agent user_agent_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres_user
 --
 
@@ -1056,6 +1045,13 @@ ALTER TABLE ONLY public.user_agent
 --
 
 CREATE INDEX idx1g886n9ijc3v1kn2ja05c61gx ON public.login_log USING btree (device_id);
+
+
+--
+-- Name: idx3kxn2twewmof6sqvng1j56ach; Type: INDEX; Schema: public; Owner: postgres_user
+--
+
+CREATE INDEX idx3kxn2twewmof6sqvng1j56ach ON public.identity_link USING btree (deleted);
 
 
 --
@@ -1133,6 +1129,13 @@ CREATE INDEX idxgrvp22cs4h9terj94b281fll5 ON public.app_role USING btree (update
 --
 
 CREATE INDEX idxi8vvu91hco9k5ymwafnff27jo ON public.access_token USING btree (fcm_token);
+
+
+--
+-- Name: idxji7nkobmpein30otij9lrotu0; Type: INDEX; Schema: public; Owner: postgres_user
+--
+
+CREATE INDEX idxji7nkobmpein30otij9lrotu0 ON public.identity_group USING btree (created_user);
 
 
 --
@@ -1359,6 +1362,14 @@ ALTER TABLE ONLY public.app_user
 
 
 --
+-- Name: identity_link fkmv65r8wt1o0gh6f6cbocxbu67; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.identity_link
+    ADD CONSTRAINT fkmv65r8wt1o0gh6f6cbocxbu67 FOREIGN KEY (app_user) REFERENCES public.app_user(id);
+
+
+--
 -- Name: system_activity_logs fkq4jtoesk8ed9fe9ivyrmet71c; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
 --
 
@@ -1375,6 +1386,14 @@ ALTER TABLE ONLY public.login_log
 
 
 --
+-- Name: identity_link fkrk90ed9l23pvmqlulqo8fi7fr; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.identity_link
+    ADD CONSTRAINT fkrk90ed9l23pvmqlulqo8fi7fr FOREIGN KEY (identity_group) REFERENCES public.identity_group(id);
+
+
+--
 -- Name: favorite_menu fksul1w41buaq90mmjqtngiqjrk; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
 --
 
@@ -1386,5 +1405,5 @@ ALTER TABLE ONLY public.favorite_menu
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vVWOxoFdHyaGoORtewflTBvIbqBNasD7QeT9JIy3Kus1PaCdfNrF9U3CcqjPEhF
+\unrestrict XykcktfzIr8BTRjJKq6sMNrVNNBlNuoKv4iXiYbbIOC4FsPaKEt4k7468IcIuvb
 

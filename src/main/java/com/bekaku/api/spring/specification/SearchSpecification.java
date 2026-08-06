@@ -1,36 +1,53 @@
 package com.bekaku.api.spring.specification;
 
-import com.bekaku.api.spring.util.DateUtil;
-import com.bekaku.api.spring.util.ConstantData;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class SearchSpecification<T> implements Specification<T> {
 
-    private List<SearchCriteria> list;
+    private final List<SearchCriteria> criteriaList;
     private final String keyword;
     private final List<String> keywordColumns;
 
-    public SearchSpecification(List<SearchCriteria> list, String keyword, List<String> keywordColumns) {
-        this.list = list;
+    public SearchSpecification(List<SearchCriteria> criteriaList, String keyword, List<String> keywordColumns) {
+        this.criteriaList = criteriaList != null ? new ArrayList<>(criteriaList) : new ArrayList<>();
         this.keyword = keyword;
         this.keywordColumns = keywordColumns;
     }
 
     public void add(SearchCriteria criteria) {
-        list.add(criteria);
+        criteriaList.add(criteria);
+    }
+    // 1. Create a method to convert a string (e.g., "module.code") into a JPA path and automatically perform a join.
+    private Path<?> getPath(Root<T> root, String key) {
+        if (!key.contains(".")) {
+            // If there is no dot, search within the table normally.
+            return root.get(key);
+        }
+
+        // If there is a dot, such as in "module.code" or "user.department.name"
+        String[] parts = key.split("\\.");
+
+        // Use a LEFT JOIN in case the data is null, so it won't be lost from the results.
+        Join<?, ?> join = root.join(parts[0], JoinType.LEFT);
+
+        // Loop for nested joins (multiple joins)
+        for (int i = 1; i < parts.length - 1; i++) {
+            join = join.join(parts[i], JoinType.LEFT);
+        }
+
+        // Returns the last field to be searched (e.g., "code")
+        return join.get(parts[parts.length - 1]);
     }
 
     @Override
@@ -38,91 +55,110 @@ public class SearchSpecification<T> implements Specification<T> {
 
         //create a new predicate list
         List<Predicate> predicates = new ArrayList<>();
-        //add add criteria to predicates
-        for (SearchCriteria criteria : list) {
+        //add criteria to predicates
+        for (SearchCriteria criteria : criteriaList) {
+
+            // 🔥 เรียกใช้ getPath แทน root.get(criteria.getKey())
+            Path<?> path = getPath(root, criteria.getKey());
 
             if (criteria.getOperation().equals(SearchOperation.GREATER_THAN)) {
                 if (criteria.isDate()) {
-                    predicates.add(builder.greaterThan(root.get(criteria.getKey()), (LocalDate) criteria.getValue()));
+                    predicates.add(builder.greaterThan(path.as(LocalDate.class), (LocalDate) criteria.getValue()));
                 } else {
-                    predicates.add(builder.greaterThan(root.get(criteria.getKey()), criteria.getValue().toString()));
+                    predicates.add(builder.greaterThan(path.as(String.class), criteria.getValue().toString()));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.LESS_THAN)) {
                 if (criteria.isDate()) {
-                    predicates.add(builder.lessThan(root.get(criteria.getKey()), (LocalDate) criteria.getValue()));
+                    predicates.add(builder.lessThan(path.as(LocalDate.class), (LocalDate) criteria.getValue()));
                 } else {
-                    predicates.add(builder.lessThan(
-                            root.get(criteria.getKey()), criteria.getValue().toString()));
+                    predicates.add(builder.lessThan(path.as(String.class), criteria.getValue().toString()));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.GREATER_THAN_EQUAL)) {
                 if (criteria.isDate()) {
-                    predicates.add(builder.greaterThanOrEqualTo(root.get(criteria.getKey()), (LocalDate) criteria.getValue()));
+                    predicates.add(builder.greaterThanOrEqualTo(path.as(LocalDate.class), (LocalDate) criteria.getValue()));
                 } else {
-                    predicates.add(builder.greaterThanOrEqualTo(
-                            root.get(criteria.getKey()), criteria.getValue().toString()));
+                    predicates.add(builder.greaterThanOrEqualTo(path.as(String.class), criteria.getValue().toString()));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.LESS_THAN_EQUAL)) {
                 if (criteria.isDate()) {
-                    predicates.add(builder.lessThanOrEqualTo(root.get(criteria.getKey()), (LocalDate) criteria.getValue()));
+                    predicates.add(builder.lessThanOrEqualTo(path.as(LocalDate.class), (LocalDate) criteria.getValue()));
                 } else {
-                    predicates.add(builder.lessThanOrEqualTo(
-                            root.get(criteria.getKey()), criteria.getValue().toString()));
+                    predicates.add(builder.lessThanOrEqualTo(path.as(String.class), criteria.getValue().toString()));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.NOT_EQUAL)) {
-                predicates.add(builder.notEqual(
-                        root.get(criteria.getKey()), criteria.getValue()));
+                predicates.add(builder.notEqual(path, criteria.getValue()));
+
             } else if (criteria.getOperation().equals(SearchOperation.EQUAL)) {
-                predicates.add(builder.equal(root.get(criteria.getKey()), criteria.getValue()));
+                predicates.add(builder.equal(path, criteria.getValue()));
+
             } else if (criteria.getOperation().equals(SearchOperation.MATCH)) {
                 if (criteria.isDate()) {
-                    predicates.add(builder.equal(root.get(criteria.getKey()), criteria.getValue()));
+                    predicates.add(builder.equal(path, criteria.getValue()));
                 } else {
                     predicates.add(builder.like(
-                            builder.lower(root.get(criteria.getKey())),
+                            builder.lower(path.as(String.class)),
                             "%" + criteria.getValue().toString().toLowerCase() + "%"));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.MATCH_END)) {
                 if (criteria.isDate()) {
-                    predicates.add(builder.equal(root.get(criteria.getKey()), criteria.getValue()));
+                    predicates.add(builder.equal(path, criteria.getValue()));
                 } else {
                     predicates.add(builder.like(
-                            builder.lower(root.get(criteria.getKey())),
+                            builder.lower(path.as(String.class)),
                             criteria.getValue().toString().toLowerCase() + "%"));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.MATCH_START)) {
                 if (criteria.isDate()) {
-                    predicates.add(builder.equal(root.get(criteria.getKey()), criteria.getValue()));
+                    predicates.add(builder.equal(path, criteria.getValue()));
                 } else {
                     predicates.add(builder.like(
-                            builder.lower(root.get(criteria.getKey())),
+                            builder.lower(path.as(String.class)),
                             "%" + criteria.getValue().toString().toLowerCase()));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.IN)) {
-                predicates.add(builder.in(root.get(criteria.getKey())).value(criteria.getValue()));
+                // Check first if the value passed is a Collection (List/Set).
+                if (criteria.getValue() instanceof java.util.Collection) {
+                    predicates.add(path.in((java.util.Collection<?>) criteria.getValue()));
+                } else {
+                    // If a single value is passed
+                    predicates.add(path.in(criteria.getValue()));
+                }
+
             } else if (criteria.getOperation().equals(SearchOperation.NOT_IN)) {
-                predicates.add(builder.not(root.get(criteria.getKey())).in(criteria.getValue()));
+                // For NOT_IN, we wrap path.in() with builder.not.
+                if (criteria.getValue() instanceof java.util.Collection) {
+                    predicates.add(builder.not(path.in((java.util.Collection<?>) criteria.getValue())));
+                } else {
+                    predicates.add(builder.not(path.in(criteria.getValue())));
+                }
+
             } else if (criteria.getOperation().equals(SearchOperation.IS_NULL)) {
-                predicates.add(builder.isNull(root.get(criteria.getKey())));
+                predicates.add(builder.isNull(path));
+
             } else if (criteria.getOperation().equals(SearchOperation.IS_NOT_NULL)) {
-                predicates.add(builder.isNotNull(root.get(criteria.getKey())));
+                predicates.add(builder.isNotNull(path));
             }
         }
+
+        // ส่วนของ Global Keyword
         if (keyword != null && !keyword.trim().isEmpty() && keywordColumns != null && !keywordColumns.isEmpty()) {
             List<Predicate> keywordPredicates = new ArrayList<>();
             for (String col : keywordColumns) {
-                // สร้างเงื่อนไข LIKE %keyword% สำหรับแต่ละคอลัมน์
-                keywordPredicates.add(builder.like(builder.lower(root.get(col).as(String.class)), "%" + keyword.toLowerCase() + "%"));
+                // Use getPath for Keyword as well to enable searching across tables.
+                Path<?> path = getPath(root, col);
+                keywordPredicates.add(builder.like(builder.lower(path.as(String.class)), "%" + keyword.toLowerCase() + "%"));
             }
-            // นำเงื่อนไขย่อยมาทำ OR กัน แล้วยัดเข้า Predicate หลัก (ซึ่งจะเป็น AND กับเงื่อนไขข้อ 1)
+            // Perform an OR operation on the sub-conditions and then insert them into the main predicate (which will be an AND operation with the main condition).
             predicates.add(builder.or(keywordPredicates.toArray(new Predicate[0])));
         }
+
         return builder.and(predicates.toArray(new Predicate[0]));
     }
 }

@@ -332,11 +332,13 @@ public class AuthController extends BaseApiController {
                                              @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
         String ckUserId = AppUtil.getCookieByName(request.getCookies(), appProperties.jwt().currentUserKey());
+        log.info("refreshToken: ckUserId:{}", ckUserId);
         if (AppUtil.isEmpty(ckUserId) || !NumberUtils.isParsable(ckUserId)) {
             throwUnauthorizes();
         }
         Long currentUserId = Long.valueOf(ckUserId);
         String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
+        log.info("refreshToken: refreshTokenKey:{}", refreshTokenKey);
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
             deleteCookie(request, response, currentUserId, true);

@@ -71,7 +71,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
 
                 String requestUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
-//                log.info("key:{}, ,id:{}", jwtProperties.currentUserKey(), requestUserId);
+                log.info("key:{}, ,id:{}", jwtProperties.currentUserKey(), requestUserId);
                 if (AppUtil.isEmpty(requestUserId)) {
                     requestUserId = request.getHeader(ConstantData.X_USER_ID);
                 }

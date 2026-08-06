@@ -120,8 +120,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Override
     public AccessToken generateRefreshToken(AppUser appUser, ApiClient apiClient, LoginLog loginLog, String fcmToken) {
         //find user agent or create new if not found
-        Instant now = Instant.now();
-        Date expires = Date.from(now.plus(appProperties.jwt().refreshTokenTtlDays(), ChronoUnit.DAYS));
+        Date expires = jwtService.getRefreshTokenExpire();
         AccessToken accessToken = new AccessToken(
                 appUser,
                 expires,

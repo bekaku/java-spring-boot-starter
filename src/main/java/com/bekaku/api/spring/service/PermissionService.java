@@ -18,7 +18,6 @@ import java.util.Optional;
 @Service
 public interface PermissionService extends BaseService<Permission, PermissionDto> {
 
-    ResponseListDto<PermissionDto> crudList(String q, String keyword, Pageable pageable);
 
     List<PermissionDto> findAllLikeByCode(String code,Pageable pageable);
 
