@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Data;
 
 @Data
-@JsonRootName("data")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserPersonalEditRequest {
     private String email;

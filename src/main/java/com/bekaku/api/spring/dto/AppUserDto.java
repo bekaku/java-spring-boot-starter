@@ -18,7 +18,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@JsonRootName("data")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class AppUserDto extends DtoId {

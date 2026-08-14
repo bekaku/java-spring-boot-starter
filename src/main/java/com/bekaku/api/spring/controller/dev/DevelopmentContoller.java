@@ -401,8 +401,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("\n");
                 writer.append("@Getter\n");
                 writer.append("@Setter\n");
-                writer.append("@JsonRootName(\"").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
-                writer.append("@JsonRootName(\"data\")\n");
+//                writer.append("@JsonRootName(\"").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");
+//                writer.append("@JsonRootName(\"data\")\n");
 //                writer.append("//@AllArgsConstructor\n");
 //                writer.append("//@NoArgsConstructor\n");
                 writer.append("@JsonIgnoreProperties(ignoreUnknown = true)\n");
@@ -757,6 +757,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("\n");
                 writer.append("import jakarta.validation.Valid;\n");
                 writer.append("import java.util.Optional;\n");
+                writer.append("import java.util.List;\n");
+                writer.append("import org.springframework.http.HttpStatus;\n");
                 writer.append("\n");
                 writer.append("@Slf4j\n");
                 writer.append("@RequestMapping(path = \"/api/").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("\")\n");

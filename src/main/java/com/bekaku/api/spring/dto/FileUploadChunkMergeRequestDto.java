@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
 
-@JsonRootName("data")
 @Getter
 @Setter
 public class FileUploadChunkMergeRequestDto {

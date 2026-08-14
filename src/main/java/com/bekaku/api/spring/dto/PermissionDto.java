@@ -8,7 +8,6 @@ import lombok.*;
 
 @Getter
 @Setter
-@JsonRootName("data")
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)

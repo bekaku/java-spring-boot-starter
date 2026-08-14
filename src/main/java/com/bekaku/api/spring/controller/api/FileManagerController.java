@@ -24,8 +24,10 @@ import com.bekaku.api.spring.service.FilesDirectoryService;
 import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
+import com.bekaku.api.spring.util.AuthUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.ControllerUtil;
+import com.bekaku.api.spring.util.CookieUtil;
 import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.util.FileUtil;
 import com.google.common.util.concurrent.RateLimiter;
@@ -104,6 +106,9 @@ public class FileManagerController extends BaseApiController {
     private final JwtService jwtService;
     private final List<String> sortProperties = List.of("fileName", "createdDate", "updatedDate", "fileSize", "fileMime");
     private final Executor executor = new ThreadPoolTaskExecutor();
+
+    private final CookieUtil cookieUtil;
+    private final AuthUtil authUtil;
 
     @PreAuthorize("@permissionChecker.hasPermission('file_manager_list')")
     @GetMapping("/findAllByAdmin")
@@ -201,24 +206,28 @@ public class FileManagerController extends BaseApiController {
     }
 
     @DeleteMapping("/deleteFileApi/{id}")
-    public ResponseEntity<?> deleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal AppUserDto auth) {
+    public ResponseEntity<?> deleteFileApi(@PathVariable("id") Long id,
+                                           @RequestParam(value = "permanentDelete", required = false, defaultValue = "0") boolean permanentDelete,
+                                           @AuthenticationPrincipal AppUserDto auth) {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
         appUserService.requireTheSameUser(auth.getId(), fileManager.get().getCreatedUser());
-        fileManagerService.deleteFileBy(fileManager.get());
+        fileManagerService.deleteFileBy(fileManager.get(), permanentDelete);
         return this.responseEntity(HttpStatus.OK);
     }
 
     @DeleteMapping("/internalDeleteFileApi/{id}")
-    public ResponseEntity<?> internalDeleteFileApi(@PathVariable("id") Long id, @AuthenticationPrincipal AppUserDto auth, HttpServletRequest request) {
+    public ResponseEntity<?> internalDeleteFileApi(@PathVariable("id") Long id,
+                                                   @RequestParam(value = "permanentDelete", required = false, defaultValue = "0") boolean permanentDelete,
+                                                   @AuthenticationPrincipal AppUserDto auth, HttpServletRequest request) {
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
         log.info("internalDeleteFileApi > id:{}", id);
-        fileManagerService.deleteFileBy(fileManager.get());
+        fileManagerService.deleteFileBy(fileManager.get(), permanentDelete);
         return responseEntity(new HashMap<String, Object>() {{
             put("id", id);
             put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
@@ -847,21 +856,15 @@ public class FileManagerController extends BaseApiController {
 
     @GetMapping("/files/stream/{id}")
     public ResponseEntity<StreamingResponseBody> streamFile(
+            HttpServletRequest request,
             @PathVariable("id") Long id,
-            @RequestParam(defaultValue = "8192") int chunkSize,
-            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
-            @RequestHeader(value = ConstantData.AUTHORIZATION) String authorization
+            @RequestParam(defaultValue = "8192") int chunkSize
     ) {
 
-        log.info("streamFile:{}, chunkSize:{}, apiClientName:{}, authorization:{}", id, chunkSize, apiClientName, authorization);
-        //        Optional<AppUserDto> userAuthen = jwtService.jwtVerify(
-//                apiClientName,
-//                request.getHeader(ConstantData.AUTHORIZATION),
-//                request.getHeader(ConstantData.X_SYNC_ACTIVE));
-        Optional<String> jwtSub = jwtService.getSubFromAuthorizationHeader(authorization, null);
-        log.info("jwtSub :{} ", jwtSub.isPresent());
-        if (jwtSub.isEmpty()) {
-            throw this.responseErrorForbidden();
+        Optional<String> accessToken = authUtil.getAccessToken(request);
+        log.info("streamFile:{}, chunkSize:{}, jwtSub :{}", id, chunkSize, accessToken.orElse(null));
+        if (accessToken.isEmpty()) {
+            throw this.responseErrorUnauthorized();
         }
         Optional<FileManager> fileManager = fileManagerService.findById(id);
         if (fileManager.isEmpty()) {

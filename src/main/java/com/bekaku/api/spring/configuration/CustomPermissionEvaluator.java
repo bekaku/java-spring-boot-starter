@@ -1,8 +1,5 @@
 package com.bekaku.api.spring.configuration;
 
-import com.bekaku.api.spring.service.PermissionService;
-import com.bekaku.api.spring.util.AuthenticationHelper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;

@@ -9,7 +9,6 @@ import com.bekaku.api.spring.dto.NotificationCount;
 import com.bekaku.api.spring.dto.RefreshTokenRequest;
 import com.bekaku.api.spring.dto.RefreshTokenResponse;
 import com.bekaku.api.spring.dto.ResponseListDto;
-import com.bekaku.api.spring.dto.ResponseMessage;
 import com.bekaku.api.spring.dto.UserChangePasswordRequest;
 import com.bekaku.api.spring.dto.UserPersonalEditRequest;
 import com.bekaku.api.spring.dto.UserRegisterRequest;
@@ -36,7 +35,7 @@ import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.ControllerUtil;
-import com.bekaku.api.spring.util.HashUtil;
+import com.bekaku.api.spring.util.CookieUtil;
 import com.bekaku.api.spring.validator.UserValidator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,11 +49,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
-
-import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @RequestMapping(path = "/api/appUser")
@@ -79,6 +89,7 @@ public class AppUserController extends BaseApiController {
     private final JwtProperties jwtProperties;
 
     private final String SHEET_NAME = "users";
+    private final CookieUtil cookieUtil;
 
     @GetMapping("/currentUserData")
     public ResponseEntity<AppUserDto> currentUserData(@AuthenticationPrincipal AppUserDto userAuthen,
@@ -87,9 +98,12 @@ public class AppUserController extends BaseApiController {
         if (userAuthen == null) {
             throw this.responseErrorForbidden();
         }
-        String ckUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
-        String jwtRefreshTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.refreshTokenName() + ckUserId);
-        String jwtTokenCookie = AppUtil.getCookieByName(request.getCookies(), jwtProperties.tokenName() + ckUserId);
+
+        //TODO can remove in production
+        String ckUserId = cookieUtil.getCurrentUserID(request);
+        String jwtRefreshTokenCookie = cookieUtil.getCurrentUserRefreshToken(request);
+        String jwtTokenCookie = cookieUtil.getCurrentUserAccessToken(request);
+
         log.info("ckUserId :{}, jwtTokenCookie: {}, currentJwtRefreshTokenCookie :{}", ckUserId, jwtTokenCookie, jwtRefreshTokenCookie);
         AppUser user = appUserService.findAndValidateAppUserBy(userAuthen);
         AppUserDto dto = appUserService.convertEntityToDto(user);

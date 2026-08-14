@@ -23,6 +23,7 @@ public class ControllerUtil {
     public static <T> SearchSpecification<T> buildSpecification(HttpServletRequest request, List<String> keywordColumns) {
 
         // 1. ดึง Filter ปรกติ (_q)
+        log.info("_q: {}", request.getParameter(ConstantData.SEARCH_PARAMETER_ATT));
         List<SearchCriteria> criteria = getSearchCriteriaList(request);
 
         // 2. ดึง Global Keyword (_keyword)
@@ -88,19 +89,62 @@ public class ControllerUtil {
     private static void addSearchCriteriaParam(String field, String value, SearchOperation operation, List<SearchCriteria> list) {
         String s = value.toLowerCase(Locale.ROOT);
 
-        // convert boolean criteria
-        if ("true".equals(s) || "false".equals(s)) {
+        // 1. ตรวจสอบว่าเป็น Array/List (มีเครื่องหมาย ,) หรือไม่
+        if (value.contains(",")) {
+            // แตกค่าด้วยคอมมา และลบช่องว่าง (trim) ออกจากแต่ละค่า
+            String[] arrayValues = value.split(",");
+            List<Object> parsedValues = new ArrayList<>();
+
+            for (String val : arrayValues) {
+                String cleanVal = val.trim();
+                String lowerCleanVal = cleanVal.toLowerCase(Locale.ROOT);
+
+                // พยายาม Parse ค่าข้างใน Array ให้เป็น Boolean หรือ Date ถ้ารองรับ
+                if ("true".equals(lowerCleanVal) || "false".equals(lowerCleanVal)) {
+                    parsedValues.add(Boolean.parseBoolean(lowerCleanVal));
+                } else if (DateUtil.isValidDate(cleanVal, DateTimeFormatter.ISO_LOCAL_DATE)) {
+                    parsedValues.add(DateUtil.parseDate(cleanVal, DateTimeFormatter.ISO_LOCAL_DATE));
+                } else {
+                    parsedValues.add(cleanVal);
+                }
+            }
+
+            // หมายเหตุ: อาจจะต้องเพิ่ม SearchOperation.IN เข้าไปใน Enum ของคุณ
+            // เพื่อใช้ระบุว่าค่านี้เป็น List ที่ต้องใช้ Query แบบ IN(...)
+            list.add(new SearchCriteria(field, parsedValues, SearchOperation.IN));
+        }
+        // 2. convert boolean criteria (กรณีไม่ใช่ Array)
+        else if ("true".equals(s) || "false".equals(s)) {
             list.add(new SearchCriteria(field, Boolean.parseBoolean(s), operation));
         }
-        // convert date criteria
+        // 3. convert date criteria (กรณีไม่ใช่ Array)
         else if (DateUtil.isValidDate(value, DateTimeFormatter.ISO_LOCAL_DATE)) {
             SearchCriteria criteriaDate = new SearchCriteria(field, DateUtil.parseDate(value, DateTimeFormatter.ISO_LOCAL_DATE), operation);
-            criteriaDate.setDate(true); // เซ็ต flag ว่าเป็น Date ตามโค้ดเดิมของคุณ
+            criteriaDate.setDate(true);
             list.add(criteriaDate);
         }
-        // string / other fallback
+        // 4. string / other fallback (กรณีไม่ใช่ Array)
         else {
             list.add(new SearchCriteria(field, value, operation));
         }
     }
+
+//    private static void addSearchCriteriaParam(String field, String value, SearchOperation operation, List<SearchCriteria> list) {
+//        String s = value.toLowerCase(Locale.ROOT);
+//
+//        // convert boolean criteria
+//        if ("true".equals(s) || "false".equals(s)) {
+//            list.add(new SearchCriteria(field, Boolean.parseBoolean(s), operation));
+//        }
+//        // convert date criteria
+//        else if (DateUtil.isValidDate(value, DateTimeFormatter.ISO_LOCAL_DATE)) {
+//            SearchCriteria criteriaDate = new SearchCriteria(field, DateUtil.parseDate(value, DateTimeFormatter.ISO_LOCAL_DATE), operation);
+//            criteriaDate.setDate(true); // เซ็ต flag ว่าเป็น Date ตามโค้ดเดิมของคุณ
+//            list.add(criteriaDate);
+//        }
+//        // string / other fallback
+//        else {
+//            list.add(new SearchCriteria(field, value, operation));
+//        }
+//    }
 }

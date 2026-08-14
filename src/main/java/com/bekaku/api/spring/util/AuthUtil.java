@@ -1,17 +1,24 @@
 package com.bekaku.api.spring.util;
 
 import com.bekaku.api.spring.dto.AppUserDto;
-import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.vo.IpAddress;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Optional;
+
 @Component
-public class AuthenticationHelper {
+@RequiredArgsConstructor
+public class AuthUtil {
+    private final CookieUtil cookieUtil;
+    private final JwtService jwtService;
+
     public Long getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
@@ -40,5 +47,13 @@ public class AuthenticationHelper {
             return "Unknown";
         }
         return ipAddress.getIp();
+    }
+
+    public Optional<String> getAccessToken(HttpServletRequest request) {
+        Optional<String> jwtToken = Optional.ofNullable(cookieUtil.getCurrentUserAccessToken(request));
+        if (jwtToken.isEmpty()) {
+            jwtToken = jwtService.getSubFromAuthorizationHeader(request.getHeader(ConstantData.AUTHORIZATION), null);
+        }
+        return jwtToken;
     }
 }

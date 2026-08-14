@@ -12,7 +12,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@JsonRootName("data")
 @NoArgsConstructor
 public class ApiClientDto extends DtoId {
 

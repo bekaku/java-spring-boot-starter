@@ -36,6 +36,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 //@ControllerAdvice
@@ -52,6 +53,15 @@ public class ExceptionResolver {
 //                .property("timestamp", Instant.now())
 //                .build();
 //    }
+
+    // Add to GlobalExceptionHandler from Parts 2-4
+
+    @ExceptionHandler(ChatStreamException.class)
+    public ResponseEntity<ApiError> handleChatStreamException(ChatStreamException ex) {
+        log.error("Chat stream error", ex);
+        final ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getLocalizedMessage(), ex.getMessage());
+        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+    }
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiError> handleApiException(ApiException ex) {
         return new ResponseEntity<>(ex.getApiError(), ex.getApiError().getStatus());

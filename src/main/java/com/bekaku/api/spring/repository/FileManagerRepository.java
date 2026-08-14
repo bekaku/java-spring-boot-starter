@@ -5,6 +5,8 @@ import com.bekaku.api.spring.model.FilesDirectory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,4 +16,8 @@ public interface FileManagerRepository extends BaseRepository<FileManager, Long>
 
     List<FileManager> findAllByFilesDirectory(FilesDirectory filesDirectory);
     Page<FileManager> findAllByFilesDirectory(FilesDirectory filesDirectory, Pageable pageable);
+
+    @Modifying
+    @Query("DELETE FROM FileManager e WHERE e.id = ?1")
+    void deletePermanentBy(Long id);
 }

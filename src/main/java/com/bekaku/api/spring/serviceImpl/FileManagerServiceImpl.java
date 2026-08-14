@@ -320,7 +320,17 @@ public class FileManagerServiceImpl implements FileManagerService {
     @Override
     public void deleteFileBy(FileManager fileManager) {
         deleteFileFromPath(fileManager);
-        delete(fileManager);
+        fileManagerRepository.delete(fileManager);
+    }
+
+    @Override
+    public void deleteFileBy(FileManager fileManager, boolean permanentDelete) {
+        deleteFileFromPath(fileManager);
+        if(!permanentDelete){
+            fileManagerRepository.delete(fileManager);
+        }else{
+            fileManagerRepository.deletePermanentBy(fileManager.getId());
+        }
     }
 
     // 0 = 0 seconds

@@ -2,6 +2,7 @@ package com.bekaku.api.spring.configuration;
 
 import com.bekaku.api.spring.properties.AppCorsProperties;
 import com.bekaku.api.spring.util.ConstantData;
+import jakarta.servlet.DispatcherType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -91,8 +92,9 @@ public class WebSecurityConfig {
                                     "/css/**",
                                     "/" + cdnPathAlias + "/**").permitAll()
 
-                            .requestMatchers("/api/fileManager/files/stream").permitAll()
-                            .requestMatchers("/api/fileManager/video/stream").permitAll()
+                            .requestMatchers("/api/fileManager/files/stream/**").permitAll()
+                            .requestMatchers("/api/fileManager/video/stream/**").permitAll()
+                            .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                             // Public auth endpoints
                             .requestMatchers(HttpMethod.POST,
                                     "/api/auth/login",

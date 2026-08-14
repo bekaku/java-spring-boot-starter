@@ -2,6 +2,7 @@ package com.bekaku.api.spring.util;
 
 
 import com.bekaku.api.spring.properties.AppProperties;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -41,4 +42,25 @@ public class CookieUtil {
                 .sameSite(appProperties.cookie().sameSite()) // Must match how it was originally set
                 .build();
     }
+
+    public String getCurrentUserID(HttpServletRequest request){
+        return AppUtil.getCookieByName(request.getCookies(), appProperties.jwt().currentUserKey());
+    }
+
+    public String getCurrentUserRefreshToken(HttpServletRequest request){
+        String uid = getCurrentUserID(request);
+        if(AppUtil.isEmpty(uid)){
+            return null;
+        }
+        return AppUtil.getCookieByName(request.getCookies(), appProperties.jwt().refreshTokenName() + uid);
+    }
+
+    public String getCurrentUserAccessToken(HttpServletRequest request){
+        String uid = getCurrentUserID(request);
+        if(AppUtil.isEmpty(uid)){
+            return null;
+        }
+        return AppUtil.getCookieByName(request.getCookies(), appProperties.jwt().tokenName() + uid);
+    }
+
 }

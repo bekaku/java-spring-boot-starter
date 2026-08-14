@@ -20,7 +20,7 @@ public class ConstantData {
 
     public static final String ASYNC_TASK_NAME = "asyncExecutor";
 
-    public static final String SEARCH_SEPARATOR_ATT = ",";
+    public static final String SEARCH_SEPARATOR_ATT = ";";
     public static final String SEARCH_PARAMETER_ATT = "_q";
     public static final String KEYWORD_PARAMETER_ATT = "_keyword";
     public static final String SEARCH_SIGN_MATCH = ":";

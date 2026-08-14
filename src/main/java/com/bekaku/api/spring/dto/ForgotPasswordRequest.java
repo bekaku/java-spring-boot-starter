@@ -9,7 +9,6 @@ import lombok.experimental.Accessors;
 
 
 @Getter
-@JsonRootName("data")
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)

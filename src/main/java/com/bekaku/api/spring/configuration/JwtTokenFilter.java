@@ -7,6 +7,7 @@ import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.service.JwtService;
+import com.bekaku.api.spring.util.CookieUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,14 +37,14 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private JwtService jwtService;
 
     @Autowired
-    private JwtProperties jwtProperties;
+    private CookieUtil cookieUtil;
 
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
     private static final List<String> SKIP_PATHS = List.of(
             "/api/public/**",
             "/api/auth/**",
-            "/api/fileManager/files/stream",
-            "/api/fileManager/video/stream",
+            "/api/fileManager/files/stream/**",
+            "/api/fileManager/video/stream/**",
             "/schedule/**",
             "/cdn/**",
             "/favicon.ico",
@@ -69,29 +70,30 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         try {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
 
+                String apiClient = request.getHeader(ConstantData.ACCEPT_APIC_LIENT);
 
-                String requestUserId = AppUtil.getCookieByName(request.getCookies(), jwtProperties.currentUserKey());
-                log.info("key:{}, ,id:{}", jwtProperties.currentUserKey(), requestUserId);
-                if (AppUtil.isEmpty(requestUserId)) {
-                    requestUserId = request.getHeader(ConstantData.X_USER_ID);
+                Optional<String> jwtToken = Optional.ofNullable(cookieUtil.getCurrentUserAccessToken(request));
+
+                if (jwtToken.isEmpty()) {
+                    jwtToken = jwtService.getSubFromAuthorizationHeader(request.getHeader(ConstantData.AUTHORIZATION), null);
                 }
 
-                String jwtToken = AppUtil.getCookieByName(request.getCookies(), jwtProperties.tokenName() + requestUserId);
-                if (AppUtil.isEmpty(jwtToken)) {
-                    Optional<String> jwtTokenHeader = jwtService.getAuthorizatoinTokenString(request.getHeader(ConstantData.AUTHORIZATION));
-                    if (jwtTokenHeader.isPresent()) {
-                        jwtToken = jwtTokenHeader.get();
-                    }
+
+                Optional<String> requestUserId = Optional.ofNullable(cookieUtil.getCurrentUserID(request));
+                if (requestUserId.isEmpty()) {
+                    requestUserId = Optional.ofNullable(request.getHeader(ConstantData.X_USER_ID));
                 }
-                if (AppUtil.isEmpty(jwtToken)) {
+                log.info("UID:{},Acces Token:{}", requestUserId.orElseGet(() -> null), jwtToken.orElseGet(() -> null));
+
+                if (jwtToken.isEmpty()) {
                     log.warn("Jwt token not found : {}", request.getRequestURI());
                     sendUnauthorizedResponse(response, "Jwt token not found", isStreamingEndpoint, request.getRequestURI());
                     return;
                 }
 
                 Optional<AppUserDto> userData = jwtService.jwtVerify(
-                        request.getHeader(ConstantData.ACCEPT_APIC_LIENT),
-                        jwtToken,
+                        apiClient,
+                        jwtToken.get(),
                         request.getHeader(ConstantData.X_SYNC_ACTIVE));
 //            logger.info("JwtVerify User data : {}", userData.<Object>map(UserDto::getEmail).orElse(null));
                 if (userData.isPresent()) {

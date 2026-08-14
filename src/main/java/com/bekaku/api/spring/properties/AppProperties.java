@@ -25,8 +25,8 @@ public record AppProperties(
         String cdnUrl,
         String cdnPort,
         List<String> allowMimes,         // app.allow-mimes
-        RagConfig rag,
-        AppCronProperties cron
+        AppCronProperties cron,
+        RagProperties rag
 
 ) {
 

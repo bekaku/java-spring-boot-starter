@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
 public class PermissionChecker {
 
 
-    private final AuthenticationHelper authHelper;
+    private final AuthUtil authHelper;
     private final PermissionService permissionService;
 
-    public PermissionChecker(AuthenticationHelper authHelper, PermissionService permissionService) {
+    public PermissionChecker(AuthUtil authHelper, PermissionService permissionService) {
         this.authHelper = authHelper;
         this.permissionService = permissionService;
     }

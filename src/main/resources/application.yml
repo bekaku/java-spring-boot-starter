@@ -18,7 +18,7 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Bangkok
     deserialization:
-      UNWRAP_ROOT_VALUE: true
+#      UNWRAP_ROOT_VALUE: true
       FAIL_ON_UNKNOWN_PROPERTIES: false
       FAIL_ON_NULL_FOR_PRIMITIVES: false
   transaction:
@@ -418,7 +418,31 @@ app:
     - audio/ogg
     - audio/flac
     - audio/mp4
+    - application/vnd.openxmlformats-officedocument.presentationml.slideshow
+    - application/vnd.ms-excel.sheet.macroenabled.12
+    - image/tiff
+    - image/bmp
+    - image/svg+xml
+    - text/markdown
+    - text/x-rst
+    - application/json
+    - text/tab-separated-values
+    - application/yaml
+    - application/x-yaml
+    - text/yaml
+    - application/xml
+    - text/xml
+    - text/html
 
+  rag:
+    top-k: 5
+    similarity-threshold: 0.5
+    chunk-size: 800
+    chunk-overlap: 100
+    min-chunk-size-chars: 350
+    min-chunk-length-to-embed: 5
+    max-num-chunks: 10000
+    delete-source-after-ingest: true
   cron:
     enable: false
     test-expression: 0 */2 * * * * #every 2 minutes

@@ -8,7 +8,6 @@ import lombok.experimental.Accessors;
 
 @Setter
 @Getter
-@JsonRootName("data")
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserUpdateRequest extends UserRequestDto {

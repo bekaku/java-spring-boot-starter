@@ -36,14 +36,14 @@ repositories {
     maven { url 'https://repo.spring.io/milestone' }
     maven { url 'https://repo.spring.io/snapshot' }
 }
-//ext {
-//    set('springAiVersion', "2.0.0-M4" )
-//}
-//dependencyManagement {
-//    imports {
-//        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
-//    }
-//}
+ext {
+    set('springAiVersion', "2.0.0" )
+}
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
+}
 dependencies {
 //    Spring and Spring Boot dependencies
     implementation 'org.springframework.boot:spring-boot-starter'
@@ -97,13 +97,6 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
-    //Image
-    implementation 'net.coobird:thumbnailator:0.4.21'
-    implementation 'com.drewnoakes:metadata-extractor:2.20.0'
-    implementation 'org.apache.tika:tika-core:3.3.1'
-    implementation 'org.apache.tika:tika-parsers-standard:3.3.1'
-    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.13.1'
-
     // Report
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
@@ -121,10 +114,21 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.22.2'
 
     // Spring AI
-    implementation 'org.springframework.ai:spring-ai-starter-model-ollama:2.0.0'
-    implementation 'org.springframework.ai:spring-ai-starter-vector-store-qdrant:2.0.0'
-    implementation 'org.springframework.ai:spring-ai-pdf-document-reader:2.0.0'
+    implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-qdrant'
+    implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
     implementation 'org.springframework.ai:spring-ai-advisors-vector-store:2.0.0-M8'
+
+    // Document readers
+    implementation 'org.springframework.ai:spring-ai-tika-document-reader'
+//    implementation 'org.apache.tika:tika-parsers-standard-package'
+
+    //Image
+    implementation 'net.coobird:thumbnailator:0.4.21'
+    implementation 'com.drewnoakes:metadata-extractor:2.20.0'
+    implementation 'org.apache.tika:tika-core:3.3.1'
+    implementation 'org.apache.tika:tika-parsers-standard:3.3.1'
+    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.13.1'
 
 //    implementation("org.springframework.boot:spring-boot-starter-webflux")
 //    implementation 'org.apache.pdfbox:pdfbox:3.0.7'

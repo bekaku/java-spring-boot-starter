@@ -1,13 +1,18 @@
 package com.bekaku.api.spring.util;
 
+import com.bekaku.api.spring.enumtype.AiDocumentType;
 import com.bekaku.api.spring.enumtype.FileMimeType;
+import com.bekaku.api.spring.exception.ApiError;
+import com.bekaku.api.spring.exception.ApiException;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.metadata.exif.ExifIFD0Directory;
+import io.micrometer.common.util.StringUtils;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,11 +31,15 @@ import java.nio.file.Paths;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class FileUtil {
 
     public static final String TEMP_UPLOAD_DIR = "temp-chunks/";
+
+
 
     public static String generateFileName(String orginalName) {
         if (ObjectUtils.isEmpty(orginalName)) {
@@ -414,6 +423,95 @@ public class FileUtil {
         if (text == null || limit < 1) return text;
 
         return text.length() <= limit ? text : text.substring(0, limit);
+    }
+
+
+    private static final Map<AiDocumentType, Set<String>> TYPE_EXTENSIONS = Map.of(
+            AiDocumentType.DOCUMENT, Set.of("pdf", "docx", "doc"),
+            AiDocumentType.SPREADSHEET, Set.of("xlsx", "xls", "xlsm"),
+            AiDocumentType.PRESENTATION, Set.of("pptx", "ppt", "ppsx"),
+            AiDocumentType.IMAGE, Set.of("jpg", "jpeg", "png", "gif", "webp", "tiff", "bmp", "svg"),
+            AiDocumentType.VIDEO, Set.of("mp4", "mpeg", "mov", "avi", "webm", "mkv", "3gp"),
+            AiDocumentType.TEXT, Set.of("txt", "md", "rst", "log"),
+            AiDocumentType.STRUCTURED_DATA, Set.of("json", "csv", "tsv", "yaml", "yml", "xml"),
+            AiDocumentType.WEB, Set.of("html", "htm")
+    );
+
+    public static AiDocumentType resolveAiDocumentType(String fileName) {
+        String ext = extensionOf(fileName);
+        return TYPE_EXTENSIONS.entrySet().stream()
+                .filter(e -> e.getValue().contains(ext))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() ->
+                        new ApiException(new ApiError(HttpStatus.BAD_REQUEST, "Unsupported file extension: ." + ext + " (file: " + fileName + ")"))
+                );
+
+    }
+
+    private static final Map<AiDocumentType, Set<String>> TYPE_MIMES = Map.of(
+            AiDocumentType.DOCUMENT, Set.of(
+                    "application/pdf",
+                    "application/msword",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document" // docx
+            ),
+            AiDocumentType.SPREADSHEET, Set.of(
+                    "application/vnd.ms-excel",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // xlsx
+                    "application/vnd.ms-excel.sheet.macroenabled.12" // xlsm
+            ),
+            AiDocumentType.PRESENTATION, Set.of(
+                    "application/vnd.ms-powerpoint",
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation", // pptx
+                    "application/vnd.ms-powerpoint.slideshow.macroenabled.12"
+            ),
+            AiDocumentType.IMAGE, Set.of(
+                    "image/jpeg", "image/png", "image/gif", "image/webp", "image/tiff", "image/bmp", "image/svg+xml"
+            ),
+            AiDocumentType.VIDEO, Set.of(
+                    "video/mp4", "video/mpeg", "video/quicktime", "video/x-msvideo", "video/webm", "video/x-matroska", "video/3gpp"
+            ),
+            AiDocumentType.TEXT, Set.of(
+                    "text/plain", "text/markdown", "text/x-rst"
+            ),
+            AiDocumentType.STRUCTURED_DATA, Set.of(
+                    "application/json", "text/csv", "text/tab-separated-values", "application/x-yaml", "text/yaml", "application/xml", "text/xml"
+            ),
+            AiDocumentType.WEB, Set.of(
+                    "text/html"
+            )
+    );
+
+    public static AiDocumentType resolveAiDocumentTypeByMime(String mimeType) {
+        if (mimeType == null || mimeType.isBlank()) {
+            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, "MIME type cannot be empty"));
+        }
+
+        // 1. ตัดส่วนขยายเสริมออก เช่น "text/html; charset=UTF-8" ให้เหลือแค่ "text/html" และปรับเป็นตัวพิมพ์เล็ก
+        String cleanMime = mimeType.split(";")[0].trim().toLowerCase();
+
+        // 2. (Optional) Smart Prefix Matching สำหรับรูปภาพและวิดีโอทั่วไป
+        if (cleanMime.startsWith("image/")) {
+            return AiDocumentType.IMAGE;
+        }
+        if (cleanMime.startsWith("video/")) {
+            return AiDocumentType.VIDEO;
+        }
+
+        // 3. ค้นหาจาก Map
+        return TYPE_MIMES.entrySet().stream()
+                .filter(e -> e.getValue().contains(cleanMime))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() ->
+                        new ApiException(new ApiError(HttpStatus.BAD_REQUEST, "Unsupported MIME type: " + mimeType))
+                );
+    }
+    public static String extensionOf(String fileName) {
+        if (StringUtils.isBlank(fileName) || !fileName.contains(".")) {
+            throw  new ApiException(new ApiError(HttpStatus.BAD_REQUEST, "File has no extension: " + fileName));
+        }
+        return fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
     }
 
 }

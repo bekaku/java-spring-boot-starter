@@ -9,7 +9,6 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Setter
-@JsonRootName("data")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class FilesDirectoryPathDto extends DtoId {

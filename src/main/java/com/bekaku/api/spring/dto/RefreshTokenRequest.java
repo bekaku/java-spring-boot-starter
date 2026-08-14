@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonRootName("data")
 public class RefreshTokenRequest {
 
     @NotBlank(message = "{error.validateRequire}")

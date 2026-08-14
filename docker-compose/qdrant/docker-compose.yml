@@ -1,0 +1,18 @@
+name: qdrant
+services:
+  # Vector database for storing document content: http://localhost:6333/dashboard
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rag-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    environment:
+      # Set your API Key (virtual password) here.
+      - QDRANT__SERVICE__API_KEY=your_super_secret_api_key_123
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  qdrant_data:
+  ollamadata:

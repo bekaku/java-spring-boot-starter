@@ -84,7 +84,8 @@ spring:
         options:
           model: gemma4:12b
           temperature: 0.1
-          top-p: 0.9
+          top-p: 0.1
+          repeat-penalty: 1.1
           num-ctx: 16384
           num-thread: 4
       embedding:
@@ -95,6 +96,8 @@ spring:
       qdrant:
         host: localhost
         port: 6334
+        api-key: api_key_123
+        use-tls: false
         collection-name: rag_documents
         initialize-schema: true
 

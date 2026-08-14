@@ -2,6 +2,7 @@ package com.bekaku.api.spring.specification;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
@@ -28,37 +29,41 @@ public class SearchSpecification<T> implements Specification<T> {
     public void add(SearchCriteria criteria) {
         criteriaList.add(criteria);
     }
-    // 1. Create a method to convert a string (e.g., "module.code") into a JPA path and automatically perform a join.
+
     private Path<?> getPath(Root<T> root, String key) {
         if (!key.contains(".")) {
-            // If there is no dot, search within the table normally.
             return root.get(key);
         }
 
-        // If there is a dot, such as in "module.code" or "user.department.name"
         String[] parts = key.split("\\.");
-
-        // Use a LEFT JOIN in case the data is null, so it won't be lost from the results.
         Join<?, ?> join = root.join(parts[0], JoinType.LEFT);
 
-        // Loop for nested joins (multiple joins)
         for (int i = 1; i < parts.length - 1; i++) {
             join = join.join(parts[i], JoinType.LEFT);
         }
 
-        // Returns the last field to be searched (e.g., "code")
         return join.get(parts[parts.length - 1]);
+    }
+
+    /**
+     * Safely converts any Path (including numeric/bigint fields) to an Expression<String>
+     * to avoid PostgreSQL 'lower(bigint) does not exist' error.
+     */
+    private Expression<String> getAsString(CriteriaBuilder builder, Path<?> path) {
+        if (path.getJavaType() != null && String.class.isAssignableFrom(path.getJavaType())) {
+            return path.as(String.class);
+        }
+        // Force SQL string concatenation ('' || column) to coerce non-string types to text in PostgreSQL
+        return builder.concat("", path.as(String.class));
     }
 
     @Override
     public Predicate toPredicate(Root<T> root, CriteriaQuery<?> cq, CriteriaBuilder builder) {
 
-        //create a new predicate list
         List<Predicate> predicates = new ArrayList<>();
-        //add criteria to predicates
+
         for (SearchCriteria criteria : criteriaList) {
 
-            // 🔥 เรียกใช้ getPath แทน root.get(criteria.getKey())
             Path<?> path = getPath(root, criteria.getKey());
 
             if (criteria.getOperation().equals(SearchOperation.GREATER_THAN)) {
@@ -100,7 +105,7 @@ public class SearchSpecification<T> implements Specification<T> {
                     predicates.add(builder.equal(path, criteria.getValue()));
                 } else {
                     predicates.add(builder.like(
-                            builder.lower(path.as(String.class)),
+                            builder.lower(getAsString(builder, path)),
                             "%" + criteria.getValue().toString().toLowerCase() + "%"));
                 }
 
@@ -109,7 +114,7 @@ public class SearchSpecification<T> implements Specification<T> {
                     predicates.add(builder.equal(path, criteria.getValue()));
                 } else {
                     predicates.add(builder.like(
-                            builder.lower(path.as(String.class)),
+                            builder.lower(getAsString(builder, path)),
                             criteria.getValue().toString().toLowerCase() + "%"));
                 }
 
@@ -118,21 +123,18 @@ public class SearchSpecification<T> implements Specification<T> {
                     predicates.add(builder.equal(path, criteria.getValue()));
                 } else {
                     predicates.add(builder.like(
-                            builder.lower(path.as(String.class)),
+                            builder.lower(getAsString(builder, path)),
                             "%" + criteria.getValue().toString().toLowerCase()));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.IN)) {
-                // Check first if the value passed is a Collection (List/Set).
                 if (criteria.getValue() instanceof java.util.Collection) {
                     predicates.add(path.in((java.util.Collection<?>) criteria.getValue()));
                 } else {
-                    // If a single value is passed
                     predicates.add(path.in(criteria.getValue()));
                 }
 
             } else if (criteria.getOperation().equals(SearchOperation.NOT_IN)) {
-                // For NOT_IN, we wrap path.in() with builder.not.
                 if (criteria.getValue() instanceof java.util.Collection) {
                     predicates.add(builder.not(path.in((java.util.Collection<?>) criteria.getValue())));
                 } else {
@@ -147,15 +149,16 @@ public class SearchSpecification<T> implements Specification<T> {
             }
         }
 
-        // ส่วนของ Global Keyword
+        // Global Keyword Search
         if (keyword != null && !keyword.trim().isEmpty() && keywordColumns != null && !keywordColumns.isEmpty()) {
             List<Predicate> keywordPredicates = new ArrayList<>();
             for (String col : keywordColumns) {
-                // Use getPath for Keyword as well to enable searching across tables.
                 Path<?> path = getPath(root, col);
-                keywordPredicates.add(builder.like(builder.lower(path.as(String.class)), "%" + keyword.toLowerCase() + "%"));
+                keywordPredicates.add(builder.like(
+                        builder.lower(getAsString(builder, path)),
+                        "%" + keyword.toLowerCase() + "%"
+                ));
             }
-            // Perform an OR operation on the sub-conditions and then insert them into the main predicate (which will be an AND operation with the main condition).
             predicates.add(builder.or(keywordPredicates.toArray(new Predicate[0])));
         }
 

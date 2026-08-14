@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@JsonRootName("data")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
