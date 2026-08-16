@@ -3,6 +3,7 @@ package com.bekaku.api.spring.serviceImpl;
 import com.bekaku.api.spring.dto.ChatRequest;
 import com.bekaku.api.spring.dto.ChatSourceReference;
 import com.bekaku.api.spring.dto.ChatStreamEvent;
+import com.bekaku.api.spring.enumtype.AiChatSourceType;
 import com.bekaku.api.spring.enumtype.AiRole;
 import com.bekaku.api.spring.exception.ChatStreamException;
 import com.bekaku.api.spring.model.AiChat;
@@ -13,15 +14,18 @@ import com.bekaku.api.spring.service.AiChatMessageService;
 import com.bekaku.api.spring.service.AiChatService;
 import com.bekaku.api.spring.service.AiDocumentMetaService;
 import com.bekaku.api.spring.service.AiRagChatService;
+import com.bekaku.api.spring.util.AiChatToolContext;
 import com.bekaku.api.spring.util.UuidUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -34,19 +38,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Slf4j
 @Transactional
-@RequiredArgsConstructor
 @Service
 public class AiRagChatServiceImpl implements AiRagChatService {
-    private final VectorStore vectorStore;
     private final ChatClient.Builder chatClientBuilder;
     private final AiDocumentMetaService aiDocumentMetaService;
     private final AppProperties appProperties;
     private static final String CONVERSATION_ID_KEY = "chat_memory_conversation_id";
     private final String TEST_COMPANY = "GATS";
+
+    // 1. VectorStore สำหรับไฟล์เอกสารเดิม (rag_documents)
+    private final VectorStore documentVectorStore;
+
 
     @Value("classpath:prompts/system-rag.txt")
     private Resource systemPromptResource;
@@ -55,6 +62,29 @@ public class AiRagChatServiceImpl implements AiRagChatService {
 
     private final AiChatService aiChatService;
     private final AiChatMessageService aiChatMessageService;
+    private final ToolCallbackProvider databaseSchemaToolProvider;
+    private final AiChatToolContext chatToolContext;
+
+    public AiRagChatServiceImpl(
+            @Qualifier("documentVectorStore") VectorStore documentVectorStore,
+            ChatClient.Builder chatClientBuilder,
+            AiDocumentMetaService aiDocumentMetaService,
+            AppProperties appProperties,
+            AiChatService aiChatService,
+            AiChatMessageService aiChatMessageService,
+//            @Qualifier("postgres-db")
+            ToolCallbackProvider databaseSchemaToolProvider,
+            AiChatToolContext chatToolContext
+    ) {
+        this.documentVectorStore = documentVectorStore;
+        this.chatClientBuilder = chatClientBuilder;
+        this.aiDocumentMetaService = aiDocumentMetaService;
+        this.appProperties = appProperties;
+        this.aiChatService = aiChatService;
+        this.aiChatMessageService = aiChatMessageService;
+        this.databaseSchemaToolProvider = databaseSchemaToolProvider;
+        this.chatToolContext = chatToolContext;
+    }
 
     public Flux<ChatStreamEvent> streamAnswer(ChatRequest request) {
         boolean isNewChat = request.getConversationId() == null;
@@ -99,22 +129,40 @@ public class AiRagChatServiceImpl implements AiRagChatService {
         }
 
         // Retrieving RAG documents.
-        List<Document> retrieved = retrieveContext(request.getMessage(), request.getFilterNames());
-        log.info("Found {} documents from Qdrant", retrieved.size());
+        List<Document> retrievedDocs = retrieveContext(request.getMessage(), request.getFilterNames());
+        log.info("Found {} documents from Qdrant", retrievedDocs.size());
 
-        List<ChatSourceReference> sources = toSourceReferences(retrieved);
-        String contextData = retrieved.stream()
+//        List<Document> retrievedSchemas =
+//                retrieveSchemaContext(request.getMessage());
+//        log.info("Found {} database schemas", retrievedSchemas.size());
+
+        List<ChatSourceReference> documentSources =
+                toDocumentSourceReferences(retrievedDocs);
+//        List<ChatSourceReference> sources = new ArrayList<>();
+//        sources.addAll(toDocumentSourceReferences(retrievedDocs));
+//        sources.addAll(toDatabaseSourceReferences(retrievedSchemas));
+
+        String documentContext = retrievedDocs.stream()
                 .map(Document::getText)
                 .collect(Collectors.joining("\n\n---\n\n"));
+
+//        String schemaContext = retrievedSchemas.stream()
+//                .map(Document::getText)
+//                .collect(Collectors.joining("\n\n---\n\n"));
+
+
         StringBuilder aiContentBuilder = new StringBuilder();
         Flux<ChatStreamEvent> tokenStream = chatClientBuilder.build()
                 .prompt()
-
                 //mark this if you dont want to use system prompt
-//                .system(s -> s.text(systemPromptResource)
-//                        .param("context", contextData)
-//                )
+                .system(s -> s.text(systemPromptResource)
+                                .param("context", documentContext)
+//                        .param("schemaContext", schemaContext)
+                )
                 .user(request.getMessage())
+                .tools(
+                        databaseSchemaToolProvider
+                )
                 // .advisors(a -> a.param(CONVERSATION_ID_KEY, convIdStr)) // เปิดใช้ถ้าเชื่อม PersistentChatMemory แล้ว
                 .stream()
                 .chatResponse()
@@ -155,8 +203,23 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                 });
 
         // Send the sources at the end.
-        Flux<ChatStreamEvent> sourcesEvent = Flux.just(
-                ChatStreamEvent.builder().type("sources").content(serializeSources(sources)).build());
+//        Flux<ChatStreamEvent> sourcesEvent = Flux.just(
+//                ChatStreamEvent.builder().type("sources").content(serializeSources(documentSources)).build());
+
+        Flux<ChatStreamEvent> sourcesEvent =
+                tokenStream.thenMany(
+                        Mono.fromSupplier(() -> {
+                            List<ChatSourceReference> sources =
+                                    new ArrayList<>(documentSources);
+                            sources.addAll(
+                                    chatToolContext.getSources()
+                            );
+                            return ChatStreamEvent.builder()
+                                    .type("sources")
+                                    .content(serializeSources(sources))
+                                    .build();
+                        })
+                );
 
         // Create a process to save the AI text to the database after the stream ends.
         final AiChat aichat = chat;
@@ -213,17 +276,42 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                 );
             }
 
-            return vectorStore.similaritySearch(searchRequestBuilder.build());
+            return documentVectorStore.similaritySearch(searchRequestBuilder.build());
         } catch (Exception e) {
             throw new ChatStreamException("Failed to retrieve context from vector store", e);
         }
     }
 
-    private List<ChatSourceReference> toSourceReferences(List<Document> documents) {
+    private List<ChatSourceReference> toDocumentSourceReferences(
+            List<Document> documents) {
+
         return documents.stream()
                 .map(doc -> ChatSourceReference.builder()
-                        .fileName(String.valueOf(doc.getMetadata().getOrDefault("fileName", "unknown")))
-                        .documentType(String.valueOf(doc.getMetadata().getOrDefault("documentType", "unknown")))
+                        .type(AiChatSourceType.DOCUMENT)
+                        .fileName(String.valueOf(
+                                doc.getMetadata().getOrDefault("fileName", "unknown")
+                        ))
+                        .documentType(String.valueOf(
+                                doc.getMetadata().getOrDefault("documentType", "unknown")
+                        ))
+                        .score(doc.getScore())
+                        .build())
+                .distinct()
+                .toList();
+    }
+
+    private List<ChatSourceReference> toDatabaseSourceReferences(
+            List<Document> schemas) {
+
+        return schemas.stream()
+                .map(doc -> ChatSourceReference.builder()
+                        .type(AiChatSourceType.DATABASE_TABLE)
+                        .schema(String.valueOf(
+                                doc.getMetadata().getOrDefault("schema", "public")
+                        ))
+                        .tableName(String.valueOf(
+                                doc.getMetadata().getOrDefault("tableName", "unknown")
+                        ))
                         .score(doc.getScore())
                         .build())
                 .distinct()
@@ -231,30 +319,52 @@ public class AiRagChatServiceImpl implements AiRagChatService {
     }
 
     private String serializeSources(List<ChatSourceReference> sources) {
+        if (sources == null || sources.isEmpty()) {
+            return "[]";
+        }
+
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < sources.size(); i++) {
             ChatSourceReference s = sources.get(i);
-            sb.append("{\"fileName\":\"").append(escape(s.getFileName())).append("\",")
-                    .append("\"documentType\":\"").append(escape(s.getDocumentType())).append("\",")
-                    .append("\"score\":").append(s.getScore() == null ? "null" : s.getScore())
+            if (s == null) continue;
+
+            sb.append("{")
+                    .append("\"type\":\"").append(s.getType() != null ? s.getType().name() : "null").append("\",");
+
+            if (s.getType() == AiChatSourceType.DATABASE_TABLE) {
+                //  Database
+                sb.append("\"schema\":\"").append(escape(s.getSchema())).append("\",")
+                        .append("\"tableName\":\"").append(escape(s.getTableName())).append("\",");
+            } else {
+                //  (Document)
+                sb.append("\"fileName\":\"").append(escape(s.getFileName())).append("\",")
+                        .append("\"documentType\":\"").append(escape(s.getDocumentType())).append("\",");
+            }
+
+            //  Score
+            sb.append("\"score\":").append(s.getScore() == null ? "null" : s.getScore())
                     .append("}");
-            if (i < sources.size() - 1) sb.append(",");
+
+            if (i < sources.size() - 1) {
+                sb.append(",");
+            }
         }
         return sb.append("]").toString();
     }
 
-    private String escape(String value) {
-        return value == null ? "" : value.replace("\"", "\\\"");
+    private String escape(String val) {
+        if (val == null) return "";
+        return val.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\b", "\\b")
+                .replace("\f", "\\f")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 
-    @Deprecated
-    public Flux<String> askStream(String question) {
-        List<String> activeFiles = aiDocumentMetaService.findAllActiveFileNames();
-        if (activeFiles.isEmpty()) {
-            return Flux.just("ขออภัย ยังไม่มีเอกสารในระบบให้ค้นหาครับ");
-        }
-
-        // Filter ค้นหาเฉพาะไฟล์ที่ Active อยู่
+    /*
+            // Filter ค้นหาเฉพาะไฟล์ที่ Active อยู่
         String joinedNames = activeFiles.stream().map(name -> "'" + name + "'").collect(Collectors.joining(", "));
         String filterExpression = "fileName in [" + joinedNames + "]";
         // 🌟 ถ้ามีการระบุแผนก (และไม่ได้เลือก "All") ให้เอามาต่อท้ายเงื่อนไขด้วย &&
@@ -266,21 +376,6 @@ public class AiRagChatServiceImpl implements AiRagChatService {
         filterExpression += " && company == '" + TEST_COMPANY + "'";
 
         log.info("filterExpression:{}", filterExpression);
-        SearchRequest searchRequest = SearchRequest.builder()
-                .filterExpression(filterExpression)
-                .topK(3)                   // ดึงข้อมูลที่ตรงที่สุดมาแค่ 3 ชิ้น (ค่า Default มักจะเป็น 4)
-                .similarityThreshold(0.75) // กำหนดความคล้ายคลึงขั้นต่ำ (0.0 - 1.0)
-                .build();
+     */
 
-        return chatClientBuilder
-                .defaultAdvisors(QuestionAnswerAdvisor.builder(vectorStore)
-                        .searchRequest(searchRequest)
-                        .build())
-                .build()
-                .prompt()
-                .system(systemPromptResource)
-                .user(question)
-                .stream()
-                .content();
-    }
 }

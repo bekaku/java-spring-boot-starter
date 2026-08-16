@@ -226,36 +226,152 @@ public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionServic
             log.info("Fetching tables and comments metadata from PostgreSQL...");
 
             String sql = """
-                    SELECT 
+                    SELECT
+                        t.table_schema,
                         t.table_name,
-                        COALESCE(obj_description(c.oid, 'pg_class'), '') AS table_comment,
+                    
+                        COALESCE(
+                            obj_description(c.oid, 'pg_class'),
+                            ''
+                        ) AS table_comment,
+                    
+                        COALESCE(
+                            pk.primary_key_columns,
+                            ''
+                        ) AS primary_key_columns,
+                    
+                        COALESCE(
+                            fk.foreign_key_columns,
+                            ''
+                        ) AS foreign_key_columns,
+                    
                         string_agg(
-                            cols.column_name || ' (' || cols.data_type || '): ' || COALESCE(pg_catalog.col_description(c.oid, cols.ordinal_position), ''),
-                            E'\n- ' ORDER BY cols.ordinal_position
+                            cols.column_name
+                            || ' (' || cols.data_type || ')'
+                            || CASE
+                                WHEN cols.is_nullable = 'NO'
+                                THEN ' NOT NULL'
+                                ELSE ''
+                               END
+                            || ': '
+                            || COALESCE(
+                                pg_catalog.col_description(
+                                    c.oid,
+                                    cols.ordinal_position
+                                ),
+                                ''
+                               ),
+                            E'\\n- '
+                            ORDER BY cols.ordinal_position
                         ) AS columns_text
+                    
                     FROM information_schema.tables t
-                    JOIN pg_catalog.pg_class c ON c.relname = t.table_name
-                    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace AND n.nspname = t.table_schema
-                    JOIN information_schema.columns cols ON cols.table_schema = t.table_schema AND cols.table_name = t.table_name
-                    WHERE t.table_schema = 'public' 
+                    
+                    JOIN pg_catalog.pg_class c
+                        ON c.relname = t.table_name
+                    
+                    JOIN pg_catalog.pg_namespace n
+                        ON n.oid = c.relnamespace
+                        AND n.nspname = t.table_schema
+                    
+                    JOIN information_schema.columns cols
+                        ON cols.table_schema = t.table_schema
+                        AND cols.table_name = t.table_name
+                    
+                    LEFT JOIN (
+                        SELECT
+                            tc.table_schema,
+                            tc.table_name,
+                            string_agg(kcu.column_name, ', ' ORDER BY kcu.ordinal_position)
+                                AS primary_key_columns
+                        FROM information_schema.table_constraints tc
+                        JOIN information_schema.key_column_usage kcu
+                            ON tc.constraint_name = kcu.constraint_name
+                            AND tc.table_schema = kcu.table_schema
+                            AND tc.table_name = kcu.table_name
+                        WHERE tc.constraint_type = 'PRIMARY KEY'
+                        GROUP BY tc.table_schema, tc.table_name
+                    ) pk
+                        ON pk.table_schema = t.table_schema
+                        AND pk.table_name = t.table_name
+                    
+                    LEFT JOIN (
+                        SELECT
+                            tc.table_schema,
+                            tc.table_name,
+                            string_agg(
+                                kcu.column_name
+                                || ' -> '
+                                || ccu.table_schema
+                                || '.' 
+                                || ccu.table_name
+                                || '.'
+                                || ccu.column_name,
+                                E'\\n- '
+                                ORDER BY kcu.ordinal_position
+                            ) AS foreign_key_columns
+                        FROM information_schema.table_constraints tc
+                        JOIN information_schema.key_column_usage kcu
+                            ON tc.constraint_name = kcu.constraint_name
+                            AND tc.table_schema = kcu.table_schema
+                            AND tc.table_name = kcu.table_name
+                        JOIN information_schema.constraint_column_usage ccu
+                            ON ccu.constraint_name = tc.constraint_name
+                            AND ccu.table_schema = tc.table_schema
+                        WHERE tc.constraint_type = 'FOREIGN KEY'
+                        GROUP BY tc.table_schema, tc.table_name
+                    ) fk
+                        ON fk.table_schema = t.table_schema
+                        AND fk.table_name = t.table_name
+                    
+                    WHERE t.table_schema = 'public'
                       AND t.table_type = 'BASE TABLE'
-                    GROUP BY t.table_name, c.oid;
+                    
+                    GROUP BY
+                        t.table_schema,
+                        t.table_name,
+                        c.oid,
+                        pk.primary_key_columns,
+                        fk.foreign_key_columns
+                    
+                    ORDER BY t.table_name
                     """;
 
             List<Document> documents = jdbcTemplate.query(sql, (rs, rowNum) -> {
+
+                String schemaName = rs.getString("table_schema");
                 String tableName = rs.getString("table_name");
                 String tableComment = rs.getString("table_comment");
                 String columnsText = rs.getString("columns_text");
+                String primaryKey = rs.getString("primary_key_columns");
+                String foreignKeys = rs.getString("foreign_key_columns");
 
                 String content = """
+                        Schema: %s
                         Table: %s
                         Description: %s
+                        
+                        Primary Key:
+                        - %s
+                        
                         Columns:
                         - %s
-                        """.formatted(tableName, tableComment, columnsText);
+                        
+                        Foreign Keys:
+                        - %s
+                        """.formatted(
+                        schemaName,
+                        tableName,
+                        tableComment,
+                        primaryKey,
+                        columnsText,
+                        foreignKeys
+                );
 
                 return Document.builder()
+                        .id("schema:" + schemaName + ":" + tableName)
                         .text(content)
+                        .metadata("schema_name", schemaName)
                         .metadata("table_name", tableName)
                         .metadata("type", "TABLE_SCHEMA")
                         .build();

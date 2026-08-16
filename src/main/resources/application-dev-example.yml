@@ -97,11 +97,21 @@ spring:
         name: postgres-mcp-client
         version: 1.0.0
         type: SYNC
+#        protocol: STREAMABLE
+#        capabilities:
+#          tool: true
+#          resource: false
+#          prompt: false
+#          completion: false
+#        streamable-http:
+#          mcp-endpoint: /mcp
         stdio:
           connections:
             postgres-db:
-              command: npx
+              command: npx #Windows : cmd, Linux :npx
               args:
+#                - /c #windows
+#                - npx #windows
                 - -y
                 - "@modelcontextprotocol/server-postgres"
                 - "postgresql://ai_readonly_user:StrongAiPassword123!@localhost:5432/spring_starter_postgres"

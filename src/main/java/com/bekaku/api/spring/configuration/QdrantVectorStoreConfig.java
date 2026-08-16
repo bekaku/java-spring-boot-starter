@@ -50,6 +50,7 @@ public class QdrantVectorStoreConfig {
     public VectorStore documentVectorStore(QdrantClient qdrantClient, EmbeddingModel embeddingModel) {
         return QdrantVectorStore.builder(qdrantClient, embeddingModel)
                 .collectionName(DOCUMENT_COLLECTION_NAME)
+                .contentFieldName("doc_content")
                 .initializeSchema(true)
                 .build();
     }
@@ -61,6 +62,7 @@ public class QdrantVectorStoreConfig {
     public VectorStore schemaVectorStore(QdrantClient qdrantClient, EmbeddingModel embeddingModel) {
         return QdrantVectorStore.builder(qdrantClient, embeddingModel)
                 .collectionName(SCHEMA_COLLECTION_NAME)
+                .contentFieldName("doc_content")
                 .initializeSchema(true)
                 .build();
     }
