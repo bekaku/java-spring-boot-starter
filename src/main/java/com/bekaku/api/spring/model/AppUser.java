@@ -22,6 +22,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "app_user",
+        comment = "Table for storing user account information.",
         indexes = {
                 @Index(columnList = "active"),
                 @Index(columnList = "deleted"),
@@ -60,28 +61,31 @@ public class AppUser extends SoftDeletedAuditable<Long> {
 
     //    @Basic(optional = false)
 //    @Column(nullable = false, length = 100, unique = true)
-    @Column(length = 100, unique = true)
+    @Column(length = 100, unique = true, comment = "Unique username for user authentication")
     private String username;
 
+    @Column(comment = "Hashed password for user authentication")
     private String password;
 
-    @Column(length = 125, unique = true, nullable = false)
+    @Column(length = 125, unique = true, nullable = false, comment = "Unique email address of the user")
     private String email;
 
     @Enumerated(EnumType.ORDINAL)
+    @Column(comment = "Default language/locale setting for the user")
     private AppLocale defaultLocale;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "avatar_file_id")
+    @JoinColumn(name = "avatar_file_id",comment = "FK -> Ref table: file_manager (id). Reference to user avatar image file")
     private FileManager avatarFile;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cover_file_id")
+    @JoinColumn(name = "cover_file_id", comment = "FK -> Ref table: file_manager (id). Reference to user cover image file")
     private FileManager coverFile;
 
+    @Column(comment = "Cryptographic salt used for password hashing")
     private String salt;
 
-    @Column(nullable = false)
+    @Column(nullable = false, comment = "Account status flag (true = active, false = disabled/suspended)")
     private boolean active = true;
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
@@ -90,8 +94,8 @@ public class AppUser extends SoftDeletedAuditable<Long> {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "app_user_role",
-            joinColumns = @JoinColumn(name = "app_user"),
-            inverseJoinColumns = @JoinColumn(name = "app_role"))
+            joinColumns = @JoinColumn(name = "app_user", comment = "FK -> Ref table: app_user (id). User identifier"),
+            inverseJoinColumns = @JoinColumn(name = "app_role", comment = "FK -> Ref table: app_role (id). Role identifier"))
     private Set<AppRole> appRoles = new HashSet<>();
 
     public static Sort getSort() {

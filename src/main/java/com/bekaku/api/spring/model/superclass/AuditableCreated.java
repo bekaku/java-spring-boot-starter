@@ -20,11 +20,11 @@ import java.time.LocalDateTime;
 public class AuditableCreated<U> extends Id {
 
     @CreatedBy
-    @Column(name = "created_user", updatable = false)
+    @Column(name = "created_user", updatable = false, nullable = true, comment = "Identifier of the user who created this record")
     private U createdUser;
 
     @CreatedDate
-    @Column(name = "created_date", updatable = false)
+    @Column(name = "created_date", updatable = false, comment = "Timestamp when this record was created")
     private LocalDateTime createdDate;
 
 }

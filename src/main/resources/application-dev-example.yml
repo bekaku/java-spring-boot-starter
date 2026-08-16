@@ -91,7 +91,20 @@ spring:
       embedding:
         options:
           model: bge-m3
-
+    mcp:
+      client:
+        enabled: true
+        name: postgres-mcp-client
+        version: 1.0.0
+        type: SYNC
+        stdio:
+          connections:
+            postgres-db:
+              command: npx
+              args:
+                - -y
+                - "@modelcontextprotocol/server-postgres"
+                - "postgresql://ai_readonly_user:StrongAiPassword123!@localhost:5432/spring_starter_postgres"
     vectorstore:
       qdrant:
         host: localhost

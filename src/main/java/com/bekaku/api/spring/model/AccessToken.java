@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -25,6 +26,7 @@ import static jakarta.persistence.FetchType.LAZY;
 @NoArgsConstructor
 @GenSourceableTable(createController = false, createDto = false, createPermission = false)
 @Table(name = "access_token",
+        comment = "Table for storing login token data.",
         indexes = {
                 @Index(columnList = "revoked"),
                 @Index(columnList = "fcmEnable"),
@@ -74,43 +76,47 @@ public class AccessToken extends Id {
 //    @Convert(converter = UUIDBinaryConverter.class)
 //    private UUID uniqeId;
 
-    @Column(name = "token", length = 100, unique = true)
+    @Column(name = "token", length = 100, unique = true, comment = "Hashed access token (SHA-256)")
     private String token;
 
+    @Column(name = "fcm_token", comment = "Firebase Cloud Messaging token for device push notifications")
     private String fcmToken;
 
+    @Column(name = "fcm_enable", comment = "Flag indicating if FCM notifications are enabled for this session")
     private Boolean fcmEnable = true;
 
     @Enumerated(EnumType.ORDINAL)
-    @Column(name = "service", nullable = false)
+    @Column(name = "service", nullable = false, comment = "Service type of the token (e.g., LOGIN, REFRESH)")
     private AccessTokenServiceType service = AccessTokenServiceType.LOGIN;
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "app_user")
+    @JoinColumn(name = "app_user", comment = "FK -> Ref table: app_user (id). The user who owns this token")
     private AppUser appUser;
 
     @JsonIgnore
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "apiClient")
+    @JoinColumn(name = "api_client", comment = "FK -> Ref table: api_client (id). The client application")
     private ApiClient apiClient;
 
     @JsonIgnore
     @OneToOne(fetch = LAZY)
-    @JoinColumn(name = "loginLog", referencedColumnName = "id")
+    @JoinColumn(name = "loginLog", referencedColumnName = "id", comment = "FK -> Ref table: login_log (id). The login activity log")
     private LoginLog loginLog;
 
+    @Column(name = "revoked", comment = "Flag indicating whether this token has been revoked")
     private boolean revoked = false;
 
+    @Column(name = "expires_at", comment = "Expiration timestamp of the token")
     private Date expiresAt;
 
-    @Column(name = "created_date", updatable = false)
+    @Column(name = "created_date", updatable = false, comment = "Timestamp when the token was created")
     private LocalDateTime createdDate;
 
-    @Column(name = "logouted_date")
+    @Column(name = "logouted_date", comment = "Timestamp when the session was logged out")
     private LocalDateTime logoutedDate;
 
-    @Column(name = "lastest_active")
+    @Column(name = "lastest_active", comment = "Timestamp of the most recent activity with this token")
     private LocalDateTime lastestActive;
 
     //    @GeneratedUuidV7

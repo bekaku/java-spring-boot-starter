@@ -1,20 +1,17 @@
 package com.bekaku.api.spring.controller.api;
 
-import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.AiDocumentMetaDto;
-import com.bekaku.api.spring.dto.IngestionRequest;
 import com.bekaku.api.spring.dto.IngestionResponse;
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.AiDocumentMeta;
 import com.bekaku.api.spring.model.FileManager;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.service.AiDocumentMetaService;
-import com.bekaku.api.spring.service.DocumentIngestionService;
+import com.bekaku.api.spring.service.AiDocumentIngestionService;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.ControllerUtil;
-import com.bekaku.api.spring.util.FileUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,19 +41,20 @@ public class AiDocumentMetaController extends BaseApiController {
     private final AiDocumentMetaService aiDocumentMetaService;
     private final I18n i18n;
     private final FileManagerService fileManagerService;
-    private final DocumentIngestionService ingestionService;
+    private final AiDocumentIngestionService ingestionService;
     private final AppProperties appProperties;
 
     /**
      * Triggers extraction, chunking, embedding, and persistence for a file that has
      * already been fully merged via the chunk upload API
      */
+    @PreAuthorize("@permissionChecker.hasPermission('ai_document_meta_add')")
     @PostMapping("/ingest/{fileManagerId}")
     public ResponseEntity<IngestionResponse> ingest(@PathVariable("fileManagerId") Long fileManagerId) {
 
 
         Optional<FileManager> f = fileManagerService.findById(fileManagerId);
-        if(f.isEmpty()){
+        if (f.isEmpty()) {
             throw this.responseErrorNotfound();
         }
         AiDocumentMeta meta = ingestionService.ingest(f.get());
@@ -73,6 +71,14 @@ public class AiDocumentMetaController extends BaseApiController {
                 .build();
 
         return this.responseEntity(response, HttpStatus.OK);
+    }
+
+    @PreAuthorize("@permissionChecker.hasPermission('ai_document_meta_add')")
+    @PostMapping("/ingestDatabaseSchemas")
+    public ResponseEntity<?> ingestDatabaseSchemas() {
+
+        ingestionService.ingestDatabaseSchemas();
+        return this.responseEntity(HttpStatus.OK);
     }
 
     @PreAuthorize("@permissionChecker.hasPermission('ai_document_meta_list')")

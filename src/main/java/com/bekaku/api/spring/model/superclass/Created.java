@@ -18,7 +18,7 @@ public class Created extends Id {
 
     @JsonIgnore
     @CreatedDate
-    @Column(name = "created_date", updatable = false)
+    @Column(name = "created_date", updatable = false, comment = "Timestamp when this record was created")
     private LocalDateTime createdDate;
 
 }

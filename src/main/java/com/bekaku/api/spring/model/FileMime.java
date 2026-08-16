@@ -15,12 +15,12 @@ import lombok.Setter;
 @Setter
 @Entity
 @NoArgsConstructor
-@Table(name = "file_mime")
+@Table(name = "file_mime", comment = "Table for storing supported file MIME types.")
 public class FileMime extends Id {
     public FileMime(String name) {
         this.name = name;
     }
 
-    @Column(length = 125)
-    String name;
+    @Column(name = "name", length = 125, comment = "MIME type identifier string (e.g., image/png, application/pdf)")
+    private String name;
 }

@@ -18,12 +18,12 @@ public class CreatedUpdated extends Id {
 
     @JsonIgnore
     @CreatedDate
-    @Column(name = "created_date", updatable = false)
+    @Column(name = "created_date", updatable = false, comment = "Timestamp when this record was created")
     private LocalDateTime createdDate;
 
     @JsonIgnore
     @LastModifiedDate
-    @Column(name = "updated_date")
+    @Column(name = "updated_date", comment = "Timestamp when this record was last modified")
     private LocalDateTime updatedDate;
 
 }

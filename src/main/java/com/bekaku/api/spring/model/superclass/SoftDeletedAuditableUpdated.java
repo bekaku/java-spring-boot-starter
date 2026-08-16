@@ -22,13 +22,13 @@ public class SoftDeletedAuditableUpdated<U> extends SoftDeletedId {
 
     @JsonIgnore
     @LastModifiedBy
-    @Column(name = "updated_user")
+    @Column(name = "updated_user", comment = "Identifier of the user who last updated this record")
     private U updatedUser;
 
     @JsonIgnore
     @LastModifiedDate
 //    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "updated_date")
+    @Column(name = "updated_date", comment = "Timestamp when this record was last modified")
     private LocalDateTime updatedDate;
 
 }

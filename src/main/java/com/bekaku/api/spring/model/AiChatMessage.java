@@ -23,26 +23,26 @@ import org.springframework.data.domain.Sort;
 import java.time.LocalDateTime;
 
 @GenSourceableTable(createController = false, createPermission = false)
-@Table(name = "ai_chat_messages")
+@Table(name = "ai_chat_messages", comment = "Table for storing individual messages within AI chat sessions.")
 @Getter
 @Setter
 @Entity
 public class AiChatMessage extends Id {
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
+    @Column(name = "role", length = 50, nullable = false, comment = "Role of the message sender (e.g., USER, ASSISTANT, SYSTEM)")
     private AiRole aiRole;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ai_chat", nullable = false)
+    @JoinColumn(name = "ai_chat", nullable = false, comment = "FK -> Ref table: ai_chat (id). The parent AI chat session")
     @ToString.Exclude
     private AiChat aiChat;
 
-    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false, comment = "Content payload of the message (user prompt or AI response)")
     private String content;
 
     @CreatedDate
-    @Column(name = "created_date", updatable = false)
+    @Column(name = "created_date", updatable = false, comment = "Timestamp when the message was sent/created")
     private LocalDateTime createdDate;
 
     @PrePersist

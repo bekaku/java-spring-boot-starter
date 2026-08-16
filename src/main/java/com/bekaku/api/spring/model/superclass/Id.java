@@ -1,10 +1,12 @@
 package com.bekaku.api.spring.model.superclass;
 
 import com.bekaku.api.spring.util.SnowflakeIdHolder;
+import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Comment;
 
 import java.io.Serializable;
 
@@ -14,6 +16,7 @@ import java.io.Serializable;
 public class Id implements Serializable {
 
     @jakarta.persistence.Id
+    @Column(name = "id", nullable = false, comment = "Primary Key")
     private Long id;
 
     @PrePersist

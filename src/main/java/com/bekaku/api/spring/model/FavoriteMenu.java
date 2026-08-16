@@ -13,12 +13,14 @@ import org.springframework.data.domain.Sort;
 @Setter
 @Entity
 @NoArgsConstructor
-@Table(name = "favorite_menu")
+@Table(name = "favorite_menu", comment = "Table for storing user's favorite menu items.")
 public class FavoriteMenu extends Id {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "app_user")
+    @JoinColumn(name = "app_user", comment = "FK -> Ref table: app_user (id). The user who owns this token")
     private AppUser appUser;
+
+    @Column(comment="The menu item that is favorited")
     private String url;
 
     public static Sort getSort() {

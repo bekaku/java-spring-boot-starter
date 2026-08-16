@@ -18,21 +18,23 @@ import java.util.Set;
 @Setter
 @Entity
 @EntityListeners(AuditListener.class)
+@Table(name = "permission", comment = "Table for storing system access permissions and operations.")
 @NoArgsConstructor
-@Table(name = "permission")
 public class Permission extends Id {
     public Permission(String code) {
         this.code = code;
     }
-    @Column(nullable = false, length = 125, unique = true)
+    @Column(name = "code", nullable = false, length = 125, unique = true, comment = "Unique permission code (e.g., USER_READ, ROLE_MANAGE)")
     private String code;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT", comment = "Detailed description of what this permission grants")
     private String description;
 
+    @Column(name = "module", length = 100, comment = "Module or domain group this permission belongs to")
     private String module;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "operation_type", length = 50, comment = "Type of operation (e.g., CRUD, ACTION)")
     private PermissionType operationType = PermissionType.CRUD;
 
     @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)

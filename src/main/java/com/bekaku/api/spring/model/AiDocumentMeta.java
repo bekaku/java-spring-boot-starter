@@ -30,31 +30,34 @@ import java.util.Map;
 @GenSourceableTable(createController = false)
 @SQLRestriction("deleted = false")
 //@SQLDelete(sql = "UPDATE ai_document_meta SET deleted = true WHERE id = ?")
-@Table(name = "ai_document_meta")
+@Table(name = "ai_document_meta", comment = "Table for storing AI document metadata, vector mappings, and properties.")
 @Getter
 @Setter
 @Entity
 public class AiDocumentMeta extends SoftDeletedAuditable<Long> {
 
+    @Column(name = "file_name", length = 255, comment = "Name of the document file")
     private String fileName;
+
+    @Column(name = "active", comment = "Flag indicating whether this document is active for AI processing/retrieval")
     private boolean active;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "file_mime")
+    @JoinColumn(name = "file_mime", comment = "FK -> Ref table: file_mime (id). MIME type reference for the document")
     private FileMime fileMime;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "ai_document_vector_ids", joinColumns = @JoinColumn(name = "document_id"))
-    @Column(name = "vector_id")
+    @CollectionTable(name = "ai_document_vector_ids", joinColumns = @JoinColumn(name = "document_id", comment = "FK -> Ref table: ai_document_meta (id). Document identifier"))
+    @Column(name = "vector_id", comment = "Vector ID / Chunk ID stored in the Vector Database")
     private List<String> vectorIds;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "ai_document_metadata",
-            joinColumns = @JoinColumn(name = "document_id")
+            joinColumns = @JoinColumn(name = "document_id", comment = "FK -> Ref table: ai_document_meta (id). Document identifier")
     )
     @MapKeyColumn(name = "meta_key")
-    @Column(name = "meta_value")
+    @Column(name = "meta_value", comment = "Metadata value content")
     private Map<String, String> metadata = new HashMap<>();
 
 //    @JdbcTypeCode(SqlTypes.JSON)

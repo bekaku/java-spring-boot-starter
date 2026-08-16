@@ -19,7 +19,9 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "app_role", indexes = {
+@Table(name = "app_role",
+        comment = "Table for storing user roles and permissions.",
+        indexes = {
         @Index(columnList = "deleted"),
         @Index(columnList = "updated_user"),
         @Index(columnList = "created_user"),
@@ -39,9 +41,10 @@ public class AppRole extends SoftDeletedAuditable<Long> {
         this.active = active;
     }
 
-    @Column(name = "name", length = 125, nullable = false)
+    @Column(name = "name", length = 125, nullable = false, comment = "Role name (e.g., ADMIN, USER)")
     private String name;
 
+    @Column(name = "active", comment = "Flag indicating if the role is active")
     private Boolean active = true;
 
     @ManyToMany(mappedBy = "appRoles", fetch = FetchType.LAZY)
@@ -49,8 +52,8 @@ public class AppRole extends SoftDeletedAuditable<Long> {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "role_permission",
-            joinColumns = {@JoinColumn(name = "app_role")},
-            inverseJoinColumns = {@JoinColumn(name = "permission")})
+            joinColumns = {@JoinColumn(name = "app_role", comment = "FK -> Ref table: app_role (id). Role identifier")},
+            inverseJoinColumns = {@JoinColumn(name = "permission", comment = "FK -> Ref table: permission (id). Permission identifier")})
     private Set<Permission> permissions = new HashSet<>();
 
     @Override

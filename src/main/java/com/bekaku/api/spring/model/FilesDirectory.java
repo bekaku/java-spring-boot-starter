@@ -22,11 +22,13 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "files_directory", indexes = {
+@Table(name = "files_directory",
+        comment = "Table for storing file directory and folder hierarchy structure.",
+        indexes = {
         @Index(columnList = "updated_user"),
         @Index(columnList = "created_user"),
 })
-@SQLDelete(sql = "UPDATE files_directory SET deleted = true null WHERE id=?")
+@SQLDelete(sql = "UPDATE files_directory SET deleted = true WHERE id=?")
 @SQLRestriction("deleted=false")
 public class FilesDirectory extends SoftDeletedAuditable<Long> {
 
@@ -36,28 +38,30 @@ public class FilesDirectory extends SoftDeletedAuditable<Long> {
         this.latestUpdated = DateUtil.getLocalDateTimeNow();
     }
 
-    @Column(length = 125)
+    @Column(name = "name", length = 125, comment = "Directory or folder name")
     private String name;
 
+    @Column(name = "active", comment = "Flag indicating if the directory is active")
     boolean active = true;
 
     @OneToMany(mappedBy = "filesDirectoryParent", fetch = FetchType.LAZY)
     private Set<FilesDirectory> flesDirectories = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "files_directory_parent")
+    @JoinColumn(name = "files_directory_parent", comment = "FK -> Ref table: files_directory (id). Self-reference to parent directory")
     private FilesDirectory filesDirectoryParent;
 
+    @Column(name = "latest_updated", comment = "Timestamp of the latest update to this directory")
     private LocalDateTime latestUpdated;
 
-    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    @Column(name = "file_size", nullable = false, columnDefinition = "BIGINT DEFAULT 0", comment = "Total aggregated file size in bytes inside this directory")
     private long fileSize = 0;
 
-    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    @Column(name = "file_count", nullable = false, columnDefinition = "BIGINT DEFAULT 0", comment = "Total count of files stored inside this directory")
     private long fileCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner")
+    @JoinColumn(name = "owner", comment = "FK -> Ref table: app_user (id). The user who owns this directory")
     private AppUser owner;
 
     @PrePersist
