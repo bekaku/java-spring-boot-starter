@@ -23,12 +23,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 
 @Slf4j
@@ -369,7 +371,7 @@ public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionServic
                 );
 
                 return Document.builder()
-                        .id("schema:" + schemaName + ":" + tableName)
+                        .id(UUID.nameUUIDFromBytes(("schema:" + schemaName + ":" + tableName).getBytes(StandardCharsets.UTF_8)).toString())
                         .text(content)
                         .metadata("schema_name", schemaName)
                         .metadata("table_name", tableName)

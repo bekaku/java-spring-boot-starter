@@ -16,6 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @GenSourceableTable(createController = false, createDto = false, createPermission = false)
 @Table(name = "identity_group",
+        comment = "Table for storing identity groups.",
         indexes = {
                 @Index(columnList = "created_user"),
         })

@@ -1,5 +1,6 @@
 package com.bekaku.api.spring.serviceImpl;
 
+import com.bekaku.api.spring.ai.PostgreSQLQueryTool;
 import com.bekaku.api.spring.dto.ChatRequest;
 import com.bekaku.api.spring.dto.ChatSourceReference;
 import com.bekaku.api.spring.dto.ChatStreamEvent;
@@ -9,19 +10,15 @@ import com.bekaku.api.spring.exception.ChatStreamException;
 import com.bekaku.api.spring.model.AiChat;
 import com.bekaku.api.spring.model.AiChatMessage;
 import com.bekaku.api.spring.properties.AppProperties;
-import com.bekaku.api.spring.repository.AiChatRepository;
 import com.bekaku.api.spring.service.AiChatMessageService;
 import com.bekaku.api.spring.service.AiChatService;
 import com.bekaku.api.spring.service.AiDocumentMetaService;
 import com.bekaku.api.spring.service.AiRagChatService;
-import com.bekaku.api.spring.util.AiChatToolContext;
-import com.bekaku.api.spring.util.UuidUtils;
-import lombok.RequiredArgsConstructor;
+import com.bekaku.api.spring.ai.AiChatToolContext;
+import com.bekaku.api.spring.ai.DatabaseSchemaTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
@@ -36,9 +33,8 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 @Slf4j
@@ -62,8 +58,8 @@ public class AiRagChatServiceImpl implements AiRagChatService {
 
     private final AiChatService aiChatService;
     private final AiChatMessageService aiChatMessageService;
-    private final ToolCallbackProvider databaseSchemaToolProvider;
-    private final AiChatToolContext chatToolContext;
+    private final DatabaseSchemaTool databaseSchemaTool;
+    private final PostgreSQLQueryTool postgreSQLQueryTool;
 
     public AiRagChatServiceImpl(
             @Qualifier("documentVectorStore") VectorStore documentVectorStore,
@@ -72,9 +68,8 @@ public class AiRagChatServiceImpl implements AiRagChatService {
             AppProperties appProperties,
             AiChatService aiChatService,
             AiChatMessageService aiChatMessageService,
-//            @Qualifier("postgres-db")
-            ToolCallbackProvider databaseSchemaToolProvider,
-            AiChatToolContext chatToolContext
+            DatabaseSchemaTool databaseSchemaTool,
+            PostgreSQLQueryTool postgreSQLQueryTool
     ) {
         this.documentVectorStore = documentVectorStore;
         this.chatClientBuilder = chatClientBuilder;
@@ -82,8 +77,8 @@ public class AiRagChatServiceImpl implements AiRagChatService {
         this.appProperties = appProperties;
         this.aiChatService = aiChatService;
         this.aiChatMessageService = aiChatMessageService;
-        this.databaseSchemaToolProvider = databaseSchemaToolProvider;
-        this.chatToolContext = chatToolContext;
+        this.databaseSchemaTool = databaseSchemaTool;
+        this.postgreSQLQueryTool=postgreSQLQueryTool;
     }
 
     public Flux<ChatStreamEvent> streamAnswer(ChatRequest request) {
@@ -152,6 +147,7 @@ public class AiRagChatServiceImpl implements AiRagChatService {
 
 
         StringBuilder aiContentBuilder = new StringBuilder();
+        AiChatToolContext chatToolContext = new AiChatToolContext();
         Flux<ChatStreamEvent> tokenStream = chatClientBuilder.build()
                 .prompt()
                 //mark this if you dont want to use system prompt
@@ -160,9 +156,10 @@ public class AiRagChatServiceImpl implements AiRagChatService {
 //                        .param("schemaContext", schemaContext)
                 )
                 .user(request.getMessage())
-                .tools(
-                        databaseSchemaToolProvider
-                )
+                .tools(databaseSchemaTool,postgreSQLQueryTool)
+                .toolContext(Map.of(
+                        "chatToolContext", chatToolContext
+                ))
                 // .advisors(a -> a.param(CONVERSATION_ID_KEY, convIdStr)) // เปิดใช้ถ้าเชื่อม PersistentChatMemory แล้ว
                 .stream()
                 .chatResponse()
@@ -330,12 +327,14 @@ public class AiRagChatServiceImpl implements AiRagChatService {
 
             sb.append("{")
                     .append("\"type\":\"").append(s.getType() != null ? s.getType().name() : "null").append("\",");
-
             if (s.getType() == AiChatSourceType.DATABASE_TABLE) {
                 //  Database
                 sb.append("\"schema\":\"").append(escape(s.getSchema())).append("\",")
                         .append("\"tableName\":\"").append(escape(s.getTableName())).append("\",");
-            } else {
+            } else if (s.getType() == AiChatSourceType.DATABASE_QUERY) {
+                // Database Query
+                sb.append("\"query\":\"").append(escape(s.getQuery())).append("\",");
+            }else {
                 //  (Document)
                 sb.append("\"fileName\":\"").append(escape(s.getFileName())).append("\",")
                         .append("\"documentType\":\"").append(escape(s.getDocumentType())).append("\",");

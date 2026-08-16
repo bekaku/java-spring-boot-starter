@@ -1,15 +1,11 @@
-package com.bekaku.api.spring.util;
+package com.bekaku.api.spring.ai;
 
 
 import com.bekaku.api.spring.dto.ChatSourceReference;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
-@RequestScope
 public class AiChatToolContext {
     private final List<ChatSourceReference> sources =
             new ArrayList<>();

@@ -20,6 +20,7 @@ public class ChatSourceReference {
     // database_table
     private String schema;
     private String tableName;
+    private String query;
 
     private Double score;
 }

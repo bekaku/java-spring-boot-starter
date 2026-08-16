@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict wDv0ZinNqaOHnwCzYDOGdc6aUsfMAwxaTuODcZFLsckQsJ0L4nB4dZqwbrMIdHe
+\restrict gp1bnKNuFJapN5U6BMuGQhEe92siD1hz7dyf2a2F4hSZKdIh7BxRyroVv6zR6UZ
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -48,6 +48,186 @@ CREATE TABLE public.access_token (
 ALTER TABLE public.access_token OWNER TO postgres_user;
 
 --
+-- Name: TABLE access_token; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.access_token IS 'Table for storing login token data.';
+
+
+--
+-- Name: COLUMN access_token.created_date; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.created_date IS 'Timestamp when the token was created';
+
+
+--
+-- Name: COLUMN access_token.expires_at; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.expires_at IS 'Expiration timestamp of the token';
+
+
+--
+-- Name: COLUMN access_token.fcm_enable; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.fcm_enable IS 'Flag indicating if FCM notifications are enabled for this session';
+
+
+--
+-- Name: COLUMN access_token.fcm_token; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.fcm_token IS 'Firebase Cloud Messaging token for device push notifications';
+
+
+--
+-- Name: COLUMN access_token.lastest_active; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.lastest_active IS 'Timestamp of the most recent activity with this token';
+
+
+--
+-- Name: COLUMN access_token.logouted_date; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.logouted_date IS 'Timestamp when the session was logged out';
+
+
+--
+-- Name: COLUMN access_token.revoked; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.revoked IS 'Flag indicating whether this token has been revoked';
+
+
+--
+-- Name: COLUMN access_token.service; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.service IS 'Service type of the token (e.g., LOGIN, REFRESH)';
+
+
+--
+-- Name: COLUMN access_token.token; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.token IS 'Hashed access token (SHA-256)';
+
+
+--
+-- Name: COLUMN access_token.api_client; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.api_client IS 'FK -> Ref table: api_client (id). The client application';
+
+
+--
+-- Name: COLUMN access_token.app_user; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.app_user IS 'FK -> Ref table: app_user (id). The user who owns this token';
+
+
+--
+-- Name: COLUMN access_token.login_log; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.access_token.login_log IS 'FK -> Ref table: login_log (id). The login activity log';
+
+
+--
+-- Name: ai_chat; Type: TABLE; Schema: public; Owner: postgres_user
+--
+
+CREATE TABLE public.ai_chat (
+    id bigint NOT NULL,
+    created_date timestamp(6) without time zone,
+    updated_date timestamp(6) without time zone,
+    title character varying(255),
+    created_user bigint,
+    updated_user bigint,
+    pin boolean DEFAULT false
+);
+
+
+ALTER TABLE public.ai_chat OWNER TO postgres_user;
+
+--
+-- Name: TABLE ai_chat; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.ai_chat IS 'Table for storing AI chat sessions and conversation topics.';
+
+
+--
+-- Name: COLUMN ai_chat.title; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_chat.title IS 'Title or topic name of the AI chat session';
+
+
+--
+-- Name: COLUMN ai_chat.pin; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_chat.pin IS 'Flag indicating whether this chat session is pinned to the top';
+
+
+--
+-- Name: ai_chat_messages; Type: TABLE; Schema: public; Owner: postgres_user
+--
+
+CREATE TABLE public.ai_chat_messages (
+    id bigint NOT NULL,
+    role character varying(50) NOT NULL,
+    content text NOT NULL,
+    created_date timestamp(6) without time zone,
+    ai_chat bigint NOT NULL,
+    CONSTRAINT ai_chat_messages_role_check CHECK (((role)::text = ANY (ARRAY[('user'::character varying)::text, ('assistant'::character varying)::text, ('system'::character varying)::text])))
+);
+
+
+ALTER TABLE public.ai_chat_messages OWNER TO postgres_user;
+
+--
+-- Name: TABLE ai_chat_messages; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.ai_chat_messages IS 'Table for storing individual messages within AI chat sessions.';
+
+
+--
+-- Name: COLUMN ai_chat_messages.role; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_chat_messages.role IS 'Role of the message sender (e.g., USER, ASSISTANT, SYSTEM)';
+
+
+--
+-- Name: COLUMN ai_chat_messages.content; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_chat_messages.content IS 'Content payload of the message (user prompt or AI response)';
+
+
+--
+-- Name: COLUMN ai_chat_messages.created_date; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_chat_messages.created_date IS 'Timestamp when the message was sent/created';
+
+
+--
+-- Name: COLUMN ai_chat_messages.ai_chat; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_chat_messages.ai_chat IS 'FK -> Ref table: ai_chat (id). The parent AI chat session';
+
+
+--
 -- Name: ai_document_meta; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -67,6 +247,34 @@ CREATE TABLE public.ai_document_meta (
 ALTER TABLE public.ai_document_meta OWNER TO postgres_user;
 
 --
+-- Name: TABLE ai_document_meta; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.ai_document_meta IS 'Table for storing AI document metadata, vector mappings, and properties.';
+
+
+--
+-- Name: COLUMN ai_document_meta.file_name; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_document_meta.file_name IS 'Name of the document file';
+
+
+--
+-- Name: COLUMN ai_document_meta.active; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_document_meta.active IS 'Flag indicating whether this document is active for AI processing/retrieval';
+
+
+--
+-- Name: COLUMN ai_document_meta.file_mime; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_document_meta.file_mime IS 'FK -> Ref table: file_mime (id). MIME type reference for the document';
+
+
+--
 -- Name: ai_document_metadata; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -80,6 +288,20 @@ CREATE TABLE public.ai_document_metadata (
 ALTER TABLE public.ai_document_metadata OWNER TO postgres_user;
 
 --
+-- Name: COLUMN ai_document_metadata.document_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_document_metadata.document_id IS 'FK -> Ref table: ai_document_meta (id). Document identifier';
+
+
+--
+-- Name: COLUMN ai_document_metadata.meta_value; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_document_metadata.meta_value IS 'Metadata value content';
+
+
+--
 -- Name: ai_document_vector_ids; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -90,6 +312,20 @@ CREATE TABLE public.ai_document_vector_ids (
 
 
 ALTER TABLE public.ai_document_vector_ids OWNER TO postgres_user;
+
+--
+-- Name: COLUMN ai_document_vector_ids.document_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_document_vector_ids.document_id IS 'FK -> Ref table: ai_document_meta (id). Document identifier';
+
+
+--
+-- Name: COLUMN ai_document_vector_ids.vector_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.ai_document_vector_ids.vector_id IS 'Vector ID / Chunk ID stored in the Vector Database';
+
 
 --
 -- Name: api_client; Type: TABLE; Schema: public; Owner: postgres_user
@@ -147,6 +383,27 @@ CREATE TABLE public.app_role (
 ALTER TABLE public.app_role OWNER TO postgres_user;
 
 --
+-- Name: TABLE app_role; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.app_role IS 'Table for storing user roles and permissions.';
+
+
+--
+-- Name: COLUMN app_role.active; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_role.active IS 'Flag indicating if the role is active';
+
+
+--
+-- Name: COLUMN app_role.name; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_role.name IS 'Role name (e.g., ADMIN, USER)';
+
+
+--
 -- Name: app_user; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -172,6 +429,69 @@ CREATE TABLE public.app_user (
 ALTER TABLE public.app_user OWNER TO postgres_user;
 
 --
+-- Name: TABLE app_user; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.app_user IS 'Table for storing user account information.';
+
+
+--
+-- Name: COLUMN app_user.active; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user.active IS 'Account status flag (true = active, false = disabled/suspended)';
+
+
+--
+-- Name: COLUMN app_user.default_locale; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user.default_locale IS 'Default language/locale setting for the user';
+
+
+--
+-- Name: COLUMN app_user.email; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user.email IS 'Unique email address of the user';
+
+
+--
+-- Name: COLUMN app_user.password; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user.password IS 'Hashed password for user authentication';
+
+
+--
+-- Name: COLUMN app_user.salt; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user.salt IS 'Cryptographic salt used for password hashing';
+
+
+--
+-- Name: COLUMN app_user.username; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user.username IS 'Unique username for user authentication';
+
+
+--
+-- Name: COLUMN app_user.avatar_file_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user.avatar_file_id IS 'FK -> Ref table: file_manager (id). Reference to user avatar image file';
+
+
+--
+-- Name: COLUMN app_user.cover_file_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user.cover_file_id IS 'FK -> Ref table: file_manager (id). Reference to user cover image file';
+
+
+--
 -- Name: app_user_role; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -182,6 +502,20 @@ CREATE TABLE public.app_user_role (
 
 
 ALTER TABLE public.app_user_role OWNER TO postgres_user;
+
+--
+-- Name: COLUMN app_user_role.app_user; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user_role.app_user IS 'FK -> Ref table: app_user (id). User identifier';
+
+
+--
+-- Name: COLUMN app_user_role.app_role; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.app_user_role.app_role IS 'FK -> Ref table: app_role (id). Role identifier';
+
 
 --
 -- Name: audit_log; Type: TABLE; Schema: public; Owner: postgres_user
@@ -200,6 +534,62 @@ CREATE TABLE public.audit_log (
 
 
 ALTER TABLE public.audit_log OWNER TO postgres_user;
+
+--
+-- Name: TABLE audit_log; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.audit_log IS 'Table for storing system audit logs and tracking user activities.';
+
+
+--
+-- Name: COLUMN audit_log.action; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.audit_log.action IS 'Action performed (e.g., CREATE, UPDATE, DELETE)';
+
+
+--
+-- Name: COLUMN audit_log.details; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.audit_log.details IS 'Detailed description or payload of the audit log';
+
+
+--
+-- Name: COLUMN audit_log.entity_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.audit_log.entity_id IS 'Identifier of the entity affected';
+
+
+--
+-- Name: COLUMN audit_log.entity_name; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.audit_log.entity_name IS 'Name of the entity or domain object affected';
+
+
+--
+-- Name: COLUMN audit_log.ip_address; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.audit_log.ip_address IS 'IP address of the client that performed the action';
+
+
+--
+-- Name: COLUMN audit_log."timestamp"; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.audit_log."timestamp" IS 'Timestamp when the audit event occurred';
+
+
+--
+-- Name: COLUMN audit_log.username; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.audit_log.username IS 'Username of the user who performed the action';
+
 
 --
 -- Name: district; Type: TABLE; Schema: public; Owner: postgres_user
@@ -234,6 +624,27 @@ CREATE TABLE public.favorite_menu (
 ALTER TABLE public.favorite_menu OWNER TO postgres_user;
 
 --
+-- Name: TABLE favorite_menu; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.favorite_menu IS 'Table for storing user''s favorite menu items.';
+
+
+--
+-- Name: COLUMN favorite_menu.url; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.favorite_menu.url IS 'The menu item that is favorited';
+
+
+--
+-- Name: COLUMN favorite_menu.app_user; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.favorite_menu.app_user IS 'FK -> Ref table: app_user (id). The user who owns this token';
+
+
+--
 -- Name: file_manager; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -266,6 +677,125 @@ CREATE TABLE public.file_manager (
 ALTER TABLE public.file_manager OWNER TO postgres_user;
 
 --
+-- Name: TABLE file_manager; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.file_manager IS 'Table for storing uploaded files and metadata.';
+
+
+--
+-- Name: COLUMN file_manager.file_name; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.file_name IS 'Stored system file name on server or storage';
+
+
+--
+-- Name: COLUMN file_manager.file_path; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.file_path IS 'Storage path or directory where the file is stored';
+
+
+--
+-- Name: COLUMN file_manager.file_size; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.file_size IS 'File size in bytes';
+
+
+--
+-- Name: COLUMN file_manager.hidden; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.hidden IS 'Flag indicating if the file is hidden from standard view';
+
+
+--
+-- Name: COLUMN file_manager.locked; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.locked IS 'Flag indicating if the file is locked to prevent modification';
+
+
+--
+-- Name: COLUMN file_manager.original_file_name; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.original_file_name IS 'Original uploaded file name';
+
+
+--
+-- Name: COLUMN file_manager.readable; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.readable IS 'Flag indicating if the file has read permission';
+
+
+--
+-- Name: COLUMN file_manager.writeable; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.writeable IS 'Flag indicating if the file has write permission';
+
+
+--
+-- Name: COLUMN file_manager.file_mime_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.file_mime_id IS 'FK -> Ref table: file_mime (id). MIME type reference of the file';
+
+
+--
+-- Name: COLUMN file_manager.files_directory_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.files_directory_id IS 'FK -> Ref table: files_directory (id). Directory containing this file';
+
+
+--
+-- Name: COLUMN file_manager.owner; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.owner IS 'FK -> Ref table: app_user (id). The user who owns this file';
+
+
+--
+-- Name: COLUMN file_manager.description; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.description IS 'Detailed description or notes about the file';
+
+
+--
+-- Name: COLUMN file_manager.duration; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.duration IS 'Media duration in seconds (for audio/video files)';
+
+
+--
+-- Name: COLUMN file_manager.title; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.title IS 'Display title or custom label for the file';
+
+
+--
+-- Name: COLUMN file_manager.use_thumbnail; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.use_thumbnail IS 'Flag indicating whether a thumbnail is generated/used';
+
+
+--
+-- Name: COLUMN file_manager.thumbnail_file; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_manager.thumbnail_file IS 'FK -> Ref table: file_manager (id). Self-reference to thumbnail file';
+
+
+--
 -- Name: file_mime; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -276,6 +806,20 @@ CREATE TABLE public.file_mime (
 
 
 ALTER TABLE public.file_mime OWNER TO postgres_user;
+
+--
+-- Name: TABLE file_mime; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.file_mime IS 'Table for storing supported file MIME types.';
+
+
+--
+-- Name: COLUMN file_mime.name; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.file_mime.name IS 'MIME type identifier string (e.g., image/png, application/pdf)';
+
 
 --
 -- Name: files_directory; Type: TABLE; Schema: public; Owner: postgres_user
@@ -301,6 +845,62 @@ CREATE TABLE public.files_directory (
 ALTER TABLE public.files_directory OWNER TO postgres_user;
 
 --
+-- Name: TABLE files_directory; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.files_directory IS 'Table for storing file directory and folder hierarchy structure.';
+
+
+--
+-- Name: COLUMN files_directory.active; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.files_directory.active IS 'Flag indicating if the directory is active';
+
+
+--
+-- Name: COLUMN files_directory.name; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.files_directory.name IS 'Directory or folder name';
+
+
+--
+-- Name: COLUMN files_directory.files_directory_parent; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.files_directory.files_directory_parent IS 'FK -> Ref table: files_directory (id). Self-reference to parent directory';
+
+
+--
+-- Name: COLUMN files_directory.file_size; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.files_directory.file_size IS 'Total aggregated file size in bytes inside this directory';
+
+
+--
+-- Name: COLUMN files_directory.latest_updated; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.files_directory.latest_updated IS 'Timestamp of the latest update to this directory';
+
+
+--
+-- Name: COLUMN files_directory.owner; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.files_directory.owner IS 'FK -> Ref table: app_user (id). The user who owns this directory';
+
+
+--
+-- Name: COLUMN files_directory.file_count; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.files_directory.file_count IS 'Total count of files stored inside this directory';
+
+
+--
 -- Name: files_directory_path; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -314,6 +914,20 @@ CREATE TABLE public.files_directory_path (
 ALTER TABLE public.files_directory_path OWNER TO postgres_user;
 
 --
+-- Name: TABLE files_directory_path; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.files_directory_path IS 'Closure table for storing directory tree paths and hierarchy depth.';
+
+
+--
+-- Name: COLUMN files_directory_path.level; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.files_directory_path.level IS 'Hierarchy distance/depth between ancestor and descendant (0 = self, 1 = direct child, etc.)';
+
+
+--
 -- Name: identity_group; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
@@ -325,6 +939,13 @@ CREATE TABLE public.identity_group (
 
 
 ALTER TABLE public.identity_group OWNER TO postgres_user;
+
+--
+-- Name: TABLE identity_group; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.identity_group IS 'Table for storing identity groups.';
+
 
 --
 -- Name: identity_link; Type: TABLE; Schema: public; Owner: postgres_user
@@ -341,6 +962,27 @@ CREATE TABLE public.identity_link (
 
 
 ALTER TABLE public.identity_link OWNER TO postgres_user;
+
+--
+-- Name: TABLE identity_link; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.identity_link IS 'Table for linking user accounts to identity groups.';
+
+
+--
+-- Name: COLUMN identity_link.app_user; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.identity_link.app_user IS 'FK -> Ref table: app_user (id). The associated user account';
+
+
+--
+-- Name: COLUMN identity_link.identity_group; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.identity_link.identity_group IS 'FK -> Ref table: identity_group (id). The associated identity group';
+
 
 --
 -- Name: login_log; Type: TABLE; Schema: public; Owner: postgres_user
@@ -362,20 +1004,111 @@ CREATE TABLE public.login_log (
 ALTER TABLE public.login_log OWNER TO postgres_user;
 
 --
+-- Name: TABLE login_log; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.login_log IS 'Table for storing user login activity logs and device metadata.';
+
+
+--
+-- Name: COLUMN login_log.created_at; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.login_log.created_at IS 'Timestamp when the login event occurred';
+
+
+--
+-- Name: COLUMN login_log.device_id; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.login_log.device_id IS 'Unique hardware/app identifier of the login device';
+
+
+--
+-- Name: COLUMN login_log.host_name; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.login_log.host_name IS 'Resolved hostname from the client IP';
+
+
+--
+-- Name: COLUMN login_log.ip; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.login_log.ip IS 'Client IP address used during login';
+
+
+--
+-- Name: COLUMN login_log.login_from; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.login_log.login_from IS 'Login source/platform type (e.g., WEB, MOBILE)';
+
+
+--
+-- Name: COLUMN login_log.app_user; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.login_log.app_user IS 'FK -> Ref table: app_user (id). The user who performed the login';
+
+
+--
+-- Name: COLUMN login_log.user_agent; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.login_log.user_agent IS 'FK -> Ref table: user_agent (id). Browser/client user agent information';
+
+
+--
 -- Name: permission; Type: TABLE; Schema: public; Owner: postgres_user
 --
 
 CREATE TABLE public.permission (
     id bigint NOT NULL,
     code character varying(125) NOT NULL,
-    module character varying(255),
+    module character varying(100),
     description text,
-    operation_type character varying(255),
-    CONSTRAINT permission_operation_type_check CHECK (((operation_type)::text = ANY ((ARRAY['CRUD'::character varying, 'REPORT'::character varying, 'OTHER'::character varying, 'FEATURE'::character varying])::text[])))
+    operation_type character varying(50),
+    CONSTRAINT permission_operation_type_check CHECK (((operation_type)::text = ANY (ARRAY[('CRUD'::character varying)::text, ('REPORT'::character varying)::text, ('OTHER'::character varying)::text, ('FEATURE'::character varying)::text])))
 );
 
 
 ALTER TABLE public.permission OWNER TO postgres_user;
+
+--
+-- Name: TABLE permission; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON TABLE public.permission IS 'Table for storing system access permissions and operations.';
+
+
+--
+-- Name: COLUMN permission.code; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.permission.code IS 'Unique permission code (e.g., USER_READ, ROLE_MANAGE)';
+
+
+--
+-- Name: COLUMN permission.module; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.permission.module IS 'Module or domain group this permission belongs to';
+
+
+--
+-- Name: COLUMN permission.description; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.permission.description IS 'Detailed description of what this permission grants';
+
+
+--
+-- Name: COLUMN permission.operation_type; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.permission.operation_type IS 'Type of operation (e.g., CRUD, ACTION)';
+
 
 --
 -- Name: province; Type: TABLE; Schema: public; Owner: postgres_user
@@ -406,6 +1139,20 @@ CREATE TABLE public.role_permission (
 
 
 ALTER TABLE public.role_permission OWNER TO postgres_user;
+
+--
+-- Name: COLUMN role_permission.app_role; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.role_permission.app_role IS 'FK -> Ref table: app_role (id). Role identifier';
+
+
+--
+-- Name: COLUMN role_permission.permission; Type: COMMENT; Schema: public; Owner: postgres_user
+--
+
+COMMENT ON COLUMN public.role_permission.permission IS 'FK -> Ref table: permission (id). Permission identifier';
+
 
 --
 -- Name: sub_district; Type: TABLE; Schema: public; Owner: postgres_user
@@ -460,6 +1207,22 @@ ALTER TABLE public.user_agent OWNER TO postgres_user;
 --
 
 COPY public.access_token (id, created_date, expires_at, fcm_enable, fcm_token, lastest_active, logouted_date, revoked, service, token, api_client, app_user, login_log) FROM stdin;
+\.
+
+
+--
+-- Data for Name: ai_chat; Type: TABLE DATA; Schema: public; Owner: postgres_user
+--
+
+COPY public.ai_chat (id, created_date, updated_date, title, created_user, updated_user, pin) FROM stdin;
+\.
+
+
+--
+-- Data for Name: ai_chat_messages; Type: TABLE DATA; Schema: public; Owner: postgres_user
+--
+
+COPY public.ai_chat_messages (id, role, content, created_date, ai_chat) FROM stdin;
 \.
 
 
@@ -560,6 +1323,7 @@ COPY public.favorite_menu (id, url, app_user) FROM stdin;
 --
 
 COPY public.file_manager (id, deleted, created_date, created_user, file_name, file_path, file_size, hidden, locked, original_file_name, readable, writeable, file_mime_id, files_directory_id, owner, description, duration, title, use_thumbnail, thumbnail_file, updated_date, updated_user) FROM stdin;
+477715963752484864	f	2026-08-11 12:52:41.292382	350885844724224000	\N	files/202608/1786427560934_345444391306924032.md	5740	f	f	9999_66201010001.md	t	t	477374803011964928	\N	350885844724224000	\N	0	\N	f	\N	2026-08-11 12:52:41.292382	350885844724224000
 \.
 
 
@@ -571,6 +1335,7 @@ COPY public.file_mime (id, name) FROM stdin;
 474234311600508928	image/jpeg
 477374803011964928	text/markdown
 477657177876598784	video/mp4
+477749132849582080	application/pdf
 \.
 
 
@@ -740,6 +1505,22 @@ COPY public.user_agent (id, agent) FROM stdin;
 
 ALTER TABLE ONLY public.access_token
     ADD CONSTRAINT access_token_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_chat_messages ai_chat_messages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.ai_chat_messages
+    ADD CONSTRAINT ai_chat_messages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_chat ai_chat_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.ai_chat
+    ADD CONSTRAINT ai_chat_pkey PRIMARY KEY (id);
 
 
 --
@@ -980,6 +1761,13 @@ ALTER TABLE ONLY public.identity_link
 
 ALTER TABLE ONLY public.user_agent
     ADD CONSTRAINT user_agent_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx1cta4hbkdlh0j3f3f4k7efof7; Type: INDEX; Schema: public; Owner: postgres_user
+--
+
+CREATE INDEX idx1cta4hbkdlh0j3f3f4k7efof7 ON public.ai_chat USING btree (created_user);
 
 
 --
@@ -1328,6 +2116,14 @@ ALTER TABLE ONLY public.identity_link
 
 
 --
+-- Name: ai_chat_messages fkq44i5ff388kmb1vw34hbdmfmv; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
+--
+
+ALTER TABLE ONLY public.ai_chat_messages
+    ADD CONSTRAINT fkq44i5ff388kmb1vw34hbdmfmv FOREIGN KEY (ai_chat) REFERENCES public.ai_chat(id);
+
+
+--
 -- Name: system_activity_logs fkq4jtoesk8ed9fe9ivyrmet71c; Type: FK CONSTRAINT; Schema: public; Owner: postgres_user
 --
 
@@ -1360,8 +2156,211 @@ ALTER TABLE ONLY public.favorite_menu
 
 
 --
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
+--
+
+GRANT USAGE ON SCHEMA public TO ai_readonly_user;
+
+
+--
+-- Name: TABLE access_token; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.access_token TO ai_readonly_user;
+
+
+--
+-- Name: TABLE ai_chat; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.ai_chat TO ai_readonly_user;
+
+
+--
+-- Name: TABLE ai_chat_messages; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.ai_chat_messages TO ai_readonly_user;
+
+
+--
+-- Name: TABLE ai_document_meta; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.ai_document_meta TO ai_readonly_user;
+
+
+--
+-- Name: TABLE ai_document_metadata; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.ai_document_metadata TO ai_readonly_user;
+
+
+--
+-- Name: TABLE ai_document_vector_ids; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.ai_document_vector_ids TO ai_readonly_user;
+
+
+--
+-- Name: TABLE api_client; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.api_client TO ai_readonly_user;
+
+
+--
+-- Name: TABLE api_client_ip; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.api_client_ip TO ai_readonly_user;
+
+
+--
+-- Name: TABLE app_role; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.app_role TO ai_readonly_user;
+
+
+--
+-- Name: TABLE app_user; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.app_user TO ai_readonly_user;
+
+
+--
+-- Name: TABLE app_user_role; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.app_user_role TO ai_readonly_user;
+
+
+--
+-- Name: TABLE audit_log; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.audit_log TO ai_readonly_user;
+
+
+--
+-- Name: TABLE district; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.district TO ai_readonly_user;
+
+
+--
+-- Name: TABLE favorite_menu; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.favorite_menu TO ai_readonly_user;
+
+
+--
+-- Name: TABLE file_manager; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.file_manager TO ai_readonly_user;
+
+
+--
+-- Name: TABLE file_mime; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.file_mime TO ai_readonly_user;
+
+
+--
+-- Name: TABLE files_directory; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.files_directory TO ai_readonly_user;
+
+
+--
+-- Name: TABLE files_directory_path; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.files_directory_path TO ai_readonly_user;
+
+
+--
+-- Name: TABLE identity_group; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.identity_group TO ai_readonly_user;
+
+
+--
+-- Name: TABLE identity_link; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.identity_link TO ai_readonly_user;
+
+
+--
+-- Name: TABLE login_log; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.login_log TO ai_readonly_user;
+
+
+--
+-- Name: TABLE permission; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.permission TO ai_readonly_user;
+
+
+--
+-- Name: TABLE province; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.province TO ai_readonly_user;
+
+
+--
+-- Name: TABLE role_permission; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.role_permission TO ai_readonly_user;
+
+
+--
+-- Name: TABLE sub_district; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.sub_district TO ai_readonly_user;
+
+
+--
+-- Name: TABLE system_activity_logs; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.system_activity_logs TO ai_readonly_user;
+
+
+--
+-- Name: TABLE user_agent; Type: ACL; Schema: public; Owner: postgres_user
+--
+
+GRANT SELECT ON TABLE public.user_agent TO ai_readonly_user;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: postgres_user
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres_user IN SCHEMA public GRANT SELECT ON TABLES TO ai_readonly_user;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict wDv0ZinNqaOHnwCzYDOGdc6aUsfMAwxaTuODcZFLsckQsJ0L4nB4dZqwbrMIdHe
+\unrestrict gp1bnKNuFJapN5U6BMuGQhEe92siD1hz7dyf2a2F4hSZKdIh7BxRyroVv6zR6UZ
 
