@@ -131,6 +131,7 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService {
         }
     }
 
+/*
     private AiDocumentMeta buildMeta(String fileName, List<String> vectorIds, Map<String, String> metaData, FileMime fileMime) {
 
         // Remove metadata keys that are not needed in the database
@@ -145,6 +146,20 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService {
         meta.setMetadata(metaData);
         return meta;
     }
+*/
+    private AiDocumentMeta buildMeta(String fileName, List<String> vectorIds, Map<String, String> metaData, FileMime fileMime) {
+        Map<String, String> dbMetadata = new HashMap<>(metaData);
+        dbMetadata.remove("documentType");
+        dbMetadata.remove("fileName");
+    
+        AiDocumentMeta meta = new AiDocumentMeta();
+        meta.setFileName(fileName);
+        meta.setActive(true);
+        meta.setVectorIds(vectorIds);
+        meta.setFileMime(fileMime);
+        meta.setMetadata(dbMetadata);
+    return meta;
+}
 
     private void safeRollbackVectors(List<String> vectorIds) {
         try {
