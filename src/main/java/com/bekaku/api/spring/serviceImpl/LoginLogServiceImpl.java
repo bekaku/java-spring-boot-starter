@@ -15,9 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-@Transactional
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LoginLogServiceImpl implements LoginLogService {
 
     private final LoginLogRepository loginLogRepository;
@@ -52,11 +52,13 @@ public class LoginLogServiceImpl implements LoginLogService {
         return loginLogRepository.findAll();
     }
 
+    @Transactional
     @Override
     public LoginLog save(LoginLog loginLog) {
         return loginLogRepository.save(loginLog);
     }
 
+    @Transactional
     @Override
     public LoginLog update(LoginLog loginLog) {
         return loginLogRepository.save(loginLog);
@@ -67,11 +69,13 @@ public class LoginLogServiceImpl implements LoginLogService {
         return loginLogRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(LoginLog loginLog) {
         loginLogRepository.delete(loginLog);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         loginLogRepository.deleteById(id);

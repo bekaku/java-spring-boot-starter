@@ -18,14 +18,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FilesDirectoryPathServiceImpl implements FilesDirectoryPathService {
     private final FilesDirectoryPathRepository filesDirectoryPathRepository;
     private final FilesDirectoryPathMapper modelMapper;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<FilesDirectoryPathDto> findAllWithPaging(Pageable pageable) {
         Page<FilesDirectoryPath> result = filesDirectoryPathRepository.findAll(pageable);
@@ -60,33 +59,35 @@ public class FilesDirectoryPathServiceImpl implements FilesDirectoryPathService 
                 .collect(Collectors.toList())
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
-    @Transactional(readOnly = true)
     @Override
     public List<FilesDirectoryPath> findAll() {
         return filesDirectoryPathRepository.findAll();
     }
 
 
+    @Transactional
     public FilesDirectoryPath save(FilesDirectoryPath filesDirectoryPath) {
         return filesDirectoryPathRepository.save(filesDirectoryPath);
     }
 
+    @Transactional
     @Override
     public FilesDirectoryPath update(FilesDirectoryPath filesDirectoryPath) {
         return filesDirectoryPathRepository.save(filesDirectoryPath);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<FilesDirectoryPath> findById(Long id) {
         return filesDirectoryPathRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(FilesDirectoryPath filesDirectoryPath) {
         filesDirectoryPathRepository.delete(filesDirectoryPath);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         filesDirectoryPathRepository.deleteById(id);
@@ -102,17 +103,18 @@ public class FilesDirectoryPathServiceImpl implements FilesDirectoryPathService 
         return modelMapper.toEntity(filesDirectoryPathDto);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<FilesDirectoryPath> findAllByFolderId(Long folderId) {
         return filesDirectoryPathRepository.findAllByFolderId(folderId);
     }
 
+    @Transactional
     @Override
     public void deleteByFolderId(Long folderId) {
         filesDirectoryPathRepository.deleteByFolderId(folderId);
     }
 
+    @Transactional
     @Override
     public void deleteByParentFolderId(Long parentFolderId) {
         filesDirectoryPathRepository.deleteByParentFolderId(parentFolderId);

@@ -20,39 +20,34 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class AiChatServiceImpl implements AiChatService {
     private final AiChatRepository aiChatRepository;
     private final AiChatMapper modelMapper;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AiChatDto> findAllWithPaging(Pageable pageable) {
         Page<AiChat> result = aiChatRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AiChatDto> findAllWithSearch(SearchSpecification<AiChat> specification, Pageable pageable) {
         return getListFromResult(findAllPageSearchSpecificationBy(specification, pageable));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AiChatDto> findAllBy(Specification<AiChat> specification, Pageable pageable) {
         return getListFromResult(findAllPageSpecificationBy(specification, pageable));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<AiChat> findAllPageSpecificationBy(Specification<AiChat> specification, Pageable pageable) {
         return aiChatRepository.findAll(specification, pageable);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<AiChat> findAllPageSearchSpecificationBy(SearchSpecification<AiChat> specification, Pageable pageable) {
         return aiChatRepository.findAll(specification, pageable);
@@ -65,33 +60,35 @@ public class AiChatServiceImpl implements AiChatService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<AiChat> findAll() {
         return aiChatRepository.findAll();
     }
 
 
+    @Transactional
     public AiChat save(AiChat aiChat) {
         return aiChatRepository.save(aiChat);
     }
 
+    @Transactional
     @Override
     public AiChat update(AiChat aiChat) {
         return aiChatRepository.save(aiChat);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AiChat> findById(Long id) {
         return aiChatRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(AiChat aiChat) {
         aiChatRepository.delete(aiChat);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         aiChatRepository.deleteById(id);
@@ -107,6 +104,7 @@ public class AiChatServiceImpl implements AiChatService {
         return modelMapper.toEntity(aiChatDto);
     }
 
+    @Transactional
     @Override
     public void updateLatestUpdateDate(Long chatId, LocalDateTime updatedDate) {
         aiChatRepository.updateLatestUpdateDate(chatId, updatedDate);

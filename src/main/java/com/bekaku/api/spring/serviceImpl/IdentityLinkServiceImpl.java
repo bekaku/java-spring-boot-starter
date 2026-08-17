@@ -22,40 +22,35 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class IdentityLinkServiceImpl extends BaseResponseException implements IdentityLinkService {
     private final IdentityLinkRepository identityLinkRepository;
     private final IdentityGroupRepository identityGroupRepository;
     private final AppUserService appUserService;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<IdentityLink> findAllWithPaging(Pageable pageable) {
         Page<IdentityLink> result = identityLinkRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<IdentityLink> findAllWithSearch(SearchSpecification<IdentityLink> specification, Pageable pageable) {
         return getListFromResult(findAllPageSearchSpecificationBy(specification, pageable));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<IdentityLink> findAllBy(Specification<IdentityLink> specification, Pageable pageable) {
         return getListFromResult(findAllPageSpecificationBy(specification, pageable));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<IdentityLink> findAllPageSpecificationBy(Specification<IdentityLink> specification, Pageable pageable) {
         return identityLinkRepository.findAll(specification, pageable);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<IdentityLink> findAllPageSearchSpecificationBy(SearchSpecification<IdentityLink> specification, Pageable pageable) {
         return identityLinkRepository.findAll(specification, pageable);
@@ -66,33 +61,34 @@ public class IdentityLinkServiceImpl extends BaseResponseException implements Id
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<IdentityLink> findAll() {
         return identityLinkRepository.findAll();
     }
 
-
+    @Transactional
     public IdentityLink save(IdentityLink identityLink) {
         return identityLinkRepository.save(identityLink);
     }
 
+    @Transactional
     @Override
     public IdentityLink update(IdentityLink identityLink) {
         return identityLinkRepository.save(identityLink);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<IdentityLink> findById(Long id) {
         return identityLinkRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(IdentityLink identityLink) {
         identityLinkRepository.delete(identityLink);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         identityLinkRepository.deleteById(id);
@@ -159,7 +155,6 @@ public class IdentityLinkServiceImpl extends BaseResponseException implements Id
         identityLinkRepository.save(newTargetLink);
     }
 
-    @Transactional(readOnly = true)
     public void validateSwitchAccount(Long currentUserId, Long targetUserId) {
         if (currentUserId.equals(targetUserId)) return;
 
@@ -182,7 +177,6 @@ public class IdentityLinkServiceImpl extends BaseResponseException implements Id
         identityLinkRepository.deleteByAppUserId(targetUserId);
     }
 
-    @Transactional(readOnly = true)
     public List<AppUserDto> getLinkedAccounts(AppUser currentUser) {
         Optional<IdentityLink> currentLinkOpt = identityLinkRepository.findByAppUserId(currentUser.getId());
         if (currentLinkOpt.isEmpty()) {

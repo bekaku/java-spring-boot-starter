@@ -22,14 +22,9 @@ public class ControllerUtil {
 
     public static <T> SearchSpecification<T> buildSpecification(HttpServletRequest request, List<String> keywordColumns) {
 
-        // 1. ดึง Filter ปรกติ (_q)
-        log.info("_q: {}", request.getParameter(ConstantData.SEARCH_PARAMETER_ATT));
+//        log.info("_q: {}", request.getParameter(ConstantData.SEARCH_PARAMETER_ATT));
         List<SearchCriteria> criteria = getSearchCriteriaList(request);
-
-        // 2. ดึง Global Keyword (_keyword)
         String keyword = request.getParameter(ConstantData.KEYWORD_PARAMETER_ATT);
-
-        // 3. คืนค่าเป็น Specification ที่พร้อมใช้งาน
         return new SearchSpecification<>(criteria, keyword, keywordColumns);
     }
 

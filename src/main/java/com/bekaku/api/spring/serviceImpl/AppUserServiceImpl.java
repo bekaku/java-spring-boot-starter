@@ -21,7 +21,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.node.StringNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +32,7 @@ import java.util.stream.Collectors;
 import static com.bekaku.api.spring.util.ConstantData.ASYNC_TASK_NAME;
 
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 @Service
 public class AppUserServiceImpl extends BaseResponseException implements AppUserService {
     private final AppUserRepository appUserRepository;
@@ -42,21 +41,18 @@ public class AppUserServiceImpl extends BaseResponseException implements AppUser
     private final UserMapper modelMapper;
     private final I18n i18n;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AppUserDto> findAllWithPaging(Pageable pageable) {
         Page<AppUser> result = appUserRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AppUserDto> findAllWithSearch(SearchSpecification<AppUser> specification, Pageable pageable) {
         Page<AppUser> result = appUserRepository.findAll(specification, pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AppUserDto> findAllBy(Specification<AppUser> specification, Pageable pageable) {
         return null;
@@ -77,33 +73,36 @@ public class AppUserServiceImpl extends BaseResponseException implements AppUser
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<AppUser> findAll() {
         return appUserRepository.findAll();
     }
 
+
+    @Transactional
     @Override
     public AppUser save(AppUser appUser) {
         return appUserRepository.save(appUser);
     }
 
+    @Transactional
     @Override
     public AppUser update(AppUser appUser) {
         return appUserRepository.save(appUser);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppUser> findById(Long id) {
         return appUserRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(AppUser appUser) {
         appUserRepository.delete(appUser);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         appUserRepository.deleteById(id);
@@ -138,7 +137,6 @@ public class AppUserServiceImpl extends BaseResponseException implements AppUser
         return modelMapper.toEntity(userData);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppUser> findByUUID(String salt) {
         return appUserRepository.findBySalt(salt);
@@ -149,19 +147,16 @@ public class AppUserServiceImpl extends BaseResponseException implements AppUser
         appUserRepository.updatePasswordBy(appUser, password);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppUser> findByEmail(String email) {
         return appUserRepository.findByEmail(email);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppUser> findByUsername(String username) {
         return appUserRepository.findByUsername(username);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppUser> findActiveByEmailOrUserName(String email) {
         Optional<AppUser> user = appUserRepository.findByEmailOrUsername(email);
@@ -175,25 +170,21 @@ public class AppUserServiceImpl extends BaseResponseException implements AppUser
     }
 
     //mapper
-    @Transactional(readOnly = true)
     @Override
     public List<AppUserDto> findAllUserData(Paging page) {
         return appUserMybatis.findAll(page);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppUserDto> findUserDataById(Long id) {
         return appUserMybatis.findById(id);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppUserDto> findUserDataByUsername(String username) {
         return appUserMybatis.findByUsername(username);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppUserDto> findUserDataByEmail(String email) {
         return appUserMybatis.findByEmail(email);

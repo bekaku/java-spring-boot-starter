@@ -34,6 +34,7 @@ import java.util.UUID;
 
 
 @Slf4j
+@Transactional(readOnly = true)
 @Service
 public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionService {
 
@@ -69,6 +70,7 @@ public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionServic
         return ingest(filePath, fileManager.getOriginalFileName(), fileManager.getFileMime());
     }
 
+    @Transactional
     @Override
     public AiDocumentMeta ingest(String mergedFilePath, String originalFileName, FileMime fileMime) {
         Path filePath = Path.of(mergedFilePath);
@@ -184,6 +186,7 @@ public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionServic
         return meta;
     }
 
+    @Transactional
     private void safeRollbackVectors(List<String> vectorIds) {
         try {
             documentVectorStore.delete(vectorIds);
@@ -214,6 +217,7 @@ public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionServic
         }
     }
 
+    @Transactional
     @Override
     public void deleteDocument(AiDocumentMeta doc) {
         if (doc.getVectorIds() != null && !doc.getVectorIds().isEmpty()) {

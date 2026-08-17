@@ -7,6 +7,7 @@ import com.bekaku.api.spring.model.AiChatMessage;
 import com.bekaku.api.spring.repository.AiChatMessageRepository;
 import com.bekaku.api.spring.service.AiChatMessageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import com.bekaku.api.spring.specification.SearchSpecification;
@@ -15,47 +16,45 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class AiChatMessageServiceImpl implements AiChatMessageService {
     private final AiChatMessageRepository aiChatMessageRepository;
     private final AiChatMessageMapper modelMapper;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AiChatMessageDto> findAllWithPaging(Pageable pageable) {
         Page<AiChatMessage> result = aiChatMessageRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AiChatMessageDto> findAllWithSearch(SearchSpecification<AiChatMessage> specification, Pageable pageable) {
         return getListFromResult(findAllPageSearchSpecificationBy(specification, pageable));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AiChatMessageDto> findAllBy(Specification<AiChatMessage> specification, Pageable pageable) {
         return getListFromResult(findAllPageSpecificationBy(specification, pageable));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<AiChatMessage> findAllPageSpecificationBy(Specification<AiChatMessage> specification, Pageable pageable) {
         return aiChatMessageRepository.findAll(specification, pageable);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<AiChatMessage> findAllPageSearchSpecificationBy(SearchSpecification<AiChatMessage> specification, Pageable pageable) {
         return aiChatMessageRepository.findAll(specification, pageable);
     }
+
     private ResponseListDto<AiChatMessageDto> getListFromResult(Page<AiChatMessage> result) {
         return new ResponseListDto<>(result.getContent()
                 .stream()
@@ -64,33 +63,35 @@ public class AiChatMessageServiceImpl implements AiChatMessageService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<AiChatMessage> findAll() {
         return aiChatMessageRepository.findAll();
     }
 
 
+    @Transactional
     public AiChatMessage save(AiChatMessage aiChatMessage) {
         return aiChatMessageRepository.save(aiChatMessage);
     }
 
+    @Transactional
     @Override
     public AiChatMessage update(AiChatMessage aiChatMessage) {
         return aiChatMessageRepository.save(aiChatMessage);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AiChatMessage> findById(Long id) {
         return aiChatMessageRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(AiChatMessage aiChatMessage) {
         aiChatMessageRepository.delete(aiChatMessage);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         aiChatMessageRepository.deleteById(id);
@@ -106,4 +107,19 @@ public class AiChatMessageServiceImpl implements AiChatMessageService {
         return modelMapper.toEntity(aiChatMessageDto);
     }
 
+    @Override
+    public List<AiChatMessage> findLastNMessagesByChatId(Long chatId, int limit) {
+        List<AiChatMessage> latestMessages = findByAiChatIdOrderByCreatedDateDesc(
+                chatId,
+                PageRequest.of(0, limit)
+        );
+        List<AiChatMessage> modifiableList = new ArrayList<>(latestMessages);
+        Collections.reverse(modifiableList);
+        return modifiableList;
+    }
+
+    @Override
+    public List<AiChatMessage> findByAiChatIdOrderByCreatedDateDesc(Long chatId, Pageable pageable) {
+        return aiChatMessageRepository.findByAiChatIdOrderByCreatedDateDesc(chatId, pageable);
+    }
 }

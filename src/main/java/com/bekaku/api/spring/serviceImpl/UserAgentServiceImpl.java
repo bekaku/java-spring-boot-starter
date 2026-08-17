@@ -1,10 +1,10 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.UserAgent;
 import com.bekaku.api.spring.repository.UserAgentRepository;
 import com.bekaku.api.spring.service.UserAgentService;
+import com.bekaku.api.spring.specification.SearchSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,14 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class UserAgentServiceImpl implements UserAgentService {
 
     private final UserAgentRepository userAgentRepository;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<UserAgent> findAllWithPaging(Pageable pageable) {
         return null;
@@ -48,34 +47,36 @@ public class UserAgentServiceImpl implements UserAgentService {
         return null;
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<UserAgent> findAll() {
         return userAgentRepository.findAll();
     }
 
     @Override
+    @Transactional
     public UserAgent save(UserAgent userAgent) {
         return userAgentRepository.save(userAgent);
     }
 
     @Override
+    @Transactional
     public UserAgent update(UserAgent userAgent) {
         return userAgentRepository.save(userAgent);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<UserAgent> findById(Long id) {
         return userAgentRepository.findById(id);
     }
 
     @Override
+    @Transactional
     public void delete(UserAgent userAgent) {
         userAgentRepository.delete(userAgent);
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
         userAgentRepository.deleteById(id);
     }
@@ -90,7 +91,6 @@ public class UserAgentServiceImpl implements UserAgentService {
         return null;
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<UserAgent> findByAgent(String name) {
         return userAgentRepository.findByAgent(name);

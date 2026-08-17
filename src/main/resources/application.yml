@@ -24,7 +24,7 @@ spring:
   transaction:
     default-timeout: 30
   jpa:
-    #    open-in-view: false
+#    open-in-view: false
     properties:
       hibernate:
         order_inserts: true
@@ -443,6 +443,10 @@ app:
     min-chunk-length-to-embed: 5
     max-num-chunks: 10000
     delete-source-after-ingest: true
+    memory-size: 10
+    database-tools:
+      enabled: false
+
   cron:
     enable: false
     test-expression: 0 */2 * * * * #every 2 minutes

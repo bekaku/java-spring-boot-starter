@@ -1,7 +1,7 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.dto.AppRoleDto;
+import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.mapper.RoleMapper;
 import com.bekaku.api.spring.model.AppRole;
 import com.bekaku.api.spring.repository.AppRoleRepository;
@@ -18,28 +18,25 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class AppRoleServiceImpl implements AppRoleService {
     private final AppRoleRepository appRoleRepository;
     private final RoleMapper modelMapper;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AppRoleDto> findAllWithPaging(Pageable pageable) {
         Page<AppRole> result = appRoleRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AppRoleDto> findAllWithSearch(SearchSpecification<AppRole> specification, Pageable pageable) {
         Page<AppRole> result = appRoleRepository.findAll(specification, pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AppRoleDto> findAllBy(Specification<AppRole> specification, Pageable pageable) {
         return null;
@@ -63,33 +60,35 @@ public class AppRoleServiceImpl implements AppRoleService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<AppRole> findAll() {
         return appRoleRepository.findAll();
     }
 
+    @Transactional
     @Override
     public AppRole save(AppRole appRole) {
         return appRoleRepository.save(appRole);
     }
 
+    @Transactional
     @Override
     public AppRole update(AppRole appRole) {
         return appRoleRepository.save(appRole);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppRole> findById(Long id) {
         return appRoleRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(AppRole appRole) {
         appRoleRepository.delete(appRole);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         appRoleRepository.deleteById(id);
@@ -105,14 +104,12 @@ public class AppRoleServiceImpl implements AppRoleService {
         return modelMapper.toEntity(appRoleDto);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AppRole> findByName(String name) {
         return appRoleRepository.findByName(name);
     }
 
 
-    @Transactional(readOnly = true)
     @Override
     public List<AppRole> findAllByOrderByNameAsc() {
         return appRoleRepository.findAllByOrderByNameAsc();

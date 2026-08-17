@@ -13,7 +13,6 @@ import com.bekaku.api.spring.repository.FileManagerRepository;
 import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
-import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.FileUtil;
 import com.bekaku.api.spring.vo.Paging;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +34,8 @@ import java.util.stream.Collectors;
 
 
 @Slf4j
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FileManagerServiceImpl implements FileManagerService {
     private final FileManagerRepository fileManagerRepository;
@@ -45,21 +44,18 @@ public class FileManagerServiceImpl implements FileManagerService {
     private final AppProperties appProperties;
     private final String DIRECTORY_MIME = "directory";
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<FileManagerDto> findAllWithPaging(Pageable pageable) {
         Page<FileManager> result = fileManagerRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<FileManagerDto> findAllWithSearch(SearchSpecification<FileManager> specification, Pageable pageable) {
         Page<FileManager> result = fileManagerRepository.findAll(specification, pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<FileManagerDto> findAllBy(Specification<FileManager> specification, Pageable pageable) {
         return null;
@@ -83,33 +79,35 @@ public class FileManagerServiceImpl implements FileManagerService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<FileManager> findAll() {
         return fileManagerRepository.findAll();
     }
 
+    @Transactional
     public FileManager save(FileManager fileManager) {
         return fileManagerRepository.save(fileManager);
     }
 
+    @Transactional
     @Override
     public FileManager update(FileManager fileManager) {
         return fileManagerRepository.save(fileManager);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<FileManager> findById(Long id) {
         return fileManagerRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(FileManager fileManager) {
         deleteFileFromPath(fileManager);
         fileManagerRepository.delete(fileManager);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         fileManagerRepository.deleteById(id);
@@ -160,13 +158,11 @@ public class FileManagerServiceImpl implements FileManagerService {
         return modelMapper.toEntity(fileManagerDto);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<FileManagerDto> findForPublicById(Long id) {
         return fileManagerMybatis.findForPublicById(id).map(this::setVoToDto);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<ImageDto> findImageDtoBy(Long id) {
         return fileManagerMybatis.findForPublicById(id)
@@ -295,7 +291,6 @@ public class FileManagerServiceImpl implements FileManagerService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<FileManager> findAllByFilesDirectory(FilesDirectory filesDirectory) {
         return fileManagerRepository.findAllByFilesDirectory(filesDirectory);
@@ -317,12 +312,14 @@ public class FileManagerServiceImpl implements FileManagerService {
 //        }
     }
 
+    @Transactional
     @Override
     public void deleteFileBy(FileManager fileManager) {
         deleteFileFromPath(fileManager);
         fileManagerRepository.delete(fileManager);
     }
 
+    @Transactional
     @Override
     public void deleteFileBy(FileManager fileManager, boolean permanentDelete) {
         deleteFileFromPath(fileManager);
@@ -340,7 +337,7 @@ public class FileManagerServiceImpl implements FileManagerService {
     // * = Every month
     // ? = No day of the week specified (always used with dates marked with an asterisk in Spring)
     @Override
-    @Scheduled(cron = "${app.cron.test-expression}")
+//    @Scheduled(cron = "${app.cron.test-expression}")
     @Transactional
     public void cleanupOldFiles() {
         if (appProperties.cron().cleanOldFile()) {

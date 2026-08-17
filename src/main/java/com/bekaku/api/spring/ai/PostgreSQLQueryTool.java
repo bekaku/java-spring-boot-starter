@@ -4,13 +4,16 @@ package com.bekaku.api.spring.ai;
 import com.bekaku.api.spring.dto.ChatSourceReference;
 import com.bekaku.api.spring.dto.DatabaseQueryResult;
 import com.bekaku.api.spring.enumtype.AiChatSourceType;
+import com.bekaku.api.spring.properties.AppProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,13 +23,16 @@ public class PostgreSQLQueryTool {
 
     private final JdbcTemplate jdbcTemplate;
     private final DatabaseQueryValidator queryValidator;
+    private final AppProperties appProperties;
 
     public PostgreSQLQueryTool(
             JdbcTemplate jdbcTemplate,
-            DatabaseQueryValidator queryValidator
+            DatabaseQueryValidator queryValidator,
+            AppProperties appProperties
     ) {
         this.jdbcTemplate = jdbcTemplate;
         this.queryValidator = queryValidator;
+        this.appProperties =appProperties;
     }
 
     @Tool(description = """
@@ -40,6 +46,7 @@ public class PostgreSQLQueryTool {
             - The returned rows are the actual database results.
             - Never invent or estimate database results.
             """)
+    @Transactional(readOnly = true)
     public DatabaseQueryResult executeSelect(
             @ToolParam(
                     description = """
@@ -50,10 +57,12 @@ public class PostgreSQLQueryTool {
                             """
             )
             String sql,
-
             ToolContext toolContext
     ) {
 
+        if (!appProperties.rag().databaseTools().enabled()) {
+            return DatabaseQueryResult.empty();
+        }
         log.info("AI called executeSelect: {}", sql);
 
         // 1. Validate SQL

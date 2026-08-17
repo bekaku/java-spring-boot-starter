@@ -9,7 +9,6 @@ import com.bekaku.api.spring.mybatis.PermissionMybatis;
 import com.bekaku.api.spring.repository.PermissionRepository;
 import com.bekaku.api.spring.repository.PermissionRepositoryCustom;
 import com.bekaku.api.spring.service.PermissionService;
-import com.bekaku.api.spring.specification.DynamicFilterSpec;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.vo.Paging;
@@ -27,9 +26,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PermissionServiceImpl implements PermissionService {
 
     @PersistenceContext
@@ -45,14 +44,12 @@ public class PermissionServiceImpl implements PermissionService {
     private static final String I18N_PREFIX = "permission.";
 
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<PermissionDto> findAllWithPaging(Pageable pageable) {
         Page<Permission> result = permissionRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<PermissionDto> findAllWithSearch(SearchSpecification<Permission> specification, Pageable pageable) {
         Page<Permission> result = permissionRepository.findAll(specification, pageable);
@@ -82,35 +79,37 @@ public class PermissionServiceImpl implements PermissionService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<Permission> findAll() {
         return permissionRepository.findAll();
     }
 
+    @Transactional
     @Override
     public Permission save(Permission permission) {
         return permissionRepository.save(permission);
 //        return permissionRepository.saveWithLogging(permission);
     }
 
+    @Transactional
     @Override
     public Permission update(Permission permission) {
         return permissionRepository.save(permission);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<Permission> findById(Long id) {
         return permissionRepository.findById(id);
     }
 
     @Override
+    @Transactional
     public void delete(Permission permission) {
         permissionRepository.delete(permission);
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
         permissionRepository.deleteById(id);
     }
@@ -140,64 +139,56 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     //My Batis
-    @Transactional(readOnly = true)
     @Override
     public List<Permission> findAllViaMapper(Paging page) {
         return permissionMybatis.findAllWithPaging(page);
     }
 
 
-    @Transactional(readOnly = true)
     @Override
     public boolean isHasPermission(long userId, String permissionCode) {
         List<String> permissionList = permissionRepository.findPermissionsByUserIdAndPermissionCode(userId, permissionCode);
         return !permissionList.isEmpty();
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<String> findAllPermissionCodeByUserId(Long userId) {
         return permissionRepository.findAllPermissionCodeByUserId(userId);
     }
 
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<Permission> findByCode(String code) {
         return permissionRepository.findByCode(code);
     }
 
+    @Transactional
     @Override
     public void saveAll(List<Permission> permissionList) {
         permissionRepository.saveAll(permissionList);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<Permission> findAllWithSearchSpecification(SearchSpecification<Permission> specification, Pageable pageable) {
         return permissionRepository.findAll(specification, pageable);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<Long> findAllPermissionIdByRoleId(Long roleId) {
         return permissionRepository.findAllPermissionIdByRoleId(roleId);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<PermissionDto> findAllBy(Sort sort) {
         List<Permission> list = permissionRepository.findAllBy(sort);
         return list.stream().map(this::convertEntityToDto).collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Object[] findCustomById(Long id) {
         return permissionRepositoryCustom.findById(id);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<Object[]> findAllCustom() {
         return permissionRepositoryCustom.findAll();

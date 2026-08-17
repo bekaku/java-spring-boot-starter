@@ -1,6 +1,5 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.AccessTokenDto;
 import com.bekaku.api.spring.dto.AppUserDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
@@ -26,7 +25,6 @@ import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.util.HashUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,16 +33,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class AccessTokenServiceImpl implements AccessTokenService {
 
@@ -87,7 +83,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    
     public Optional<AccessToken> findByToken(String token) {
         return accessTokenRepository.findByToken(HashUtil.sha256(token));
     }
@@ -105,13 +101,13 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return Optional.empty();
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public Optional<AccessToken> findAccessTokenByTokenAndUser(AppUser appUser, String token) {
         return accessTokenRepository.findAccessTokenByTokenAndUser(appUser, HashUtil.sha256(token));
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public Optional<AccessToken> findAccessTokenByToken(String token, boolean revoked) {
         return accessTokenRepository.findAccessTokenByToken(HashUtil.sha256(token), revoked);
@@ -133,7 +129,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return save(accessToken);
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked) {
         List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, AccessTokenServiceType.LOGIN, revoked);
@@ -142,7 +138,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked, Pageable pageable) {
         List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, AccessTokenServiceType.LOGIN, revoked, pageable);
@@ -169,7 +165,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 DateUtil.datetimeDiffMinutes(accessToken.getLastestActive(), DateUtil.getLocalDateTimeNow()) <= ConstantData.ONLINE_MINUTES_CLAIM;
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public void validateRefreshToken(String token) {
         accessTokenRepository.findByToken(HashUtil.sha256(token))
@@ -192,29 +188,32 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         accessTokenRepository.updateNullFcmToken(fcmToken);
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked) {
         return accessTokenRepository.findByTokenAndRevoked(HashUtil.sha256(token), revoked);
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public Optional<AppUserDto> findByAccessTokenKey(String token) {
         return appUserMybatis.findByAccessTokenKey(HashUtil.sha256(token));
     }
 
+    
     @Override
     public Optional<AccessToken> findByActiveToken(String token) {
         return accessTokenRepository.findByActiveToken(HashUtil.sha256(token));
     }
 
+    @Transactional
     @Override
     public void updateLastestActive(LocalDateTime lastestActive, Long id) {
 //        accessTokenRepository.updateLastestActive(lastestActive, id);
         accessTokenMybatis.updateLastestActive(lastestActive, id);
     }
 
+    @Transactional
     @Override
     public AccessToken generateTokenBy(AppUser appUser, Date expiresAt, String token, AccessTokenServiceType service) {
         Optional<AccessToken> accessToken = accessTokenRepository.findLatestAccessTokenByUser(appUser, service);
@@ -243,6 +242,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return expire;
     }
 
+    @Transactional
     @Override
     public void logoutProcess(AccessToken token) {
         if (token.getFcmToken() != null) {
@@ -266,22 +266,25 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return false;
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public ResponseListDto<AccessToken> findAllWithPaging(Pageable pageable) {
         return null;
     }
 
+    
     @Override
     public ResponseListDto<AccessToken> findAllWithSearch(SearchSpecification<AccessToken> specification, Pageable pageable) {
         return null;
     }
 
+    
     @Override
     public ResponseListDto<AccessToken> findAllBy(Specification<AccessToken> specification, Pageable pageable) {
         return null;
     }
 
+    
     @Override
     public Page<AccessToken> findAllPageSpecificationBy(Specification<AccessToken> specification, Pageable pageable) {
         return null;
@@ -292,33 +295,37 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return null;
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public List<AccessToken> findAll() {
         return accessTokenRepository.findAll();
     }
 
+    @Transactional
     @Override
     public AccessToken save(AccessToken accessToken) {
         return accessTokenRepository.save(accessToken);
     }
 
+    @Transactional
     @Override
     public AccessToken update(AccessToken accessToken) {
         return accessTokenRepository.save(accessToken);
     }
 
-    @Transactional(readOnly = true)
+    
     @Override
     public Optional<AccessToken> findById(Long id) {
         return accessTokenRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(AccessToken accessToken) {
         accessTokenRepository.delete(accessToken);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         accessTokenRepository.deleteById(id);

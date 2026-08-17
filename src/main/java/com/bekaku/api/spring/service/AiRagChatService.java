@@ -5,5 +5,5 @@ import com.bekaku.api.spring.dto.ChatStreamEvent;
 import reactor.core.publisher.Flux;
 
 public interface AiRagChatService {
-    Flux<ChatStreamEvent> streamAnswer(ChatRequest request);
+    Flux<ChatStreamEvent> streamAnswer(Long userId, ChatRequest request);
 }

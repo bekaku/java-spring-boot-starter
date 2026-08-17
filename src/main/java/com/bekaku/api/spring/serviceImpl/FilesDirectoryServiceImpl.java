@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FilesDirectoryServiceImpl extends BaseResponseException implements FilesDirectoryService {
     private final FilesDirectoryRepository filesDirectoryRepository;
@@ -33,7 +33,6 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
     private final FilesDirectoryMybatis filesDirectoryMybatis;
     private final I18n i18n;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<FilesDirectoryDto> findAllWithPaging(Pageable pageable) {
         Page<FilesDirectory> result = filesDirectoryRepository.findAll(pageable);
@@ -69,33 +68,34 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<FilesDirectory> findAll() {
         return filesDirectoryRepository.findAll();
     }
 
-
+    @Transactional
     public FilesDirectory save(FilesDirectory filesDirectory) {
         return filesDirectoryRepository.save(filesDirectory);
     }
 
+    @Transactional
     @Override
     public FilesDirectory update(FilesDirectory filesDirectory) {
         return filesDirectoryRepository.save(filesDirectory);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<FilesDirectory> findById(Long id) {
         return filesDirectoryRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(FilesDirectory filesDirectory) {
         filesDirectoryRepository.delete(filesDirectory);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         filesDirectoryRepository.deleteById(id);
@@ -111,13 +111,11 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
         return modelMapper.toEntity(filesDirectoryDto);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<FilesDirectory> findByIdAndOwnerId(Long id, Long appUserId) {
         return filesDirectoryRepository.findByIdAndOwnerId(id, appUserId);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<FilesDirectory> findAllByFilesDirectoryParent(FilesDirectory filesDirectoryParent) {
         return filesDirectoryRepository.findAllByFilesDirectoryParent(filesDirectoryParent);
@@ -128,7 +126,6 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
         return filesDirectoryRepository.findAllByFilesDirectoryParent(filesDirectoryParent, pageable);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<FilesDirectoryDto> findDirectoryById(Long id) {
         return filesDirectoryMybatis.findById(id).flatMap(this::setDtoBy);
@@ -153,7 +150,6 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
         return Optional.empty();
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<FilesDirectoryDto> findDtoByIdAndOwnerId(Long id, Long ownerId) {
         return filesDirectoryMybatis.findByIdAndOwnerId(id, ownerId).flatMap(this::setDtoBy);
@@ -166,7 +162,6 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
         }
     }
 
-    @Transactional(readOnly = true)
     @Override
     public FilesDirectory validateFolderOwnerAndGetBy(AppUser appUser, Long folderID) {
         Optional<FilesDirectory> directoryExist = filesDirectoryRepository.findByOwnerAndId(appUser, folderID);
@@ -176,7 +171,6 @@ public class FilesDirectoryServiceImpl extends BaseResponseException implements 
         return directoryExist.get();
     }
 
-    @Transactional(readOnly = true)
     @Override
     public void validateDuplicateName(AppUser appUser, String name, FilesDirectory filesDirectoryParent) {
         Optional<FilesDirectory> directoryExist;

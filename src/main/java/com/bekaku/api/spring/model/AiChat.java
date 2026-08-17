@@ -3,6 +3,7 @@ package com.bekaku.api.spring.model;
 
 import com.bekaku.api.spring.annotation.GenSourceableTable;
 import com.bekaku.api.spring.model.superclass.Auditable;
+import com.bekaku.api.spring.model.superclass.CreatedUpdated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -19,13 +20,19 @@ import org.springframework.data.domain.Sort;
 @Getter
 @Setter
 @Entity
-public class AiChat extends Auditable<Long> {
+public class AiChat extends CreatedUpdated {
 
     @Column(name = "title", length = 255, comment = "Title or topic name of the AI chat session")
     private String title;
 
     @Column(name = "pin", columnDefinition = "boolean default false", comment = "Flag indicating whether this chat session is pinned to the top")
     private boolean pin;
+
+    @Column(name = "created_user", updatable = false, comment = "Identifier of the user who created this record")
+    private Long createdUser;
+
+    @Column(name = "updated_user", comment = "Identifier of the user who last updated this record")
+    private Long updatedUser;
 
     public static Sort getSort() {
         return Sort.by(

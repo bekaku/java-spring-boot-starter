@@ -50,8 +50,8 @@ public class AiChatController extends BaseApiController {
      * Event payloads are ChatStreamEvent JSON objects with type: token | sources | done | error.
      */
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ChatStreamEvent> streamChat(@Valid @RequestBody ChatRequest request) {
-        return aiRagChatService.streamAnswer(request);
+    public Flux<ChatStreamEvent> streamChat(@AuthenticationPrincipal AppUserDto auth, @Valid @RequestBody ChatRequest request) {
+        return aiRagChatService.streamAnswer(auth.getId(), request);
     }
 
     @GetMapping("/history")

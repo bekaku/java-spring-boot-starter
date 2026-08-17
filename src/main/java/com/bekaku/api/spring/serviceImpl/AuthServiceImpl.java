@@ -6,9 +6,19 @@ import com.bekaku.api.spring.dto.RefreshTokenResponse;
 import com.bekaku.api.spring.enumtype.JwtType;
 import com.bekaku.api.spring.enumtype.LoginLogType;
 import com.bekaku.api.spring.exception.AppException;
-import com.bekaku.api.spring.model.*;
+import com.bekaku.api.spring.model.AccessToken;
+import com.bekaku.api.spring.model.ApiClient;
+import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.model.LoginLog;
+import com.bekaku.api.spring.model.UserAgent;
 import com.bekaku.api.spring.properties.AppProperties;
-import com.bekaku.api.spring.service.*;
+import com.bekaku.api.spring.service.AccessTokenService;
+import com.bekaku.api.spring.service.AppUserService;
+import com.bekaku.api.spring.service.AuthService;
+import com.bekaku.api.spring.service.FileManagerService;
+import com.bekaku.api.spring.service.JwtService;
+import com.bekaku.api.spring.service.LoginLogService;
+import com.bekaku.api.spring.service.UserAgentService;
 import com.bekaku.api.spring.util.HashUtil;
 import com.bekaku.api.spring.util.UuidUtils;
 import com.bekaku.api.spring.vo.IpAddress;
@@ -19,13 +29,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
 
-@Transactional
 @Service
+@Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
 
     @Autowired
@@ -53,7 +61,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public AppUser getCurrentUser() {
         org.springframework.security.core.userdetails.User principal = (org.springframework.security.core.userdetails.User) SecurityContextHolder.
                 getContext().getAuthentication().getPrincipal();
@@ -61,6 +68,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UsernameNotFoundException("User name not found - " + principal.getUsername()));
     }
 
+    @Transactional
     @Override
     public void fetchUserAndEnable(AccessToken verificationToken) {
         String username = verificationToken.getAppUser().getUsername();
@@ -69,6 +77,7 @@ public class AuthServiceImpl implements AuthService {
         appUserService.save(appUser);
     }
 
+    @Transactional
     @Override
     public RefreshTokenResponse login(AppUser appUser, LoginRequest loginRequest, ApiClient apiClient, String userAgent, IpAddress ipAddress) {
         return loingProcess(appUser, apiClient, userAgent, ipAddress, loginRequest.getDeviceId(), loginRequest.getLoginFrom(), loginRequest.getFcmToken());
@@ -96,6 +105,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
+    @Transactional
     @Override
     public RefreshTokenResponse refreshToken(AccessToken accessToken, ApiClient apiClient, String userAgent) {
         //update refresh token

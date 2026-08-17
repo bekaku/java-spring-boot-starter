@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class ApiClientIpServiceImpl implements ApiClientIpService {
 
@@ -52,33 +52,36 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
         return null;
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<ApiClientIp> findAll() {
         return apiClientIpRepository.findAll();
     }
 
+
+    @Transactional
     @Override
     public ApiClientIp save(ApiClientIp apiClientIp) {
         return apiClientIpRepository.save(apiClientIp);
     }
 
+    @Transactional
     @Override
     public ApiClientIp update(ApiClientIp apiClientIp) {
         return apiClientIpRepository.save(apiClientIp);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<ApiClientIp> findById(Long id) {
         return apiClientIpRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(ApiClientIp apiClientIp) {
         apiClientIpRepository.delete(apiClientIp);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         apiClientIpRepository.deleteById(id);
@@ -95,13 +98,11 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
     }
 
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<ApiClientIp> findByIdAndApiClientId(Long id, Long apiClientId) {
         return apiClientIpRepository.findByIdAndApiClientId(id, apiClientId);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<ApiClientIp> findAllByApiClient(ApiClient apiClient) {
         return apiClientIpRepository.findByApiClient(apiClient);
@@ -115,7 +116,6 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<ApiClientIpDto> findPageByApiClient(Long apiCilentId, Pageable pageable) {
         Page<ApiClientIp> result = apiClientIpRepository.findPageByApiClient(apiCilentId, pageable);
@@ -127,7 +127,6 @@ public class ApiClientIpServiceImpl implements ApiClientIpService {
         return null;
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<ApiClientIp> findByApiClientIdAndIpAddress(Long apiClientId, String ipAddress) {
         return apiClientIpRepository.findByApiClientIdAndIpAddress(apiClientId, ipAddress);

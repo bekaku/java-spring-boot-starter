@@ -10,6 +10,9 @@ public record RagProperties(int topK,
                             int minChunkSizeChars,
                             int minChunkLengthToEmbed,
                             int maxNumChunks,
-                            boolean deleteSourceAfterIngest
+                            int memorySize,
+                            boolean deleteSourceAfterIngest,
+                            boolean databaseToolsSchema,
+                            RagDatabaseToolsProperties databaseTools
 ) {
 }

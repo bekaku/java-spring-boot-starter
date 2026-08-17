@@ -589,7 +589,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import java.util.stream.Collectors;\n");
 
                 writer.append("\n");
-                writer.append("@Transactional\n");
+                writer.append("@Transactional(readOnly = true)\n");
                 writer.append("@RequiredArgsConstructor\n");
                 writer.append("@Service\n");
                 writer.append("public class ").append(entityName).append("ServiceImpl implements ").append(entityName).append("Service {\n");
@@ -601,7 +601,6 @@ public class DevelopmentContoller extends BaseApiController {
                 }
                 //findAllWithPaging
                 writer.append("\n");
-                writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public ResponseListDto<").append(haveDto ? entityName + "Dto" : entityName).append("> findAllWithPaging(Pageable pageable) {\n");
                 writer.append("        Page<").append(entityName).append("> result = ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findAll(pageable);\n");
@@ -609,28 +608,24 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    }\n");
                 //findAllWithSearch
                 writer.append("\n");
-                writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public ResponseListDto<").append(haveDto ? entityName + "Dto" : entityName).append("> findAllWithSearch(SearchSpecification<").append(entityName).append("> specification, Pageable pageable) {\n");
                 writer.append("        return getListFromResult(findAllPageSearchSpecificationBy(specification, pageable));\n");
                 writer.append("    }\n");
                 //findAllBy Specification
                 writer.append("\n");
-                writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public ResponseListDto<").append(haveDto ? entityName + "Dto" : entityName).append("> findAllBy(Specification<").append(entityName).append("> specification, Pageable pageable) {\n");
                 writer.append("        return getListFromResult(findAllPageSpecificationBy(specification, pageable));\n");
                 writer.append("    }\n");
                 //findAllPageSpecificationBy
                 writer.append("\n");
-                writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public Page<").append(entityName).append("> findAllPageSpecificationBy(Specification<").append(entityName).append("> specification, Pageable pageable) {\n");
                 writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findAll(specification, pageable);\n");
                 writer.append("    }\n");
                 //findAllPageSearchSpecificationBy
                 writer.append("\n");
-                writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public Page<").append(entityName).append("> findAllPageSearchSpecificationBy(SearchSpecification<").append(entityName).append("> specification, Pageable pageable) {\n");
                 writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findAll(specification, pageable);\n");
@@ -648,7 +643,6 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    }\n");
                 //findAll
                 writer.append("\n");
-                writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public List<").append(entityName).append("> findAll() {\n");
                 writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findAll();\n");
@@ -656,30 +650,33 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("\n");
                 //save
                 writer.append("\n");
+                writer.append("    @Transactional\n");
                 writer.append("    public ").append(entityName).append(" save(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.save(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 writer.append("    }\n");
                 //update
                 writer.append("\n");
+                writer.append("    @Transactional\n");
                 writer.append("    @Override\n");
                 writer.append("    public ").append(entityName).append(" update(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.save(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 writer.append("    }\n");
                 //findById
                 writer.append("\n");
-                writer.append("    @Transactional(readOnly = true)\n");
                 writer.append("    @Override\n");
                 writer.append("    public Optional<").append(entityName).append("> findById(Long id) {\n");
                 writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.findById(id);\n");
                 writer.append("    }\n");
                 //delete
                 writer.append("\n");
+                writer.append("    @Transactional\n");
                 writer.append("    @Override\n");
                 writer.append("    public void delete(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.delete(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 writer.append("    }\n");
 
                 writer.append("\n");
+                writer.append("    @Transactional\n");
                 writer.append("    @Override\n");
                 writer.append("    public void deleteById(Long id) {\n");
                 writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository.deleteById(id);\n");

@@ -1,11 +1,11 @@
 package com.bekaku.api.spring.serviceImpl;
 
-import com.bekaku.api.spring.util.AuthUtil;
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.model.AuditLog;
 import com.bekaku.api.spring.repository.AuditLogRepository;
 import com.bekaku.api.spring.service.AuditLogService;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,39 +16,34 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class AuditLogServiceImpl implements AuditLogService {
     private final AuditLogRepository auditLogRepository;
     private final AuthUtil authHelper;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AuditLog> findAllWithPaging(Pageable pageable) {
         Page<AuditLog> result = auditLogRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AuditLog> findAllWithSearch(SearchSpecification<AuditLog> specification, Pageable pageable) {
         return getListFromResult(findAllPageSearchSpecificationBy(specification, pageable));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<AuditLog> findAllBy(Specification<AuditLog> specification, Pageable pageable) {
         return getListFromResult(findAllPageSpecificationBy(specification, pageable));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<AuditLog> findAllPageSpecificationBy(Specification<AuditLog> specification, Pageable pageable) {
         return auditLogRepository.findAll(specification, pageable);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Page<AuditLog> findAllPageSearchSpecificationBy(SearchSpecification<AuditLog> specification, Pageable pageable) {
         return auditLogRepository.findAll(specification, pageable);
@@ -59,33 +54,35 @@ public class AuditLogServiceImpl implements AuditLogService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<AuditLog> findAll() {
         return auditLogRepository.findAll();
     }
 
 
+    @Transactional
     public AuditLog save(AuditLog auditLog) {
         return auditLogRepository.save(auditLog);
     }
 
+    @Transactional
     @Override
     public AuditLog update(AuditLog auditLog) {
         return auditLogRepository.save(auditLog);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<AuditLog> findById(Long id) {
         return auditLogRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(AuditLog auditLog) {
         auditLogRepository.delete(auditLog);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         auditLogRepository.deleteById(id);

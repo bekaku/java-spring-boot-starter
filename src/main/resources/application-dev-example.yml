@@ -195,6 +195,10 @@ app:
     refresh-token-ttl-days: 7
   front-end:
     theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
+  rag:
+    delete-source-after-ingest: true
+    database-tools:
+      enabled: false
 
 custom:
   config:

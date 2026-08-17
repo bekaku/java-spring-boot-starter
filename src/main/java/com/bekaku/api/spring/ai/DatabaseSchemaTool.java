@@ -15,6 +15,8 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -71,6 +73,9 @@ public class DatabaseSchemaTool {
             String query,
             ToolContext toolContext
     ) {
+        if (!appProperties.rag().databaseTools().enabled()) {
+            return Collections.emptyList();
+        }
         log.info("AI called searchSchema Query: [{}]", query);
         List<Document> documents = retrieveSchemaContext(query);
         log.info("Schema search returned {} documents", documents.size());

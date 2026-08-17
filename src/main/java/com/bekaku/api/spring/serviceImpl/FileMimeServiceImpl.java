@@ -15,20 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FileMimeServiceImpl implements FileMimeService {
     private final FileMimeRepository fileMimeRepository;
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<FileMime> findAllWithPaging(Pageable pageable) {
         Page<FileMime> result = fileMimeRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<FileMime> findAllWithSearch(SearchSpecification<FileMime> specification, Pageable pageable) {
         Page<FileMime> result = fileMimeRepository.findAll(specification, pageable);
@@ -55,33 +53,34 @@ public class FileMimeServiceImpl implements FileMimeService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<FileMime> findAll() {
         return fileMimeRepository.findAll();
     }
 
-
+    @Transactional
     public FileMime save(FileMime fileMime) {
         return fileMimeRepository.save(fileMime);
     }
 
+    @Transactional
     @Override
     public FileMime update(FileMime fileMime) {
         return fileMimeRepository.save(fileMime);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<FileMime> findById(Long id) {
         return fileMimeRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(FileMime fileMime) {
         fileMimeRepository.delete(fileMime);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         fileMimeRepository.deleteById(id);

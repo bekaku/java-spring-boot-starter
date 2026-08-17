@@ -341,15 +341,18 @@ public class AuthController extends BaseApiController {
         log.info("refreshToken: refreshTokenKey:{}", refreshTokenKey);
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
+            log.info("refreshToken: apiClient.isEmpty()");
             deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
         if (AppUtil.isEmpty(refreshTokenKey)) {
+            log.info("refreshToken: refreshTokenKey.isEmpty()");
             deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
         Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(refreshTokenKey, false);
         if (accessToken.isEmpty()) {
+            log.info("refreshToken: accessToken.isEmpty()");
             deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
@@ -357,6 +360,7 @@ public class AuthController extends BaseApiController {
         //validate expred token
         boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
         if (isExpired) {
+            log.info("refreshToken: accessToken isExpired");
             deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }

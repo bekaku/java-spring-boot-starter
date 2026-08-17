@@ -18,27 +18,38 @@ import com.bekaku.api.spring.ai.AiChatToolContext;
 import com.bekaku.api.spring.ai.DatabaseSchemaTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.support.ToolCallbacks;
+import org.springframework.ai.tool.StaticToolCallbackProvider;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.bekaku.api.spring.util.AppUtil.distinctByKey;
+
 
 @Slf4j
-@Transactional
 @Service
 public class AiRagChatServiceImpl implements AiRagChatService {
     private final ChatClient.Builder chatClientBuilder;
@@ -50,9 +61,12 @@ public class AiRagChatServiceImpl implements AiRagChatService {
     // 1. VectorStore สำหรับไฟล์เอกสารเดิม (rag_documents)
     private final VectorStore documentVectorStore;
 
-
     @Value("classpath:prompts/system-rag.txt")
     private Resource systemPromptResource;
+
+    @Value("classpath:prompts/system-rag-db-tools.txt")
+    private Resource systemPromptDbToolsResource;
+
     @Value("classpath:prompts/system-rag-generate-title.txt")
     private Resource generateTitlePromptResource;
 
@@ -60,6 +74,8 @@ public class AiRagChatServiceImpl implements AiRagChatService {
     private final AiChatMessageService aiChatMessageService;
     private final DatabaseSchemaTool databaseSchemaTool;
     private final PostgreSQLQueryTool postgreSQLQueryTool;
+
+    private final MessageChatMemoryAdvisor chatMemoryAdvisor;
 
     public AiRagChatServiceImpl(
             @Qualifier("documentVectorStore") VectorStore documentVectorStore,
@@ -69,7 +85,8 @@ public class AiRagChatServiceImpl implements AiRagChatService {
             AiChatService aiChatService,
             AiChatMessageService aiChatMessageService,
             DatabaseSchemaTool databaseSchemaTool,
-            PostgreSQLQueryTool postgreSQLQueryTool
+            PostgreSQLQueryTool postgreSQLQueryTool,
+            ChatMemory chatMemory
     ) {
         this.documentVectorStore = documentVectorStore;
         this.chatClientBuilder = chatClientBuilder;
@@ -78,16 +95,19 @@ public class AiRagChatServiceImpl implements AiRagChatService {
         this.aiChatService = aiChatService;
         this.aiChatMessageService = aiChatMessageService;
         this.databaseSchemaTool = databaseSchemaTool;
-        this.postgreSQLQueryTool=postgreSQLQueryTool;
+        this.postgreSQLQueryTool = postgreSQLQueryTool;
+        this.chatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
     }
 
-    public Flux<ChatStreamEvent> streamAnswer(ChatRequest request) {
+    public Flux<ChatStreamEvent> streamAnswer(Long userId, ChatRequest request) {
         boolean isNewChat = request.getConversationId() == null;
 
         AiChat chat;
         if (isNewChat) {
             chat = new AiChat();
             chat.setTitle("New Chat");
+            chat.setCreatedUser(userId);
+            chat.setUpdatedUser(userId);
             chat = aiChatService.save(chat); // Save to get the ID
         } else {
             chat = aiChatService.findById(request.getConversationId())
@@ -120,6 +140,7 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                         log.info("Generated new chat title: {}", title);
                         return ChatStreamEvent.builder().type("title").content(title).build();
                     })
+                    .subscribeOn(Schedulers.boundedElastic())
                     .flux();
         }
 
@@ -127,40 +148,51 @@ public class AiRagChatServiceImpl implements AiRagChatService {
         List<Document> retrievedDocs = retrieveContext(request.getMessage(), request.getFilterNames());
         log.info("Found {} documents from Qdrant", retrievedDocs.size());
 
-//        List<Document> retrievedSchemas =
-//                retrieveSchemaContext(request.getMessage());
-//        log.info("Found {} database schemas", retrievedSchemas.size());
-
         List<ChatSourceReference> documentSources =
                 toDocumentSourceReferences(retrievedDocs);
-//        List<ChatSourceReference> sources = new ArrayList<>();
-//        sources.addAll(toDocumentSourceReferences(retrievedDocs));
-//        sources.addAll(toDatabaseSourceReferences(retrievedSchemas));
 
         String documentContext = retrievedDocs.stream()
                 .map(Document::getText)
                 .collect(Collectors.joining("\n\n---\n\n"));
 
-//        String schemaContext = retrievedSchemas.stream()
-//                .map(Document::getText)
-//                .collect(Collectors.joining("\n\n---\n\n"));
-
-
         StringBuilder aiContentBuilder = new StringBuilder();
         AiChatToolContext chatToolContext = new AiChatToolContext();
-        Flux<ChatStreamEvent> tokenStream = chatClientBuilder.build()
+
+        boolean databaseToolsEnabled = appProperties.rag()
+                .databaseTools()
+                .enabled();
+
+        Resource systemPrompt = !databaseToolsEnabled
+                ? systemPromptResource
+                : systemPromptDbToolsResource;
+
+        List<ToolCallback> toolCallbacks = new ArrayList<>();
+        if (databaseToolsEnabled) {
+            toolCallbacks.addAll(Arrays.asList(
+                    ToolCallbacks.from(databaseSchemaTool)
+            ));
+
+            toolCallbacks.addAll(Arrays.asList(
+                    ToolCallbacks.from(postgreSQLQueryTool)
+            ));
+        }
+
+        Flux<ChatStreamEvent> tokenStream = chatClientBuilder
+                .build()
                 .prompt()
+                //TODO
                 //mark this if you dont want to use system prompt
-                .system(s -> s.text(systemPromptResource)
-                                .param("context", documentContext)
-//                        .param("schemaContext", schemaContext)
-                )
+//                .system(s -> s.text(systemPrompt)
+//                        .param("context", documentContext)
+//                )
                 .user(request.getMessage())
-                .tools(databaseSchemaTool,postgreSQLQueryTool)
-                .toolContext(Map.of(
-                        "chatToolContext", chatToolContext
+                .advisors(chatMemoryAdvisor)
+                .advisors(a -> a.param(
+                        ChatMemory.CONVERSATION_ID,
+                        convIdStr
                 ))
-                // .advisors(a -> a.param(CONVERSATION_ID_KEY, convIdStr)) // เปิดใช้ถ้าเชื่อม PersistentChatMemory แล้ว
+                .tools(toolCallbacks)
+                .toolContext(Map.of("chatToolContext", chatToolContext))
                 .stream()
                 .chatResponse()
                 .flatMapIterable(response -> {
@@ -200,40 +232,47 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                 });
 
         // Send the sources at the end.
-//        Flux<ChatStreamEvent> sourcesEvent = Flux.just(
-//                ChatStreamEvent.builder().type("sources").content(serializeSources(documentSources)).build());
+        Flux<ChatStreamEvent> sourcesEvent = Mono.fromSupplier(() -> {
+            List<ChatSourceReference> allSources =
+                    new ArrayList<>(documentSources);
+            if (chatToolContext.getSources() != null) {
+                allSources.addAll(chatToolContext.getSources());
+            }
 
-        Flux<ChatStreamEvent> sourcesEvent =
-                tokenStream.thenMany(
-                        Mono.fromSupplier(() -> {
-                            List<ChatSourceReference> sources =
-                                    new ArrayList<>(documentSources);
-                            sources.addAll(
-                                    chatToolContext.getSources()
-                            );
-                            return ChatStreamEvent.builder()
-                                    .type("sources")
-                                    .content(serializeSources(sources))
-                                    .build();
-                        })
-                );
+            List<ChatSourceReference> uniqueSources = allSources.stream()
+                    .filter(distinctByKey(source -> {
+                        if (source.getFileName() != null) {
+                            return source.getFileName();
+                        } else if (source.getTableName() != null) {
+                            return source.getSchema() + "." + source.getTableName();
+                        }
+                        return source.toString(); // Fallback
+                    }))
+                    .toList();
+
+            return ChatStreamEvent.builder()
+                    .type("sources")
+                    .content(serializeSources(uniqueSources))
+                    .build();
+        }).flux();
 
         // Create a process to save the AI text to the database after the stream ends.
         final AiChat aichat = chat;
         Flux<ChatStreamEvent> saveAiMessageFlux = Mono.fromRunnable(() -> {
-            AiChatMessage aiMsg = new AiChatMessage();
-            aiMsg.setAiChat(aichat);
-            aiMsg.setAiRole(AiRole.assistant);
+                    AiChatMessage aiMsg = new AiChatMessage();
+                    aiMsg.setAiChat(aichat);
+                    aiMsg.setAiRole(AiRole.assistant);
 
-            //Gather the accumulated text. If you have any ideas, you could put them in metadata or a new column.
-            aiMsg.setContent(aiContentBuilder.toString());
+                    //Gather the accumulated text. If you have any ideas, you could put them in metadata or a new column.
+                    aiMsg.setContent(aiContentBuilder.toString());
 
-            // If you have fields in your database that accept metadata, you can store the thinking and sources in JSON format.
-            // aiMsg.setMetadata("{ \"thinking\": \"...\", \"sources\": [...] }");
+                    // If you have fields in your database that accept metadata, you can store the thinking and sources in JSON format.
+                    // aiMsg.setMetadata("{ \"thinking\": \"...\", \"sources\": [...] }");
 
-            aiChatMessageService.save(aiMsg);
-            log.info("Saved AI response to DB for chat ID: {}", finalChatId);
-        }).thenMany(Flux.empty()); // Use thenMany to avoid affecting the main stream.
+                    aiChatMessageService.save(aiMsg);
+                    log.info("Saved AI response to DB for chat ID: {}", finalChatId);
+                }).subscribeOn(Schedulers.boundedElastic())
+                .thenMany(Flux.empty()); // Use thenMany to avoid affecting the main stream.
 
         // Send the "Done" message (ending) along with the room ID.
         Flux<ChatStreamEvent> doneEvent = Flux.just(
@@ -250,6 +289,7 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                     .user(firstMessage)
                     .call()
                     .content();
+
 
             return generatedTitle != null ? generatedTitle.trim().replace("\"", "") : "New Chat";
         } catch (Exception e) {
@@ -334,7 +374,7 @@ public class AiRagChatServiceImpl implements AiRagChatService {
             } else if (s.getType() == AiChatSourceType.DATABASE_QUERY) {
                 // Database Query
                 sb.append("\"query\":\"").append(escape(s.getQuery())).append("\",");
-            }else {
+            } else {
                 //  (Document)
                 sb.append("\"fileName\":\"").append(escape(s.getFileName())).append("\",")
                         .append("\"documentType\":\"").append(escape(s.getDocumentType())).append("\",");

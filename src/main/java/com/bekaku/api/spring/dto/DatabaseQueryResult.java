@@ -15,4 +15,11 @@ import java.util.Map;
 public class DatabaseQueryResult {
     private int rowCount;
     private List<Map<String, Object>> rows;
+
+    public static DatabaseQueryResult empty() {
+        return DatabaseQueryResult.builder()
+                .rowCount(0)
+                .rows(List.of())
+                .build();
+    }
 }

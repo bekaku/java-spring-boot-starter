@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class ApiClientServiceImpl implements ApiClientService {
 
@@ -30,27 +30,23 @@ public class ApiClientServiceImpl implements ApiClientService {
     private final AccessTokenRepository accessTokenRepository;
     private final ApiClientMapper modelMapper;
 
-    Logger logger = LoggerFactory.getLogger(ApiClientServiceImpl.class);
-
-    @Transactional(readOnly = true)
     @Override
     public Optional<ApiClient> findByApiName(String apiName) {
         return apiClientRepository.findByApiName(apiName);
     }
 
+    @Transactional
     @Override
     public void saveAll(List<ApiClient> apiClientList) {
         apiClientRepository.saveAll(apiClientList);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<ApiClientDto> findAllWithPaging(Pageable pageable) {
         Page<ApiClient> result = apiClientRepository.findAll(pageable);
         return getListFromResult(result);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public ResponseListDto<ApiClientDto> findAllWithSearch(SearchSpecification<ApiClient> specification, Pageable pageable) {
         Page<ApiClient> result = apiClientRepository.findAll(specification, pageable);
@@ -80,34 +76,36 @@ public class ApiClientServiceImpl implements ApiClientService {
                 , result.getTotalPages(), result.getTotalElements(), result.isLast());
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<ApiClient> findAll() {
         return apiClientRepository.findAll();
     }
 
+    @Transactional
     @Override
     public ApiClient save(ApiClient apiClient) {
         return apiClientRepository.save(apiClient);
     }
 
+    @Transactional
     @Override
     public ApiClient update(ApiClient apiClient) {
         return apiClientRepository.save(apiClient);
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Optional<ApiClient> findById(Long id) {
         return apiClientRepository.findById(id);
     }
 
+    @Transactional
     @Override
     public void delete(ApiClient apiClient) {
         accessTokenRepository.deleteByApiClient(apiClient);
         apiClientRepository.delete(apiClient);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
         Optional<ApiClient> apiClient = findById(id);
