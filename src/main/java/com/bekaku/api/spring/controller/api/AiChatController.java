@@ -14,6 +14,7 @@ import com.bekaku.api.spring.service.AiChatService;
 import com.bekaku.api.spring.service.AiRagChatService;
 import com.bekaku.api.spring.specification.SearchCriteria;
 import com.bekaku.api.spring.specification.SearchOperation;
+import com.bekaku.api.spring.util.AppUtil;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import com.bekaku.api.spring.specification.SearchSpecification;
@@ -78,19 +79,24 @@ public class AiChatController extends BaseApiController {
     }
 
     @PutMapping("/{id}")
-    public AiChatDto update(@PathVariable("id") Long id, @Valid @RequestBody AiChatDto dto) {
-        AiChat aiChat = aiChatService.convertDtoToEntity(dto);
-        Optional<AiChat> oldData = aiChatService.findById(id);
+    public AiChatDto update(@AuthenticationPrincipal AppUserDto auth, @PathVariable("id") Long id, @Valid @RequestBody AiChatDto dto) {
+
+        Optional<AiChat> oldData = aiChatService.findByIdAndCreator(id, auth.getId());
         if (oldData.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        aiChatService.update(aiChat);
-        return aiChatService.convertEntityToDto(aiChat);
+        if (!AppUtil.isEmpty(dto.getTitle())) {
+            oldData.get().setTitle(dto.getTitle());
+        }
+        oldData.get().setPin(dto.isPin());
+        oldData.get().setUpdatedUser(auth.getId());
+        aiChatService.update(oldData.get());
+        return aiChatService.convertEntityToDto(oldData.get());
     }
 
     @GetMapping("/{id}")
-    public AiChatDto findOne(@PathVariable("id") Long id) {
-        Optional<AiChat> aiChat = aiChatService.findById(id);
+    public AiChatDto findOne(@AuthenticationPrincipal AppUserDto auth, @PathVariable("id") Long id) {
+        Optional<AiChat> aiChat = aiChatService.findByIdAndCreator(id, auth.getId());
         if (aiChat.isEmpty()) {
             throw this.responseErrorNotfound();
         }
@@ -98,11 +104,12 @@ public class AiChatController extends BaseApiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") Long id) {
-        Optional<AiChat> aiChat = aiChatService.findById(id);
+    public ResponseEntity<Object> delete(@AuthenticationPrincipal AppUserDto auth, @PathVariable("id") Long id) {
+        Optional<AiChat> aiChat = aiChatService.findByIdAndCreator(id, auth.getId());
         if (aiChat.isEmpty()) {
             throw this.responseErrorNotfound();
         }
+        aiChatMessageService.deleteByAiChatId(id);
         aiChatService.delete(aiChat.get());
         return this.responseDeleteMessage();
     }

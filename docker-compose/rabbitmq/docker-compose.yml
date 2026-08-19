@@ -1,0 +1,14 @@
+name: rabbitmq
+services:
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: 'rabbitmq'
+    restart: unless-stopped
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+        - ./data/:/var/lib/rabbitmq/
+        - ./log/:/var/log/rabbitmq
+        - ./conf/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+        - ./conf/definitions.json:/etc/rabbitmq/definitions.json:ro

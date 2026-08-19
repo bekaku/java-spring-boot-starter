@@ -4,6 +4,7 @@ services:
   qdrant:
     image: qdrant/qdrant:latest
     container_name: rag-qdrant
+    restart: unless-stopped
     ports:
       - "6333:6333"
       - "6334:6334"

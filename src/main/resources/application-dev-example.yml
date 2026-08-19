@@ -77,12 +77,18 @@ spring:
         options:
           model: gpt-4o # หรือ gpt-3.5-turbo
           temperature: 0.1
-          top-p: 0.9
+          top-p: 0.1
+          presence-penalty: 0.1
+      embedding:
+        base-url: http://localhost:8082/v1 # ชี้มาที่พอร์ตของ Embedding Server
+        api-key: "none"
+        options:
+          model: bge-m3
     ollama:
       base-url: http://localhost:11434
       chat:
         options:
-          model: gemma4:12b
+          model: gemma4:e4b #scb10x/typhoon2.5-qwen3-4b, ,gemma4:e2b, gemma4:e4b, qwen3:8b
           temperature: 0.1
           top-p: 0.1
           repeat-penalty: 1.1
@@ -91,6 +97,7 @@ spring:
       embedding:
         options:
           model: bge-m3
+          num-ctx: 8192
     mcp:
       client:
         enabled: true

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -66,7 +67,7 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AiChat save(AiChat aiChat) {
         return aiChatRepository.save(aiChat);
     }
@@ -104,9 +105,29 @@ public class AiChatServiceImpl implements AiChatService {
         return modelMapper.toEntity(aiChatDto);
     }
 
-    @Transactional
+    @Override
+    public Optional<AiChat> findByIdAndCreator(Long chatId, Long creatorId) {
+        return aiChatRepository.findByIdAndCreator(chatId, creatorId);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void updateLatestUpdateDate(Long chatId, LocalDateTime updatedDate) {
         aiChatRepository.updateLatestUpdateDate(chatId, updatedDate);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public void updateTitle(Long chatId, String title) {
+        aiChatRepository.updateTitle(chatId, title);
+    }
+
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+    @Override
+    public boolean existsById(Long id) {
+        if (id == null) {
+            return false;
+        }
+        return aiChatRepository.existsById(id);
     }
 }

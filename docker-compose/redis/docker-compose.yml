@@ -7,8 +7,7 @@ services:
       - "6379:6379"
     volumes:
       - ./data/:/data
-    #restart: unless-stopped
-    restart: always
+    restart: unless-stopped
     environment:
       - REDIS_PASSWORD=your_strong_Password
     healthcheck:
@@ -22,6 +21,7 @@ services:
   redisinsights:
     image: redis/redisinsight:latest
     container_name: redisinsights
+    restart: unless-stopped
     ports:
       - "5540:5540"  # Expose Redis Insights on port 8001
     volumes:

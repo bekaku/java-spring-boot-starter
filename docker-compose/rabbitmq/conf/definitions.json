@@ -1,0 +1,47 @@
+{
+ "users": [
+  {
+   "name": "local_jobs",
+   "password_hash": "y68IEeFeUxptd/eZLcMKk8HAVkHkog+c+MkWNZNxElU57+P8",
+   "hashing_algorithm": "rabbit_password_hashing_sha256",
+   "tags": ""
+  },
+  {
+   "name": "adminuser",
+   "password_hash": "y68IEeFeUxptd/eZLcMKk8HAVkHkog+c+MkWNZNxElU57+P8",
+   "hashing_algorithm": "rabbit_password_hashing_sha256",
+   "tags": "administrator"
+  }
+ ],
+ "vhosts": [
+  {
+   "name": "\/"
+  }
+ ],
+ "permissions": [
+  {
+   "user": "local_jobs",
+   "vhost": "\/",
+   "configure": ".*",
+   "write": ".*",
+   "read": ".*"
+  },
+  {
+   "user": "adminuser",
+   "vhost": "\/",
+   "configure": ".*",
+   "write": ".*",
+   "read": ".*"
+  }
+ ],
+ "parameters": [],
+ "policies": [],
+ "queues": [
+ {"name":"com.bekaku.api.spring.generic","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+ {"name":"com.bekaku.api.spring.send.notify","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+ {"name":"com.bekaku.api.spring.job","vhost":"/","durable":true,"auto_delete":false,"arguments":{}},
+ {"name":"com.bekaku.api.spring.socket.broadcast","vhost":"/","durable":true,"auto_delete":false,"arguments":{}}
+ ],
+ "exchanges": [],
+ "bindings": []
+}

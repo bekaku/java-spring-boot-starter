@@ -74,7 +74,7 @@ spring:
       max-lifetime: 1800000 # 30 mins, matches MySQL default
       keepalive-time: 120000 #120000 keep connection alive every 2 mins
       autoCommit: true
-      leak-detection-threshold: 30000 # warn if a connection is held >30s
+      leak-detection-threshold: 60000 # warn if a connection is held >30s
       connection-test-query: SELECT 1
       data-source-properties:
         prepStmtCacheSize: 500 #doubled for high-load scenarios
@@ -83,6 +83,11 @@ spring:
         useServerPrepStmts: true
     pool-prepared-statements: true
     max-open-prepared-statements: 500
+  flyway:
+    enabled: false
+#    baseline-on-migrate: true
+#    baseline-version: 1
+    locations: classpath:db/migration
   thymeleaf:
     cache: false
     #spring.freemarker.suffix=.html
@@ -149,7 +154,7 @@ spring:
     host: 127.0.0.1
     port: 5672
     username: local_jobs
-    password: 'pwd'
+    password: 'strong_password'
     listener:
       simple:
         concurrency: 3

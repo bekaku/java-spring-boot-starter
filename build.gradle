@@ -72,9 +72,9 @@ dependencies {
 
 //    Databases
 
-    // Progres
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
-    // MySql
 //    implementation 'com.mysql:mysql-connector-j:9.5.0'
     implementation 'com.zaxxer:HikariCP:7.1.0'
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1'
@@ -115,6 +115,7 @@ dependencies {
 
     // Spring AI
     implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
+//    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'org.springframework.ai:spring-ai-starter-vector-store-qdrant'
     implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
     implementation 'org.springframework.ai:spring-ai-advisors-vector-store:2.0.0-M8'

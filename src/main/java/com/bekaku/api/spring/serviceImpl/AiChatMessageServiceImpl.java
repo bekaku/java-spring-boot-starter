@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -69,7 +70,7 @@ public class AiChatMessageServiceImpl implements AiChatMessageService {
     }
 
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AiChatMessage save(AiChatMessage aiChatMessage) {
         return aiChatMessageRepository.save(aiChatMessage);
     }
@@ -121,5 +122,11 @@ public class AiChatMessageServiceImpl implements AiChatMessageService {
     @Override
     public List<AiChatMessage> findByAiChatIdOrderByCreatedDateDesc(Long chatId, Pageable pageable) {
         return aiChatMessageRepository.findByAiChatIdOrderByCreatedDateDesc(chatId, pageable);
+    }
+
+    @Transactional
+    @Override
+    public void deleteByAiChatId(Long chatId) {
+        aiChatMessageRepository.deleteByAiChatId(chatId);
     }
 }

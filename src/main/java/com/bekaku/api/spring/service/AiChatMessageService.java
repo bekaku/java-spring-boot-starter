@@ -11,4 +11,6 @@ public interface AiChatMessageService extends BaseService<AiChatMessage, AiChatM
     List<AiChatMessage> findLastNMessagesByChatId(Long chatId, int limit);
 
     List<AiChatMessage> findByAiChatIdOrderByCreatedDateDesc(Long chatId, Pageable pageable);
+
+    void deleteByAiChatId(Long chatId);
 }

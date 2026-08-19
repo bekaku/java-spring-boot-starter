@@ -1,4 +1,4 @@
-package com.bekaku.api.spring.configuration;
+package com.bekaku.api.spring.ai;
 
 
 import io.qdrant.client.QdrantClient;

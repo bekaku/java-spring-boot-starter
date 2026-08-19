@@ -1,5 +1,7 @@
 package com.bekaku.api.spring.serviceImpl;
 
+import com.bekaku.api.spring.ai.AiChatToolContext;
+import com.bekaku.api.spring.ai.DatabaseSchemaTool;
 import com.bekaku.api.spring.ai.PostgreSQLQueryTool;
 import com.bekaku.api.spring.dto.ChatRequest;
 import com.bekaku.api.spring.dto.ChatSourceReference;
@@ -14,27 +16,20 @@ import com.bekaku.api.spring.service.AiChatMessageService;
 import com.bekaku.api.spring.service.AiChatService;
 import com.bekaku.api.spring.service.AiDocumentMetaService;
 import com.bekaku.api.spring.service.AiRagChatService;
-import com.bekaku.api.spring.ai.AiChatToolContext;
-import com.bekaku.api.spring.ai.DatabaseSchemaTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.support.ToolCallbacks;
-import org.springframework.ai.tool.StaticToolCallbackProvider;
 import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -99,187 +94,202 @@ public class AiRagChatServiceImpl implements AiRagChatService {
         this.chatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
     }
 
+    @Override
     public Flux<ChatStreamEvent> streamAnswer(Long userId, ChatRequest request) {
-        boolean isNewChat = request.getConversationId() == null;
+        return Mono.fromCallable(() -> {
+                    boolean isNewChat = request.getConversationId() == null;
 
-        AiChat chat;
-        if (isNewChat) {
-            chat = new AiChat();
-            chat.setTitle("New Chat");
-            chat.setCreatedUser(userId);
-            chat.setUpdatedUser(userId);
-            chat = aiChatService.save(chat); // Save to get the ID
-        } else {
-            chat = aiChatService.findById(request.getConversationId())
-                    .orElseThrow(() -> new ChatStreamException("Chat not found with ID: " + request.getConversationId(), null));
-        }
+                    Long chatId;
+                    if (isNewChat) {
+                        AiChat chat = new AiChat();
+                        chat.setTitle("New Chat");
+                        chat.setCreatedUser(userId);
+                        chat.setUpdatedUser(userId);
+                        chat = aiChatService.save(chat);
+                        chatId = chat.getId();
+                    } else {
+                        chatId = request.getConversationId();
+                        if (!aiChatService.existsById(chatId)) {
+                            throw new ChatStreamException("Chat not found with ID: " + chatId, null);
+                        }
+                    }
 
-        final Long finalChatId = chat.getId();
-        final String convIdStr = String.valueOf(finalChatId);
+                    AiChat chatRef = new AiChat();
+                    chatRef.setId(chatId);
 
-        AiChatMessage userMsg = new AiChatMessage();
-        userMsg.setAiChat(chat);
-        userMsg.setAiRole(AiRole.user);
-        userMsg.setContent(request.getMessage());
-        aiChatMessageService.save(userMsg);
-        //update chat latest date for sorting recent chats
-        aiChatService.updateLatestUpdateDate(chat.getId(), LocalDateTime.now());
+                    AiChatMessage userMsg = new AiChatMessage();
+                    userMsg.setAiChat(chatRef);
+                    userMsg.setAiRole(AiRole.user);
+                    userMsg.setContent(request.getMessage());
+                    aiChatMessageService.save(userMsg);
 
+                    aiChatService.updateLatestUpdateDate(chatId, LocalDateTime.now());
 
-        Flux<ChatStreamEvent> idEventFlux = Flux.just(
-                ChatStreamEvent.builder().type("chat_id").content(convIdStr).build()
-        );
+                    return chatId;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(finalChatId -> {
+                    final String convIdStr = String.valueOf(finalChatId);
+                    boolean isNewChat = request.getConversationId() == null;
+                    Flux<ChatStreamEvent> idEventFlux = Flux.just(
+                            ChatStreamEvent.builder().type("chat_id").content(convIdStr).build()
+                    );
 
-        Flux<ChatStreamEvent> titleEventFlux = Flux.empty();
-        if (isNewChat) {
-            final AiChat currentChat = chat;
-            titleEventFlux = Mono.fromCallable(() -> generateTitle(request.getMessage()))
-                    .map(title -> {
-                        currentChat.setTitle(title);
-                        aiChatService.save(currentChat);
-                        log.info("Generated new chat title: {}", title);
-                        return ChatStreamEvent.builder().type("title").content(title).build();
-                    })
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .flux();
-        }
+                    Flux<ChatStreamEvent> titleEventFlux = Flux.empty();
+                    if (isNewChat) {
+                        titleEventFlux = Mono.fromCallable(() -> generateTitle(request.getMessage()))
+                                .map(title -> {
+                                    aiChatService.updateTitle(finalChatId, title);
+                                    log.info("Generated new chat title: {}", title);
+                                    return ChatStreamEvent.builder().type("title").content(title).build();
+                                })
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .flux();
+                    }
 
-        // Retrieving RAG documents.
-        List<Document> retrievedDocs = retrieveContext(request.getMessage(), request.getFilterNames());
-        log.info("Found {} documents from Qdrant", retrievedDocs.size());
+                    // Retrieving RAG documents.
+                    List<Document> retrievedDocs = retrieveContext(request.getMessage(), request.getFilterNames());
+                    log.info("Found {} documents from Qdrant", retrievedDocs.size());
 
-        List<ChatSourceReference> documentSources =
-                toDocumentSourceReferences(retrievedDocs);
+                    List<ChatSourceReference> documentSources =
+                            toDocumentSourceReferences(retrievedDocs);
 
-        String documentContext = retrievedDocs.stream()
-                .map(Document::getText)
-                .collect(Collectors.joining("\n\n---\n\n"));
+                    String documentContext = retrievedDocs.stream()
+                            .map(Document::getText)
+                            .collect(Collectors.joining("\n\n---\n\n"));
 
-        StringBuilder aiContentBuilder = new StringBuilder();
-        AiChatToolContext chatToolContext = new AiChatToolContext();
+                    StringBuilder aiContentBuilder = new StringBuilder();
+                    AiChatToolContext chatToolContext = new AiChatToolContext();
 
-        boolean databaseToolsEnabled = appProperties.rag()
-                .databaseTools()
-                .enabled();
+                    boolean databaseToolsEnabled = appProperties.rag()
+                            .databaseTools()
+                            .enabled();
 
-        Resource systemPrompt = !databaseToolsEnabled
-                ? systemPromptResource
-                : systemPromptDbToolsResource;
+                    Resource systemPrompt = !databaseToolsEnabled
+                            ? systemPromptResource
+                            : systemPromptDbToolsResource;
 
-        List<ToolCallback> toolCallbacks = new ArrayList<>();
-        if (databaseToolsEnabled) {
-            toolCallbacks.addAll(Arrays.asList(
-                    ToolCallbacks.from(databaseSchemaTool)
-            ));
+                    List<ToolCallback> toolCallbacks = new ArrayList<>();
+                    if (databaseToolsEnabled) {
+                        toolCallbacks.addAll(Arrays.asList(
+                                ToolCallbacks.from(databaseSchemaTool)
+                        ));
 
-            toolCallbacks.addAll(Arrays.asList(
-                    ToolCallbacks.from(postgreSQLQueryTool)
-            ));
-        }
+                        toolCallbacks.addAll(Arrays.asList(
+                                ToolCallbacks.from(postgreSQLQueryTool)
+                        ));
+                    }
 
-        Flux<ChatStreamEvent> tokenStream = chatClientBuilder
-                .build()
-                .prompt()
-                //TODO
-                //mark this if you dont want to use system prompt
+                    Flux<ChatStreamEvent> tokenStream = chatClientBuilder
+                            .build()
+                            .prompt()
+                            //TODO
+                            //mark this if you dont want to use system prompt
 //                .system(s -> s.text(systemPrompt)
 //                        .param("context", documentContext)
 //                )
-                .user(request.getMessage())
-                .advisors(chatMemoryAdvisor)
-                .advisors(a -> a.param(
-                        ChatMemory.CONVERSATION_ID,
-                        convIdStr
-                ))
-                .tools(toolCallbacks)
-                .toolContext(Map.of("chatToolContext", chatToolContext))
-                .stream()
-                .chatResponse()
-                .flatMapIterable(response -> {
-                    List<ChatStreamEvent> events = new ArrayList<>();
+                            .user(request.getMessage())
+                            .advisors(chatMemoryAdvisor)
+                            .advisors(a -> a.param(
+                                    ChatMemory.CONVERSATION_ID,
+                                    convIdStr
+                            ))
+                            .tools(toolCallbacks)
+                            .toolContext(Map.of("chatToolContext", chatToolContext))
+                            .stream()
+                            .chatResponse()
+                            .flatMapIterable(response -> {
+                                List<ChatStreamEvent> events = new ArrayList<>();
 
-                    if (response == null || response.getResult() == null || response.getResult().getOutput() == null) {
-                        return events;
-                    }
+                                if (response.getResult() == null || response.getResult().getOutput() == null) {
+                                    return events;
+                                }
 
-                    var output = response.getResult().getOutput();
-                    String content = output.getText();
+                                var output = response.getResult().getOutput();
+                                var metadata = output.getMetadata();
+                                String content = output.getText();
 
-                    String thinking = null;
-                    if (output.getMetadata().containsKey("thinking")) {
-                        thinking = String.valueOf(output.getMetadata().get("thinking"));
-                    } else if (output.getMetadata().containsKey("reasoning_content")) {
-                        thinking = String.valueOf(output.getMetadata().get("reasoning_content"));
-                    }
+                                String thinking = null;
+                                if (metadata.containsKey("reasoningContent")) {
+                                    thinking = String.valueOf(metadata.get("reasoningContent"));
+                                } else if (metadata.containsKey("reasoning_content")) {
+                                    thinking = String.valueOf(metadata.get("reasoning_content"));
+                                } else if (metadata.containsKey("reasoning")) {
+                                    thinking = String.valueOf(metadata.get("reasoning"));
+                                } else if (metadata.containsKey("thinking")) {
+                                    thinking = String.valueOf(metadata.get("thinking"));
+                                }
 
-                    if (thinking != null && !thinking.isEmpty() && !"null".equals(thinking)) {
-                        events.add(ChatStreamEvent.builder().type("thinking").content(thinking).build());
-                    }
+                                // 2. ส่ง Event Thinking ไป Frontend
+                                if (thinking != null && !thinking.isBlank() && !"null".equalsIgnoreCase(thinking)) {
+                                    events.add(ChatStreamEvent.builder()
+                                            .type("thinking")
+                                            .content(thinking)
+                                            .build());
+                                }
 
-                    if (content != null && !content.isEmpty()) {
-                        events.add(ChatStreamEvent.builder().type("token").content(content).build());
-                        aiContentBuilder.append(content);
-                    }
+                                if (content != null && !content.isEmpty()) {
+                                    events.add(ChatStreamEvent.builder().type("token").content(content).build());
+                                    aiContentBuilder.append(content);
+                                }
 
-                    return events;
-                })
-                .onErrorResume(ex -> {
-                    log.error("Streaming chat completion failed, conversationId={}", convIdStr, ex);
-                    return Flux.just(ChatStreamEvent.builder()
-                            .type("error")
-                            .content("The assistant encountered an error while generating a response.")
-                            .build());
-                });
+                                return events;
+                            })
+                            .onErrorResume(ex -> {
+                                log.error("Streaming chat completion failed, conversationId={}", convIdStr, ex);
+                                return Flux.just(ChatStreamEvent.builder()
+                                        .type("error")
+                                        .content("The assistant encountered an error while generating a response.")
+                                        .build());
+                            });
 
-        // Send the sources at the end.
-        Flux<ChatStreamEvent> sourcesEvent = Mono.fromSupplier(() -> {
-            List<ChatSourceReference> allSources =
-                    new ArrayList<>(documentSources);
-            if (chatToolContext.getSources() != null) {
-                allSources.addAll(chatToolContext.getSources());
-            }
-
-            List<ChatSourceReference> uniqueSources = allSources.stream()
-                    .filter(distinctByKey(source -> {
-                        if (source.getFileName() != null) {
-                            return source.getFileName();
-                        } else if (source.getTableName() != null) {
-                            return source.getSchema() + "." + source.getTableName();
+                    // Send the sources at the end.
+                    Flux<ChatStreamEvent> sourcesEvent = Mono.fromSupplier(() -> {
+                        List<ChatSourceReference> allSources =
+                                new ArrayList<>(documentSources);
+                        if (chatToolContext.getSources() != null) {
+                            allSources.addAll(chatToolContext.getSources());
                         }
-                        return source.toString(); // Fallback
-                    }))
-                    .toList();
 
-            return ChatStreamEvent.builder()
-                    .type("sources")
-                    .content(serializeSources(uniqueSources))
-                    .build();
-        }).flux();
+                        List<ChatSourceReference> uniqueSources = allSources.stream()
+                                .filter(distinctByKey(source -> {
+                                    if (source.getFileName() != null) {
+                                        return source.getFileName();
+                                    } else if (source.getTableName() != null) {
+                                        return source.getSchema() + "." + source.getTableName();
+                                    }
+                                    return source.toString(); // Fallback
+                                }))
+                                .toList();
 
-        // Create a process to save the AI text to the database after the stream ends.
-        final AiChat aichat = chat;
-        Flux<ChatStreamEvent> saveAiMessageFlux = Mono.fromRunnable(() -> {
-                    AiChatMessage aiMsg = new AiChatMessage();
-                    aiMsg.setAiChat(aichat);
-                    aiMsg.setAiRole(AiRole.assistant);
+                        return ChatStreamEvent.builder()
+                                .type("sources")
+                                .content(serializeSources(uniqueSources))
+                                .build();
+                    }).flux();
 
-                    //Gather the accumulated text. If you have any ideas, you could put them in metadata or a new column.
-                    aiMsg.setContent(aiContentBuilder.toString());
+                    // Create a process to save the AI text to the database after the stream ends.
+                    Flux<ChatStreamEvent> saveAiMessageFlux = Mono.fromRunnable(() -> {
 
-                    // If you have fields in your database that accept metadata, you can store the thinking and sources in JSON format.
-                    // aiMsg.setMetadata("{ \"thinking\": \"...\", \"sources\": [...] }");
+                                AiChat chatParent = new AiChat();
+                                chatParent.setId(finalChatId);
 
-                    aiChatMessageService.save(aiMsg);
-                    log.info("Saved AI response to DB for chat ID: {}", finalChatId);
-                }).subscribeOn(Schedulers.boundedElastic())
-                .thenMany(Flux.empty()); // Use thenMany to avoid affecting the main stream.
+                                AiChatMessage aiMsg = new AiChatMessage();
+                                aiMsg.setAiChat(chatParent);
+                                aiMsg.setAiRole(AiRole.assistant);
+                                aiMsg.setContent(aiContentBuilder.toString());
+                                aiChatMessageService.save(aiMsg);
+                                log.info("Saved AI response to DB for chat ID: {}", finalChatId);
+                            }).subscribeOn(Schedulers.boundedElastic())
+                            .thenMany(Flux.empty()); // Use thenMany to avoid affecting the main stream.
 
-        // Send the "Done" message (ending) along with the room ID.
-        Flux<ChatStreamEvent> doneEvent = Flux.just(
-                ChatStreamEvent.builder().type("done").content(convIdStr).build());
+                    // Send the "Done" message (ending) along with the room ID.
+                    Flux<ChatStreamEvent> doneEvent = Flux.just(
+                            ChatStreamEvent.builder().type("done").content(convIdStr).build());
 
-        // Streaming Order: ID -> Title -> Token -> Sources -> **Save AI DB** -> Done
-        return Flux.concat(idEventFlux, titleEventFlux, tokenStream, sourcesEvent, saveAiMessageFlux, doneEvent);
+                    // Streaming Order: ID -> Title -> Token -> Sources -> **Save AI DB** -> Done
+                    return Flux.concat(idEventFlux, titleEventFlux, tokenStream, sourcesEvent, saveAiMessageFlux, doneEvent);
+                });
     }
 
     private String generateTitle(String firstMessage) {
@@ -330,24 +340,6 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                         ))
                         .documentType(String.valueOf(
                                 doc.getMetadata().getOrDefault("documentType", "unknown")
-                        ))
-                        .score(doc.getScore())
-                        .build())
-                .distinct()
-                .toList();
-    }
-
-    private List<ChatSourceReference> toDatabaseSourceReferences(
-            List<Document> schemas) {
-
-        return schemas.stream()
-                .map(doc -> ChatSourceReference.builder()
-                        .type(AiChatSourceType.DATABASE_TABLE)
-                        .schema(String.valueOf(
-                                doc.getMetadata().getOrDefault("schema", "public")
-                        ))
-                        .tableName(String.valueOf(
-                                doc.getMetadata().getOrDefault("tableName", "unknown")
                         ))
                         .score(doc.getScore())
                         .build())

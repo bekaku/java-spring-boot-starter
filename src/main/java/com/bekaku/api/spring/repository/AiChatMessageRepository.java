@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.repository;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -23,4 +24,8 @@ public interface AiChatMessageRepository extends BaseRepository<AiChatMessage,Lo
     List<AiChatMessage> findLastNMessagesByChatId(Long chatId, int limit);
 
     List<AiChatMessage> findByAiChatIdOrderByCreatedDateDesc(Long chatId, Pageable pageable);
+
+    @Modifying
+    @Query("DELETE FROM AiChatMessage e WHERE e.aiChat.id = ?1")
+    void deleteByAiChatId(Long chatId);
 }
