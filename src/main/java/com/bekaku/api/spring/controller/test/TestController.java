@@ -31,6 +31,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +70,8 @@ public class TestController extends BaseApiController {
     @Value("${custom.config.file}")
     String testConfigFile;
 
+    private final JsonMapper jsonMapper;
+
 //    private final KafkaProducerService kafkaProducerService;
 
     private String getMetaTagContent(Document document, String cssQuery) {
@@ -77,6 +80,11 @@ public class TestController extends BaseApiController {
             return elm.attr("content");
         }
         return "";
+    }
+
+    @GetMapping("/jackson-version")
+    public String check() {
+        return jsonMapper.getClass().getName() + " | " + jsonMapper.version();
     }
 
     @GetMapping("/ping")

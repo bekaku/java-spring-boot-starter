@@ -5,6 +5,7 @@ import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.configuration.MetadataExtractorIntegrator;
 import com.bekaku.api.spring.controller.api.BaseApiController;
 import com.bekaku.api.spring.enumtype.DevFrontendTheme;
+import com.bekaku.api.spring.enumtype.PermissionType;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.AppRole;
 import com.bekaku.api.spring.model.Permission;
@@ -14,6 +15,7 @@ import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.FileUtil;
+import com.bekaku.api.spring.util.SnowflakeIdHolder;
 import com.bekaku.api.spring.vo.GenerateTableSrcItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -306,21 +308,37 @@ public class DevelopmentContoller extends BaseApiController {
 
                     }
                     if (genSourceableTable.createPermission()) {
-                        if (permissonService.findByCode(table.getName() + "_list").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_list"));
+
+
+                        String tableName = table.getName();
+                        String[] actions = {"list", "view", "add", "edit", "delete"};
+
+                        for (String action : actions) {
+                            String code = tableName + "_" + action;
+                            if (permissonService.findByCode(code).isEmpty()) {
+                                // 1. Generate Snowflake ID
+                                long id = SnowflakeIdHolder.generator().nextId();
+                                String description = "Permission for " + code;
+                                String operationType = "CRUD";
+
+                                // 2. บันทึก Entity ลง DB (กำหนด id ที่เพิ่ง generate)
+                                Permission permission = new Permission();
+                                permission.setId(id);
+                                permission.setCode(code);
+                                permission.setModule(tableName);
+                                permission.setDescription(description);
+                                permission.setOperationType(PermissionType.CRUD);
+                                permissonService.save(permission);
+
+                                // 3. Log คำสั่ง SQL สำหรับนำไปใช้ใน Flyway
+                                log.info("INSERT INTO public.permission (id, code, module, description, operation_type) " +
+                                                "VALUES ({}, '{}', '{}', '{}', '{}') " +
+                                                "ON CONFLICT (id) DO NOTHING;",
+                                        id, code, tableName, description, operationType);
+                            }
                         }
-                        if (permissonService.findByCode(table.getName() + "_view").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_view"));
-                        }
-                        if (permissonService.findByCode(table.getName() + "_add").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_add"));
-                        }
-                        if (permissonService.findByCode(table.getName() + "_edit").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_edit"));
-                        }
-                        if (permissonService.findByCode(table.getName() + "_delete").isEmpty()) {
-                            permissonService.save(new Permission(table.getName() + "_delete"));
-                        }
+
+
 //                        permissonService.saveAll(Arrays.asList(
 //                                new Permission(table.getName()+"_list", table.getName()+"_list", table.getName()+"_list"),
 //                                new Permission(table.getName()+"_view", table.getName()+"_view", table.getName()+"_view"),

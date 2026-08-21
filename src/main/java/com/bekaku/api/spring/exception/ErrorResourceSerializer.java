@@ -1,22 +1,20 @@
 package com.bekaku.api.spring.exception;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ErrorResourceSerializer extends JsonSerializer<ErrorResource> {
+public class ErrorResourceSerializer extends ValueSerializer<ErrorResource> {
     @Override
-    public void serialize(ErrorResource value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
+    public void serialize(ErrorResource value, JsonGenerator gen, SerializationContext serializers)  {
         Map<String, List<String>> json = new HashMap<>();
         gen.writeStartObject();
-        gen.writeObjectFieldStart("errors");
+        gen.writeName("errors");
         for (FieldErrorResource fieldErrorResource : value.getFieldErrors()) {
             if (!json.containsKey(fieldErrorResource.getField())) {
                 json.put(fieldErrorResource.getField(), new ArrayList<String>());
@@ -24,14 +22,8 @@ public class ErrorResourceSerializer extends JsonSerializer<ErrorResource> {
             json.get(fieldErrorResource.getField()).add(fieldErrorResource.getMessage());
         }
         for (Map.Entry<String, List<String>> pair : json.entrySet()) {
-            gen.writeArrayFieldStart(pair.getKey());
-            pair.getValue().forEach(content -> {
-                try {
-                    gen.writeString(content);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+            gen.writeArrayPropertyStart(pair.getKey());
+            pair.getValue().forEach(gen::writeString);
             gen.writeEndArray();
         }
         gen.writeEndObject();

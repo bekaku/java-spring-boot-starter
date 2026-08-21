@@ -334,7 +334,7 @@ public class FileManagerController extends BaseApiController {
                     thumbnailatorResize(uploadPath, dto.getChunkFilename());
                 }
                 //create thumbnail
-                if (appProperties.uploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
+                if (dto.isCreateThumbnail() && appProperties.uploadImage().isCreateThumbnail() && canCreateThumnail(imgInfo)) {
                     useThumbnail = true;
                     thumbnailatorCreateThumnail(uploadPath, dto.getChunkFilename());
                 }

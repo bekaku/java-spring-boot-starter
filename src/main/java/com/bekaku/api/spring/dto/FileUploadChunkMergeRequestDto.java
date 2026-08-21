@@ -1,6 +1,5 @@
 package com.bekaku.api.spring.dto;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
@@ -17,6 +16,7 @@ public class FileUploadChunkMergeRequestDto {
     @NotEmpty(message = "{error.NotEmpty}")
     private String chunkFilename;
     private Long fileDirectoryId;
+    private boolean createThumbnail;
     private boolean resizeImage;
     private boolean hidden;
     private Integer duration;

@@ -3,6 +3,7 @@ package com.bekaku.api.spring.serviceImpl;
 import com.bekaku.api.spring.ai.AiChatToolContext;
 import com.bekaku.api.spring.ai.DatabaseSchemaTool;
 import com.bekaku.api.spring.ai.PostgreSQLQueryTool;
+import com.bekaku.api.spring.ai.UserActivityTool;
 import com.bekaku.api.spring.dto.ChatRequest;
 import com.bekaku.api.spring.dto.ChatSourceReference;
 import com.bekaku.api.spring.dto.ChatStreamEvent;
@@ -16,6 +17,7 @@ import com.bekaku.api.spring.service.AiChatMessageService;
 import com.bekaku.api.spring.service.AiChatService;
 import com.bekaku.api.spring.service.AiDocumentMetaService;
 import com.bekaku.api.spring.service.AiRagChatService;
+import com.bekaku.api.spring.service.UnansweredPromptLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -48,12 +50,9 @@ import static com.bekaku.api.spring.util.AppUtil.distinctByKey;
 @Service
 public class AiRagChatServiceImpl implements AiRagChatService {
     private final ChatClient.Builder chatClientBuilder;
-    private final AiDocumentMetaService aiDocumentMetaService;
+    private final UnansweredPromptLogService unansweredPromptLogService;
     private final AppProperties appProperties;
-    private static final String CONVERSATION_ID_KEY = "chat_memory_conversation_id";
-    private final String TEST_COMPANY = "GATS";
 
-    // 1. VectorStore สำหรับไฟล์เอกสารเดิม (rag_documents)
     private final VectorStore documentVectorStore;
 
     @Value("classpath:prompts/system-rag.txt")
@@ -69,28 +68,31 @@ public class AiRagChatServiceImpl implements AiRagChatService {
     private final AiChatMessageService aiChatMessageService;
     private final DatabaseSchemaTool databaseSchemaTool;
     private final PostgreSQLQueryTool postgreSQLQueryTool;
+    private final UserActivityTool userActivityTool;
 
     private final MessageChatMemoryAdvisor chatMemoryAdvisor;
 
     public AiRagChatServiceImpl(
             @Qualifier("documentVectorStore") VectorStore documentVectorStore,
             ChatClient.Builder chatClientBuilder,
-            AiDocumentMetaService aiDocumentMetaService,
+            UnansweredPromptLogService unansweredPromptLogService,
             AppProperties appProperties,
             AiChatService aiChatService,
             AiChatMessageService aiChatMessageService,
             DatabaseSchemaTool databaseSchemaTool,
             PostgreSQLQueryTool postgreSQLQueryTool,
+            UserActivityTool userActivityTool,
             ChatMemory chatMemory
     ) {
         this.documentVectorStore = documentVectorStore;
         this.chatClientBuilder = chatClientBuilder;
-        this.aiDocumentMetaService = aiDocumentMetaService;
+        this.unansweredPromptLogService = unansweredPromptLogService;
         this.appProperties = appProperties;
         this.aiChatService = aiChatService;
         this.aiChatMessageService = aiChatMessageService;
         this.databaseSchemaTool = databaseSchemaTool;
         this.postgreSQLQueryTool = postgreSQLQueryTool;
+        this.userActivityTool = userActivityTool;
         this.chatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
     }
 
@@ -150,6 +152,12 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                     // Retrieving RAG documents.
                     List<Document> retrievedDocs = retrieveContext(request.getMessage(), request.getFilterNames());
                     log.info("Found {} documents from Qdrant", retrievedDocs.size());
+                    if (retrievedDocs.isEmpty()) {
+                        log.info("No documents found for prompt, logging for admin... userId: {}", userId);
+                        Mono.fromRunnable(() ->
+                                unansweredPromptLogService.logUnansweredPrompt(userId, request.getMessage())
+                        ).subscribeOn(Schedulers.boundedElastic()).subscribe();
+                    }
 
                     List<ChatSourceReference> documentSources =
                             toDocumentSourceReferences(retrievedDocs);
@@ -169,7 +177,10 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                             ? systemPromptResource
                             : systemPromptDbToolsResource;
 
-                    List<ToolCallback> toolCallbacks = new ArrayList<>();
+                    List<ToolCallback> toolCallbacks = new ArrayList<>(Arrays.asList(
+                            //custom service tool
+                            ToolCallbacks.from(userActivityTool)
+                    ));
                     if (databaseToolsEnabled) {
                         toolCallbacks.addAll(Arrays.asList(
                                 ToolCallbacks.from(databaseSchemaTool)
@@ -183,11 +194,10 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                     Flux<ChatStreamEvent> tokenStream = chatClientBuilder
                             .build()
                             .prompt()
-                            //TODO
-                            //mark this if you dont want to use system prompt
-//                .system(s -> s.text(systemPrompt)
-//                        .param("context", documentContext)
-//                )
+                            //TODO unmark this if you want to use system prompt
+                            .system(s -> s.text(systemPrompt)
+                                    .param("context", documentContext)
+                            )
                             .user(request.getMessage())
                             .advisors(chatMemoryAdvisor)
                             .advisors(a -> a.param(

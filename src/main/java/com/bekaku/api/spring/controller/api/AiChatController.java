@@ -57,7 +57,7 @@ public class AiChatController extends BaseApiController {
 
     @GetMapping("/history")
     public ResponseEntity<ResponseListDto<AiChatDto>> findAll(@AuthenticationPrincipal AppUserDto auth, HttpServletRequest request, Pageable pageable) {
-        SearchSpecification<AiChat> specification = ControllerUtil.buildSpecification(request, List.of());
+        SearchSpecification<AiChat> specification = ControllerUtil.buildSpecification(request, List.of("title"));
         specification.add(new SearchCriteria("createdUser", auth.getId(), SearchOperation.EQUAL));
         return this.responseEntity(aiChatService.findAllWithSearch(specification, getPageable(pageable, AiChat.getSort())), HttpStatus.OK);
     }

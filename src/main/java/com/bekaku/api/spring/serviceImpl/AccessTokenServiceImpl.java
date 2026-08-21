@@ -2,6 +2,7 @@ package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.dto.AccessTokenDto;
 import com.bekaku.api.spring.dto.AppUserDto;
+import com.bekaku.api.spring.dto.OnlineUserDto;
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.exception.ApiError;
@@ -253,6 +254,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         } else {
             delete(token);
         }
+    }
+
+    @Override
+    public List<OnlineUserDto> findOnlineUsers(LocalDateTime timeLimit) {
+        return accessTokenRepository.findOnlineUsers(timeLimit);
     }
 
     @Override

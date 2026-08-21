@@ -1,0 +1,42 @@
+name: face-detection
+services:
+  face-detection:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: face-detection
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount cache โฟลเดอร์โมเดล InsightFace ไว้ภายนอกเพื่อไม่ต้องโหลดใหม่ทุกครั้งที่ build
+      - model_cache:/root/.insightface
+    environment:
+      - MODEL_NAME=buffalo_sc # เบา/เร็ว เหมาะกับ CPU (buffalo_l แม่นยำสูงกว่าแต่ช้ากว่า)
+      - LIVE_CLASS_INDEX=1 # 0=Print, 1=Live, 2=Replay
+      - ANTISPOOF_THRESHOLD=0.85 # ปรับตามข้อมูลจริงหลัง log score สักพัก
+      - MIN_POSE_DELTA_DEG=8.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    # หาก Server มี NVIDIA GPU ให้เปิด Block นี้:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  model_cache:

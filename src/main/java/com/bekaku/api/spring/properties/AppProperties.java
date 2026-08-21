@@ -26,15 +26,16 @@ public record AppProperties(
         String cdnPort,
         List<String> allowMimes,         // app.allow-mimes
         AppCronProperties cron,
-        RagProperties rag
+        RagProperties rag,
+        FaceRecognitionProperties faceRecognition
 
 ) {
 
-    // 2. วิธีจัดการกับ Default Value (แทนที่ = new ArrayList<>())
-    // เราใช้ Compact Constructor เพื่อเช็กว่าถ้า Spring ไม่ได้ Bind ค่ามาให้ ให้เป็น List ว่าง
+    // How to handle Default Value (replace = new ArrayList<>())
+    // We use the Compact Constructor to check if Spring hasn't bound the values, and if so, set the list to empty.
     public AppProperties {
         if (menus == null) {
-            menus = List.of(); // หรือจะใช้ new java.util.ArrayList<>() ก็ได้ครับ
+            menus = List.of(); // or new java.util.ArrayList<>()
         }
         if (defaultRecipients == null) {
             defaultRecipients = List.of();
@@ -44,10 +45,10 @@ public record AppProperties(
         }
     }
 
-    // 3. Custom Methods สามารถเขียนไว้ข้างใน Body ได้เลย
-    // สังเกตว่าเราเลิกใช้ getCdnPath() แล้วเปลี่ยนมาเรียกชื่อตัวแปร cdnPath ตรงๆ ได้เลย
+    // Custom methods can be written directly inside the body.
+    // Notice that we've stopped using getCdnPath() and can now call the variable cdnPath directly.
     public String getUploadPath() {
-        if (cdnPath == null) return ""; // ดัก Null ไว้หน่อยเพื่อความปลอดภัยครับ
+        if (cdnPath == null) return "";
         return cdnPath.replace("file:///", "");
     }
 

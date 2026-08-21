@@ -1,9 +1,11 @@
 package com.bekaku.api.spring.repository;
 
+import com.bekaku.api.spring.dto.OnlineUserDto;
 import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.AppUser;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -62,4 +64,16 @@ public interface AccessTokenRepository extends BaseRepository<AccessToken, Long>
     @Modifying
     @Query(value = "UPDATE access_token SET fcm_token=null WHERE fcm_token=?1", nativeQuery = true)
     void updateNullFcmToken(String fcmToken);
+
+    @Query("""
+        SELECT new com.bekaku.api.spring.dto.OnlineUserDto(
+            u.id, u.email, MAX(a.lastestActive)
+        )
+        FROM AccessToken a
+        JOIN a.appUser u
+        WHERE a.lastestActive >= :timeLimit
+          AND a.revoked = false
+        GROUP BY u.id, u.email
+    """)
+    List<OnlineUserDto> findOnlineUsers(@Param("timeLimit") LocalDateTime timeLimit);
 }

@@ -9,7 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DtoId {
-    //    @JsonSerialize(using = ToStringSerializer.class)
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
 }

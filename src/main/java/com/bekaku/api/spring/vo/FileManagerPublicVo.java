@@ -17,10 +17,8 @@ public class FileManagerPublicVo {
     private Long fileSize;
     private boolean directoryFolder;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedDate;
 
     @JsonIgnore

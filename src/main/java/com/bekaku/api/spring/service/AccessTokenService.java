@@ -2,11 +2,13 @@ package com.bekaku.api.spring.service;
 
 import com.bekaku.api.spring.dto.AccessTokenDto;
 import com.bekaku.api.spring.dto.AppUserDto;
+import com.bekaku.api.spring.dto.OnlineUserDto;
 import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.LoginLog;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
@@ -50,4 +52,6 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
     Date getExpireDateBy(AccessTokenServiceType service);
 
     void logoutProcess(AccessToken token);
+
+    List<OnlineUserDto> findOnlineUsers(@Param("timeLimit") LocalDateTime timeLimit);
 }
