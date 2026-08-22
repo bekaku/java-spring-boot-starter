@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.dto.ApiClientDto;
+import com.bekaku.api.spring.dto.GeneratedApiKey;
 import com.bekaku.api.spring.dto.ResponseListDto;
 import com.bekaku.api.spring.mapper.ApiClientMapper;
 import com.bekaku.api.spring.model.ApiClient;
@@ -8,15 +9,18 @@ import com.bekaku.api.spring.repository.AccessTokenRepository;
 import com.bekaku.api.spring.repository.ApiClientRepository;
 import com.bekaku.api.spring.service.ApiClientService;
 import com.bekaku.api.spring.specification.SearchSpecification;
+import com.bekaku.api.spring.util.HashUtil;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,6 +33,32 @@ public class ApiClientServiceImpl implements ApiClientService {
     private final ApiClientRepository apiClientRepository;
     private final AccessTokenRepository accessTokenRepository;
     private final ApiClientMapper modelMapper;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
+
+
+    public GeneratedApiKey generateKey(String prefix, int byteLength) {
+        byte[] randomBytes = new byte[byteLength];
+        SECURE_RANDOM.nextBytes(randomBytes);
+
+        String secret = URL_ENCODER.encodeToString(randomBytes);
+        String rawKey = prefix + "_" + secret;
+        String keyHash = HashUtil.sha256(rawKey);
+
+        return new GeneratedApiKey(rawKey, keyHash, prefix);
+    }
+    public boolean verifyKey(String rawKey, String storedHash) {
+        String incomingHash = HashUtil.sha256(rawKey);
+        byte[] a = incomingHash.getBytes(StandardCharsets.UTF_8);
+        byte[] b = storedHash.getBytes(StandardCharsets.UTF_8);
+        return MessageDigest.isEqual(a, b);
+    }
+
+
+    @Override
+    public Optional<ApiClient> findByApiTokenAndStatusIsTrue(String keyHash) {
+        return apiClientRepository.findByApiTokenAndStatusIsTrue(keyHash);
+    }
 
     @Override
     public Optional<ApiClient> findByApiName(String apiName) {

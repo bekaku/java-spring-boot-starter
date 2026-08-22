@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -27,10 +28,10 @@ public class DatabaseSchemaTool {
     private final AppProperties appProperties;
 
     public DatabaseSchemaTool(
-            @Qualifier("schemaVectorStore") VectorStore schemaVectorStore,
+            @Qualifier("schemaVectorStore") Optional<VectorStore> schemaVectorStore,
             AppProperties appProperties
     ) {
-        this.schemaVectorStore = schemaVectorStore;
+        this.schemaVectorStore = schemaVectorStore.orElse(null);
         this.appProperties = appProperties;
     }
 
@@ -73,7 +74,7 @@ public class DatabaseSchemaTool {
             String query,
             ToolContext toolContext
     ) {
-        if (!appProperties.rag().databaseTools().enabled()) {
+        if (!appProperties.rag().databaseTools().enabled() || schemaVectorStore == null) {
             return Collections.emptyList();
         }
         log.info("AI called searchSchema Query: [{}]", query);

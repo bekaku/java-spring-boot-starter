@@ -20,7 +20,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@GenSourceableTable(createPermission=false)
+@GenSourceableTable(createFrontend = true)
 @NoArgsConstructor
 @Table(name = "api_client", indexes = {
         @Index(columnList = "updated_user"),

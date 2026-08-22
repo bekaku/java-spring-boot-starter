@@ -167,6 +167,7 @@ public class WebSecurityConfig {
                 ConstantData.ACCEPT_LANGUGE,
                 ConstantData.ACCEPT_APIC_LIENT,
                 ConstantData.X_SYNC_ACTIVE,
+                ConstantData.X_API_KEY,
                 ConstantData.X_USER_ID));
 
         configuration.setExposedHeaders(Arrays.asList("Content-Disposition", "Set-Cookie"));

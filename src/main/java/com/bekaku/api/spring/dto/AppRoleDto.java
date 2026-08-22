@@ -21,4 +21,5 @@ public class AppRoleDto extends DtoId {
     private String name;
     private boolean active;
     private String[] selectdPermissions = new String[]{};
+    private LocalDateTime createdDate;
 }

@@ -65,6 +65,7 @@ public class DevelopmentContoller extends BaseApiController {
     private static final String TYPE_BIG_DECIMAL = "big_decimal";
     private static final String TYPE_FLOAT = "float";
     private static final String TYPE_INTEGER = "integer";
+    private static final String TYPE_LONG = "long";
     private static final String TYPESCRIPT_STRING = "string";
     private static final String TYPESCRIPT_NUMBER = "number";
     private static final String TYPESCRIPT_BOOLEAN = "boolean";
@@ -304,6 +305,7 @@ public class DevelopmentContoller extends BaseApiController {
                         switch (theme) {
                             case QUASAR -> generateFrontend(className, persistentClass);
                             case NUXT_QUASAR -> generateFrontendNuxt3Quasar(className, persistentClass);
+                            case NUXT_UI -> generateFrontendNuxtUI(className, persistentClass);
                         }
 
                     }
@@ -436,9 +438,11 @@ public class DevelopmentContoller extends BaseApiController {
                         boolean isRefClass = isObjectLink(src.getPropertyType());
                         if (type != null) {
                             if (src.getPropertyType().equals(TYPE_LOCAL_DATETIME)) {
-                                writer.append("    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyy-MM-dd HH:mm:ss\")\n");
+//                                writer.append("    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyy-MM-dd HH:mm:ss\")\n");
                             } else if (src.getPropertyType().equals(TYPE_LOCAL_DATE)) {
                                 writer.append("    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyy-MM-dd\")\n");
+                            } else if (src.getPropertyType().equals(TYPE_LONG)) {
+                                writer.append("    @JsonFormat(shape = JsonFormat.Shape.STRING)\n");
                             }
 
                             if (!isNullable) {
@@ -910,6 +914,402 @@ public class DevelopmentContoller extends BaseApiController {
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
+        }
+    }
+
+    //Start nuxt3+quasar
+    private void generateFrontendNuxtUI(String entityName, PersistentClass persistentClass) {
+        Table table = persistentClass.getTable();
+        String tableName = table.getName();
+        String tableNameKebabCase = tableName.replace("_", "-");
+        String dirName = ConstantData.DEFAULT_FRONTEND_GENERATE_DIRECTORY + "/nuxt-ui/" + tableNameKebabCase;
+        String listName = dirName + "/index.vue";
+        String dirFormName = dirName + "/[crud]";
+        String formName = dirFormName + "/[id].vue";
+        String apiName = dirName + "/use" + entityName + "Api.ts";
+        log.info("generateFrontendNuxtUI > TableName :{},  listName :{}, formName :{}, apiName :{}", tableName, listName, formName, apiName);
+
+        if (!FileUtil.folderExist(dirName)) {
+            FileUtil.folderCreate(dirName);
+            log.warn("NuxtUI created folder :{} ", dirName);
+        }
+        if (!FileUtil.folderExist(dirFormName)) {
+            FileUtil.folderCreate(dirFormName);
+            log.warn("NuxtUI dirFormName :{} ", dirFormName);
+        }
+        if (!FileUtil.fileExists(listName)) {
+            log.warn("NuxtUI listName :{}, created", listName);
+            generateNuxUIFrontList(listName, entityName, tableName);
+        }
+        if (!FileUtil.fileExists(formName)) {
+            log.warn("NuxtUI formName :{}, created", formName);
+            generateNuxUIFrontForm(formName, entityName, tableName);
+        }
+        if (!FileUtil.fileExists(apiName)) {
+            log.warn("NuxtUI apiName :{}, created", apiName);
+//            generateNux3QuasarFrontService(apiName, entityName, tableName);
+        }
+    }
+
+    private void generateNuxUIFrontList(String filePathName, String entityName, String tableName) {
+        String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
+        String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
+        String tableNameKebabCase = tableName.replace("_", "-");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+            writer.append("<script setup lang=\"ts\">\n");
+            writer.append("\n");
+
+            //Model
+            writer.append("/* move this interface to /app/types/models.ts \n");
+            writer.append("export interface ").append(entityName).append(" extends Id {\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    String typeScriptType = getTypscriptType(propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String undefinedSign = isNullable ? "?" : "";
+                    String typeScriptTypeFinal = !AppUtil.isEmpty(undefinedSign) ? typeScriptType + " " + TYPESCRIPT_OR_SIGN + " " + TYPESCRIPT_NULL : typeScriptType;
+                    writer.append(" ").append(propertyName).append(undefinedSign).append(": ").append(typeScriptTypeFinal).append("\n");
+                }
+            }
+            writer.append("}\n");
+            writer.append("*/\n");
+
+            //message
+            writer.append("/* move this message object to /app/i18n/th/model.ts and /app/i18n/en/model.ts under model:{}  \n");
+            writer.append("    ,\"").append(entityNameLowerFirst).append("\": {\n");
+            writer.append("      \"table\": \"").append(entityNameLowerFirst).append("\",\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                if (!exceptField(propertyName)) {
+                    writer.append("      \"").append(propertyName).append("\": \"").append(propertyName).append("\",\n");
+                }
+            }
+            writer.append("    }\n");
+            writer.append("*/\n");
+
+            writer.append("\n");
+            writer.append("import type { TableColumn } from \"@nuxt/ui\";\n");
+            writer.append("import { ICrudListHeaderOptionSearchType, type ICrudFilterOptions} from \"~/types/common\";\n");
+            writer.append("import type { ").append(entityName).append(" } from \"~/types/models\";\n");
+            writer.append("\n");
+            writer.append("definePageMeta({\n");
+            writer.append("  pageName: 'model.").append(entityNameLowerFirst).append(".table',\n");
+            writer.append("  requiresPermission: [\"").append(tableName).append("_list\"],\n");
+            writer.append("});\n");
+            writer.append("const { t } = useLang();\n");
+            writer.append("const {formatDateTime, formatDate} = useDateFns();\n");
+            writer.append("const UIcon = resolveComponent(\"UIcon\");\n");
+            writer.append("\n");
+            writer.append("const {\n");
+            writer.append("  dataList,\n");
+            writer.append("  loading,\n");
+            writer.append("  firstLoaded,\n");
+            writer.append("  pages,\n");
+            writer.append("  sorts,\n");
+            writer.append("  onPageChange,\n");
+            writer.append("  onPerPageChange,\n");
+            writer.append("  onSort,\n");
+            writer.append("  onReload,\n");
+            writer.append("  onSearch,\n");
+            writer.append("  onItemDelete,\n");
+            writer.append("  onNewForm,\n");
+            writer.append("  onItemClick,\n");
+            writer.append("  onItemCopy,\n");
+            writer.append("  crudName,\n");
+            writer.append("  onKeywordSearch,\n");
+            writer.append("} = useCrudList<").append(entityName).append(">({\n");
+            writer.append("  crudName: \"").append(entityName).append("\",\n");
+            writer.append("  apiEndpoint: \"/api/").append(entityNameLowerFirst).append("\",\n");
+            writer.append("  headers: [],\n");
+            writer.append("  itemsPerPage: 10,\n");
+            writer.append("  defaultSorts: [\n");
+            writer.append("    {\n");
+            writer.append("      column: \"id\",\n");
+            writer.append("      mode: \"desc\",\n");
+            writer.append("    },\n");
+            writer.append("  ],\n");
+            writer.append("});\n");
+            writer.append("const columns = ref<TableColumn<").append(entityName).append(">[]>([\n");
+
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    String crudListSearchType = getCrudListSearchType(src.getPropertyType());
+                    String typeScriptType = getTypscriptType(propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
+                    boolean isTextAreaType = isTypeTextArea(src.getSqlType(), propertyTypeName);
+                    Long limitText = src.getLength();
+                    boolean isNumberType = propertyTypeName.equals(TYPE_FLOAT) || propertyTypeName.equals(TYPE_BIG_DECIMAL) || propertyTypeName.equals(TYPE_INTEGER);
+                    boolean isStringType = propertyTypeName.equals(TYPE_STRING);
+                    boolean isRefClass = isObjectLink(propertyTypeName);
+                    boolean isBooleanType = propertyTypeName.equals(TYPE_BOOLEAN);
+                    boolean isDateType = propertyTypeName.equals(TYPE_LOCAL_DATE);
+                    boolean isDatetimeType = propertyTypeName.equals(TYPE_LOCAL_DATETIME);
+                    String searchOperation = isDateType || isNumberType || isDatetimeType ? ">=" : isBooleanType ? "=" : ":";
+
+                    writer.append("  {\n");
+                    writer.append("    accessorKey: \"").append(propertyName).append("\",\n");
+                    writer.append("    header: t(\"model.").append(entityNameLowerFirst).append(".").append(propertyName).append("\"),\n");
+
+                    if (isBooleanType) {
+                        writer.append("    cell: ({ row }) => {\n");
+                        writer.append("      const ").append(propertyName).append(" = row.getValue(\"").append(propertyName).append("\");\n");
+                        writer.append("      return h(UIcon, {\n");
+                        writer.append("        name: ").append(propertyName).append(" ? \"lucide:circle-check\" : \"lucide:circle-x\",\n");
+                        writer.append("        class: ").append(propertyName).append(" ? \"text-primary size-6\" : \"text-neutral size-6\",\n");
+                        writer.append("      });\n");
+                        writer.append("    },\n");
+                    } else if (isDateType || isDatetimeType) {
+                        writer.append("    cell: ({ row }) => {\n");
+                        writer.append("      const ").append(propertyName).append(" = row.getValue(\"").append(propertyName).append("\") as string;\n");
+                        writer.append("      return ").append(isDatetimeType ? "formatDateTime" : "formatDate").append("({\n");
+                        writer.append("        date: ").append(propertyName).append(",\n");
+                        writer.append("        iso:true\n");
+                        writer.append("      });\n");
+                        writer.append("    },\n");
+                    } else if (isNumberType) {
+                        writer.append("    cell: ({ row }) => {\n");
+                        writer.append("      const ").append(propertyName).append(" = row.getValue(\"").append(propertyName).append("\") as string;\n");
+                        writer.append("      numberFormat(").append(propertyName).append(")\n");
+                        writer.append("    },\n");
+                        writer.append("\n");
+                    } else {
+                        writer.append("    cell: ({ row }) => row.getValue(\"").append(propertyName).append("\"),\n");
+                    }
+                    writer.append("\n");
+                    writer.append("    meta: {\n");
+                    writer.append("      options: {\n");
+                    writer.append("        sortable: true,\n");
+                    writer.append("        searchable: true,\n");
+                    writer.append("        searchType: ICrudListHeaderOptionSearchType.").append(crudListSearchType).append(",\n");
+                    writer.append("        searchOperation: \"").append(searchOperation).append("\",\n");
+                    writer.append("        searchModel: ").append(isBooleanType ? "true" : "\"\"").append(",\n");
+                    writer.append("        searchOperationReadonly: ").append(Boolean.toString(isBooleanType)).append(",\n");
+                    writer.append("      } as ICrudFilterOptions,\n");
+                    writer.append("    } as any,\n");
+                    writer.append("\n");
+                    writer.append("  },\n");
+                }
+            }
+            writer.append("]);\n");
+
+            writer.append("const onCellTypeClick = (index: number) => {\n");
+            writer.append("  let rowItem = dataList.value[index];\n");
+            writer.append("  console.log(\"rowItem\", rowItem);\n");
+//            writer.append("  if (rowItem) {\n");
+//            writer.append("    rowItem.active = !rowItem.active;\n");
+//            writer.append("  }\n");
+            writer.append("};\n");
+            writer.append("</script>\n");
+            writer.append("\n");
+
+            writer.append("<template>\n");
+            writer.append("  <BaseDashboardPanel id=\"").append(tableNameKebabCase).append("-index\" :title=\"$t('model.").append(entityNameLowerFirst).append(".table')\">\n");
+            writer.append("    <BaseTable\n");
+            writer.append("      icon=\"lucide:layout-list\"\n");
+            writer.append("      :title=\"$t('model.").append(entityNameLowerFirst).append(".table')\"\n");
+            writer.append("      :crud-name=\"crudName\"\n");
+            writer.append("      :list=\"dataList\"\n");
+            writer.append("      :show-checkbox=\"true\"\n");
+            writer.append("      :loading=\"loading\"\n");
+            writer.append("      :first-loaded=\"firstLoaded\"\n");
+            writer.append("      :columns=\"columns\"\n");
+            writer.append("      v-model:sorts=\"sorts\"\n");
+            writer.append("      v-model:paging=\"pages\"\n");
+            writer.append("      @on-item-delete=\"onItemDelete\"\n");
+            writer.append("      @on-page-no-change=\"onPageChange\"\n");
+            writer.append("      @on-items-perpage-change=\"onPerPageChange\"\n");
+            writer.append("      @on-new-form=\"onNewForm\"\n");
+            writer.append("      @on-item-click=\"onItemClick\"\n");
+            writer.append("      @on-item-copy=\"onItemCopy\"\n");
+            writer.append("      @on-sort=\"onSort\"\n");
+            writer.append("      @on-reload=\"onReload\"\n");
+            writer.append("      @on-keyword-search=\"onKeywordSearch\"\n");
+            writer.append("      @on-search=\"onSearch\"\n");
+            writer.append("    >\n");
+            writer.append("      <!-- accessorKey or id of column can be used as slots everywhere in side BaseTable\n");
+            writer.append("    <template #actions-cell=\"{ row }\">\n");
+            writer.append("     Action slot\n");
+            writer.append("    </template>\n");
+            writer.append("    <template #code-cell=\"{ row }\">\n");
+            writer.append("     Code slot\n");
+            writer.append("    </template>\n");
+            writer.append("    -->\n");
+            writer.append("\n");
+            writer.append("\n");
+            writer.append("\n");
+            writer.append("\n");
+            writer.append("    </BaseTable>\n");
+            writer.append("  </BaseDashboardPanel>\n");
+            writer.append("</template>\n");
+            writer.append("\n");
+            writer.append("\n");
+            writer.append("\n");
+            writer.close();
+            logCretedFile(filePathName);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private void generateNuxUIFrontForm(String filePathName, String entityName, String tableName) {
+        String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
+        String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
+        String tableNameKebabCase = tableName.replace("_", "-");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePathName, false));
+            writer.append("<script setup lang=\"ts\">\n");
+            writer.append("import z from \"zod\";\n");
+            writer.append("import type { ").append(entityName).append(" } from \"~/types/models\";\n");
+            writer.append("definePageMeta({\n");
+            writer.append("  pageName: \"model.").append(entityNameLowerFirst).append(".table\",\n");
+            writer.append("  requiresPermission: [\"").append(tableName).append("_view\", \"").append(tableName).append("_add\", \"").append(tableName).append("_edit\"],\n");
+            writer.append("});\n");
+            writer.append("const { t } = useLang();\n");
+
+            writer.append("const schema = z.object({\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    String crudListSearchType = getCrudListSearchType(src.getPropertyType());
+                    String typeScriptType = getTypscriptType(propertyTypeName);
+                    boolean isNullable = src.isNullable();
+                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
+                    boolean isTextAreaType = isTypeTextArea(src.getSqlType(), propertyTypeName);
+                    Long limitText = src.getLength();
+                    boolean isNumberType = propertyTypeName.equals(TYPE_FLOAT) || propertyTypeName.equals(TYPE_BIG_DECIMAL) || propertyTypeName.equals(TYPE_INTEGER);
+                    boolean isStringType = propertyTypeName.equals(TYPE_STRING);
+                    boolean isRefClass = isObjectLink(propertyTypeName);
+                    boolean isBooleanType = propertyTypeName.equals(TYPE_BOOLEAN);
+                    boolean isDateType = propertyTypeName.equals(TYPE_LOCAL_DATE);
+                    boolean isDatetimeType = propertyTypeName.equals(TYPE_LOCAL_DATETIME);
+                    if (!isRefClass && !isDatetimeType) {
+                        String typeString = isNumberType ? "number-step" : isTextAreaType ? "textarea" : isBooleanType ? "checkbox" : isDateType ? "date" : "text";
+                        String zString = isNumberType ? "number()" : isBooleanType ? "any()" : "string()";
+                        writer.append("  ").append(propertyName).append(": z\n");
+                        writer.append("    .").append(zString).append("\n");
+                        if (!isNullable) {
+                            writer.append("    .min(1, t(\"error.validateRequireField\"))\n");
+                        }
+                        writer.append("    .describe(\n");
+                        writer.append("      uiConfig({\n");
+                        writer.append("        label: t(\"model.").append(entityNameLowerFirst).append(".").append(propertyName).append("\"),\n");
+                        writer.append("        ui: {\n");
+                        writer.append("          type: \"").append(typeString).append("\",\n");
+                        writer.append("          required: ").append(Boolean.toString(!isNullable)).append(",\n");
+                        writer.append("          clearable: true,\n");
+                        if (isDateType) {
+                            writer.append("          numberOfMonths: 2,\n");
+                        }
+                        if (limitText!=null && limitText > 0) {
+                            writer.append("          maxlength: ").append(String.valueOf(limitText)).append(",\n");
+                        }
+                        writer.append("        },\n");
+                        writer.append("      }),\n");
+                        if (!isNullable) {
+                            writer.append("    ),\n");
+                        } else {
+                            writer.append("    )\n");
+                            writer.append("    .optional(),\n");
+                        }
+                    } else if (isDatetimeType) {
+                        writer.append(" //implement datetime\n");
+                        writer.append(" //").append(propertyName).append("\n");
+                    } else {
+                        //implement ref object
+                        writer.append(" //implement ref object\n");
+                        writer.append(" //").append(propertyName).append("\n");
+                    }
+                }
+            }
+
+            writer.append("});\n");
+            //end z object
+
+            writer.append("type Schema = z.output<typeof schema>;\n");
+
+            writer.append("const state = ref<Partial<Schema>>({\n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                String propertyTypeName = src.getPropertyType();
+                if (!exceptField(propertyName)) {
+                    String defaultValue = getTypscriptTypeDefaultValue(propertyTypeName);
+                    boolean isNumberType = propertyTypeName.equals(TYPE_FLOAT) || propertyTypeName.equals(TYPE_BIG_DECIMAL) || propertyTypeName.equals(TYPE_INTEGER);
+                    boolean isBooleanType = propertyTypeName.equals(TYPE_BOOLEAN);
+                    String defaultVal = isNumberType ? "0" : isBooleanType ? "true" : "\"\"";
+                    writer.append("  ").append(propertyName).append(": ").append(defaultValue != null ? defaultValue : defaultVal).append(", \n");
+                }
+            }
+            writer.append("});\n");
+            writer.append("const {\n");
+            writer.append("  crudAction,\n");
+            writer.append("  loading,\n");
+            writer.append("  crudName,\n");
+            writer.append("  isEditMode,\n");
+            writer.append("  onDelete,\n");
+            writer.append("  onBack,\n");
+            writer.append("  onEnableEditForm,\n");
+            writer.append("  onSubmit,\n");
+            writer.append("} = useCrudForm<").append(entityName).append(">(\n");
+            writer.append("  {\n");
+            writer.append("    crudName: \"").append(entityName).append("\",\n");
+            writer.append("  },\n");
+            writer.append("  state,\n");
+            writer.append(");\n");
+            writer.append("</script>\n");
+            writer.append("<template>\n");
+            writer.append("  <BaseDashboardPanel\n");
+            writer.append("    id=\"").append(tableNameKebabCase).append("-crud-index\"\n");
+            writer.append("    :title=\"$t('model.").append(entityNameLowerFirst).append(".table')\"\n");
+            writer.append("  >\n");
+            writer.append("    <BaseForm\n");
+            writer.append("      :zod-schema=\"schema\"\n");
+            writer.append("      v-model=\"state\"\n");
+            writer.append("      :edit-mode=\"isEditMode\"\n");
+            writer.append("      :crud-action=\"crudAction\"\n");
+            writer.append("      :loading=\"loading\"\n");
+            writer.append("      :crud-name=\"crudName\"\n");
+            writer.append("      icon=\"lucide:form\"\n");
+            writer.append("      :title=\"$t('model.").append(entityNameLowerFirst).append(".table')\"\n");
+            writer.append("      orientation=\"horizontal\"\n");
+            writer.append("      class=\"max-w-[1020px]\"\n");
+            writer.append("      @on-back=\"onBack\"\n");
+            writer.append("      @on-edit-enable=\"onEnableEditForm\"\n");
+            writer.append("      @on-submit=\"onSubmit\"\n");
+            writer.append("      @on-delete=\"onDelete\"\n");
+            writer.append("    >\n");
+            writer.append("      <!-- you can override prepend fields here -->\n");
+            writer.append("      <!-- <template #prepend-fields> </template> -->\n");
+            writer.append("\n");
+            writer.append("      <!-- you can override form fields here auto generate slot by field-${z.object.id} -->\n");
+            writer.append("      <!-- \n");
+            for (GenerateTableSrcItem src : propertyList) {
+                String propertyName = src.getPropertyName();
+                if (!exceptField(propertyName)) {
+                    writer.append("      <template #field-").append(propertyName).append(">\n");
+                    writer.append("        <UFormField :label=\"$t('model.").append(entityNameLowerFirst).append(".").append(propertyName).append("')\" name=\"").append(propertyName).append("\" class=\"w-full\">\n");
+                    writer.append("          Override ").append(propertyName).append("\n");
+                    writer.append("        </UFormField>\n");
+                    writer.append("      </template>\n");
+                }
+            }
+            writer.append("      -->\n");
+
+            writer.append("\n");
+            writer.append("\n");
+            writer.append("    </BaseForm>\n");
+            writer.append("  </BaseDashboardPanel>\n");
+            writer.append("</template>\n");
+            writer.close();
+            logCretedFile(filePathName);
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 

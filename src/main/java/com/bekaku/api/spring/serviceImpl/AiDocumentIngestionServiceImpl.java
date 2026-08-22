@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -53,15 +54,15 @@ public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionServic
             AiDocumentMetaRepository documentMetaRepository,
             AppProperties appProperties,
             JdbcTemplate jdbcTemplate,
-            @Qualifier("documentVectorStore") VectorStore documentVectorStore,
-            @Qualifier("schemaVectorStore") VectorStore schemaVectorStore
+            @Qualifier("documentVectorStore") Optional<VectorStore> documentVectorStore,
+            @Qualifier("schemaVectorStore") Optional<VectorStore> schemaVectorStore
     ) {
         this.extractorFactory = extractorFactory;
         this.documentMetaRepository = documentMetaRepository;
         this.appProperties = appProperties;
         this.jdbcTemplate = jdbcTemplate;
-        this.documentVectorStore = documentVectorStore;
-        this.schemaVectorStore = schemaVectorStore;
+        this.documentVectorStore = documentVectorStore.orElse(null);
+        this.schemaVectorStore = schemaVectorStore.orElse(null);
     }
 
     @Override

@@ -13,6 +13,7 @@ public record RagProperties(int topK,
                             int memorySize,
                             boolean deleteSourceAfterIngest,
                             boolean databaseToolsSchema,
+                            boolean qdrantEnabled,
                             RagDatabaseToolsProperties databaseTools
 ) {
 }

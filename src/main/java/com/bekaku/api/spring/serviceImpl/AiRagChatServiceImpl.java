@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.bekaku.api.spring.util.AppUtil.distinctByKey;
@@ -73,7 +74,7 @@ public class AiRagChatServiceImpl implements AiRagChatService {
     private final MessageChatMemoryAdvisor chatMemoryAdvisor;
 
     public AiRagChatServiceImpl(
-            @Qualifier("documentVectorStore") VectorStore documentVectorStore,
+            @Qualifier("documentVectorStore") Optional<VectorStore> documentVectorStore,
             ChatClient.Builder chatClientBuilder,
             UnansweredPromptLogService unansweredPromptLogService,
             AppProperties appProperties,
@@ -84,7 +85,7 @@ public class AiRagChatServiceImpl implements AiRagChatService {
             UserActivityTool userActivityTool,
             ChatMemory chatMemory
     ) {
-        this.documentVectorStore = documentVectorStore;
+        this.documentVectorStore = documentVectorStore.orElse(null);
         this.chatClientBuilder = chatClientBuilder;
         this.unansweredPromptLogService = unansweredPromptLogService;
         this.appProperties = appProperties;
@@ -195,9 +196,9 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                             .build()
                             .prompt()
                             //TODO unmark this if you want to use system prompt
-                            .system(s -> s.text(systemPrompt)
-                                    .param("context", documentContext)
-                            )
+//                            .system(s -> s.text(systemPrompt)
+//                                    .param("context", documentContext)
+//                            )
                             .user(request.getMessage())
                             .advisors(chatMemoryAdvisor)
                             .advisors(a -> a.param(

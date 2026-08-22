@@ -201,9 +201,10 @@ app:
     access-token-ttl-minutes: 15
     refresh-token-ttl-days: 7
   front-end:
-    theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
+    theme: NUXT_UI #NUXT_UI, NUXT_QUASAR, QUASAR
   rag:
     delete-source-after-ingest: true
+    qdrant-enabled: false
     database-tools:
       enabled: false
 

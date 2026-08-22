@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface ApiClientRepository extends BaseRepository<ApiClient, Long>, JpaSpecificationExecutor<ApiClient> {
 
     Optional<ApiClient> findByApiName(String apiName);
+    Optional<ApiClient> findByApiTokenAndStatusIsTrue(String keyHash);
 }

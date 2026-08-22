@@ -34,7 +34,6 @@ public class ApiClientController extends BaseApiController {
     private final ApiClientService apiClientService;
     private final ApiClientIpService apiClientIpService;
     private final I18n i18n;
-    //   Logger logger = LoggerFactory.getLogger(ApiClientController.class);
 
     @PreAuthorize("@permissionChecker.hasPermission('api_client_list')")
     @GetMapping
@@ -44,12 +43,24 @@ public class ApiClientController extends BaseApiController {
     }
 
     @PreAuthorize("@permissionChecker.hasPermission('api_client_add')")
+    @PostMapping("/generate/{apiId}")
+    public String generate(@PathVariable("apiId") Long apiId) {
+        Optional<ApiClient> apiClient = apiClientService.findById(apiId);
+        if (apiClient.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+
+        var keyData = apiClientService.generateKey("sk_live", 32);
+        apiClient.get().setApiToken(keyData.keyHash());
+        apiClientService.save(apiClient.get());
+
+        return keyData.rawKey();
+    }
+
+    @PreAuthorize("@permissionChecker.hasPermission('api_client_add')")
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody ApiClientDto dto) {
 
-//        return this.responseEntity(new HashMap<String, Object>() {{
-//            put("dto", dto);
-//        }}, HttpStatus.OK);
         ApiClient apiClient = new ApiClient(dto.getApiName(), dto.getByPass(), dto.getStatus());
         Optional<ApiClient> apiExist = apiClientService.findByApiName(dto.getApiName());
         if (apiExist.isPresent()) {
@@ -61,7 +72,7 @@ public class ApiClientController extends BaseApiController {
             }
         }
 
-        apiClientService.save(apiClient);
+
         return this.responseEntity(apiClientService.convertEntityToDto(apiClient), HttpStatus.OK);
     }
 
@@ -77,15 +88,23 @@ public class ApiClientController extends BaseApiController {
         return this.responseEntity(HttpStatus.OK);
     }
 
+    private void validateDefaultApi(ApiClient apiClient) {
+        String defultApi = "default";
+        if (apiClient.getApiName().equals(defultApi)) {
+            throw this.responseError(HttpStatus.BAD_REQUEST, "Cannot delete/update default API");
+        }
+    }
+
     @PreAuthorize("@permissionChecker.hasPermission('api_client_edit')")
-    @PutMapping
-    public ResponseEntity<Object> update(@Valid @RequestBody ApiClientDto dto) {
+    @PutMapping("/{apiClientId}")
+    public ResponseEntity<Object> update(@PathVariable("apiClientId") long apiClientId, @Valid @RequestBody ApiClientDto dto) {
 
         ApiClient apiClient = apiClientService.convertDtoToEntity(dto);
-        Optional<ApiClient> oldData = apiClientService.findById(dto.getId());
+        Optional<ApiClient> oldData = apiClientService.findById(apiClientId);
         if (oldData.isEmpty()) {
             throw this.responseErrorNotfound();
         }
+        validateDefaultApi(oldData.get());
         if (!oldData.get().getApiName().equals(apiClient.getApiName())) {
             Optional<ApiClient> apiExist = apiClientService.findByApiName(dto.getApiName());
             if (apiExist.isPresent()) {
@@ -123,6 +142,7 @@ public class ApiClientController extends BaseApiController {
         if (apiClient.isEmpty()) {
             throw this.responseErrorNotfound();
         }
+        validateDefaultApi(apiClient.get());
         apiClientService.delete(apiClient.get());
         return this.responseDeleteMessage();
     }
