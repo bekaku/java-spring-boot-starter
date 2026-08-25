@@ -196,9 +196,9 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                             .build()
                             .prompt()
                             //TODO unmark this if you want to use system prompt
-//                            .system(s -> s.text(systemPrompt)
-//                                    .param("context", documentContext)
-//                            )
+                            .system(s -> s.text(systemPrompt)
+                                    .param("context", documentContext)
+                            )
                             .user(request.getMessage())
                             .advisors(chatMemoryAdvisor)
                             .advisors(a -> a.param(

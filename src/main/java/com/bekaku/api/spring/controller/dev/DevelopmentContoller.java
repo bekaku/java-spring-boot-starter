@@ -6,17 +6,16 @@ import com.bekaku.api.spring.configuration.MetadataExtractorIntegrator;
 import com.bekaku.api.spring.controller.api.BaseApiController;
 import com.bekaku.api.spring.enumtype.DevFrontendTheme;
 import com.bekaku.api.spring.enumtype.PermissionType;
-import com.bekaku.api.spring.model.ApiClient;
-import com.bekaku.api.spring.model.AppRole;
 import com.bekaku.api.spring.model.Permission;
 import com.bekaku.api.spring.service.ApiClientService;
-import com.bekaku.api.spring.service.AppRoleService;
+import com.bekaku.api.spring.service.CodeGeneratorService;
 import com.bekaku.api.spring.service.PermissionService;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.FileUtil;
 import com.bekaku.api.spring.util.SnowflakeIdHolder;
 import com.bekaku.api.spring.vo.GenerateTableSrcItem;
+import freemarker.template.Template;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.boot.Metadata;
@@ -33,10 +32,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequestMapping(path = "/dev/development")
@@ -46,7 +47,8 @@ public class DevelopmentContoller extends BaseApiController {
     private final I18n i18n;
     private final PermissionService permissonService;
     private final ApiClientService apiClientService;
-    private final AppRoleService appRoleService;
+
+    private final CodeGeneratorService codeGeneratorService;
 
 
     @Value("${environments.production}")
@@ -86,113 +88,9 @@ public class DevelopmentContoller extends BaseApiController {
         return this.responseEntity(HttpStatus.OK);
     }
 
-    private void migrateDefaultPermission() {
-        /*
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('api_client_list',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('api_client_view',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('api_client_manage',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('permission_list',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('permission_view',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('permission_manage',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('role_list',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('role_view',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('role_manage',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('user_list',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('user_view',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('user_manage',false);
-        INSERT INTO `permission`  (`code`, front_end) VALUES ('backend_login',false);
-
-
-        INSERT INTO `role`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `front_end`, `name`, `name_en`, `company_id`) VALUES (1, 0, NULL, NULL, '2022-06-02 16:16:08.386441', 1, 1, 0, 'Developer', 'Developer', NULL);
-        INSERT INTO `role`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `front_end`, `name`, `name_en`, `company_id`) VALUES (2, 0, '2022-06-08 16:34:57.366829', 1, '2022-06-08 16:34:57.366829', 1, 1, 1, 'general user', 'general user', NULL);
-        INSERT INTO `role`(`id`, `deleted`, `created_date`, `created_user`, `updated_date`, `updated_user`, `active`, `front_end`, `name`, `name_en`, `company_id`) VALUES (3, 0, '2022-09-03 11:16:46.830155', 1, '2022-09-03 11:16:46.830155', 1, 1, 1, 'Organization admin', 'Organization admin', NULL);
-
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 1);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 2);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 3);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 4);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 5);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 6);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 7);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 8);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 9);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 10);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 11);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 12);
-        INSERT INTO `role_permission`(`role`, `permission`) VALUES (1, 13);
-
-        INSERT INTO `user`(`id`, `created_date`, `created_user`, `updated_date`, `updated_user`, `email`, `avatar_file_id`, `password`, `salt`, `active`, `username`) VALUES (1, NULL, NULL, NULL, NULL, 'admin@mydomain.com', NULL, '$2a$10$VvK6.mMEdt9sdEjIFE.g8uN4I33dbV9luiFkhGV773wPIBHLEamhe', '0d1af063-ed5c-4387-91b2-04292799b06c', 1, 'admin');
-        INSERT INTO `user_role`(`user`, `role`) VALUES (1, 1);
-        INSERT INTO `api_client`(`id`, `created_date`, `created_user`, `updated_date`, `updated_user`, `api_name`, `api_token`, `by_pass`, `status`) VALUES (1, '2022-04-19 16:39:10', NULL, '2022-04-19 16:39:10', NULL, 'default', '10b7b78c-6544-4a04-9839-8f8c10d9445e', 1, 1);
-
-        Index
-        alter table files_directory_path add INDEX k_files_directory (files_directory);
-        alter table files_directory_path add INDEX k_files_directory_parent (files_directory_parent);
-
-        -- CREATE INDEX IDXpostRecommend ON form_answer(recommend(255));
-        -- https://database.guide/how-the-match-function-works-in-mysql/
-        -- SELECT * FROM table WHERE MATCH(col1, col2,col3,col4, col5) AGAINST ('abc');
-        -- ALTER TABLE tab ADD FULLTEXT ft_index_name (col1,col2,col3,col4,col5);
-
-        ALTER TABLE form_answer ADD FULLTEXT IDXFTrecommend(recommend);
-        ALTER TABLE post_data ADD FULLTEXT IDXFTpost_content(post_content);
-        ALTER TABLE post_data ADD FULLTEXT IDXFTpost_cause(post_cause);
-        ALTER TABLE post_data ADD FULLTEXT IDXFTpost_solution(post_solution);
-         */
-        permissonService.saveAll(Arrays.asList(
-                new Permission("api_client_list"),
-                new Permission("api_client_view"),
-                new Permission("api_client_add"),
-                new Permission("api_client_edit"),
-                new Permission("api_client_delete"),
-                new Permission("permission_list"),
-                new Permission("permission_view"),
-                new Permission("permission_add"),
-                new Permission("permission_edit"),
-                new Permission("permission_delete"),
-                new Permission("role_list"),
-                new Permission("role_view"),
-                new Permission("role_add"),
-                new Permission("role_edit"),
-                new Permission("role_delete"),
-                new Permission("user_list"),
-                new Permission("user_view"),
-                new Permission("user_add"),
-                new Permission("user_edit"),
-                new Permission("user_delete"),
-                new Permission("files_directory_list"),
-                new Permission("files_directory_view"),
-                new Permission("files_directory_add"),
-                new Permission("files_directory_edit"),
-                new Permission("files_directory_delete"),
-                new Permission("file_manager_list"),
-                new Permission("file_manager_view"),
-                new Permission("file_manager_add"),
-                new Permission("file_manager_edit"),
-                new Permission("file_manager_delete")
-        ));
-    }
-
-    private void migrateApiClient() {
-
-        apiClientService.save(new ApiClient("default", true, true));
-    }
-
-    private void migrateDevRole() {
-        AppRole appRole = new AppRole("developer", true);
-        appRole.getPermissions().addAll(permissonService.findAll());
-        appRoleService.save(appRole);
-    }
-
-    @RequestMapping(value = "/generateSrcV2", method = RequestMethod.GET)
-    public ResponseEntity<Object> generateSrcMethodGet() {
-        generateProcess(DevFrontendTheme.QUASAR);
-        return this.responseEntity(HttpStatus.OK);
-    }
-
     @RequestMapping(value = "/generateSrc", method = RequestMethod.POST)
     public ResponseEntity<Object> generateSrc() {
-        DevFrontendTheme theme = DevFrontendTheme.QUASAR;
+        DevFrontendTheme theme = DevFrontendTheme.NUXT_UI;
         if (frontendTheme != null) {
             theme = DevFrontendTheme.valueOf(frontendTheme);
         }
@@ -200,36 +98,34 @@ public class DevelopmentContoller extends BaseApiController {
         return this.responseEntity(HttpStatus.OK);
     }
 
-    private void setPropertyList(Table table, PersistentClass persistentClass) {
-        propertyList = new ArrayList<>();
-        for (Iterator propertyIterator = persistentClass.getProperties().listIterator();
-             propertyIterator.hasNext(); ) {
+    private List<GenerateTableSrcItem> extractProperties(PersistentClass persistentClass) {
+        List<GenerateTableSrcItem> properties = new ArrayList<>();
+
+        for (Iterator propertyIterator = persistentClass.getProperties().listIterator(); propertyIterator.hasNext(); ) {
             Property property = (Property) propertyIterator.next();
-            for (Iterator columnIterator = property.getColumns().iterator();
-                 columnIterator.hasNext(); ) {
+            for (Iterator columnIterator = property.getColumns().iterator(); columnIterator.hasNext(); ) {
                 Column column = (Column) columnIterator.next();
-                propertyList.add(GenerateTableSrcItem.builder()
+                String javaClassName = property.getType().getReturnedClass() != null
+                        ? property.getType().getReturnedClass().getName()
+                        : property.getType().getName();
+                properties.add(GenerateTableSrcItem.builder()
                         .tableName(null)
                         .propertyName(property.getName())
                         .sqlName(column.getName())
                         .sqlType(column.getSqlType())
-                        .propertyType(property.getType().getName())
+                        .propertyType(javaClassName)
                         .unique(column.isUnique())
                         .length(column.getLength())
                         .nullable(column.isNullable())
                         .typeTextArea(isTypeTextArea(column.getSqlType(), property.getType().getName()))
                         .build());
-//                log.info("Property: {} is mapped on table column: {} of type: {} uniqe : {}, length : {}, propertyTypeName : {} , isNullable :{}",
-//                        property.getName(),
-//                        column.getName(),
-//                        column.getSqlType(),
-//                        column.isUnique(),
-//                        column.getLength(),
-//                        property.getType().getName(),
-//                        column.isNullable()
-//                );
             }
         }
+        return properties;
+    }
+
+    private void setPropertyList(Table table, PersistentClass persistentClass) {
+        propertyList = extractProperties(persistentClass);
     }
 
     private void generateProcess(DevFrontendTheme theme) {
@@ -276,8 +172,8 @@ public class DevelopmentContoller extends BaseApiController {
                 if (genSourceableTable != null) {
 
                     if (genSourceableTable.createDto()) {
-                        generateDto(className, persistentClass);
-                        generateDtoMapper(className, persistentClass);
+                        generateDto(className);
+                        generateDtoMapper(className);
                     }
                     if (genSourceableTable.createRepository()) {
                         generateRepository(className);
@@ -291,17 +187,10 @@ public class DevelopmentContoller extends BaseApiController {
                     if (genSourceableTable.createController()) {
                         generateController(className, genSourceableTable.createDto(), genSourceableTable.createPermission());
                     }
-//                    if (genSourceableTable.createMapper()) {
-//                        log.error("  createMapper : {} ", className);
-//                    }
 //                    if (genSourceableTable.createValidator()) {
 //                        log.error("  createValidator : {} ", className);
 //                    }
                     if (genSourceableTable.createFrontend()) {
-
-//                        if(theme==DevFrontendTheme.DEFAULT){
-//                            generateFrontend(className, persistentClass);
-//                        }
                         switch (theme) {
                             case QUASAR -> generateFrontend(className, persistentClass);
                             case NUXT_QUASAR -> generateFrontendNuxt3Quasar(className, persistentClass);
@@ -339,15 +228,6 @@ public class DevelopmentContoller extends BaseApiController {
                                         id, code, tableName, description, operationType);
                             }
                         }
-
-
-//                        permissonService.saveAll(Arrays.asList(
-//                                new Permission(table.getName()+"_list", table.getName()+"_list", table.getName()+"_list"),
-//                                new Permission(table.getName()+"_view", table.getName()+"_view", table.getName()+"_view"),
-//                                new Permission(table.getName()+"_manage", table.getName()+"_manage", table.getName()+"_add")
-//                                new Permission(table.getName()+"_manage", table.getName()+"_manage", table.getName()+"_edit")
-//                                new Permission(table.getName()+"_manage", table.getName()+"_manage", table.getName()+"_delete")
-//                        ));
                     }
                 }
             } else {
@@ -388,16 +268,24 @@ public class DevelopmentContoller extends BaseApiController {
 
     }
 
-    private void generateDto(String entityName, PersistentClass persistentClass) {
+    private void generateDto(String entityName ) {
         //package com.grandats.api.givedeefive.controller.api
         String fileName = entityName + "Dto";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto." + fileName;
+        String filePath = ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/dto/" + fileName + ".java";
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
             log.warn("---generateDto : {} ", fileName);
+            Map<String, Object> dataModel = new HashMap<>();
+            dataModel.put("rootPackage", ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE);
+            dataModel.put("entityName", entityName);
+            dataModel.put("properties", propertyList);
+            codeGeneratorService.generateFile("spring-dto.ftl", dataModel, filePath);
+            logCretedFile(className);
+            /*
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/dto/" + fileName + ".java", false));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto").append(";\n");
                 writer.append("\n");
                 writer.append("import com.fasterxml.jackson.annotation.JsonIgnoreProperties;\n");
@@ -481,18 +369,27 @@ public class DevelopmentContoller extends BaseApiController {
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
+            */
         }
     }
 
-    private void generateDtoMapper(String entityName, PersistentClass persistentClass) {
+    private void generateDtoMapper(String entityName) {
         String fileName = entityName + "Mapper";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".mapper." + fileName;
+        String filePath = ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/mapper/" + fileName + ".java";
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
             log.warn("---generateDtoMapper : {} ", fileName);
+            Map<String, Object> dataModel = new HashMap<>();
+            dataModel.put("rootPackage", ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE);
+            dataModel.put("entityName", entityName);
+
+            codeGeneratorService.generateFile("spring-mapper.ftl", dataModel, filePath);
+            logCretedFile(className);
+            /*
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/mapper/" + fileName + ".java", false));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".mapper").append(";\n");
                 writer.append("\n");
                 writer.append("import org.mapstruct.Mapper;\n");
@@ -512,6 +409,7 @@ public class DevelopmentContoller extends BaseApiController {
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
+            */
         }
     }
 
@@ -519,12 +417,20 @@ public class DevelopmentContoller extends BaseApiController {
         //package io.beka.repository
         String fileName = entityName + "Repository";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository." + fileName;
+        String filePath = ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/repository/" + fileName + ".java";
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
             log.warn("---generateRepository : {} ", fileName);
+            Map<String, Object> dataModel = new HashMap<>();
+            dataModel.put("rootPackage", ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE);
+            dataModel.put("entityName", entityName);
+
+            codeGeneratorService.generateFile("spring-repository.ftl", dataModel, filePath);
+            logCretedFile(className);
+            /*
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/repository/" + fileName + ".java", false));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository").append(";\n");
                 writer.append("\n");
                 writer.append("import org.springframework.stereotype.Repository;\n");
@@ -539,6 +445,7 @@ public class DevelopmentContoller extends BaseApiController {
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
+            */
         }
     }
 
@@ -546,11 +453,20 @@ public class DevelopmentContoller extends BaseApiController {
         //package io.beka.service
         String fileName = entityName + "Service";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service." + fileName;
+        String filePath = ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/service/" + fileName + ".java";
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
             log.warn("---generateService : {} ", fileName);
+            Map<String, Object> dataModel = new HashMap<>();
+            dataModel.put("rootPackage", ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE);
+            dataModel.put("entityName", entityName);
+            dataModel.put("haveDto", haveDto);
+
+            codeGeneratorService.generateFile("spring-service.ftl", dataModel, filePath);
+            logCretedFile(className);
+            /*
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/service/" + fileName + ".java", false));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service").append(";\n");
                 if (haveDto) {
                     writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
@@ -565,6 +481,7 @@ public class DevelopmentContoller extends BaseApiController {
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
+            */
         }
     }
 
@@ -576,15 +493,22 @@ public class DevelopmentContoller extends BaseApiController {
         //package com.bekaku.api.spring.serviceImpl
         String fileName = entityName + "ServiceImpl";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".serviceImpl." + fileName;
+        String filePath = ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/serviceImpl/" + fileName + ".java";
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
             log.warn("---generateServiceImpl : {} ", fileName);
+            Map<String, Object> dataModel = new HashMap<>();
+            dataModel.put("rootPackage", ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE);
+            dataModel.put("entityName", entityName);
+            dataModel.put("haveDto", haveDto);
+            codeGeneratorService.generateFile("spring-service-impl.ftl", dataModel, filePath);
+            logCretedFile(className);
+            /*
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/serviceImpl/" + fileName + ".java", false));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".serviceImpl").append(";\n");
                 writer.append("\n");
-//                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".vo.Paging;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.ResponseListDto;\n");
                 if (haveDto) {
                     writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
@@ -593,15 +517,11 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".repository.").append(entityName).append("Repository;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.").append(entityName).append("Service;\n");
-//                writer.append("import lombok.AllArgsConstructor;\n");
                 writer.append("import lombok.RequiredArgsConstructor;\n");
-//                writer.append("import org.modelmapper.ModelMapper;\n");
                 writer.append("import org.springframework.data.domain.Pageable;\n");
                 writer.append("import org.springframework.data.domain.Page;\n");
                 writer.append("import com.bekaku.api.spring.specification.SearchSpecification;\n");
                 writer.append("import org.springframework.data.jpa.domain.Specification;\n");
-//                writer.append("import org.springframework.data.domain.PageRequest;\n");
-//                writer.append("import org.springframework.data.domain.Sort;\n");
                 writer.append("import org.springframework.stereotype.Service;\n");
                 writer.append("import org.springframework.transaction.annotation.Transactional;\n");
                 writer.append("import org.springframework.beans.factory.annotation.Autowired;\n");
@@ -615,10 +535,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("@RequiredArgsConstructor\n");
                 writer.append("@Service\n");
                 writer.append("public class ").append(entityName).append("ServiceImpl implements ").append(entityName).append("Service {\n");
-//                writer.append("    @Autowired\n");
                 writer.append("    private final ").append(entityName).append("Repository ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Repository;\n");
                 if (haveDto) {
-//                  writer.append("    @Autowired\n");
                     writer.append("    private final ").append(AppUtil.capitalizeFirstLetter(entityName, false)).append("Mapper modelMapper;\n");
                 }
                 //findAllWithPaging
@@ -708,7 +626,6 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    @Override\n");
                 writer.append("    public ").append(haveDto ? entityName + "Dto" : entityName).append(" convertEntityToDto(").append(entityName).append(" ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 if (haveDto) {
-//                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(", ").append(entityName).append("Dto.class);\n");
                     writer.append("        return modelMapper.toDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(");\n");
                 } else {
                     writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
@@ -720,7 +637,6 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("    @Override\n");
                 writer.append("    public ").append(entityName).append(" convertDtoToEntity(").append(haveDto ? entityName + "Dto " + AppUtil.capitalizeFirstLetter(entityName, true) + "Dto" : entityName + " " + AppUtil.capitalizeFirstLetter(entityName, true)).append(") {\n");
                 if (haveDto) {
-//                    writer.append("        return modelMapper.map(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Dto, ").append(entityName).append(".class);\n");
                     writer.append("        return modelMapper.toEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Dto);\n");
                 } else {
                     writer.append("return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
@@ -733,6 +649,7 @@ public class DevelopmentContoller extends BaseApiController {
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
+            */
         }
     }
 
@@ -740,35 +657,40 @@ public class DevelopmentContoller extends BaseApiController {
         //package com.bekaku.api.spring.controller.api
         String fileName = entityName + "Controller";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api." + fileName;
+        String filePath = ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/controller/api/" + fileName + ".java";
 
         boolean isExist = getClassFromName(className) != null;
         if (!isExist) {
             log.warn("---generateController : {} ", fileName);
+            Map<String, Object> dataModel = new HashMap<>();
+            dataModel.put("rootPackage", ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE);
+            dataModel.put("entityName", entityName);
+            dataModel.put("entityNameLower", AppUtil.capitalizeFirstLetter(entityName, true));
+            dataModel.put("entityNameSnake", AppUtil.camelToSnake(entityName)); // สำหรับพวกชื่อ permission
+            dataModel.put("haveDto", haveDto);
+            dataModel.put("havePermission", havePermission);
+            // 2. โยนให้ CodeGeneratorService อ่าน FTL และสร้างไฟล์ .java
+            codeGeneratorService.generateFile("spring-controller.ftl", dataModel, filePath);
+            logCretedFile(className);
+
+            /*
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(ConstantData.DEFAULT_PROJECT_ROOT_PATH + "/controller/api/" + fileName + ".java", false));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false));
                 writer.append("package ").append(ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".controller.api").append(";\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".configuration.I18n;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.ResponseListDto;\n");
-//                writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".vo.Paging;\n");
                 if (haveDto) {
                     writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto.").append(entityName).append("Dto;\n");
                 }
 
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".model.").append(entityName).append(";\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".service.").append(entityName).append("Service;\n");
-//                writer.append("import lombok.RequiredArgsConstructor;\n");
-//                writer.append("import org.slf4j.Logger;\n");
-//                writer.append("import org.slf4j.LoggerFactory;\n");
                 writer.append("import lombok.extern.slf4j.Slf4j;\n");
                 writer.append("import lombok.RequiredArgsConstructor;\n");
-//                writer.append("import jakarta.servlet.http.HttpServletRequest;\n");
                 writer.append("import " + ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".specification.SearchSpecification;\n");
-//                writer.append("import org.springframework.beans.factory.annotation.Autowired;\n");
-//                writer.append("import org.springframework.http.HttpStatus;\n");
                 writer.append("import org.springframework.http.ResponseEntity;\n");
                 writer.append("import org.springframework.web.bind.annotation.*;\n");
                 writer.append("import org.springframework.security.access.prepost.PreAuthorize;\n");
-//                writer.append("import org.springframework.data.domain.PageRequest;\n");
                 writer.append("import org.springframework.data.domain.Pageable;\n");
                 writer.append("import com.bekaku.api.spring.util.ControllerUtil;\n");
                 writer.append("import jakarta.servlet.http.HttpServletRequest;\n");
@@ -785,11 +707,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("@RequiredArgsConstructor\n");
                 writer.append("public class ").append(fileName).append(" extends BaseApiController{\n");
                 writer.append("\n");
-//                writer.append("    @Autowired\n");
                 writer.append("    private final ").append(entityName).append("Service ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service;\n");
-//                writer.append("    @Autowired\n");
                 writer.append("    private final I18n i18n;\n");
-//                writer.append(" //   Logger logger = LoggerFactory.getLogger(").append(entityName).append("Controller.class);\n");
                 writer.append("\n");
                 //findall
                 if (havePermission) {
@@ -797,20 +716,12 @@ public class DevelopmentContoller extends BaseApiController {
                 }
                 writer.append("    @GetMapping\n");
 
-//                writer.append("    public ResponseEntity<Object> findAll(@RequestParam(value = \"page\", defaultValue = \"0\") int page,\n");
-//                writer.append("                                          @RequestParam(value = \"limit\", defaultValue = \"20\") int limit) {\n");
-//                writer.append("    public ResponseEntity<Object> findAll(Pageable pageable) {\n");
                 if (haveDto) {
                     writer.append("    public ResponseEntity<ResponseListDto<").append(entityName).append("Dto").append(">> findAll(HttpServletRequest request, Pageable pageable) {\n");
                 } else {
                     writer.append("    public ResponseEntity<ResponseListDto<").append(entityName).append(">> findAll(HttpServletRequest request, Pageable pageable) {\n");
                 }
-//                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(new Paging(page, limit), ").append(entityName).append(".getSort()), HttpStatus.OK);\n");
-//                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :\n");
-//                writer.append("                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
-//                writer.append("        SearchSpecification<").append(entityName).append("> specification = new SearchSpecification<>(getSearchCriteriaList(q));    \n");
                 writer.append("        SearchSpecification<").append(entityName).append("> specification = ControllerUtil.buildSpecification(request, List.of());    \n");
-//                writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithSearch(specification, getPageable(pageable, ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
                 writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.findAllWithSearch(specification, getPageable(pageable, ").append(entityName).append(".getSort())), HttpStatus.OK);\n");
                 writer.append("    }\n");
                 //create
@@ -867,7 +778,6 @@ public class DevelopmentContoller extends BaseApiController {
                 } else {
                     writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(";\n");
                 }
-//                writer.append("        return this.reponseUpdatedMessage();\n");
                 writer.append("    }\n");
 
                 //findOne
@@ -884,10 +794,8 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("            throw this.responseErrorNotfound();\n");
                 writer.append("        }\n");
                 if (haveDto) {
-//                    writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".get()), HttpStatus.OK);\n");
                     writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.convertEntityToDto(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".get());\n");
                 } else {
-//                    writer.append("        return this.responseEntity(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".get(), HttpStatus.OK);\n");
                     writer.append("        return ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".get();\n");
                 }
                 writer.append("    }\n");
@@ -902,7 +810,6 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("        if (").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".isEmpty()) {\n");
                 writer.append("            throw this.responseErrorNotfound();\n");
                 writer.append("        }\n");
-//                writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.deleteById(id);\n");
                 writer.append("        ").append(AppUtil.capitalizeFirstLetter(entityName, true)).append("Service.delete(").append(AppUtil.capitalizeFirstLetter(entityName, true)).append(".get());\n");
                 writer.append("        return this.responseDeleteMessage();\n");
                 writer.append("    }\n");
@@ -914,10 +821,12 @@ public class DevelopmentContoller extends BaseApiController {
             } catch (Exception e) {
                 log.error(e.getMessage());
             }
+
+            */
         }
     }
 
-    //Start nuxt3+quasar
+    //Start nuxt+ UI
     private void generateFrontendNuxtUI(String entityName, PersistentClass persistentClass) {
         Table table = persistentClass.getTable();
         String tableName = table.getName();
@@ -929,6 +838,11 @@ public class DevelopmentContoller extends BaseApiController {
         String apiName = dirName + "/use" + entityName + "Api.ts";
         log.info("generateFrontendNuxtUI > TableName :{},  listName :{}, formName :{}, apiName :{}", tableName, listName, formName, apiName);
 
+        Map<String, Object> dataModel = new HashMap<>();
+        dataModel.put("entityName", entityName);
+        dataModel.put("tableName", tableName);
+        dataModel.put("properties", propertyList);
+
         if (!FileUtil.folderExist(dirName)) {
             FileUtil.folderCreate(dirName);
             log.warn("NuxtUI created folder :{} ", dirName);
@@ -939,11 +853,13 @@ public class DevelopmentContoller extends BaseApiController {
         }
         if (!FileUtil.fileExists(listName)) {
             log.warn("NuxtUI listName :{}, created", listName);
-            generateNuxUIFrontList(listName, entityName, tableName);
+//            generateNuxUIFrontList(listName, entityName, tableName);
+            codeGeneratorService.generateFile("nuxt-ui-list.ftl", dataModel, listName);
         }
         if (!FileUtil.fileExists(formName)) {
             log.warn("NuxtUI formName :{}, created", formName);
-            generateNuxUIFrontForm(formName, entityName, tableName);
+//            generateNuxUIFrontForm(formName, entityName, tableName);
+            codeGeneratorService.generateFile("nuxt-ui-form.ftl", dataModel, formName);
         }
         if (!FileUtil.fileExists(apiName)) {
             log.warn("NuxtUI apiName :{}, created", apiName);
@@ -1207,7 +1123,7 @@ public class DevelopmentContoller extends BaseApiController {
                         if (isDateType) {
                             writer.append("          numberOfMonths: 2,\n");
                         }
-                        if (limitText!=null && limitText > 0) {
+                        if (limitText != null && limitText > 0) {
                             writer.append("          maxlength: ").append(String.valueOf(limitText)).append(",\n");
                         }
                         writer.append("        },\n");
@@ -1313,7 +1229,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    //Start nuxt3+quasar
+    //Start nuxt4+quasar
     private void generateFrontendNuxt3Quasar(String entityName, PersistentClass persistentClass) {
         Table table = persistentClass.getTable();
         String tableName = table.getName();
