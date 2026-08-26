@@ -35,7 +35,6 @@ import static com.bekaku.api.spring.util.ConstantData.JWT_TYPE_ATT;
 @Slf4j
 @Component
 public class JwtServiceImpl implements JwtService {
-    private final SecretKey signatureAlgorithm;
     private final String UID = "uid";
 
     private final ApiClientService apiClientService;
@@ -52,7 +51,6 @@ public class JwtServiceImpl implements JwtService {
         this.appUserService = appUserService;
         this.accessTokenService = accessTokenService;
         this.appProperties = appProperties;
-        signatureAlgorithm = Jwts.SIG.HS512.key().build();
     }
 
     public SecretKey getKey(ApiClient apiClient) {
@@ -149,52 +147,62 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Optional<AppUserDto> jwtVerify(String apiclientName, String jwtToken, String syncActiveHeader) {
-        AtomicReference<Optional<AppUserDto>> dto = new AtomicReference<>(Optional.empty());
-//        Optional<ApiClient> apiClient = verifyApiClient(apiclientName);
-        if (!AppUtil.isEmpty(apiclientName) && !AppUtil.isEmpty(jwtToken)) {
-//        if (apiClient.isPresent()) {
-//                Optional<String> sub = getSubFromToken(authToken.get(), apiClient.get());
-//                Optional<Claims> claims = getClaimsFromToken(authToken.get(), apiClient.get());
-            // TODO verify apiClient later
-            Optional<Claims> claims = getClaimsFromToken(jwtToken, null);
-            if (claims.isPresent()) {
-//                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                String sub = claims.get().getSubject();
-//                        String userUuid = (String) claims.get().get(UUID);
-                String jwtTypeString = (String) claims.get().get(JWT_TYPE_ATT);
-                String userID = (String) claims.get().get(UID);
-                if (!AppUtil.isEmpty(sub) && !AppUtil.isEmpty(jwtTypeString)) {
-                    JwtType jwtType = JwtType.valueOf(jwtTypeString);
-                    if (jwtType.equals(JwtType.Authen)) {
-
-                        //stateless
-                        AppUserDto userDto = new AppUserDto();
-                        userDto.setId(Long.valueOf(userID));
-                        userDto.setToken(sub);
-                        dto.set(Optional.of(userDto));
-
-                        //Hit database every time
-
-                            /*
-                            Optional<AppUserDto> userDto = accessTokenService.findByAccessTokenKey(sub);
-                            if (userDto.isPresent()) {
-
-                                //sync online status if required TODO you can implement with Message Queue eg. RabbitMQ
-                                if (syncActiveHeader != null && syncActiveHeader.equals("1")) {
-                                    accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), userDto.get().getAccessTokenId());
-                                }
-                                userDto.get().setToken(sub);
-                                dto.set(userDto);
-                            }
-                             */
-
-                    }
-                }
-//                    }
-            }
+        if (AppUtil.isEmpty(apiclientName) || AppUtil.isEmpty(jwtToken)) {
+            return Optional.empty();
         }
 
-        return dto.get();
+        //TODO verify apiClient later
+//        Optional<ApiClient> apiClient = verifyApiClient(apiclientName);
+//        if (apiClient.isEmpty()) {
+//            return Optional.empty();
+//        }
+
+        Optional<Claims> claims = getClaimsFromToken(jwtToken, null);
+        if (claims.isEmpty()) {
+            return Optional.empty();
+        }
+        Claims payload = claims.get();
+        String sub = payload.getSubject();
+        String jwtTypeString = payload.get(JWT_TYPE_ATT, String.class);
+        String userID = payload.get(UID, String.class);
+        if (AppUtil.isEmpty(sub) || AppUtil.isEmpty(jwtTypeString) || AppUtil.isEmpty(userID)) {
+            return Optional.empty();
+        }
+
+        JwtType jwtType;
+        try {
+            jwtType = JwtType.valueOf(jwtTypeString);
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown jwt type claim: {}", jwtTypeString);
+            return Optional.empty();
+        }
+        if (!JwtType.Authen.equals(jwtType)) {
+            return Optional.empty();
+        }
+
+        long userId;
+        try {
+            userId = Long.parseLong(userID);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid uid claim in token");
+            return Optional.empty();
+        }
+
+        // revocation check: the subject is the session token key - it must exist and not be revoked
+        Optional<AccessToken> session = accessTokenService.findByTokenAndRevoked(sub, false);
+        if (session.isEmpty()) {
+            log.info("Rejected revoked or unknown session token");
+            return Optional.empty();
+        }
+        if ("1".equals(syncActiveHeader)) {
+            accessTokenService.updateLastestActive(DateUtil.getLocalDateTimeNow(), session.get().getId());
+        }
+
+        AppUserDto userDto = new AppUserDto();
+        userDto.setId(userId);
+        userDto.setToken(sub);
+        userDto.setAccessTokenId(session.get().getId());
+        return Optional.of(userDto);
     }
 
     private AppUserDto setUserDto(AppUser appUser) {
@@ -258,7 +266,10 @@ public class JwtServiceImpl implements JwtService {
             //TODO save this apiClient to cache
             Optional<ApiClient> apiClient = apiClientService.findByApiName(apiName);
             if (apiClient.isPresent()) {
-                return apiClient.get().getStatus() || apiClient.get().getByPass() ? apiClient : Optional.empty();
+                ApiClient client = apiClient.get();
+                boolean isActive = Boolean.TRUE.equals(client.getStatus())
+                        || Boolean.TRUE.equals(client.getByPass());
+                return isActive ? apiClient : Optional.empty();
             }
         }
         return Optional.empty();

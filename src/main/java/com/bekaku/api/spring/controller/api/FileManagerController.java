@@ -45,7 +45,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -86,7 +85,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
 
 import static com.bekaku.api.spring.util.FileUtil.TEMP_UPLOAD_DIR;
 
@@ -105,7 +103,6 @@ public class FileManagerController extends BaseApiController {
     private final AppUserService appUserService;
     private final JwtService jwtService;
     private final List<String> sortProperties = List.of("fileName", "createdDate", "updatedDate", "fileSize", "fileMime");
-    private final Executor executor = new ThreadPoolTaskExecutor();
 
     private final CookieUtil cookieUtil;
     private final AuthUtil authUtil;
@@ -226,6 +223,7 @@ public class FileManagerController extends BaseApiController {
         if (fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
+        appUserService.requireTheSameUser(auth.getId(), fileManager.get().getCreatedUser());
         log.info("internalDeleteFileApi > id:{}", id);
         fileManagerService.deleteFileBy(fileManager.get(), permanentDelete);
         return responseEntity(new HashMap<String, Object>() {{
@@ -243,9 +241,15 @@ public class FileManagerController extends BaseApiController {
                                                      @AuthenticationPrincipal AppUserDto user) {
 
         try {
+            if (chunkNumber < 1 || totalChunks < 1 || chunkNumber > totalChunks) {
+                throw this.responseError(HttpStatus.BAD_REQUEST, null, "Invalid chunk number");
+            }
             String uploadPathTmp = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR, true);
             String mimeType = FileUtil.getMimeType(file).toLowerCase();
             log.info("mimeType: {}", mimeType);
+            if (!AppUtil.isEmpty(chunkFilename) && !isValidFileName(chunkFilename)) {
+                throw this.responseError(HttpStatus.BAD_REQUEST, null, "Invalid file name");
+            }
             if (chunkNumber == 1) {
                 this.validateAllowMemeType(mimeType);
             } else {
@@ -291,6 +295,9 @@ public class FileManagerController extends BaseApiController {
         if (AppUtil.isEmpty(dto.getChunkFilename()) || dto.getTotalChunks() == 0) {
             throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required parameters.");
         }
+        if (!isValidFileName(dto.getChunkFilename())) {
+            throw this.responseError(HttpStatus.BAD_REQUEST, null, "Invalid file name");
+        }
 
         AppUser appUser = appUserService.findAndValidateAppUserBy(user);
         try {
@@ -316,6 +323,7 @@ public class FileManagerController extends BaseApiController {
             if (AppUtil.isEmpty(mimeType)) {
                 throw this.responseError(HttpStatus.BAD_REQUEST, null, "Missing required mime type.");
             }
+            this.validateAllowMemeType(mimeType.toLowerCase());
             FileMimeType fileMimeType = FileUtil.getFileMimeType(mimeType);
             log.info("mergeChunkApi > fileMimeType:{}, mimeType:{}, fileSize:{}", fileMimeType, mimeType, fileSize);
             String yearMonthFolder = FileUtil.getUploadYearMonthPath(fileMimeType);
@@ -666,52 +674,6 @@ public class FileManagerController extends BaseApiController {
         return this.responseEntity(dto.get(), HttpStatus.OK);
     }
 
-    @PutMapping("/updateUserAvatar")
-    public ResponseMessage updateUserAvatar(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
-
-        if (userAuthen == null) {
-            return new ResponseMessage(HttpStatus.UNAUTHORIZED, null);
-        }
-
-        Optional<AppUser> user = appUserService.findById(userAuthen.getId());
-        Optional<FileManager> fileManager = fileManagerService.findById(fileManagerId);
-        if (user.isEmpty() || fileManager.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-
-        //delete old avatar file
-        if (user.get().getAvatarFile() != null) {
-            fileManagerService.deleteFileBy(user.get().getAvatarFile());
-        }
-
-
-        user.get().setAvatarFile(fileManager.get());
-        appUserService.update(user.get());
-        return new ResponseMessage(HttpStatus.OK, null);
-    }
-
-    @PutMapping("/updateUserCover")
-    public ResponseMessage updateUserCover(@AuthenticationPrincipal AppUserDto userAuthen, @RequestParam("fileManagerId") Long fileManagerId) {
-
-        if (userAuthen == null) {
-            return new ResponseMessage(HttpStatus.UNAUTHORIZED, null);
-        }
-
-        Optional<AppUser> user = appUserService.findById(userAuthen.getId());
-        Optional<FileManager> fileManager = fileManagerService.findById(fileManagerId);
-        if (user.isEmpty() || fileManager.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-        //delete old avatar file
-        if (user.get().getCoverFile() != null) {
-            fileManagerService.deleteFileBy(user.get().getCoverFile());
-        }
-
-        user.get().setCoverFile(fileManager.get());
-        appUserService.update(user.get());
-        return new ResponseMessage(HttpStatus.OK, null);
-    }
-
     @GetMapping("/images")
     public ResponseEntity<Resource> getImage(@RequestParam("path") String filename) {
         try {
@@ -862,7 +824,7 @@ public class FileManagerController extends BaseApiController {
     ) {
 
         Optional<String> accessToken = authUtil.getAccessToken(request);
-        log.info("streamFile:{}, chunkSize:{}, jwtSub :{}", id, chunkSize, accessToken.orElse(null));
+        log.info("streamFile:{}, chunkSize:{}, token present:{}", id, chunkSize, accessToken.isPresent());
         if (accessToken.isEmpty()) {
             throw this.responseErrorUnauthorized();
         }
@@ -1224,13 +1186,23 @@ public class FileManagerController extends BaseApiController {
     }
 
     // Helper methods to improve code organization and readability
+    private boolean isValidFileName(String fileName) {
+        if (AppUtil.isEmpty(fileName)) {
+            return false;
+        }
+        return fileName.matches("[A-Za-z0-9._-]+") && !fileName.contains("..");
+    }
+
     private boolean isValidFilePath(String fileName) {
-        return fileName != null && !fileName.isEmpty() && !fileName.contains("..");
+        if (fileName == null || fileName.isEmpty()) {
+            return false;
+        }
+        return !fileName.contains("..") && fileName.indexOf('\0') == -1;
     }
 
     private boolean isFileAccessAllowed(File file) throws IOException {
         String canonicalFilePath = file.getCanonicalPath();
-        String canonicalDirPath = new File(appProperties.getUploadPath()).getCanonicalPath();
+        String canonicalDirPath = new File(appProperties.getUploadPath()).getCanonicalPath() + File.separator;
         return canonicalFilePath.startsWith(canonicalDirPath);
     }
 

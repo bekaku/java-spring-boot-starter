@@ -8,6 +8,7 @@ import java.util.List;
 public record AppCronProperties(
         String testExpression,
         String cleanFileExpression,
-        boolean cleanOldFile
+        boolean cleanOldFile,
+        boolean cleanOldTempChunks
 ) {
 }

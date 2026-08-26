@@ -467,6 +467,7 @@ app:
     test-expression: 0 */2 * * * * #every 2 minutes
     clean-file-expression: 0 30 23 * * ? #every day 11:30 PM
     clean-old-file: false
+    clean-old-temp-chunks: false
   worker:
     id: ${WORKER_ID:1} # fallback to 1 if not set
 custom:

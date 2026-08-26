@@ -91,9 +91,8 @@ public class WebSecurityConfig {
                                     "/actuator/**",
                                     "/css/**",
                                     "/" + cdnPathAlias + "/**").permitAll()
-
-                            .requestMatchers("/api/fileManager/files/stream/**").permitAll()
-                            .requestMatchers("/api/fileManager/video/stream/**").permitAll()
+//                            .requestMatchers("/api/fileManager/files/stream/**").permitAll()
+//                            .requestMatchers("/api/fileManager/video/stream/**").permitAll()
                             .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                             // Public auth endpoints
                             .requestMatchers(HttpMethod.POST,

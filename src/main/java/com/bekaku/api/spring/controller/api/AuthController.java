@@ -9,6 +9,7 @@ import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.model.AppRole;
+import com.bekaku.api.spring.properties.AppDefaultsProperties;
 import com.bekaku.api.spring.properties.AppProperties;
 import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.service.*;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.bekaku.api.spring.util.ConstantData.UNDER_SCORE;
 
@@ -55,25 +57,32 @@ public class AuthController extends BaseApiController {
     private final AppProperties appProperties;
     private final IdentityLinkService identityLinkService;
     private final CookieUtil cookieUtil;
+    private final AppDefaultsProperties appDefaultsProperties;
+
+    private static final Map<String, Long> OTP_REQUEST_TIMESTAMPS = new ConcurrentHashMap<>();
+    private static final long OTP_REQUEST_INTERVAL_MS = 60_000L;
+
+    private boolean isOtpRequestAllowed(String email) {
+        String key = email.trim().toLowerCase();
+        long now = System.currentTimeMillis();
+        Long last = OTP_REQUEST_TIMESTAMPS.get(key);
+        if (last != null && now - last < OTP_REQUEST_INTERVAL_MS) {
+            return false;
+        }
+        OTP_REQUEST_TIMESTAMPS.put(key, now);
+        return true;
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<ResponseMessage> signup(@Valid @RequestBody UserRegisterRequest registerDto) {
         validateUserRegister(registerDto);
 
-        //user can have many role
+        // public signup must not accept client-selected roles - always assign the configured default role only
         Set<AppRole> appRoles = new HashSet<>();
-        if (registerDto.getSelectedRoles().length > 0) {
-            Optional<AppRole> role;
-            for (long roleId : registerDto.getSelectedRoles()) {
-                role = appRoleService.findById(roleId);
-                role.ifPresent(appRoles::add);
-            }
+        Long defaultRoleId = appDefaultsProperties.role();
+        if (defaultRoleId != null) {
+            appRoleService.findById(defaultRoleId).ifPresent(appRoles::add);
         }
-//        else {
-        //save defult role for new user
-//            Optional<Role> role = roleService.findById(defaultRole);
-//            role.ifPresent(roles::add);
-//        }
         AppUser appUser = new AppUser();
         appUser.addNew(
                 registerDto.getUsername(),
@@ -83,7 +92,7 @@ public class AuthController extends BaseApiController {
         );
         appUser.setAppRoles(appRoles);
         //encrypt pwd
-        appUser.setPassword(encryptService.encrypt(appUser.getPassword(), appUser.getSalt()));
+        appUser.setPassword(encryptService.encrypt(appUser.getPassword()));
         appUserService.save(appUser);
         return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
     }
@@ -98,7 +107,7 @@ public class AuthController extends BaseApiController {
             errors.add(i18n.getMessage("error.validateDuplicateEmail", registerParam.getEmail()));
         }
         if (!errors.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"), errors));
+            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"), errors));
         }
     }
 
@@ -114,7 +123,6 @@ public class AuthController extends BaseApiController {
         RefreshTokenResponse tokenResponse = authService.login(user, loginRequest, apiClient, userAgent, AppUtil.getIpaddress(request));
         setAuthCookie(response, tokenResponse);
         return tokenResponse;
-//        return authService.login(user.get(), loginRequest, apiClient.get(), userAgent, AppUtil.getIpaddress(request));
     }
 
     private ApiClient validateApiClient(String apiClientName) {
@@ -179,6 +187,7 @@ public class AuthController extends BaseApiController {
                                            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                            @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
         String targetRefreshCookie = AppUtil.getCookieByName(request.getCookies(), appProperties.jwt().refreshTokenName() + targetUserId);
+        identityLinkService.validateSwitchAccount(currentUser.getId(), targetUserId);
         if (!AppUtil.isEmpty(targetRefreshCookie)) {
             var accessTokenOpt = accessTokenService.findByToken(targetRefreshCookie);
             if (accessTokenOpt.isPresent()) {
@@ -195,7 +204,6 @@ public class AuthController extends BaseApiController {
             }
         }
 
-        identityLinkService.validateSwitchAccount(currentUser.getId(), targetUserId);
         AppUser targetUser = appUserService.findById(targetUserId).orElseThrow();
         ApiClient apiClient = validateApiClient(apiClientName);
         RefreshTokenResponse tokenResponse = authService.login(targetUser, apiClient, userAgent, AppUtil.getIpaddress(request));
@@ -217,16 +225,16 @@ public class AuthController extends BaseApiController {
     private AppUser validateLogin(LoginRequest loginRequest) {
 
         if (loginRequest.getEmailOrUsername() == null) {
-            throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
+            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"),
                     i18n.getMessage("error.apiClientNotFound")));
         }
         Optional<AppUser> user = appUserService.findActiveByEmailOrUserName(loginRequest.getEmailOrUsername());
         if (user.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
-                    i18n.getMessage("error.userNotFound", loginRequest.getEmailOrUsername())));
+            throw new ApiException(new ApiError(HttpStatus.FORBIDDEN, i18n.getMessage("error.error"),
+                    i18n.getMessage("error.loginWrong")));
         }
         if (!encryptService.check(loginRequest.getPassword(), user.get().getPassword()) || !user.get().isActive()) {
-            throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
+            throw new ApiException(new ApiError(HttpStatus.FORBIDDEN, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
         }
 
@@ -338,7 +346,7 @@ public class AuthController extends BaseApiController {
         }
         Long currentUserId = Long.valueOf(ckUserId);
         String refreshTokenKey = AppUtil.getCookieByName(request.getCookies(), getRefreshKeyBy(currentUserId));
-        log.info("refreshToken: refreshTokenKey:{}", refreshTokenKey);
+        log.info("refreshToken request received");
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
         if (apiClient.isEmpty()) {
             log.info("refreshToken: apiClient.isEmpty()");
@@ -350,6 +358,7 @@ public class AuthController extends BaseApiController {
             deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
+        accessTokenService.handleRefreshTokenReuse(refreshTokenKey);
         Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(refreshTokenKey, false);
         if (accessToken.isEmpty()) {
             log.info("refreshToken: accessToken.isEmpty()");
@@ -383,11 +392,8 @@ public class AuthController extends BaseApiController {
         if (AppUtil.isEmpty(refreshTokenKey)) {
             throwUnauthorizes();
         }
-        log.info("dto.getRefreshToken() :{}", refreshTokenKey);
-//        Optional<String> tokenKey = jwtService.getSubFromToken(refreshTokenKey, apiClient.get());
-//        if (tokenKey.isEmpty()) {
-//            throwUnauthorizes();
-//        }
+        log.debug("refreshTokenApi request received");
+        accessTokenService.handleRefreshTokenReuse(refreshTokenKey);
         Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(refreshTokenKey, false);
         if (accessToken.isEmpty()) {
             throwUnauthorizes();
@@ -410,17 +416,20 @@ public class AuthController extends BaseApiController {
                                                               @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                                               @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) throws MessagingException {
 
-        Optional<AppUser> user = appUserService.findByEmail(reqBody.getEmail());
-        if (user.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.NOT_FOUND, i18n.getMessage("error.error"),
-                    i18n.getMessage("error.userNotFound", reqBody.getEmail())));
+        if (!isOtpRequestAllowed(reqBody.getEmail())) {
+            throw new ApiException(new ApiError(HttpStatus.TOO_MANY_REQUESTS, i18n.getMessage("error.error"),
+                    "Too many requests. Please try again later."));
         }
 
-        String token = AppUtil.generateRandomNumber(6);
-        AccessToken accessToken = accessTokenService.generateTokenBy(user.get(), accessTokenService.getExpireDateBy(AccessTokenServiceType.FORGOT_PASSWORD), token, AccessTokenServiceType.FORGOT_PASSWORD);
-        if (accessToken.isNewToken()) {
-            //TODO
+        // respond identically whether or not the account exists to prevent email enumeration
+        Optional<AppUser> user = appUserService.findByEmail(reqBody.getEmail());
+        if (user.isPresent()) {
+            String token = AppUtil.generateRandomNumber(6);
+            AccessToken accessToken = accessTokenService.generateTokenBy(user.get(), accessTokenService.getExpireDateBy(AccessTokenServiceType.FORGOT_PASSWORD), token, AccessTokenServiceType.FORGOT_PASSWORD);
+            if (accessToken.isNewToken()) {
+                //TODO
 //            emailService.sendEmailRecoveryToken(accessToken);
+            }
         }
         return this.responseServerMessage(i18n.getMessage("authen.token_not_expire", reqBody.getEmail()));
     }
@@ -468,7 +477,7 @@ public class AuthController extends BaseApiController {
         }
 
         AccessToken accessToken = getRequestForgotPasswordAccesstoken(reqBody);
-        String newPassword = encryptService.encrypt(reqBody.getNewPassword(), accessToken.getAppUser().getSalt());
+        String newPassword = encryptService.encrypt(reqBody.getNewPassword());
         appUserService.updatePasswordBy(accessToken.getAppUser(), newPassword);
         accessTokenService.delete(accessToken);
         return this.responseServerMessage(i18n.getMessage("helper.reset_pwd_ok", reqBody.getEmail()));

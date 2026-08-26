@@ -68,7 +68,7 @@ public class BaseApiController extends BaseResponseException {
             put(ConstantData.SERVER_MESSAGE, o);
             put(ConstantData.SERVER_STATUS, status);
             put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
-        }}, HttpStatus.OK);
+        }}, status);
     }
 
     public ResponseEntity<Object> responseServerMessage(String o, HttpStatus status, boolean success) {
@@ -77,7 +77,7 @@ public class BaseApiController extends BaseResponseException {
             put(ConstantData.SERVER_STATUS, status);
             put(ConstantData.SERVER_SUCCESS, success);
             put(ConstantData.SERVER_TIMESTAMP, DateUtil.getLocalDateTimeNow());
-        }}, HttpStatus.OK);
+        }}, status);
     }
 
     public ResponseEntity<Object> responseEntity(HttpStatus status) {
@@ -144,18 +144,22 @@ public class BaseApiController extends BaseResponseException {
             if (!pageable.getSort().isEmpty()) {
                 Sort sort = pageable.getSort();
                 for (Sort.Order order : sort) {
-                    if (!acceptSortField.isEmpty()) {
+                    if (isSortPropertyAllowed(order.getProperty(), acceptSortField)) {
                         sortString = order.getProperty() + "," + order.getDirection();
-                    } else {
-                        if (acceptSortField.contains(order.getProperty())) {
-                            sortString = order.getProperty() + "," + order.getDirection();
-                        }
                     }
                 }
             }
             return new Paging(p.getPageNumber(), p.getPageSize(), sortString);
         }
         return null;
+    }
+
+    private boolean isSortPropertyAllowed(String property, List<String> acceptSortField) {
+        if (!property.matches("[A-Za-z0-9_.]+")) {
+            return false;
+        }
+        return acceptSortField == null || acceptSortField.isEmpty()
+                || acceptSortField.contains(property);
     }
 
     public HashMap<String, Object> getSearchCriteriaMap() {

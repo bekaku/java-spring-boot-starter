@@ -23,8 +23,10 @@ import com.bekaku.api.spring.service.UserAgentService;
 import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.DateUtil;
+import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.HashUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -40,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -184,6 +187,21 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         accessTokenRepository.revokeTokenByUserId(userId);
     }
 
+    @Transactional
+    @Override
+    public void handleRefreshTokenReuse(String token) {
+        if (AppUtil.isEmpty(token)) {
+            return;
+        }
+        accessTokenRepository.findByToken(HashUtil.sha256(token))
+                .filter(AccessToken::isRevoked)
+                .ifPresent(accessToken -> {
+                    log.warn("Refresh token reuse detected - revoking all sessions of userId {}",
+                            accessToken.getAppUser().getId());
+                    accessTokenRepository.revokeTokenByUserId(accessToken.getAppUser().getId());
+                });
+    }
+
     @Override
     public void updateNullFcmToken(String fcmToken) {
         accessTokenRepository.updateNullFcmToken(fcmToken);
@@ -218,20 +236,14 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     @Override
     public AccessToken generateTokenBy(AppUser appUser, Date expiresAt, String token, AccessTokenServiceType service) {
         Optional<AccessToken> accessToken = accessTokenRepository.findLatestAccessTokenByUser(appUser, service);
-        AccessToken accessTokenResponse = null;
-        if (accessToken.isPresent()) {
-            boolean isExpired = isTokenExpired(accessToken.get());
-            if (isExpired) {
-                delete(accessToken.get());
-            } else {
-                accessTokenResponse = accessToken.get();
-            }
-        } else {
-            accessTokenResponse = new AccessToken();
-            accessTokenResponse.onCreateToken(appUser, expiresAt, token, service);
-            save(accessTokenResponse);
+        if (accessToken.isPresent() && !isTokenExpired(accessToken.get())) {
+            accessToken.get().setNewToken(false);
+            return accessToken.get();
         }
-        return accessTokenResponse;
+        accessToken.ifPresent(this::delete);
+        AccessToken newToken = new AccessToken();
+        newToken.onCreateToken(appUser, expiresAt, token, service);
+        return save(newToken);
     }
 
     @Override

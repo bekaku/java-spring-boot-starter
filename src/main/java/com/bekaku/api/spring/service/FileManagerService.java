@@ -40,4 +40,6 @@ public interface FileManagerService extends BaseService<FileManager, FileManager
     void deleteFileBy(FileManager fileManager, boolean permanentDelete);
 
     void cleanupOldFiles();
+
+    void cleanupOldTempChunks();
 }

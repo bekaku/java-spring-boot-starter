@@ -1,16 +1,12 @@
 package com.bekaku.api.spring.service;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.security.GeneralSecurityException;
 
 public interface EncryptService {
 
-    String encrypt(String password, String salt);
+    String encrypt(String password);
     boolean check(String checkPassword, String realPassword);
-    String encrypt(String data) throws IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException;
-    String decrypt(String encryptedData) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException;
+    String encryptData(String data) throws GeneralSecurityException;
+    String decryptData(String encryptedData) throws GeneralSecurityException;
 
 }

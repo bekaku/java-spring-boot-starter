@@ -1,6 +1,7 @@
 package com.bekaku.api.spring.serviceImpl;
 
 import com.bekaku.api.spring.configuration.I18n;
+import com.bekaku.api.spring.dto.AppUserDto;
 import com.bekaku.api.spring.dto.LoginRequest;
 import com.bekaku.api.spring.dto.RefreshTokenResponse;
 import com.bekaku.api.spring.enumtype.JwtType;
@@ -19,8 +20,7 @@ import com.bekaku.api.spring.service.FileManagerService;
 import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.service.LoginLogService;
 import com.bekaku.api.spring.service.UserAgentService;
-import com.bekaku.api.spring.util.HashUtil;
-import com.bekaku.api.spring.util.UuidUtils;
+import com.bekaku.api.spring.util.DateUtil;
 import com.bekaku.api.spring.vo.IpAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -62,10 +62,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AppUser getCurrentUser() {
-        org.springframework.security.core.userdetails.User principal = (org.springframework.security.core.userdetails.User) SecurityContextHolder.
-                getContext().getAuthentication().getPrincipal();
-        return appUserService.findByUsername(principal.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User name not found - " + principal.getUsername()));
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof AppUserDto appUserDto) {
+            return appUserService.findById(appUserDto.getId())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found - id " + appUserDto.getId()));
+        }
+        if (principal instanceof org.springframework.security.core.userdetails.User user) {
+            return appUserService.findByUsername(user.getUsername())
+                    .orElseThrow(() -> new UsernameNotFoundException("User name not found - " + user.getUsername()));
+        }
+        throw new IllegalStateException("Unsupported principal type: "
+                + (principal != null ? principal.getClass().getName() : "null"));
     }
 
     @Transactional
@@ -99,6 +106,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Transactional
     @Override
     public RefreshTokenResponse login(AppUser appUser, ApiClient apiClient, String userAgent, IpAddress ipAddress) {
         return loingProcess(appUser, apiClient, userAgent, ipAddress, null, null, null);
@@ -108,17 +116,30 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public RefreshTokenResponse refreshToken(AccessToken accessToken, ApiClient apiClient, String userAgent) {
-        //update refresh token
         Date expired = jwtService.getRefreshTokenExpire();
         Date accessExpired = jwtService.getAccessTokenExpire();
-        String token = UuidUtils.generateUUID().toString();
-        accessToken.setToken(HashUtil.sha256(token));
-        accessToken.setExpiresAt(expired);
-        accessTokenService.update(accessToken);
+
         AppUser appUser = accessToken.getAppUser();
+        // revoke the old row instead of overwriting it, so a stolen/rotated token stays detectable on reuse
+        accessToken.setRevoked(true);
+        accessTokenService.update(accessToken);
+
+        // login_log is unique per access_token row - clone the session info into a fresh LoginLog
+        LoginLog oldLog = accessToken.getLoginLog();
+        LoginLog loginLog = loginLogService.save(new LoginLog(
+                oldLog != null ? oldLog.getLoginFrom() : null,
+                appUser,
+                new IpAddress(oldLog != null ? oldLog.getIp() : null, oldLog != null ? oldLog.getHostName() : null),
+                oldLog != null ? oldLog.getDeviceId() : null,
+                oldLog != null ? oldLog.getUserAgent() : null));
+
+        AccessToken newSession = new AccessToken(appUser, expired, false, apiClient,
+                loginLog, DateUtil.getLocalDateTimeNow(), accessToken.getFcmToken());
+        accessTokenService.save(newSession);
+
         return RefreshTokenResponse.builder()
-                .authenticationToken(jwtService.toToken(appUser, token, apiClient, accessExpired, JwtType.Authen))
-                .refreshToken(token)
+                .authenticationToken(jwtService.toToken(appUser, newSession.getRawToken(), apiClient, accessExpired, JwtType.Authen))
+                .refreshToken(newSession.getRawToken())
                 .expiresAt(expired)
                 .userId(appUser.getId())
                 .build();

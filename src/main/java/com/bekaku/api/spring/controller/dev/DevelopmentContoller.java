@@ -15,7 +15,6 @@ import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.FileUtil;
 import com.bekaku.api.spring.util.SnowflakeIdHolder;
 import com.bekaku.api.spring.vo.GenerateTableSrcItem;
-import freemarker.template.Template;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.boot.Metadata;
@@ -32,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,7 +55,6 @@ public class DevelopmentContoller extends BaseApiController {
     @Value("${app.front-end.theme}")
     String frontendTheme;
 
-    private List<GenerateTableSrcItem> propertyList;
     private static final String TYPE_BOOLEAN = "boolean";
     private static final String TYPE_STRING = "string";
     private static final String TYPE_TEXT = "text";
@@ -124,10 +121,6 @@ public class DevelopmentContoller extends BaseApiController {
         return properties;
     }
 
-    private void setPropertyList(Table table, PersistentClass persistentClass) {
-        propertyList = extractProperties(persistentClass);
-    }
-
     private void generateProcess(DevFrontendTheme theme) {
         log.warn("Production : {}, theme: {}", isProduction, theme);
         if (isProduction) {
@@ -162,7 +155,7 @@ public class DevelopmentContoller extends BaseApiController {
             className = AppUtil.getSimpleClassName(persistentClass.getClassName());
             packageClassName = persistentClass.getClassName();
             Table table = persistentClass.getTable();
-            setPropertyList(table, persistentClass);
+            List<GenerateTableSrcItem> properties = extractProperties(persistentClass);
             log.info("--------------------------");
             log.info("capitalizeFirstLetter {} => {}", className, AppUtil.capitalizeFirstLetter(className, true));
             log.info("-Entity: {} is mapped to table: {}", packageClassName, table.getName());
@@ -172,7 +165,7 @@ public class DevelopmentContoller extends BaseApiController {
                 if (genSourceableTable != null) {
 
                     if (genSourceableTable.createDto()) {
-                        generateDto(className);
+                        generateDto(className, properties);
                         generateDtoMapper(className);
                     }
                     if (genSourceableTable.createRepository()) {
@@ -191,11 +184,11 @@ public class DevelopmentContoller extends BaseApiController {
 //                        log.error("  createValidator : {} ", className);
 //                    }
                     if (genSourceableTable.createFrontend()) {
-                        switch (theme) {
-                            case QUASAR -> generateFrontend(className, persistentClass);
-                            case NUXT_QUASAR -> generateFrontendNuxt3Quasar(className, persistentClass);
-                            case NUXT_UI -> generateFrontendNuxtUI(className, persistentClass);
-                        }
+                            switch (theme) {
+                                case QUASAR -> generateFrontend(className, persistentClass, properties);
+                                case NUXT_QUASAR -> generateFrontendNuxt3Quasar(className, persistentClass, properties);
+                                case NUXT_UI -> generateFrontendNuxtUI(className, persistentClass, properties);
+                            }
 
                     }
                     if (genSourceableTable.createPermission()) {
@@ -268,7 +261,7 @@ public class DevelopmentContoller extends BaseApiController {
 
     }
 
-    private void generateDto(String entityName ) {
+    private void generateDto(String entityName, List<GenerateTableSrcItem> properties) {
         //package com.grandats.api.givedeefive.controller.api
         String fileName = entityName + "Dto";
         String className = ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE + ".dto." + fileName;
@@ -280,7 +273,7 @@ public class DevelopmentContoller extends BaseApiController {
             Map<String, Object> dataModel = new HashMap<>();
             dataModel.put("rootPackage", ConstantData.DEFAULT_PROJECT_ROOT_PACKAGE);
             dataModel.put("entityName", entityName);
-            dataModel.put("properties", propertyList);
+            dataModel.put("properties", properties);
             codeGeneratorService.generateFile("spring-dto.ftl", dataModel, filePath);
             logCretedFile(className);
             /*
@@ -317,7 +310,7 @@ public class DevelopmentContoller extends BaseApiController {
                 writer.append("@Accessors(chain = true)\n");
                 writer.append("public class ").append(fileName).append(" extends DtoId {\n");
 //                writer.append("    private Long id;\n");
-                for (GenerateTableSrcItem src : propertyList) {
+                for (GenerateTableSrcItem src : properties) {
                     String propertyName = src.getPropertyName();
                     if (!exceptField(propertyName)) {
                         String type = getJavaType(src.getPropertyType());
@@ -827,7 +820,7 @@ public class DevelopmentContoller extends BaseApiController {
     }
 
     //Start nuxt+ UI
-    private void generateFrontendNuxtUI(String entityName, PersistentClass persistentClass) {
+    private void generateFrontendNuxtUI(String entityName, PersistentClass persistentClass, List<GenerateTableSrcItem> properties) {
         Table table = persistentClass.getTable();
         String tableName = table.getName();
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -841,7 +834,7 @@ public class DevelopmentContoller extends BaseApiController {
         Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("entityName", entityName);
         dataModel.put("tableName", tableName);
-        dataModel.put("properties", propertyList);
+        dataModel.put("properties", properties);
 
         if (!FileUtil.folderExist(dirName)) {
             FileUtil.folderCreate(dirName);
@@ -867,7 +860,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateNuxUIFrontList(String filePathName, String entityName, String tableName) {
+    private void generateNuxUIFrontList(String filePathName, String entityName, String tableName, List<GenerateTableSrcItem> properties) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -879,7 +872,7 @@ public class DevelopmentContoller extends BaseApiController {
             //Model
             writer.append("/* move this interface to /app/types/models.ts \n");
             writer.append("export interface ").append(entityName).append(" extends Id {\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -897,7 +890,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("/* move this message object to /app/i18n/th/model.ts and /app/i18n/en/model.ts under model:{}  \n");
             writer.append("    ,\"").append(entityNameLowerFirst).append("\": {\n");
             writer.append("      \"table\": \"").append(entityNameLowerFirst).append("\",\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 if (!exceptField(propertyName)) {
                     writer.append("      \"").append(propertyName).append("\": \"").append(propertyName).append("\",\n");
@@ -950,7 +943,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("});\n");
             writer.append("const columns = ref<TableColumn<").append(entityName).append(">[]>([\n");
 
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -1073,7 +1066,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateNuxUIFrontForm(String filePathName, String entityName, String tableName) {
+    private void generateNuxUIFrontForm(String filePathName, String entityName, String tableName, List<GenerateTableSrcItem> properties) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -1089,7 +1082,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("const { t } = useLang();\n");
 
             writer.append("const schema = z.object({\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -1151,7 +1144,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("type Schema = z.output<typeof schema>;\n");
 
             writer.append("const state = ref<Partial<Schema>>({\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -1205,7 +1198,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("\n");
             writer.append("      <!-- you can override form fields here auto generate slot by field-${z.object.id} -->\n");
             writer.append("      <!-- \n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 if (!exceptField(propertyName)) {
                     writer.append("      <template #field-").append(propertyName).append(">\n");
@@ -1230,7 +1223,7 @@ public class DevelopmentContoller extends BaseApiController {
     }
 
     //Start nuxt4+quasar
-    private void generateFrontendNuxt3Quasar(String entityName, PersistentClass persistentClass) {
+    private void generateFrontendNuxt3Quasar(String entityName, PersistentClass persistentClass, List<GenerateTableSrcItem> properties) {
         Table table = persistentClass.getTable();
         String tableName = table.getName();
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -1251,11 +1244,11 @@ public class DevelopmentContoller extends BaseApiController {
         }
         if (!FileUtil.fileExists(listName)) {
             log.warn("listName :{}, created", listName);
-            generateNuxQuasarFrontList(listName, entityName, tableName);
+            generateNuxQuasarFrontList(listName, entityName, tableName, properties);
         }
         if (!FileUtil.fileExists(formName)) {
             log.warn("formName :{}, created", formName);
-            generateNuxQuasarFrontForm(formName, entityName, tableName);
+            generateNuxQuasarFrontForm(formName, entityName, tableName, properties);
         }
         if (!FileUtil.fileExists(apiName)) {
             log.warn("apiName :{}, created", apiName);
@@ -1263,7 +1256,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateNuxQuasarFrontList(String filePathName, String entityName, String tableName) {
+    private void generateNuxQuasarFrontList(String filePathName, String entityName, String tableName, List<GenerateTableSrcItem> properties) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -1292,7 +1285,7 @@ public class DevelopmentContoller extends BaseApiController {
             //Model
             writer.append("/* move this interface to /app/types/models.ts \n");
             writer.append("export interface ").append(entityName).append(" extends Id {\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -1321,7 +1314,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("/* move this message object to /app/i18n/th/model.ts and /app/i18n/en/model.ts under model:{}  \n");
             writer.append("    ,").append(entityNameLowerFirst).append(": {\n");
             writer.append("      table: '").append(entityNameLowerFirst).append("',\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 if (!exceptField(propertyName)) {
                     writer.append("      ").append(propertyName).append(": '").append(propertyName).append("',\n");
@@ -1341,7 +1334,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("useInitPage(); \n");
             writer.append("const { t }=useLang(); \n");
             writer.append("const headerItems: ICrudListHeader[] = [\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 if (!exceptField(propertyName)) {
 
@@ -1417,7 +1410,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append(");\n");
             writer.append("</script>\n");
 
-//            for (GenerateTableSrcItem src : propertyList) {
+//            for (GenerateTableSrcItem src : properties) {
 //                String propertyName = src.getPropertyName();
 //                String propertyTypeName = src.getPropertyType();
 //                if (!exceptField(propertyName)) {
@@ -1495,7 +1488,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateNuxQuasarFrontForm(String filePathName, String entityName, String tableName) {
+    private void generateNuxQuasarFrontForm(String filePathName, String entityName, String tableName, List<GenerateTableSrcItem> properties) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -1522,7 +1515,7 @@ public class DevelopmentContoller extends BaseApiController {
             //initial entity
             writer.append("const entity: ").append(entityName).append(" =  Object.freeze<").append(entityName).append(">({\n");
             writer.append("  id: null,\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -1589,7 +1582,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      <template #crudFromContent>\n");
             //start row
             writer.append("        <div class=\"row\">\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -1757,7 +1750,7 @@ public class DevelopmentContoller extends BaseApiController {
     //End nuxt3+quasar
 
     //Start Default theme Quasar SSR
-    private void generateFrontend(String entityName, PersistentClass persistentClass) {
+    private void generateFrontend(String entityName, PersistentClass persistentClass, List<GenerateTableSrcItem> properties) {
         Table table = persistentClass.getTable();
         String tableName = table.getName();
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -1773,11 +1766,11 @@ public class DevelopmentContoller extends BaseApiController {
         }
         if (!FileUtil.fileExists(listName)) {
             log.warn("listName :{}, created", listName);
-            generateFrontList(listName, entityName, tableName);
+            generateFrontList(listName, entityName, tableName, properties);
         }
         if (!FileUtil.fileExists(formName)) {
             log.warn("formName :{}, created", formName);
-            generateFrontForm(formName, entityName, tableName);
+            generateFrontForm(formName, entityName, tableName, properties);
         }
         if (!FileUtil.fileExists(apiName)) {
             log.warn("apiName :{}, created", apiName);
@@ -1785,7 +1778,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateFrontForm(String filePathName, String entityName, String tableName) {
+    private void generateFrontForm(String filePathName, String entityName, String tableName, List<GenerateTableSrcItem> properties) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -1816,7 +1809,7 @@ public class DevelopmentContoller extends BaseApiController {
             //initial entity
             writer.append("const entity: ").append(entityName).append(" = Object.freeze({\n");
             writer.append("  id: null,\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -1873,7 +1866,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("      <template #crudFromContent>\n");
             //start row
             writer.append("        <div class=\"row\">\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -1965,7 +1958,7 @@ public class DevelopmentContoller extends BaseApiController {
         }
     }
 
-    private void generateFrontList(String filePathName, String entityName, String tableName) {
+    private void generateFrontList(String filePathName, String entityName, String tableName, List<GenerateTableSrcItem> properties) {
         String entityNameLowerFirst = AppUtil.capitalizeFirstLetter(entityName, true);
         String upperTableName = AppUtil.upperLowerCaseString(tableName, false);
         String tableNameKebabCase = tableName.replace("_", "-");
@@ -2017,7 +2010,7 @@ public class DevelopmentContoller extends BaseApiController {
             //Model
             writer.append("/* move this interface to /src/types/models.ts \n");
             writer.append("export interface ").append(entityName).append(" extends Id {\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 String propertyTypeName = src.getPropertyType();
                 if (!exceptField(propertyName)) {
@@ -2046,7 +2039,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("/* move this message object to /src/i18n/th/model.ts and /src/i18n/en/model.ts under model:{}  \n");
             writer.append("    ,").append(entityNameLowerFirst).append(": {\n");
             writer.append("      table: '").append(entityNameLowerFirst).append("',\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 if (!exceptField(propertyName)) {
                     writer.append("      ").append(propertyName).append(": '").append(propertyName).append("',\n");
@@ -2069,7 +2062,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append("const { setTitle } = useAppMeta({ manualSet: true });\n");
             writer.append("const { t } = useLang();\n");
             writer.append("const headers = ref<ICrudListHeader[]>([\n");
-            for (GenerateTableSrcItem src : propertyList) {
+            for (GenerateTableSrcItem src : properties) {
                 String propertyName = src.getPropertyName();
                 if (!exceptField(propertyName)) {
 
@@ -2144,7 +2137,7 @@ public class DevelopmentContoller extends BaseApiController {
             writer.append(");\n");
             writer.append("</script>\n");
 
-//            for (GenerateTableSrcItem src : propertyList) {
+//            for (GenerateTableSrcItem src : properties) {
 //                String propertyName = src.getPropertyName();
 //                String propertyTypeName = src.getPropertyType();
 //                if (!exceptField(propertyName)) {

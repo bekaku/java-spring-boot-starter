@@ -6,6 +6,7 @@ import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.vo.IpAddress;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,6 +19,7 @@ import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,14 +27,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class AppUtil {
-    public static final String EMAIL_PATTERN = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\\\.[A-Za-z0-9-]+)*(\\\\.[A-Za-z]{2,})$";
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    public static final String EMAIL_PATTERN = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
     // strict regex
     public static final String USERNAME_PATTERN = "^[a-zA-Z0-9]([._-](?![._-])|[a-zA-Z0-9]){3,18}[a-zA-Z0-9]$";
 
@@ -58,7 +63,6 @@ public class AppUtil {
         String user = userAgent.toLowerCase();
 
         String os = "";
-        String browser = "";
 
         if (userAgent.toLowerCase().contains("windows")) {
             os = "Windows";
@@ -73,29 +77,42 @@ public class AppUtil {
         } else {
             os = "UnKnown, More-Info: " + userAgent;
         }
+        String browser;
+        try {
+            browser = detectBrowser(userAgent, user);
+        } catch (Exception e) {
+            log.debug("Failed to parse user agent: {}", userAgent, e);
+            browser = "UnKnown";
+        }
+        return os + " " + browser;
+    }
+
+    private static String detectBrowser(String userAgent, String user) {
         if (user.contains("msie")) {
-            String substring = userAgent.substring(userAgent.indexOf("MSIE")).split(";")[0];
-            browser = substring.split(" ")[0].replace("MSIE", "IE") + "-" + substring.split(" ")[1];
+            String substring = userAgent.substring(user.indexOf("MSIE")).split(";")[0];
+            return substring.split(" ")[0].replace("MSIE", "IE") + "-" + substring.split(" ")[1];
         } else if (user.contains("safari") && user.contains("version")) {
-            browser = (userAgent.substring(userAgent.indexOf("Safari")).split(" ")[0]).split("/")[0] + "-" + (userAgent.substring(userAgent.indexOf("Version")).split(" ")[0]).split("/")[1];
+            return (userAgent.substring(userAgent.indexOf("Safari")).split(" ")[0]).split("/")[0] + "-" + (userAgent.substring(userAgent.indexOf("Version")).split(" ")[0]).split("/")[1];
         } else if (user.contains("opr") || user.contains("opera")) {
             if (user.contains("opera"))
-                browser = (userAgent.substring(userAgent.indexOf("Opera")).split(" ")[0]).split("/")[0] + "-" + (userAgent.substring(userAgent.indexOf("Version")).split(" ")[0]).split("/")[1];
-            else if (user.contains("opr"))
-                browser = ((userAgent.substring(userAgent.indexOf("OPR")).split(" ")[0]).replace("/", "-")).replace("OPR", "Opera");
+                return (userAgent.substring(userAgent.indexOf("Opera")).split(" ")[0]).split("/")[0] + "-" + (userAgent.substring(userAgent.indexOf("Version")).split(" ")[0]).split("/")[1];
+            else
+                return ((userAgent.substring(userAgent.indexOf("OPR")).split(" ")[0]).replace("/", "-")).replace("OPR", "Opera");
         } else if (user.contains("chrome")) {
-            browser = (userAgent.substring(userAgent.indexOf("Chrome")).split(" ")[0]).replace("/", "-");
+            return (userAgent.substring(userAgent.indexOf("Chrome")).split(" ")[0]).replace("/", "-");
         } else if ((user.contains("mozilla/7.0")) || (user.contains("netscape6")) || (user.contains("mozilla/4.7")) || (user.contains("mozilla/4.78")) || (user.contains("mozilla/4.08")) || (user.contains("mozilla/3"))) {
-            browser = "Netscape-?";
+            return "Netscape-?";
         } else if (user.contains("firefox")) {
-            browser = (userAgent.substring(userAgent.indexOf("Firefox")).split(" ")[0]).replace("/", "-");
+            return (userAgent.substring(userAgent.indexOf("Firefox")).split(" ")[0]).replace("/", "-");
         } else if (user.contains("rv")) {
-            browser = "IE-" + user.substring(user.indexOf("rv") + 3, user.indexOf(")"));
-        } else {
-            browser = "UnKnown, More-Info: " + userAgent;
+            int start = user.indexOf("rv") + 3;
+            int end = user.indexOf(')', start);
+            if (start < 0 || end < 0 || end <= start) {
+                return "UnKnown";
+            }
+            return "IE-" + user.substring(start, end);
         }
-
-        return os + " " + browser;
+        return "UnKnown, More-Info: " + userAgent;
     }
 
     public static IpAddress getIpaddress() {
@@ -265,12 +282,13 @@ public class AppUtil {
     }
 
     public static double calculatePercentRank(double[] values, double targetValue) {
-        Arrays.sort(values);
-        int rank = Arrays.binarySearch(values, targetValue);
+        double[] sorted = values.clone();
+        Arrays.sort(sorted);
+        int rank = Arrays.binarySearch(sorted, targetValue);
         if (rank < 0) {
             rank = -(rank + 1);
         }
-        return (double) rank / values.length * 100;
+        return (double) rank / sorted.length * 100;
     }
 
     public static boolean isEmpty(Object o) {
@@ -320,15 +338,9 @@ public class AppUtil {
     }
 
     public static String generateRandomNumber(int length) {
-//        Random random = new Random();
-//        StringBuilder sb = new StringBuilder(length);
-//        for (int i = 0; i < length; i++) {
-//            sb.append(random.nextInt(10)); // Appending random digits (0-9)
-//        }
-//        return sb.toString();
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            sb.append(ThreadLocalRandom.current().nextInt(10));
+            sb.append(SECURE_RANDOM.nextInt(10));
         }
         return sb.toString();
     }
@@ -398,14 +410,15 @@ public class AppUtil {
         return str.matches("\\d+");
     }
 
-    public static int maxRunningNoByLength(int length) {
-        StringBuilder maxRunningString = new StringBuilder();
-        int maxRunning;
-        for (int i = 0; i < length; i++) {
-            maxRunningString.append("9");
+    public static long maxRunningNoByLength(int length) {
+        if (length < 0 || length >= 18) {
+            throw new IllegalArgumentException("length must be between 0 and 17");
         }
-        maxRunning = Integer.parseInt(maxRunningString.toString());
-        return maxRunning;
+        long maxRunning = 1;
+        for (int i = 0; i < length; i++) {
+            maxRunning *= 10;
+        }
+        return maxRunning - 1;
     }
 
     public static String runningNoPrependPrefix(int maxLength, int runningNo) {

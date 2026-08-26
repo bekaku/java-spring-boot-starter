@@ -6,8 +6,6 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -17,6 +15,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -25,6 +25,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -36,14 +37,12 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
-//@ControllerAdvice
 @Slf4j
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class ExceptionResolver {
+public class GlobalExceptionHandler {
     //    @ExceptionHandler(ApiException.class)
 //    ErrorResponse handleApiException(ApiException e) {
 //        return ErrorResponse.builder(e, e.getApiError().getStatus(), e.getMessage())
@@ -67,10 +66,30 @@ public class ExceptionResolver {
         return new ResponseEntity<>(ex.getApiError(), ex.getApiError().getStatus());
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
+        final ApiError apiError = new ApiError(HttpStatus.FORBIDDEN, "Access denied", "error.403");
+        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+    }
+
+    @ExceptionHandler({HttpMessageNotReadableException.class})
+    public ResponseEntity<Object> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        final ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, "Malformed request body", "Malformed request body");
+        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+    }
+
+    @ExceptionHandler({MissingServletRequestPartException.class})
+    public ResponseEntity<Object> handleMissingPart(MissingServletRequestPartException ex) {
+        final ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST,
+                ex.getRequestPartName() + " part is missing",
+                ex.getRequestPartName() + " part is missing");
+        return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
+    }
+
     @ExceptionHandler({Exception.class})
     public ResponseEntity<Object> handleAll(final Exception ex, final WebRequest request) {
-        ex.printStackTrace();
-        final ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getLocalizedMessage(), "error occurred");
+        log.error("Unhandled exception", ex);
+        final ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", "error occurred");
         return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
     }
 
@@ -180,7 +199,8 @@ public class ExceptionResolver {
 
     @ExceptionHandler({MultipartException.class})
     public ResponseEntity<Object> handleMultipartFile(Exception ex) {
-        final ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage(), ex.getCause().getMessage());
+        final String cause = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+        final ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, cause, cause);
         return new ResponseEntity<>(apiError, new HttpHeaders(), apiError.getStatus());
     }
 

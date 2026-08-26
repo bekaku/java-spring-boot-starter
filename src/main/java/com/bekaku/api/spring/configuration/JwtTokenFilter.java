@@ -43,9 +43,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private static final List<String> SKIP_PATHS = List.of(
             "/api/public/**",
             "/api/auth/**",
-            "/api/fileManager/files/stream/**",
-            "/api/fileManager/video/stream/**",
             "/schedule/**",
+//            "/api/fileManager/files/stream/**",
+//            "/api/fileManager/video/stream/**",
             "/cdn/**",
             "/favicon.ico",
             "/_websocket/**",
@@ -83,7 +83,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 if (requestUserId.isEmpty()) {
                     requestUserId = Optional.ofNullable(request.getHeader(ConstantData.X_USER_ID));
                 }
-                log.info("UID:{},Acces Token:{}", requestUserId.orElseGet(() -> null), jwtToken.orElseGet(() -> null));
+                log.info("UID:{}, Access token present:{}", requestUserId.orElse(null), jwtToken.isPresent());
 
                 if (jwtToken.isEmpty()) {
                     log.warn("Jwt token not found : {}", request.getRequestURI());

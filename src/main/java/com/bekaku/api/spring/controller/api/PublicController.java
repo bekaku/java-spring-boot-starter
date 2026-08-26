@@ -3,8 +3,10 @@ package com.bekaku.api.spring.controller.api;
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.vo.LinkPreview;
 import com.google.common.net.InternetDomainName;
+import com.bekaku.api.spring.util.UrlUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,6 +35,9 @@ public class PublicController extends BaseApiController {
         return "";
     }
 
+    private static final int MAX_REDIRECTS = 5;
+    private static final int CONNECT_TIMEOUT_MS = 5000;
+
     @GetMapping("/getOgMeta")
     public LinkPreview getOgMeta(@RequestParam(value = "url") String url) {
         if (!url.startsWith("http")) {
@@ -41,7 +46,7 @@ public class PublicController extends BaseApiController {
         Document document;
         LinkPreview preview = null;
         try {
-            document = Jsoup.connect(url).get();
+            document = fetchExternalDocument(url);
             String title = getMetaTagContent(document, "meta[name=title]");
             String desc = getMetaTagContent(document, "meta[name=description]");
             String ogUrl = getMetaTagContent(document, "meta[property=og:url]");
@@ -60,11 +65,34 @@ public class PublicController extends BaseApiController {
                     !ObjectUtils.isEmpty(ogDesc) ? ogDesc : desc,
                     ogImage,
                     ogImageAlt);
-        } catch (IOException e) {
-//            this.throwError(HttpStatus.OK, i18n.getMessage("error.error"), e.getMessage());
+        } catch (IOException | IllegalArgumentException e) {
+            log.warn("Failed to fetch link preview for url: {}", url, e);
         }
 
         return preview;
+    }
+
+    private Document fetchExternalDocument(String url) throws IOException {
+        String current = url;
+        for (int i = 0; i < MAX_REDIRECTS; i++) {
+            UrlUtil.validatePublicUrl(current);
+            Connection.Response response = Jsoup.connect(current)
+                    .timeout(CONNECT_TIMEOUT_MS)
+                    .followRedirects(false)
+                    .ignoreHttpErrors(true)
+                    .execute();
+            int status = response.statusCode();
+            if (status >= 300 && status < 400) {
+                String location = response.header("Location");
+                if (location == null || location.isEmpty()) {
+                    return response.parse();
+                }
+                current = UrlUtil.resolveRedirect(current, location);
+                continue;
+            }
+            return response.parse();
+        }
+        throw new IOException("Too many redirects");
     }
 
 

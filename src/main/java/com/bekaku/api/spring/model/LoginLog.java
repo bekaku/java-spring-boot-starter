@@ -43,7 +43,7 @@ public class LoginLog extends Id {
     @JoinColumn(name = "userAgent", comment = "FK -> Ref table: user_agent (id). Browser/client user agent information")
     private UserAgent userAgent;
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     @Column(name = "login_from", comment = "Login source/platform type (e.g., WEB, MOBILE)")
     private LoginLogType loginFrom;
 

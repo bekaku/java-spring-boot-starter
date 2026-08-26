@@ -35,7 +35,6 @@ import com.bekaku.api.spring.specification.SearchSpecification;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
 import com.bekaku.api.spring.util.ControllerUtil;
-import com.bekaku.api.spring.util.CookieUtil;
 import com.bekaku.api.spring.validator.UserValidator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -89,22 +88,14 @@ public class AppUserController extends BaseApiController {
     private final JwtProperties jwtProperties;
 
     private final String SHEET_NAME = "users";
-    private final CookieUtil cookieUtil;
 
     @GetMapping("/currentUserData")
-    public ResponseEntity<AppUserDto> currentUserData(@AuthenticationPrincipal AppUserDto userAuthen,
-                                                      HttpServletRequest request) {
+    public ResponseEntity<AppUserDto> currentUserData(@AuthenticationPrincipal AppUserDto userAuthen) {
 
         if (userAuthen == null) {
             throw this.responseErrorForbidden();
         }
 
-        //TODO can remove in production
-        String ckUserId = cookieUtil.getCurrentUserID(request);
-        String jwtRefreshTokenCookie = cookieUtil.getCurrentUserRefreshToken(request);
-        String jwtTokenCookie = cookieUtil.getCurrentUserAccessToken(request);
-
-        log.info("ckUserId :{}, jwtTokenCookie: {}, currentJwtRefreshTokenCookie :{}", ckUserId, jwtTokenCookie, jwtRefreshTokenCookie);
         AppUser user = appUserService.findAndValidateAppUserBy(userAuthen);
         AppUserDto dto = appUserService.convertEntityToDto(user);
         if (userAuthen.getAccessTokenId() != null) {
@@ -239,7 +230,7 @@ public class AppUserController extends BaseApiController {
 
         setUserRoles(dto.getSelectedRoles(), appUser);
         //encrypt pwd
-        appUser.setPassword(encryptService.encrypt(appUser.getPassword(), appUser.getSalt()));
+        appUser.setPassword(encryptService.encrypt(appUser.getPassword()));
         appUserService.save(appUser);
 
         return appUserService.convertEntityToDto(appUser);
@@ -321,7 +312,7 @@ public class AppUserController extends BaseApiController {
         appUserUpdate.setPassword(dto.getPassword());
         //encrypt pwd
         if (!ObjectUtils.isEmpty(appUserUpdate.getPassword())) {
-            appUserUpdate.setPassword(encryptService.encrypt(appUserUpdate.getPassword(), appUserUpdate.getSalt()));
+            appUserUpdate.setPassword(encryptService.encrypt(appUserUpdate.getPassword()));
             appUserService.update(appUserUpdate);
 
             if (dto.isLogoutAllDevice()) {
@@ -364,6 +355,7 @@ public class AppUserController extends BaseApiController {
         if (user.isEmpty() || fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
+        appUserService.requireTheSameUser(userAuthen.getId(), fileManager.get().getCreatedUser());
         user.get().setAvatarFile(fileManager.get());
         appUserService.update(user.get());
         return this.responseEntity(HttpStatus.OK);
@@ -381,6 +373,7 @@ public class AppUserController extends BaseApiController {
         if (user.isEmpty() || fileManager.isEmpty()) {
             throw this.responseErrorNotfound();
         }
+        appUserService.requireTheSameUser(userAuthen.getId(), fileManager.get().getCreatedUser());
         user.get().setCoverFile(fileManager.get());
         appUserService.update(user.get());
         return this.responseEntity(HttpStatus.OK);
@@ -421,7 +414,7 @@ public class AppUserController extends BaseApiController {
 
         //encrypt pwd
         if (!ObjectUtils.isEmpty(appUserUpdate.getPassword())) {
-            appUserUpdate.setPassword(encryptService.encrypt(appUserUpdate.getPassword(), appUserUpdate.getSalt()));
+            appUserUpdate.setPassword(encryptService.encrypt(appUserUpdate.getPassword()));
             appUserService.update(appUserUpdate);
 
             if (dto.isLogoutAllDevice()) {
@@ -529,7 +522,7 @@ public class AppUserController extends BaseApiController {
         Optional<ApiClient> apiClient = apiClientService.findByApiName(apiClientName);
 
         if (apiClient.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.OK, i18n.getMessage("error.error"),
+            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"),
                     i18n.getMessage("error.apiClientNotFound")));
         }
         Optional<AppUser> user = appUserService.findActiveByEmailOrUserName(usernameRequest.getEmailOrUsername());

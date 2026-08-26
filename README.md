@@ -126,6 +126,62 @@ flowchart TD
     class I database
 ```
 
+### Detailed Architecture Analysis
+
+A production-style Spring Boot 4.1 / Java 25 API starter with auth, file management, AI/RAG chat, WebSocket chat, and queue processing. Gradle multi-profile builds (dev/prod), Docker + Kubernetes deployment ready.
+
+#### Layered Architecture (classic 4-layer, interface/impl separation)
+
+```
+Controller (controller/api|web|socket)
+    ↓
+Service interface (service/, extends BaseService<T, DTO>)
+    ↓
+ServiceImpl (serviceImpl/, @Transactional(readOnly=true) at class level)
+    ↓
+Repository (repository/, JPA + Specification)  ←→  MyBatis mappers (mybatis/)
+```
+
+Strict naming convention throughout: `AppUserController → AppUserService → AppUserServiceImpl → AppUserRepository → mapper/AppUserMapper` (MapStruct for entity↔DTO).
+
+#### Base/Generic Framework Layer (boilerplate elimination)
+
+- `BaseApiController` — response helpers, paging/sort validation, parses query params into `SearchCriteria`
+- `BaseService<T, DTO>` — generic CRUD contract incl. paged search and entity/DTO conversion
+- `SearchSpecification<T>` + `SearchCriteria/SearchOperation/DynamicFilterSpec` — generic JPA Criteria builder driven entirely by URL params (LIKE, IN, >, joins via dotted keys). No per-entity filter code needed.
+- `BaseResponseEntity<T>` — record `(status, data, message)` envelope; `ResponseListDto<DTO>` for paginated lists
+- `BaseResponseException` — typed errors handled by `CustomRestExceptionHandler`
+- `BaseRepository(Impl)` — extension point over `SimpleJpaRepository`
+
+#### Dual Data Access
+
+- **JPA/Hibernate** primary — entities with audited superclasses (`AuditAwareImpl`), batch writes (batch_size 50), Snowflake ID generation (`SnowflakeIdGenerator`, plus `UuidV7Generator`)
+- **MyBatis** for read-optimized joined queries returning DTOs directly (e.g. user+role+token join), XML in `resources/mybatis/`. Services inject both side-by-side.
+
+#### Security
+
+- Stateless JWT filter chain: token from cookie `_session_` or `Bearer` header; 15-min access + 7-day refresh tokens; BCrypt + per-user salt
+- DB-backed roles/permissions → `CustomPermissionEvaluator` for `@PreAuthorize("hasPermission(...)")`; menu ACL in `resources/acl.json`
+- Dev/test endpoints gated by `environments.production=false`
+
+#### AI Module (Spring AI)
+
+- **RAG**: Ollama chat client + Qdrant vector store; ingestion service chunks documents (800/100 overlap, topK 5); custom JDBC-persisted `ChatMemory`
+- **Function calling**: read-only PostgreSQL query tools with SQL validation, schema introspection, user activity tool
+- **Face recognition**: external Python ArcFace microservice (`docker-compose/face-verification-service`)
+
+#### Async & Realtime
+
+- **WebSocket STOMP**: group/user-to-user chat + bots under `/_websocket/**`
+- **RabbitMQ**: notification/scoring/reward queues with retry (Kafka configured but disabled)
+- **Virtual threads enabled**, `@Async` config, cron scheduler for cleanup
+
+#### Infrastructure
+
+MySQL (Postgres alternative) + HikariCP, Flyway (disabled by default), Undertow (HTTP/2), EhCache, Redis/Kafka/Qdrant/RabbitMQ/Grafana-Prometheus via docker-compose, Log4j2, Actuator + Prometheus, Swagger, i18n (en/th), Firebase FCM, Thymeleaf/Freemarker web dashboard.
+
+In short: it's a reusable **starter template** whose value is the generic base layer (paging/search/response/error handling) that lets you add new entities with minimal code, pre-wired with modern extras (AI/RAG, WebSocket, queues, observability).
+
 ## 🚀 Getting Started
 
 ### Prerequisites

@@ -38,6 +38,8 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
 
     void revokeTokenByUserId(Long userId);
 
+    void handleRefreshTokenReuse(String token);
+
     void updateNullFcmToken(String fcmToken);
 
     Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked);

@@ -28,9 +28,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.bekaku.api.spring.util.FileUtil.TEMP_UPLOAD_DIR;
 
 
 @Slf4j
@@ -337,17 +342,48 @@ public class FileManagerServiceImpl implements FileManagerService {
     // * = Every month
     // ? = No day of the week specified (always used with dates marked with an asterisk in Spring)
     @Override
-//    @Scheduled(cron = "${app.cron.test-expression}")
+//    @Scheduled(cron = "${app.cron.clean-file-expression}")
     @Transactional
     public void cleanupOldFiles() {
-        if (appProperties.cron().cleanOldFile()) {
-            List<FileManager> files = fileManagerRepository.findAll();
-            for (FileManager file : files) {
-                deleteFileFromPath(file);
-            }
+//        if (appProperties.cron().cleanOldFile()) {
+//            List<FileManager> files = fileManagerRepository.findAll();
+//            for (FileManager file : files) {
+//                deleteFileFromPath(file);
+//            }
+//        }
+    }
+
+    // 0 = 0 seconds
+    // 30 = 30 minutes
+    // 23 = 23 hours (11 PM)
+    // * = Every day
+    // * = Every month
+    // ? = No day of the week specified (always used with dates marked with an asterisk in Spring)
+    @Override
+    @Scheduled(cron = "${app.cron.clean-file-expression}")
+    public void cleanupOldTempChunks() {
+        if (!appProperties.cron().cleanOldTempChunks()) {
+            return;
+        }
+        Path tempDir = Path.of(FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), TEMP_UPLOAD_DIR, true));
+        Instant cutoff = Instant.now().minus(1, ChronoUnit.DAYS);
+        try (Stream<Path> files = Files.walk(tempDir)) {
+            files.filter(Files::isRegularFile).forEach(path -> {
+                try {
+                    if (Files.getLastModifiedTime(path).toInstant().isBefore(cutoff)) {
+                        Files.deleteIfExists(path);
+                        log.info("cleanupOldTempChunks deleted: {}", path.getFileName());
+                    }
+                } catch (IOException e) {
+                    log.warn("Failed to delete old temp chunk: {}", path, e);
+                }
+            });
+        } catch (IOException e) {
+            log.error("Failed to clean old temp chunks in directory: {}", tempDir, e);
         }
     }
 
+   
     private void deleteFileFromPath(FileManager fileManager) {
         String filePath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), fileManager.getFilePath(), false);
         try {
