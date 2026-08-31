@@ -248,7 +248,7 @@ public class JwtServiceImpl implements JwtService {
         return getTokenString(header);
     }
 
-    private Optional<String> getTokenString(String header) {
+    public Optional<String> getTokenString(String header) {
         if (header == null) {
             return Optional.empty();
         } else {

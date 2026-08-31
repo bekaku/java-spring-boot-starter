@@ -73,11 +73,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 String apiClient = request.getHeader(ConstantData.ACCEPT_APIC_LIENT);
 
                 Optional<String> jwtToken = Optional.ofNullable(cookieUtil.getCurrentUserAccessToken(request));
-
                 if (jwtToken.isEmpty()) {
-                    jwtToken = jwtService.getSubFromAuthorizationHeader(request.getHeader(ConstantData.AUTHORIZATION), null);
+                    jwtToken = jwtService.getTokenString(request.getHeader(ConstantData.AUTHORIZATION));
                 }
-
 
                 Optional<String> requestUserId = Optional.ofNullable(cookieUtil.getCurrentUserID(request));
                 if (requestUserId.isEmpty()) {

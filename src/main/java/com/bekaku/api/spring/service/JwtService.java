@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface JwtService {
     String toToken(AppUser appUser, String token, ApiClient apiClient, Date expired, JwtType jwtType);
 
+    Optional<String> getTokenString(String header);
     Optional<String> getSubFromToken(String token, ApiClient apiClient);
 
     Optional<String> getSubFromAuthorizationHeader(String authorization, ApiClient apiClient);

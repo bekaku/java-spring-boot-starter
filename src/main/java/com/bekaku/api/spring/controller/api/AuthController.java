@@ -192,6 +192,11 @@ public class AuthController extends BaseApiController {
             var accessTokenOpt = accessTokenService.findByToken(targetRefreshCookie);
             if (accessTokenOpt.isPresent()) {
 
+                // Ensure the refresh token actually belongs to the target user
+                if (!accessTokenOpt.get().getAppUser().getId().equals(targetUserId)) {
+                    return this.responseEntity("Refresh token does not belong to target user", HttpStatus.BAD_REQUEST);
+                }
+
                 if (!accessTokenService.isTokenExpired(accessTokenOpt.get())) {
 
                     ResponseCookie currentUserCookie = cookieUtil.setCookie(appProperties.jwt().currentUserKey(), targetUserId.toString(),
@@ -362,6 +367,12 @@ public class AuthController extends BaseApiController {
         Optional<AccessToken> accessToken = accessTokenService.findByTokenAndRevoked(refreshTokenKey, false);
         if (accessToken.isEmpty()) {
             log.info("refreshToken: accessToken.isEmpty()");
+            deleteCookie(request, response, currentUserId, true);
+            throwUnauthorizes();
+        }
+        // validate user is active
+        if(!accessToken.get().getAppUser().isActive() || accessToken.get().getAppUser().getDeleted()){
+            log.info("refreshToken: user is not active or deleted");
             deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();
         }
