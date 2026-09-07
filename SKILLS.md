@@ -1,547 +1,194 @@
-# 🛠️ Project Skills & Technology Stack
+# Agent Guide: Java Spring Boot API Starter
 
-This document outlines the core technologies, architectural patterns, and coding conventions used in this Java Spring Boot boilerplate.
-**Note for AI Assistants (Copilot, Claude, Codex):** Please strictly adhere to these technologies, design patterns, and versions when generating code, creating new modules, or refactoring.
+Read this guide and [README.md](README.md) before implementing changes. This is repository guidance for a coding agent, not an installable skill package. Current behavior and known defects are distinguished from the conventions agents should follow. Do not claim the conventions are uniformly implemented in existing code.
 
-## 1. Core Technologies
-* **Framework:** Spring Boot 4.1.0
-* **Language:** Java 25 (Gradle toolchain)
-* **Build Tool:** Gradle (Manage dependencies through the build.gradle file and use the ./gradlew command to run various tasks.)
-* **API Documentation:** SpringDoc OpenAPI 3.0.3 (Swagger UI)
-* **Logging:** Log4j2 (excluded Logback and SLF4J)
-* **AI:** Spring AI 2.x (Ollama model, Qdrant vector store, PDF/Tika document readers)
+## Scope and starting workflow
 
-## 2. Architecture & Patterns
-* **Architecture:** Layered Architecture (Controller -> Service -> Repository)
-* **Data Transfer Pattern:** Strict use of DTOs (Data Transfer Objects) for requests and responses. Entities must NEVER be exposed directly to the Controller layer.
-* **Dependency Injection:** Constructor Injection preferred (utilizing Lombok's `@RequiredArgsConstructor`).
-* **Database Access:** Spring Data JPA / Hibernate + MyBatis 4.0.1
-* **Security:** Spring Security with JWT authentication via `JwtTokenFilter` (cookie or `Authorization` header). Sessions are tracked in the `access_token` table (refresh tokens stored SHA-256 hashed), so every request is revocation-checked; refresh-token rotation revokes the old row and detects token reuse by revoking all of a user's sessions.
-* **Async Processing:** `@EnableAsync` for asynchronous task execution
-* **Scheduling:** `@EnableScheduling` for scheduled tasks (cron expressions from `app.cron.*` properties, e.g. old-file and old-temp-chunk cleanup in `FileManagerServiceImpl`)
-* **Caching:** Spring Cache with Ehcache 3.12.0
-* **Auditing:** JPA Auditing for tracking entity creation/modification metadata
-* **Configuration Properties:** Immutable Java `record`s annotated with `@ConfigurationProperties` (e.g. `AppProperties`, `JwtProperties`, `AppDefaultsProperties`)
+1. Read any applicable `AGENTS.md`, the user's request and `git status --short`. Preserve staged changes, local configuration and unrelated edits.
+2. Use the source map below to trace the requested operation from route to DTO, service, mapper/repository, SQL and configuration. Read active code, including annotations and callers; comments and file names can describe dormant examples.
+3. Reproduce an issue with a focused test when practical. A request for review authorizes inspection and reporting; implement only the requested changes.
+4. Implement the smallest coherent change, preserving existing routes and API contracts unless the user requests a migration.
+5. Run relevant checks and report exact results, including known failures and untested integrations. Read [README review findings](README.md#review-findings) before calling a feature complete.
 
-## 3. 🤖 AI Code Generation Guidelines
-When assisting with code generation in this project, AI agents must follow these rules:
-1. **Lombok Usage:** Use Lombok annotations (`@Data`, `@Getter`, `@Setter`, `@Builder`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Slf4j`) to reduce boilerplate code.
-2. **Standardized Responses:** All REST API endpoints must return a unified wrapper object (e.g., `ApiResponse<T>`) rather than raw data. Use the `BaseApiController` response helpers (`responseEntity`, `responseServerMessage`) — they honor the `HttpStatus` passed in.
-3. **Exception Handling:** Do not use plain `try-catch` blocks in Controllers for business logic errors. Throw `ApiException` (built via the `BaseResponseException` helpers: `responseErrorNotfound()`, `responseErrorForbidden()`, `responseErrorBadRequest()`, `throwError(...)`) and let the global `ExceptionResolver` (`@RestControllerAdvice`, `exception/ExceptionResolver.java`) handle the HTTP response. Error bodies are `ApiError` objects; the 500 catch-all logs the stack server-side and returns a generic message — never leak exception details to clients.
-4. **Validation:** Use `jakarta.validation.constraints` (e.g., `@NotNull`, `@NotBlank`, `@Email`) on Request DTOs, and ensure `@Valid` is used in the Controller.
-5. **Transactions:** Apply `@Transactional` at the Service layer for methods that modify the database. For methods that only perform select/read queries, strictly use `@Transactional(readOnly = true)` to optimize performance. Write paths in a service with class-level `readOnly = true` MUST have their own method-level `@Transactional`.
-6. **Security:**
-   - Never log raw tokens, passwords, or secrets (log presence/booleans instead).
-   - Any user-supplied file path/name must be validated before use in `Path.resolve()` / `File` construction (see `FileManagerController.isValidFileName` / `isFileAccessAllowed` and `util/UrlUtil.validatePublicUrl` for outbound URLs).
-   - Endpoints that touch per-user data must enforce ownership (`appUserService.requireTheSameUser(...)`).
-   - Public signup must never accept client-selected roles — assign the configured default role only (`app.defaults.role`).
-   - Use `SecureRandom` (via `AppUtil.generateRandomNumber`) for OTPs/codes; apply rate limiting to sensitive public endpoints.
-7. **Tests:** New controller/service behavior should be covered by JUnit 5 + Mockito unit tests (see `src/test/java/com/bekaku/api/spring/controller/api/AuthControllerTest.java`). Run them with `./gradlew test --tests "*ClassName*"`.
+Do not launch the application against an existing database merely to inspect it: the development example uses `ddl-auto: update`; MCP can spawn a process; enabled Qdrant builders initialize collections; scheduled cleanup can delete files. Use unit tests or an explicitly disposable integration environment for those checks.
 
-*Standard Controller Example Pattern:*
-```java
-@Slf4j
-@RequestMapping(path = "/api/resource")
-@RestController
-@RequiredArgsConstructor
-public class ResourceController extends BaseApiController {
+## Baseline and command reference
 
-    private final ResourceService resourceService;
-    private final I18n i18n;
+| Item | Repository choice |
+| --- | --- |
+| Application | Single Gradle project `api-service`, base package `com.bekaku.api.spring` |
+| Runtime/build | Java 25, Gradle Wrapper 9.6.0, Spring Boot 4.1.0 |
+| Data | PostgreSQL + pgvector; Spring Data JPA and MyBatis 4.0.1 |
+| Code generation | Lombok 1.18.46 and MapStruct 1.6.3 annotation processors; separate FreeMarker development generator |
+| HTTP/security | Servlet MVC/Tomcat, Spring Security, JJWT 0.13.0 |
+| AI | Spring AI 2.0.0 BOM; explicit 2.0.0-M8 advisor; Ollama/Qdrant/MCP |
+| Tests | Jupiter/Mockito/AssertJ; direct controller/service tests, standalone MockMvc image-endpoint tests and focused ownership tests |
 
-    @PreAuthorize("@permissionChecker.hasPermission('resource_list')")
-    @GetMapping
-    public ResponseEntity<ResponseListDto<ResourceDto>> findAll(HttpServletRequest request, Pageable pageable) {
-        SearchSpecification<Resource> specification = ControllerUtil.buildSpecification(request, List.of());
-        return this.responseEntity(resourceService.findAllWithSearch(specification, getPageable(pageable, Resource.getSort())), HttpStatus.OK);
-    }
+Use the wrapper, keep dependency declarations in `build.gradle`, and do not upgrade libraries as an incidental cleanup. The build explicitly overrides some managed versions, including `spring-jcl`, the AI advisor and Jupiter API; inspect resolved dependencies before changing one component in isolation.
 
-    @PreAuthorize("@permissionChecker.hasPermission('resource_view')")
-    @GetMapping("/{id}")
-    public ResponseEntity<ResourceDto> findOne(@PathVariable("id") Long id) {
-        Optional<Resource> resource = resourceService.findById(id);
-        if (resource.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-        return this.responseEntity(resourceService.convertEntityToDto(resource.get()), HttpStatus.OK);
-    }
-
-    @PreAuthorize("@permissionChecker.hasPermission('resource_add')")
-    @PostMapping
-    public ResponseEntity<ResourceDto> create(@Valid @RequestBody ResourceDto dto) {
-        return this.responseEntity(createProcess(dto), HttpStatus.CREATED);
-    }
-
-    private ResourceDto createProcess(ResourceDto dto) {
-        Resource resource = resourceService.convertDtoToEntity(dto);
-        resourceService.save(resource);
-        return resourceService.convertEntityToDto(resource);
-    }
-
-    @PreAuthorize("@permissionChecker.hasPermission('resource_edit')")
-    @PutMapping("/{id}")
-    public ResponseEntity<ResourceDto> update(@Valid @RequestBody ResourceDto dto, @PathVariable("id") Long id) {
-        Optional<Resource> resource = resourceService.findById(id);
-        if (resource.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-        return this.responseEntity(updateProcess(resource.get(), dto), HttpStatus.OK);
-    }
-
-    private ResourceDto updateProcess(Resource resource, ResourceDto dto) {
-        resource.update(dto.getName(), dto.isActive());
-        resourceService.update(resource);
-        return resourceService.convertEntityToDto(resource);
-    }
-
-    @PreAuthorize("@permissionChecker.hasPermission('resource_delete')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
-        Optional<Resource> resource = resourceService.findById(id);
-        if (resource.isEmpty()) {
-            throw this.responseErrorNotfound();
-        }
-        resourceService.delete(resource.get());
-        return this.responseDeleteMessage();
-    }
-}
+```bash
+./gradlew test --tests '*AuthControllerTest*'
+./gradlew test
+./gradlew compileJava
+./gradlew bootJar
+./gradlew bootRun --args='--spring.profiles.active=dev'
+git diff --check
 ```
 
-*Standard Entity Example Pattern:*
-```java
-@GenSourceableTable
-@NoArgsConstructor
-@Getter
-@Setter
-@Entity
-@Table(name = "resource",
-        indexes = {
-                @Index(columnList = "deleted"),
-                @Index(columnList = "updated_user"),
-                @Index(columnList = "created_user"),
-        }
-)
-@SQLDelete(sql = "UPDATE resource SET deleted = true WHERE id=?")
-@SQLRestriction("deleted=false")
-@EntityListeners(AuditListener.class)
-public class Resource extends SoftDeletedAuditable<Long> {
+`bootRun` requires configured infrastructure. `bootJar` packages without starting the app and does not run tests automatically. Use `gradlew.bat` equivalents on Windows. Profile helper tasks share `bootRun` configuration; explicit arguments are clearer. Native tasks are unavailable until the GraalVM plugin is enabled and verified.
 
-    public Resource(String name, Boolean active) {
-        this.name = name;
-        this.active = active;
-    }
+As reviewed on 2026-09-07, `./gradlew test --rerun-tasks` compiled successfully and ran 32 tests, with 31 passing and one failing. `AuthControllerTest.SwitchAccount.fastPathSwitchesOnValidTargetRefreshCookie` supplies a session belonging to a different user than the target; line 393 expects 200 while the ownership guard returns 400. Do not remove that guard to make the test pass. Recheck the baseline after relevant code changes.
 
-    public void update(String name, Boolean active) {
-        this.name = name;
-        this.active = active;
-    }
+After the R2 fix, all 16 `FileManagerControllerTest` cases pass with a temporary Gradle init script restricting test sources to that class. The current standard test compilation is blocked because `AuthController.signup` was commented out while `AuthControllerTest` still calls it. `--tests` filters execution, not test-source compilation; do not mistake the isolated R2 result for a passing full suite.
 
-    @Column(name = "name", length = 125, nullable = false)
-    private String name;
+After the R3 fix, all 5 `*OwnershipTest` cases pass with the same isolated-source technique. They cover unauthorized chat history, creator binding on chat creation, unauthorized chat resume, cross-user face registration and selection of another user's file. They do not replace filter-chain, database or external face-service integration tests.
 
-    private Boolean active = true;
+## Source entry points by task
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "resource_related",
-            joinColumns = {@JoinColumn(name = "resource")},
-            inverseJoinColumns = {@JoinColumn(name = "related_id")})
-    private Set<RelatedEntity> relatedEntities = new HashSet<>();
+Paths in this table are relative to `src/main/java/com/bekaku/api/spring/` unless marked as resources.
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private ParentEntity parent;
+| Task | Read these together |
+| --- | --- |
+| Login, refresh, logout, account linking | `controller/api/AuthController`, `serviceImpl/AuthServiceImpl`, `AccessTokenServiceImpl`, `IdentityLinkServiceImpl`, `model/AccessToken`, `util/CookieUtil` |
+| Request authentication/permissions | `configuration/WebSecurityConfig`, `SecurityEnablerConfig`, `JwtTokenFilter`, `serviceImpl/JwtServiceImpl`, `util/PermissionChecker`, `AuthUtil`, `repository/PermissionRepository` |
+| Add an admin resource | `controller/api/AppRoleController` or `PermissionController`, matching service/implementation/repository/mapper/DTO/entity |
+| Paging/search | `controller/api/BaseApiController`, `util/ControllerUtil`, `specification/SearchSpecification`, `SearchCriteria`, `SearchOperation`, `vo/Paging` |
+| Files and folders | `controller/api/FileManagerController`, `FilesDirectoryController`, corresponding services, `util/FileUtil`, resource MyBatis XML |
+| Chat and ingestion | `controller/api/AiChatController`, `AiDocumentMetaController`, `serviceImpl/AiRagChatServiceImpl`, `AiDocumentIngestionServiceImpl`, `ai/DatabaseChatMemory`, `QdrantVectorStoreConfig`, `extraction/` |
+| Database tools | `ai/PostgreSQLQueryTool`, `DatabaseQueryValidator`, `DatabaseSchemaTool`, `UserActivityTool`, `AiChatToolContext` |
+| Face recognition | `controller/api/FaceRegconitionController`, `serviceImpl/FaceRecognitionServiceImpl`, `ai/AiFaceRegconitionServiceClient`, `model/AppUserFace`, `docker-compose/face-verification-service/` |
+| Configuration/auditing | `SpringApiApplication`, `properties/`, `configuration/AuditAwareImpl`, `AuditListener`, `WebConfigurerAdapter`, `AsyncConfig`, `SnowflakeConfig` |
+| Generated modules | `annotation/GenSourceableTable`, `controller/dev/DevelopmentContoller`, `service/CodeGeneratorService`, `util/ConstantData`, resource `templates/spring-*.ftl` and frontend templates |
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Resource that = (Resource) o;
-        return getId() != null && Objects.equals(getId(), that.getId());
-    }
+Class/package names above preserve repository spelling. Do not rename `serviceImpl`, `DevelopmentContoller`, or `/api/faceRegconition` as part of an unrelated task.
 
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
+## Skill: implement a resource through the existing layers
 
-    public static Sort getSort() {
-        return Sort.by(Sort.Direction.ASC, "name");
-    }
-}
-```
+Use `Controller → Service interface → ServiceImpl → Repository` with DTO mapping at the transport boundary. Entities can be used internally by controllers in this codebase; return DTOs to clients and keep multi-step business writes in services.
 
-**ID Generation Explanation:**
-- Entities extend `SoftDeletedAuditable<Long>` which extends `SoftDeletedId` which extends `Id`
-- The `Id` superclass contains a `@PrePersist` method that automatically generates Snowflake IDs
-- Snowflake ID generation is handled by `SnowflakeIdHolder.generator().nextId()` before entity persistence
-- No manual ID assignment is required - the ID is automatically generated when the entity is first saved
-- Snowflake IDs are distributed unique IDs that are sortable by time and avoid collisions in distributed systems
+For a new resource:
 
-*Standard Service Example Pattern:*
+1. Define an entity and schema migration, choosing the appropriate existing ID/audit/soft-delete base class.
+2. Define request/response DTOs and constraints; separate create/update requests when their allowed fields differ.
+3. Add a MapStruct interface using `@Mapper(componentModel = "spring")`. Existing mappers often ignore unmapped targets, so review every field intentionally.
+4. Add a Spring Data repository, usually `BaseRepository<Entity, Long>` plus `JpaSpecificationExecutor<Entity>` where filtering is required.
+5. Add the service contract and transactional implementation. Implement each exposed method; do not copy `return null` stubs from existing service implementations.
+6. Add endpoints using constructor injection (`@RequiredArgsConstructor`), `@Valid`, service calls and the appropriate permission/ownership checks.
+7. Add permission records and intentional role assignments; a new permission does not automatically grant it to an existing role. Update UI ACL and localized labels only where the feature needs them.
+8. Cover the operation and its access boundary with tests, and update docs/configuration when the external contract changes.
 
-**Service Interface:**
-```java
-public interface ResourceService extends BaseService<Resource, ResourceDto> {
+Prefer concrete references over copying large generated examples. `BaseService<T, DTO>` exposes entities for internal operations and conversion methods; implementations vary in completeness.
 
-    Optional<Resource> findByName(String name);
+## Skill: preserve HTTP contracts
 
-    List<Resource> findAllByActiveTrue();
+- `BaseApiController.responseEntity(body, status)` returns that body directly. Do not introduce an `ApiResponse` envelope on the assumption one already exists. `BaseResponseEntity` is a separate record, not an automatically applied wrapper.
+- Paged resource endpoints commonly return `ResponseListDto<T>`; some file-list endpoints return arrays. Verify each existing response before changing serialization.
+- Jakarta validation belongs on request DTOs with `@Valid` at controller boundaries. Use existing i18n keys where applicable.
+- Throw `ApiException` using `BaseResponseException` helpers for expected API failures. `GlobalExceptionHandler` is the active main advice; `CustomRestExceptionHandler` is deprecated/inactive. Preserve endpoint-specific streaming/filter error behavior when necessary.
+- Validate actual HTTP status codes in tests. A status field in the JSON body does not set the response status.
+- Match current route names, field names, enum serialization and cookie names. Login bodies are unwrapped; `loginFrom` uses `WEB`, `IOS`, `ANDROID`.
+- Preserve numeric-ID representation unless coordinating a client migration. Snowflake `Long` values can exceed JavaScript's safe integer range; inspect DTO serialization and consumers before introducing new IDs to frontend code.
 
-    Optional<Resource> findByCode(String code);
-}
-```
+## Skill: design persistence and transactions
 
-**Service Implementation:**
-```java
-@Transactional(readOnly = true)
-@RequiredArgsConstructor
-@Service
-public class ResourceServiceImpl implements ResourceService {
-    private final ResourceRepository resourceRepository;
-    private final ResourceMapper resourceMapper;
+- `model/superclass/Id` assigns a Snowflake ID only when null in `@PrePersist`. Do not combine it with an unrelated identity/sequence strategy. `SoftDeletedAuditable<Long>`'s type parameter represents the auditor, not a generic primary-key type.
+- Use the correct audit superclass and entity listeners. `AuditAwareImpl` reads an `AppUserDto` from the security context; async/Reactor work may need the actor ID passed explicitly.
+- Preserve entity-specific `@SQLDelete` and `@SQLRestriction` behavior. A base `deleted` field alone does not implement soft deletion. MyBatis/native SQL also needs explicit visibility/ownership predicates.
+- Prefer lazy relationships, DTO projections and bounded fetching. Check N+1 behavior when adding a relation to a list response.
+- Follow proxy-safe identity equality used by nearby entities. Avoid Lombok `@Data` on entities with relationships; it can traverse them in equality, logging or serialization.
+- Many service classes use `@Transactional(readOnly = true)`; write entry points need `@Transactional`. Private methods and same-bean calls do not gain a new Spring proxy transaction merely from the annotation.
+- Keep multi-step database operations in one service transaction. Database transactions do not roll back filesystem, Qdrant, email, or remote-service effects. Define compensation and the point at which source files/chunks may be deleted.
+- Add the next Flyway migration instead of rewriting deployed migrations. Check the actual migration history before choosing a number; V1–V4 exist in this checkout.
+- Use a disposable PostgreSQL + pgvector database for SQL/schema tests. H2 cannot validate PostgreSQL casts, vector operators or the dump-based migrations.
 
-    @Override
-    public ResponseListDto<ResourceDto> findAllWithPaging(Pageable pageable) {
-        Page<Resource> result = resourceRepository.findAll(pageable);
-        return getListFromResult(result);
-    }
+## Skill: implement search and MyBatis safely
 
-    @Override
-    public ResponseListDto<ResourceDto> findAllWithSearch(SearchSpecification<Resource> specification, Pageable pageable) {
-        Page<Resource> result = resourceRepository.findAll(specification, pageable);
-        return getListFromResult(result);
-    }
+Read `ControllerUtil` and `ConstantData`: `_q` conditions use `;`, comma-separated values become `IN`, and `_keyword` uses controller-specified columns. The keyword column list does not constrain arbitrary `_q` fields. Add server-derived owner predicates regardless of client filters.
 
-    @Override
-    public ResponseListDto<ResourceDto> findAllBy(Specification<Resource> specification, Pageable pageable) {
-        return getListFromResult(findAllPageSpecificationBy(specification, pageable));
-    }
+Use `getPageable(pageable, Entity.getSort())` for the existing JPA default-sort behavior. For dynamic SQL, use the explicit sort allow-list path (`getPaging(pageable, acceptedFields)`) and inspect `Paging` as well as the XML. The base helper's direction check is not a general field authorization mechanism.
 
-    @Override
-    public Page<Resource> findAllPageSpecificationBy(Specification<Resource> specification, Pageable pageable) {
-        return resourceRepository.findAll(specification, pageable);
-    }
+Keep MyBatis Java interfaces, `@Param` names, XML statement IDs and result maps synchronized. Bind values using `#{...}`. Existing `${page.sortfield}`/`${page.sortmode}` substitutions need trusted, validated values; do not interpolate arbitrary request text.
 
-    @Override
-    public Page<Resource> findAllPageSearchSpecificationBy(SearchSpecification<Resource> specification, Pageable pageable) {
-        return resourceRepository.findAll(specification, pageable);
-    }
+Use PostgreSQL pagination (`LIMIT ... OFFSET ...`) and current schema names. Legacy `AppUserMybatis.findAll` and `PermissionMybatis.findAll` still contain MySQL pagination, and `selectUserData` refers to `user_role` instead of `app_user_role`. Do not use them as SQL templates without correction and a database test.
 
-    private ResponseListDto<ResourceDto> getListFromResult(Page<Resource> result) {
-        return new ResponseListDto<>(result.getContent()
-                .stream()
-                .map(this::convertEntityToDto)
-                .collect(Collectors.toList())
-                , result.getTotalPages(), result.getTotalElements(), result.isLast());
-    }
+## Skill: work on authentication and authorization
 
-    @Override
-    public List<Resource> findAll() {
-        return resourceRepository.findAll();
-    }
+Trace three distinct boundaries: the security chain's route rules, the JWT filter's skip list/verification, and method/service ownership checks. `AuthorizationInterceptor` currently returns true; it does not supply missing authorization.
 
-    @Transactional
-    @Override
-    public Resource save(Resource resource) {
-        return resourceRepository.save(resource);
-    }
-    
-    @Transactional
-    @Override
-    public Resource update(Resource resource) {
-        return resourceRepository.save(resource);
-    }
+- Add public routes only to the explicitly intended method/path allow-list, and make the filter behavior agree. Current blanket skipping of `/api/auth/**` breaks protected account routes; direct controller tests conceal this.
+- The principal is an `AppUserDto` containing identity/session fields, not necessarily a populated user profile. Load and validate the current user when account state matters.
+- Permission annotations normally call `@permissionChecker.hasPermission('module_action')`; also scope each requested row to its owner, or verify a deliberate administrative permission.
+- Cookie access is selected by `_sid` plus user-suffixed token cookies. `X-User-Id` is request input, not proof of identity.
+- Keep raw refresh tokens out of persistent fields and logs. Existing service lookup methods hash raw inputs internally; do not double-hash them. Review the JWT-subject issue R5 before extending the session format.
+- Maintain rotation/reuse detection and ownership checks. Test inactive/deleted users, revoked/expired sessions, wrong client and wrong owner, for both cookie and API refresh paths.
+- Use `EncryptService.encrypt/check` for BCrypt passwords. Data encryption is a separate AES-GCM operation with a different key format. Legacy MD5 helpers exist, but automatic login migration is currently commented out.
+- Signup should assign configured default roles, never caller-selected privileges. Making signup public requires an intentional route/filter change and corresponding tests.
+- The OTP throttle is process-local and keyed by email; do not describe it as distributed rate limiting. Changes to reset/OTP flows need expiry, replay and abuse-path tests.
+- CSRF is disabled while cookie authentication is supported. Revisit the browser threat model when changing cookie SameSite/CORS or adding cookie-authenticated writes.
 
-    @Override
-    public Optional<Resource> findById(Long id) {
-        return resourceRepository.findById(id);
-    }
+## Skill: handle files and external requests
 
-    @Transactional
-    @Override
-    public void delete(Resource resource) {
-        resourceRepository.delete(resource);
-    }
+The storage root is currently mapped publicly by `WebConfigurerAdapter`. Do not place new secrets, logs, backups or confidential assets under that mapping. Private-file access must remain behind an authenticated, owner-aware service path.
 
-    @Transactional
-    @Override
-    public void deleteById(Long id) {
-        resourceRepository.deleteById(id);
-    }
+Use server-generated filenames and canonical/real-path containment checks before reading/writing. Check absolute paths, `..`, encoded separators and symlinks as appropriate. `FileManagerController.getImage` now checks relative paths against the real upload root, validates symlink targets, and serves only readable regular files from the checked path. Preserve its regression tests. This containment check is not a per-user ownership check and does not fix the public CDN mapping.
 
-    @Override
-    public ResourceDto convertEntityToDto(Resource resource) {
-        return resourceMapper.toDto(resource);
-    }
+Multipart uploads use `_filesUploadName`; chunks are one-based. A caller-supplied `chunkFilename` is not evidence of upload ownership. Bind upload sessions to the authenticated user and validate limits/order before combining them. Merge currently deletes chunks while copying; design recovery and validation before treating that operation as atomic.
 
-    @Override
-    public Resource convertDtoToEntity(ResourceDto resourceDto) {
-        return resourceMapper.toEntity(resourceDto);
-    }
+Inspect Tika MIME detection, `app.allow-mimes`, `upload-image` settings, `FileUtil` directory rules and thumbnail naming before changing storage. Stream large content where feasible and preserve Range handling for video/file endpoints.
 
-    @Override
-    public Optional<Resource> findByName(String name) {
-        return resourceRepository.findByName(name);
-    }
+For URL fetching, use `UrlUtil.validatePublicUrl` and validate each redirect. DNS checks and a later HTTP connection are distinct steps; do not claim complete SSRF protection solely because the helper exists.
 
-    @Override
-    public List<Resource> findAllByActiveTrue() {
-        return resourceRepository.findAllByActiveTrue();
-    }
+The actual scheduled cleanup gate is `app.cron.clean-old-temp-chunks`; `cleanupOldTempChunks` deletes regular files older than one day under the temp-chunk directory. Do not infer that generic `app.cron.enable` gates every scheduled task.
 
-    @Override
-    public Optional<Resource> findByCode(String code) {
-        return resourceRepository.findByCode(code);
-    }
-}
-```
+## Skill: extend AI/RAG without hidden dependencies
 
-## 4. Database & Infrastructure
-- **Database:** PostgreSQL (primary; Flyway migrations via `spring-boot-starter-flyway` + `flyway-database-postgresql`)
-- **Connection Pool:** HikariCP 7.1.0
-- **ORM:** Spring Data JPA with Hibernate + MyBatis 4.0.1 for complex queries
-- **Caching:** Ehcache 3.12.0 (Spring Cache abstraction)
-- **Message Queues:**
-  - RabbitMQ (Spring AMQP, `queue/QueueSender` + `QueueConfig`)
-  - Kafka (`KafkaConsumerConfig`/`KafkaProducerConfig`; starter dependency currently commented out in build.gradle — enable when needed)
-- **In-memory Data:** Redis (provided via docker-compose for caching/sessions)
-- **Containerization:** Docker & Docker Compose — `docker-compose/` has per-service files (postgres, mysql, redis, rabbitmq, kafka, qdrant, grafana-prometheus, face-verification-service) plus a root `docker-compose.yml`
-- **Monitoring:** Spring Boot Actuator with Prometheus metrics
-- **Email:** Spring Boot Mail (SMTP support)
+- This is MVC SSE with Reactor publishers, not a WebFlux server. Offload blocking JDBC/filesystem/model setup work appropriately and pass user identity explicitly across threads.
+- Preserve event names and payload types in `ChatStreamEvent`. `sources.content` is serialized JSON inside a string. Handle errors before and after response commitment; do not append another HTTP body after streaming starts.
+- Check conversation ownership before reading history, resuming a conversation, updating timestamps or adding messages. The current message-list and resume paths use `findByIdAndCreator`; preserve that creator-scoped lookup and bind new chats to the authenticated actor.
+- Store chat messages in the service, matching `DatabaseChatMemory`'s read-only role; its `add/clear` methods do nothing. Avoid double-saving messages when adding advisors.
+- Custom Qdrant registration uses `spring.ai.vectorstore.qdrant.enabled`; Spring AI's starter also has auto-configuration selected by `spring.ai.vectorstore.type`. Verify both. `app.rag.qdrant-enabled` is not bound or consumed.
+- Preserve the named stores/qualifiers `documentVectorStore` and `schemaVectorStore`. They hardcode collection names, content field and schema initialization. Changing YAML alone will not change those custom settings.
+- Null optional stores currently cause runtime failures on chat/ingestion. When implementing a disabled mode, gate every consumer and verify startup as well as endpoint behavior.
+- Keep document metadata and vector IDs consistent. Current compensation is limited; a later transaction-commit failure may happen outside a local save catch. Source deletion must follow a defined durable-success boundary.
+- `chunk-overlap` and `max-num-chunks` are unused by the current splitter; image/video extraction is placeholder text. Do not promise OCR, transcription, overlap or chunk caps without implementing and testing them.
+- Built-in Java tools share the application's `JdbcTemplate`. The MCP stdio server's separate read-only credentials do not constrain those tools. Isolate credentials, tables/columns and row scope before broadening AI data access; add timeouts and result bounds.
+- Treat prompts, retrieved text and model-generated SQL as untrusted input. Prompt instructions are not an authorization boundary.
+- Face extraction is a separate Python service and PostgreSQL pgvector path. Registration passes the authenticated actor into the service and validates both the requested user and file owner before replacing stored data; preserve those checks and the existing route spelling unless migration is requested.
 
-## 5. Key Libraries & Frameworks
-- **Object Mapping:** MapStruct 1.6.3 (DTO-Entity mapping)
-- **JSON Processing:** Gson 2.14.0
-- **JWT:** jjwt 0.13.0 (api/impl/jackson)
-- **Validation:** Jakarta Validation (spring-boot-starter-validation)
-- **Commons:** Apache Commons Validator 1.10.1 (email validation), Commons Lang3
-- **Image Processing:**
-  - Thumbnailator 0.4.21 (thumbnail generation)
-  - metadata-extractor 2.20.0 (EXIF/IPTC metadata)
-  - Apache Tika 3.3.1 (file type detection)
-  - TwelveMonkeys ImageIO 3.13.1 (WebP support)
-- **Report Generation:** Apache POI 5.5.1 (Excel/Office documents)
-- **ID Generation:**
-  - UUID Creator 6.1.1 (including UUID v7)
-  - Custom Snowflake ID generator (`SnowflakeIdGenerator`/`SnowflakeIdHolder`)
-- **Web Scraping:** Jsoup 1.22.2 (always fetch through `util/UrlUtil.validatePublicUrl` to prevent SSRF)
-- **AI / RAG:**
-  - `org.springframework.ai:spring-ai-starter-model-ollama` (chat model)
-  - `spring-ai-starter-vector-store-qdrant` (vector store)
-  - `spring-ai-pdf-document-reader`, `spring-ai-tika-document-reader`, `spring-ai-advisors-vector-store`
-- **Google Services:**
-  - Guava 33.6.0-jre (includes `RateLimiter` used by streaming endpoints)
-  - Firebase Admin 9.9.0 (FCM push notifications)
-- **Testing:** spring-boot-starter-test (JUnit 5, Mockito, AssertJ), spring-security-test
+## Skill: configuration, messaging and delivery
 
-## 6. Key Features & Capabilities
-- **Authentication & Authorization:**
-  - JWT access + refresh tokens issued by `JwtServiceImpl` (jjwt 0.13.0); `JwtTokenFilter` authenticates via cookie or `Authorization` header
-  - Session store in `access_token` table: refresh tokens stored SHA-256 hashed (`HashUtil`), revocation checked on every request
-  - Refresh-token rotation (`AuthServiceImpl.refreshToken`) revokes the old row and issues a new session row; `handleRefreshTokenReuse` revokes all of a user's sessions when a revoked token is replayed
-  - Account linking/switching (`IdentityLinkService`) always validates user↔target linkage
-  - Custom permission system with `@PermissionRequire` annotation and `@PreAuthorize("@permissionChecker.hasPermission('...')")`
-  - Role-based access control (RBAC) with permission codes like `<table>_list|view|add|edit|delete`
-  - IP-based API client restrictions (`ApiClientIp`)
-  - Password hashing with BCrypt (`EncryptService.encrypt/check`); AES-GCM encryption helpers (`EncryptService.encryptData/decryptData`) with per-message random IV
-- **File Management:**
-  - Multi-directory file storage under `app.upload-path` (year/month folders per MIME type)
-  - Chunked upload (`uploadChunkApi`/`mergeChunkApi`) with strict filename allowlist, chunk-number bounds, and merged-content MIME validation
-  - Authenticated file/video streaming with Range support and Guava `RateLimiter` throttling; path-traversal guards (canonical-path containment)
-  - Image processing, resizing and thumbnail generation (Thumbnailator)
-  - MIME type detection and allowlist validation (Apache Tika)
-  - File metadata extraction (metadata-extractor)
-  - Scheduled cleanup of old files and stale `temp-chunks/` parts (cron `app.cron.clean-file-expression`, gated by `app.cron.clean-old-file` / `app.cron.clean-old-temp-chunks`)
-- **AI / RAG Module (`ai/`, Spring AI):**
-  - Ollama chat model with streaming (`AiChatController /stream`)
-  - Qdrant vector store for document ingestion & retrieval (`AiDocumentIngestionService`, `AiRagChatService`)
-  - Database chat memory (`DatabaseChatMemory`), DB schema/SQL tools, user activity tool, face-recognition client
-- **Document Extraction (`extraction/`):** Tika-based `DocumentExtractor` factory for PDF/media text extraction
-- **WebSocket Support:** Real-time communication with user interceptors
-- **Internationalization (i18n):** Header-based locale resolution via `I18n`
-- **Audit Logging:** Automatic tracking of entity changes (created_by, updated_by, timestamps)
-- **Async Processing:** Background task execution with `@Async`
-- **Scheduled Tasks:** Cron-based job scheduling (`scheduler/CronScheduler` plus service-level `@Scheduled` jobs)
-- **Custom Annotations:**
-  - `@PermissionRequire` - Method-level security (validated by `PermissionRequireValidator`)
-  - `@GeneratedUuidV7` - UUID v7 generation
-  - `@GenSourceableTable` - Custom table generation
-- **REST Client:** External API integration service
-- **Email Service:** Templated email sending capability
+Use existing typed `@ConfigurationProperties` records/classes under `properties/`. Nested records can be null when configuration is absent; validate required configuration instead of assuming every nested value has defaults. Bind new settings in code and demonstrate them in the development example.
 
-## 7. MyBatis Integration
-This project uses MyBatis 4.0.1 for complex database queries that are difficult to express with JPA/Hibernate. MyBatis is used alongside Spring Data JPA, providing flexibility for custom SQL operations.
+`spring.profiles.active` selects configuration, while `environments.production` controls route exposure. Set both correctly for production. The ignored local dev YAML/logging files must be prepared from examples on a fresh checkout. `.env` is not globally ignored; inspect `git status` before staging any configuration.
 
-### MyBatis Structure
-- **Mapper Interfaces:** Located in `src/main/java/com/bekaku/api/spring/mybatis/`
-- **XML Mappers:** Located in `src/main/resources/mybatis/`
-- **Annotation:** All mapper interfaces use `@Mapper` from `org.apache.ibatis.annotations.Mapper`
+Spring Cache currently delegates to JCache/Ehcache. Verify named cache creation/configuration before adding caching annotations. Do not assume the Redis Compose service is an application cache integration.
 
-### Standard MyBatis Usage Pattern
+RabbitMQ declarations are active, queues are non-durable, and the same routing key binds multiple queues to the exchange. Inspect that fan-out before publishing new events. No active application listeners were found; retry/concurrency YAML alone does not implement consumers. If adding consumers, test duplicate delivery and define idempotency.
 
-**Mapper Interface Example:**
-```java
-@Mapper
-public interface ExampleMybatis {
-    List<ExampleDto> findAll(@Param("page") Paging page);
-    Optional<ExampleDto> findById(@Param("id") Long id);
-    void updateField(@Param("field") String field, @Param("id") Long id);
-}
-```
+WebSocket broker registration, Kafka, Undertow and native-image build configuration are disabled. Restore and verify their wiring deliberately if requested. The configured custom async executor is a platform-thread pool despite the application's virtual-thread setting.
 
-**XML Mapper Example:**
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.bekaku.api.spring.mybatis.ExampleMybatis">
-    <!-- Reusable SQL fragments -->
-    <sql id="selectData">
-        SELECT id, name, description, created_date
-        FROM example_table
-    </sql>
+Inspect Dockerfile, Compose, Kubernetes and workflows before deployment changes. The standard image uses UID 1001, activates `prod`, skips tests at build time and reads `/usr/spring-data/env/`. Its public-storage overlap is unresolved. Keep each replica's Snowflake `WORKER_ID` unique within 0–1023. Native CI is currently inconsistent with the disabled plugin.
 
-    <!-- Simple select with result type -->
-    <select id="findById" resultType="com.bekaku.api.spring.dto.ExampleDto">
-        <include refid="selectData"/>
-        WHERE id = #{id} AND deleted is false
-    </select>
+## Skill: use the source generator deliberately
 
-    <!-- Complex select with result map -->
-    <select id="findAll" resultMap="exampleResult">
-        <include refid="selectData"/>
-        WHERE deleted is false
-        <if test="page.sortfield != null and page.sortmode != null">
-            order by ${page.sortfield} ${page.sortmode}
-        </if>
-        <if test="page.offset != null and page.limit != null">
-            LIMIT #{page.limit} OFFSET #{page.offset}
-        </if>
-    </select>
+The development HTTP generator is distinct from Lombok/MapStruct compilation. It walks all annotated entities, chooses templates/options and may insert permissions. Some outputs skip existing files, while the shared writer supports overwriting: inspect each output path and invocation before running it.
 
-    <!-- Update with dynamic set -->
-    <update id="updateField">
-        UPDATE example_table
-        <set>
-            field = #{field}
-        </set>
-        WHERE id = #{id}
-    </update>
+Never use generation as a read-only diagnostic. When generation is requested, inspect `@GenSourceableTable` options and `ConstantData` destinations, review all resulting diffs, implement validation/ownership/transactions, and compile the outputs. Do not edit `build/generated` as a lasting source change.
 
-    <!-- Result map for complex object mapping -->
-    <resultMap id="exampleResult" type="com.bekaku.api.spring.dto.ExampleDto">
-        <id column="id" property="id"/>
-        <result column="name" property="name"/>
-        <result column="description" property="description"/>
-        <result column="created_date" property="createdDate"/>
-        <!-- Collection mapping for one-to-many relationships -->
-        <collection property="items" javaType="list" ofType="string">
-            <result column="item"/>
-        </collection>
-    </resultMap>
-</mapper>
-```
+## Validation and handoff
 
-### Key MyBatis Features Used
+Choose tests for the changed boundary:
 
-- **SQL Fragments (`<sql>`):** Reusable query components defined once and included with `<include refid="..."/>`
-- **Dynamic SQL:** Use `<if>`, `<choose>`, `<when>`, `<otherwise>` for conditional query building
-- **Result Maps (`<resultMap>`):** Complex object mapping including collections and nested objects
-- **Parameter Binding:** Use `@Param` annotation in interfaces and `#{paramName}` in XML for safe parameter binding
-- **Direct SQL:** Use `${paramName}` for direct SQL injection (use carefully, typically for column names in ORDER BY)
-- **Pagination:** Custom `Paging` VO object with `offset` and `limit` properties for pagination
-- **Database Compatibility:** XML mappers support both MySQL and PostgreSQL syntax (commented alternatives provided)
+| Change | Useful evidence |
+| --- | --- |
+| Controller/service logic | Focused unit test, including failure path and ownership |
+| Authentication/routes | HTTP test using the real security filter chain, plus cookie and Bearer flows |
+| SQL/schema/vector columns | PostgreSQL + pgvector integration test on a disposable database |
+| File operations | Temporary-directory tests for containment, ownership and partial failure |
+| RAG/SSE | Mock model/vector dependencies; verify event order, disabled mode, cancellation/error and persistence |
+| Configuration/dependency wiring | Compile/package and a controlled application-context/startup test |
+| Documentation only | Verify statements, commands, links and whitespace; do not claim runtime validation from a prose edit |
 
-### Current Mappers
-- `AccessTokenMybatis` - Token management operations
-- `AppUserMybatis` - User queries with role associations
-- `FileManagerMybatis` - File and directory queries with UNION operations
-- `FilesDirectoryMybatis` - Directory path queries with hierarchical mapping
-- `PermissionMybatis` - Permission queries with pagination
-- `AppRoleMybatis` - Role operations (placeholder for future use)
+The authentication Mockito test constructs `AuthController` directly with lenient mocks. The file and ownership regression tests are also isolated controller/service tests. Passing results are not evidence of filter-chain enforcement, migrations, SQL correctness, external-service behavior or startup. Report baseline failures separately from regressions.
 
-### When to Use MyBatis vs JPA
-Use MyBatis for:
-- Complex queries with multiple JOINs that are difficult to optimize with JPA
-- Queries requiring UNION operations
-- Performance-critical queries where SQL control is needed
-- Queries with complex result mapping (collections, nested objects)
-- Database-specific features not well-supported by JPA
-
-Use JPA for:
-- Simple CRUD operations
-- Standard entity relationships
-- Queries that can be expressed with Specification/Query DSL
-- When you want database-agnostic queries
-
-## 8. Project Structure
-```
-src/main/java/com/bekaku/api/spring/
-├── ai/                     # Spring AI: RAG chat, Qdrant config, DB tools, face-recognition client
-├── annotation/             # Custom annotations (@GenSourceableTable, @GeneratedUuidV7, @PermissionRequire)
-├── configuration/          # Spring configuration classes (security, JWT filter, cache, Kafka, WebSocket, AI ChatClient, ...)
-├── controller/             # REST controllers
-│   ├── api/                #   Main API controllers (extends BaseApiController)
-│   ├── dev/                #   Dev-only code generator (blocked in production)
-│   ├── socket/             #   WebSocket controllers
-│   ├── test/               #   Test/demo endpoints (non-production)
-│   └── web/                #   Web (Thymeleaf) controllers
-├── dto/                    # Data Transfer Objects
-├── enumtype/               # Enumerations
-├── exception/              # ApiException/ApiError, BaseResponseException helpers, ExceptionResolver (@RestControllerAdvice)
-├── extraction/             # Tika-based document text extraction (DocumentExtractor factory)
-├── logger/                 # Logging utilities
-├── mapper/                 # MapStruct mappers
-├── middleware/             # Custom middleware (interceptors)
-├── model/                  # JPA entities
-├── mybatis/                # MyBatis mapper interfaces
-├── properties/             # @ConfigurationProperties records (AppProperties, JwtProperties, ...)
-├── queue/                  # Message queue consumers/producers (RabbitMQ/Kafka)
-├── repository/             # JPA repositories
-├── repositoryImpl/         # Custom repository implementations
-├── scheduler/              # Scheduled tasks (CronScheduler)
-├── service/                # Service interfaces
-├── serviceImpl/            # Service implementations
-├── specification/          # Dynamic query specifications (SearchSpecification)
-├── util/                   # Utility classes (AppUtil, UrlUtil, CookieUtil, FileUtil, HashUtil, ...)
-├── validator/              # Custom validators
-└── vo/                     # View objects (Paging, LinkPreview, IpAddress, ...)
-
-src/main/resources/
-├── mybatis/                # MyBatis XML mapper files
-├── i18n/                   # Message bundles for internationalization
-└── application*.yml        # Profiles: default (prod defaults), dev, localdocker
-
-src/test/java/com/bekaku/api/spring/
-└── controller/api/         # Controller unit tests (JUnit 5 + Mockito), e.g. AuthControllerTest
-```
-
-## 9. Exception Handling Pattern
-Global handling is centralized in `exception/ExceptionResolver` (`@RestControllerAdvice`, `@Order(HIGHEST_PRECEDENCE)`). Controllers never catch business exceptions themselves — they throw and let the resolver produce an `ApiError` body with the correct HTTP status.
-
-**Throwing errors from controllers/services** (via `BaseResponseException` inherited by `BaseApiController`):
-```java
-throw this.responseError(HttpStatus.BAD_REQUEST, "Error Message");
-throw this.responseErrorNotfound();                       // 404
-throw this.responseErrorForbidden("custom message");      // 403
-throw this.responseErrorBadRequest();                     // 400
-this.throwError(HttpStatus.CONFLICT, null, i18n.getMessage("error.duplicate", value)); // any status
-
-// Or construct directly:
-throw new ApiException(new ApiError(HttpStatus.TOO_MANY_REQUESTS,
-        i18n.getMessage("error.error"), "Too many requests"));
-```
-
-Rules:
-- `ApiError` carries `status`, `message`, `errors[]`, `timestamp`; the resolver returns it with its own status.
-- The resolver's catch-all logs the full stack server-side but returns only a generic message — do not include `ex.getLocalizedMessage()` in client responses.
-- Client-disconnect scenarios (`ClientAbortException`, broken pipe during streaming) are handled gracefully by the resolver and must not be turned into error responses.
-- `responseServerMessage(msg, status)` honors the given status (e.g. `HttpStatus.BAD_REQUEST`) — do not return error payloads with HTTP 200.
-
-## 10. Testing Conventions
-- **Stack:** JUnit 5 + Mockito + AssertJ (from `spring-boot-starter-test`). Run: `./gradlew test --tests "*AuthControllerTest"`.
-- **Style:** Plain unit tests that instantiate the controller/service directly with mocked dependencies (no Spring context). See `AuthControllerTest` as the reference:
-  - Nested `@DisplayName` classes per endpoint.
-  - `@ExtendWith(MockitoExtension.class)` + `@MockitoSettings(strictness = Strictness.LENIENT)`.
-  - `@ConfigurationProperties` records are mocked with Mockito (`when(appProperties.jwt()).thenReturn(new JwtProperties(...))`) or built as real records when convenient.
-  - Fields injected via `@Autowired` in superclasses (e.g. `I18n` in `BaseApiController`/`BaseResponseException`) must be set by reflection in test setup.
-  - Cover every endpoint plus security-relevant branches: auth failures, ownership checks, rate limiting, enumeration-safe responses, and role assignment restrictions.
+At handoff, state which files changed, what behavior or documentation changed, the commands actually run and their results, and any remaining integration limits. Do not stage/commit unrelated user work or claim deployment, security or test success that was not verified.

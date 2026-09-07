@@ -1,83 +1,80 @@
-# Springboot rest api
+# Spring Boot REST API Starter
 
-# Front end
-- Nuxt js + Quasar  [nuxt-quasar-example-app](https://github.com/bekaku/nuxt-quasar-example-app)
-- Vue Js 3 + Quasar 2+ [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app)
-- Vue Js 3 + Ionic 8 [vue-ionic-example-app](https://github.com/bekaku/vue-ionic-example-app)
-# 🚀 Java Spring Boot Starter
+A modern, production-ready Spring Boot starter template for building secure REST APIs with comprehensive authentication, authorization, and auto-generation capabilities.
 
-A modern and modular starter template for building robust REST APIs using Spring Boot and Gradle. Designed for quick bootstrapping of secure, production-ready Java backends.
+## 🌟 Overview
 
----
+This starter template provides a robust foundation for Java-based REST API development using Spring Boot and Gradle. It includes enterprise-level features such as JWT authentication, appRole-based access control, comprehensive API documentation, and automated code generation tools.
+
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Compatible Frontend Applications](#-compatible-frontend-applications)
+- [System Architecture](#-system-architecture)
+- [Getting Started](#-getting-started)
+- [Configuration](#-configuration)
+- [Database Setup](#-database-setup)
+- [API Documentation](#-api-documentation)
+- [Authentication & Authorization](#-authentication--authorization)
+- [Auto Code Generation](#-auto-code-generation)
+- [Docker Support](#-docker-support)
+- [Production Deployment](#-production-deployment)
 
 ## ✨ Features
 
-- ✅ Spring Boot (latest supported version)
-- ✅ Spring Data JPA with Hibernate
-- ✅ Support for H2 / MySQL / PostgreSQL
-- ✅ RESTful API architecture
-- ✅ Input validation with `javax.validation`
-- ✅ Global exception handling
-- ✅ JWT-based authentication and authorization
-- ✅ Swagger (OpenAPI 3) documentation
-- ✅ Environment-based configuration (`.yml`)
-- ✅ Easy database switching
-- ✅ Docker-ready (optional Dockerfile support)
+### Core Features
+- **Spring Boot** - Latest supported version with production-ready configurations
+- **RESTful API Architecture** - Clean, scalable API design patterns
+- **Spring Data JPA** - Hibernate-based ORM with repository pattern
+- **Multi-Database Support** - H2 (development), MySQL, PostgreSQL
+- **Input Validation** - Comprehensive validation using Jakarta Bean Validation
+- **Global Exception Handling** - Centralized error handling and response formatting
 
----
+### Security Features
+- **JWT Authentication** - Stateless authentication with refresh token support
+- **Role-Based Access Control (RBAC)** - Fine-grained permission system
+- **Method-Level Security** - Annotation-based endpoint protection
+- **Access Control Lists (ACL)** - Flexible permission management
 
-## 📦 Tech Stack
+### Development Features
+- **Auto Code Generation** - Automatic CRUD operations and frontend code generation
+- **OpenAPI 3 Documentation** - Interactive Swagger UI documentation
+- **Environment-Based Configuration** - Separate configs for development/production
+- **Internationalization (i18n)** - Multi-language support
+- **Comprehensive Logging** - Log4j2 integration with configurable levels
 
-- **Framework**: Spring Boot
-- **Build Tool**: Gradle
-- **Database**: H2 (in-memory), MySQL, PostgreSQL
-- **ORM**: Hibernate (via Spring Data JPA)
-- **API Docs**: Swagger UI (OpenAPI)
+### DevOps Features
+- **Docker Ready** - Complete containerization support
+- **Gradle Build System** - Modern build tool with dependency management
+- **Health Checks** - Spring Boot Actuator endpoints
+- **Profile-Based Deployment** - Environment-specific configurations
 
----
+## 🛠 Tech Stack
 
-## 🚀 Getting Started
+| Category | Technology                 |
+|----------|----------------------------|
+| **Framework** | Spring Boot 4.x            |
+| **Build Tool** | Gradle 8.x                 |
+| **Language** | Java 17+                   |
+| **Database** | PostgreSQL, MySQL 8+,   |
+| **ORM** | Hibernate (Spring Data JPA) |
+| **Security** | Spring Security + JWT      |
+| **Documentation** | OpenAPI 3 (Swagger)        |
+| **Testing** | JUnit 5, Mockito           |
+| **Containerization** | Docker                     |
 
-### 1. Clone the Repository
+## 🎨 Compatible Frontend Applications
 
-```bash
-git clone https://github.com/Bekaku/java-spring-boot-starter.git
-cd java-spring-boot-starter
-```
-## Environment Configuration
-- Application configuration: `src/main/resources/application.yml`
-- Local config: `src/main/resources/application-dev.yml`
+This API is designed to work seamlessly with modern frontend frameworks:
 
-## 🗃️ Project Structure
-```
-src
-├── main
-│   ├── java
-│   │   └── com.bekaku.api.spring
-│   │       ├── annotation
-│   │       ├── configuration
-│   │       ├── controller
-│   │       ├── dto
-│   │       └── exception
-│   │       ├── mapper
-│   │       ├── model
-│   │       ├── repository
-│   │       ├── service
-│   │       ├── serviceImpl
-│   │       ├── util
-│   │       ├── validator
-│   │       ├── vo
-│   │       ├── util
-│   └── resources
-│       ├── files
-│       ├── i18n
-│       ├── mapper
-│       ├── static
-│       ├── application.yml
-│       └── application-local.yml
-├── test
-│   └── java
-```
+- **[Nuxt.js + Nuxt Ui](https://github.com/bekaku/nuxt-ui-starter)** - Server-side rendered Vue.js application
+- **[Nuxt.js + Quasar](https://github.com/bekaku/nuxt-quasar-example-app)** - Server-side rendered Vue.js application
+- **[Vue.js 3 + Quasar 2+](https://github.com/bekaku/quasar-starter-template)** - Modern Vue.js SPA & SSR
+- **[Vue.js 3 + Ionic 8](https://github.com/bekaku/vue-ionic-example-app)** - Mobile-first application
+
+## 🏗 System Architecture
 
 ```mermaid
 flowchart TD
@@ -129,631 +126,395 @@ flowchart TD
     class I database
 ```
 
-Requirements
-------------
+### Detailed Architecture Analysis
 
-Only supported on Java 1.8 and up, MySql 8 and up.
+A production-style Spring Boot 4.1 / Java 25 API starter with auth, file management, AI/RAG chat, WebSocket chat, and queue processing. Gradle multi-profile builds (dev/prod), Docker + Kubernetes deployment ready.
 
-## Usage
+#### Layered Architecture (classic 4-layer, interface/impl separation)
 
-### 1. Download this repository
-```git
-git clone https://github.com/bekaku/java-spring-boot-starter my-app
+```
+Controller (controller/api|web|socket)
+    ↓
+Service interface (service/, extends BaseService<T, DTO>)
+    ↓
+ServiceImpl (serviceImpl/, @Transactional(readOnly=true) at class level)
+    ↓
+Repository (repository/, JPA + Specification)  ←→  MyBatis mappers (mybatis/)
 ```
 
-Repository will be downloaded into `my-app/` folder
-## Database
+Strict naming convention throughout: `AppUserController → AppUserService → AppUserServiceImpl → AppUserRepository → mapper/AppUserMapper` (MapStruct for entity↔DTO).
 
-Database file located at `my-app`/spring-data/files/spring_starter.sql and you can use following command for restore to your db.
+#### Base/Generic Framework Layer (boilerplate elimination)
 
-```batch
-$ mysql -uroot -p your_db_name < your_backup_file_path
+- `BaseApiController` — response helpers, paging/sort validation, parses query params into `SearchCriteria`
+- `BaseService<T, DTO>` — generic CRUD contract incl. paged search and entity/DTO conversion
+- `SearchSpecification<T>` + `SearchCriteria/SearchOperation/DynamicFilterSpec` — generic JPA Criteria builder driven entirely by URL params (LIKE, IN, >, joins via dotted keys). No per-entity filter code needed.
+- `BaseResponseEntity<T>` — record `(status, data, message)` envelope; `ResponseListDto<DTO>` for paginated lists
+- `BaseResponseException` — typed errors handled by `CustomRestExceptionHandler`
+- `BaseRepository(Impl)` — extension point over `SimpleJpaRepository`
+
+#### Dual Data Access
+
+- **JPA/Hibernate** primary — entities with audited superclasses (`AuditAwareImpl`), batch writes (batch_size 50), Snowflake ID generation (`SnowflakeIdGenerator`, plus `UuidV7Generator`)
+- **MyBatis** for read-optimized joined queries returning DTOs directly (e.g. user+role+token join), XML in `resources/mybatis/`. Services inject both side-by-side.
+
+#### Security
+
+- Stateless JWT filter chain: token from cookie `_session_` or `Bearer` header; 15-min access + 7-day refresh tokens; BCrypt + per-user salt
+- DB-backed roles/permissions → `CustomPermissionEvaluator` for `@PreAuthorize("hasPermission(...)")`; menu ACL in `resources/acl.json`
+- Dev/test endpoints gated by `environments.production=false`
+
+#### AI Module (Spring AI)
+
+- **RAG**: Ollama chat client + Qdrant vector store; ingestion service chunks documents (800/100 overlap, topK 5); custom JDBC-persisted `ChatMemory`
+- **Function calling**: read-only PostgreSQL query tools with SQL validation, schema introspection, user activity tool
+- **Face recognition**: external Python ArcFace microservice (`docker-compose/face-verification-service`)
+
+#### Async & Realtime
+
+- **WebSocket STOMP**: group/user-to-user chat + bots under `/_websocket/**`
+- **RabbitMQ**: notification/scoring/reward queues with retry (Kafka configured but disabled)
+- **Virtual threads enabled**, `@Async` config, cron scheduler for cleanup
+
+#### Infrastructure
+
+MySQL (Postgres alternative) + HikariCP, Flyway (disabled by default), Undertow (HTTP/2), EhCache, Redis/Kafka/Qdrant/RabbitMQ/Grafana-Prometheus via docker-compose, Log4j2, Actuator + Prometheus, Swagger, i18n (en/th), Firebase FCM, Thymeleaf/Freemarker web dashboard.
+
+In short: it's a reusable **starter template** whose value is the generic base layer (paging/search/response/error handling) that lets you add new entities with minimal code, pre-wired with modern extras (AI/RAG, WebSocket, queues, observability).
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Java 17+** - Required for Spring Boot 3.x
+- **MySQL 8+** or **PostgreSQL** (optional, H2 included for development)
+- **Git** - For cloning the repository
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/bekaku/java-spring-boot-starter.git
+   cd java-spring-boot-starter
+   ```
+
+2. **Run the application**
+   ```bash
+   ./gradlew bootRun
+   ```
+
+3. **Verify installation**
+   Open your browser and navigate to: `http://localhost:8080/welcome`
+
+### Project Structure
+
 ```
-example on windows
-```batch
-$ mysql -uroot -p your_db_name < E:\bak\db\spring_starter.sql
-```
-example on Ubuntu
-```batch
-$ mysql -uroot -p your_db_name < /var/tmp/spring_starter.sql
+src/
+├── main/
+│   ├── java/com/bekaku/api/spring/
+│   │   ├── annotation/          # Custom annotations
+│   │   ├── configuration/       # Spring configurations
+│   │   ├── controller/          # REST controllers
+│   │   ├── dto/                 # Data Transfer Objects
+│   │   ├── exception/           # Exception handling
+│   │   ├── mapper/              # Entity-DTO mappers
+│   │   ├── mybatis/             # MyBatis
+│   │   ├── model/               # JPA entities
+│   │   ├── repository/          # Data repositories
+│   │   ├── service/             # Business logic interfaces
+│   │   ├── serviceImpl/         # Business logic implementations
+│   │   ├── util/                # Utility classes
+│   │   ├── validator/           # Custom validators
+│   │   └── vo/                  # Value Objects
+│   └── resources/
+│       ├── files/               # Static files
+│       ├── i18n/                # Internationalization
+│       ├── mybatis/              # MyBatis mappers (if used)
+│       ├── static/              # Web static resources
+│       ├── application.yml      # Main configuration
+│       └── application-dev.yml  # Development configuration
+└── test/
+    └── java/                    # Test classes
 ```
 
-Config your database connection at `my-app`/src/main/resources/`application.yml` or `application-dev.yml`
-```yml
-  datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/`your_db_name`?allowPublicKeyRetrieval=true&useSSL=false
-    username: `db_username`
-    password: `your_db_password`
-```
+## ✨ Configuration
 
-Config your frontend generate template at `my-app`/src/main/resources/`application-dev.yml`
-```yml
+### Environment Configuration
+
+The application supports multiple environments through Spring profiles:
+
+**Main Configuration** (`application.yml`)
+```yaml
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev  # Change to 'prod' for production
 app:
+   url: https://api.your-domain.com
+   port: 443
+   cdn-directory: /usr/spring-data/
+   cors:
+      allowed-origins:
+         - https://your-production-webapp.com #  Frontend dev server
+```
+
+**Development Configuration** (`application-dev.yml`)
+```yaml
+app:
+  url: http://127.0.0.1
+  port: 8080
+  cdn-directory: /path/to/your/spring-data/
   front-end:
-    theme: NUXT_QUASAR #NUXT_QUASAR, QUASAR
-```
----
-## Getting started
-
-[//]: # (**Project structure**)
-
-[//]: # (![image]&#40;https://appUser-images.githubusercontent.com/33171470/116986615-32423a00-acf8-11eb-88f7-db2e44a77b12.png&#41;)
-
-
-Open Terminal and run following command 
-
-```batch
-./gradlew bootRun
+    theme: NUXT_QUASAR  # Options: NUXT_QUASAR, QUASAR
+  cors:
+     allowed-origins:
+        - http://localhost:3004 # Ionic dev (Development Web)
+        - http://localhost:3003 # Frontend dev server
 ```
 
-To test that it works, open a browser tab at http://localhost:8080/welcome
+### Database Configuration
 
----
-Build production jar and run following command jar location `/build/libs/`
+Configure your database connection in `application.yml` or `application-dev.yml`:
 
-```batch
+```yaml
+spring:
+  datasource:
+    #MySql
+    #url: jdbc:mysql://localhost:3306/spring_starter_mysql?allowPublicKeyRetrieval=true&useSSL=false
+    #username: your_username
+    #password: your_password
+    #driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # Postgres
+    url: jdbc:postgresql://localhost:5432/spring_starter_postgres
+    username: your_username
+    password: your_password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+```
+
+Configure your log4j in `log4j2-prod.xml` or `log4j2-dev.xml`:
+```
+<Property name="APP_LOG_ROOT">/path/to/your/spring-data/logs</Property>
+```
+
+## ✨ Database Setup
+
+### Database Installation
+```
+Database file location /path/to/your/spring-data/files/spring_starter_mysql.sql or spring_starter_postgres.sql
+```
+1. **Import the database schema**
+   ```bash
+   # Windows
+   
+   # MySql
+   mysql -uroot -p your_db_name < E:\path\to\spring_starter_mysql.sql
+   
+   # Postgres
+   psql -U your_user_name -d your_db_name -f  E:\path\to\spring_starter_postgres.sql
+   
+   # Linux/macOS
+   
+   # MySql
+   mysql -uroot -p your_db_name < /path/to/spring_starter_mysql.sql
+   ```
+
+2. **Update configuration**
+   Update the database connection details in your configuration files.
+
+### Supported Databases
+
+- **H2** - In-memory database for development and testing
+- **MySQL 8+** - Production-ready relational database
+- **PostgreSQL** - Advanced open-source database
+
+## 📚 API Documentation
+
+### Swagger UI
+
+Access interactive API documentation at:
+- **Swagger UI**: `http://localhost:8080/swagger-ui/index.html`
+- **OpenAPI JSON**: `http://localhost:8080/api-docs`
+
+### Key API Endpoints
+
+| Endpoint | Method | Description | Auth Required |
+|----------|--------|-------------|---------------|
+| `/api/auth/login` | POST | User authentication | No |
+| `/api/appUser/currentUserData` | GET | Get current appUser info | Yes |
+| `/api/permission` | GET, POST, PUT, DELETE | Permission management | Yes |
+| `/api/appRole` | GET, POST, PUT, DELETE | Role management | Yes |
+| `/api/appUser` | POST | User registration | Yes |
+
+## 🔐 Authentication & Authorization
+
+### Authentication Flow
+
+1. **Login Request**
+   ```json
+   POST /api/auth/login
+   {
+     "appUser": {
+       "emailOrUsername": "admin@mydomain.com",
+       "password": "P@ssw0rd",
+       "loginForm": 1
+     }
+   }
+   ```
+
+2. **Success Response**
+   ```json
+   {
+     "userId": 1,
+     "authenticationToken": "eyJhbGciOiJIUzUxMiJ9...",
+     "refreshToken": "eyJhbGciOiJIUzUxMiJ9...",
+     "expiresAt": "2024-10-29T01:24:46.019+00:00"
+   }
+   ```
+
+### Authorization Headers
+
+For protected endpoints, include the JWT token in the Authorization header:
+
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+Accept-Language: en
+Accept-ApiClient: default
+```
+
+### Method-Level Security
+
+Use the `@PreAuthorize` annotation to protect specific endpoints:
+
+```java
+@PreAuthorize("@permissionChecker.hasPermission('role_list')")
+@GetMapping
+public ResponseEntity<Object> findAll(Pageable pageable) {
+    // Implementation
+}
+
+@PreAuthorize("@permissionChecker.hasAnyPermission('role_add', 'user_manage')")
+@PostMapping
+public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
+    // Implementation
+}
+```
+
+## 🔧 Auto Code Generation
+
+### Enable Auto Generation
+
+1. **Annotate your entity**
+   ```java
+   @GenSourceableTable(createFrontend = true)
+   @Entity
+   public class YourEntity extends BaseEntity {
+       // Entity fields
+   }
+   ```
+
+2. **Generate source code**
+   ```bash
+   POST http://localhost:8080/dev/development/generateSrc
+   ```
+
+### Generated Files
+
+The system automatically generates:
+- **DTO classes** - Data Transfer Objects
+- **Repository interfaces** - Data access layer
+- **Service interfaces** - Business logic contracts
+- **Service implementations** - Business logic
+- **REST controllers** - API endpoints
+- **Frontend components** - Vue.js forms and lists (optional)
+
+## 🐳 Docker Support
+
+### Build and Run with Docker
+
+1. **Build the application**
+   ```bash
+   ./gradlew bootJar
+   ```
+
+2. **Build Docker image**
+   ```bash
+   docker-compose build
+   ```
+
+3. **Run with Docker Compose**
+   ```bash
+   docker-compose up -d
+   ```
+
+### Docker Configuration
+
+The included `docker-compose.yml` provides:
+- Application container
+- Database container (MySQL/PostgreSQL)
+- Volume mapping for persistent data
+- Network configuration
+
+## 🚀 Production Deployment
+
+### Build Production JAR
+
+```bash
 ./gradlew bootJar
 ```
 
-Docker run 
-```batch
-docker-compose build
-docker-compose up -d
-```
+The JAR file will be available in `/build/libs/`
 
-## API Docs
-OpenAI, Swagger UI form API doc path
-```
-/api-docs, /swagger-ui/index.html
-```
+### Production Configuration
 
-Server run at port `8080` can config server port at /src/main/resources/`application.yml`  
-```yml
-server:
-  port: 8080
-```
+1. **Set production profile**
+   ```yaml
+   spring:
+     profiles:
+       active: prod
+   ```
 
-Change profiles active for development mode
-```yml
-spring:
-  profiles:
-#    active: prod
-    active: dev
-```
+2. **Configure logging**
+   Update `log4j2-prod.xml` with appropriate log levels and file paths.
 
-Development mode properties config at /src/main/resources/`application-dev.yml`
-```yml
-app:
-  url: http://YOUR_SERVER_IP or http://127.0.0.1
-  port: 8080
-  cdn-directory: D:/code/tutorial/spring-data/ #your spring-data directory path
-```
+3. **Environment variables**
+   ```bash
+   export MYSQL_HOST=your-db-host
+   export MYSQL_USERNAME=your-username
+   export MYSQL_PASSWORD=your-password
+   ```
 
-Log4j path config at resources/`log4j2-dev.xml` and resources/`log4j2-prod.xml`
-```xml
-<Property name="APP_LOG_ROOT">D:/code/tutorial/spring-data/logs</Property>
-```
-Log4j path config at resources/`log4j2-dev.xml` and resources/`log4j2-prod.xml`
-```xml
-<Property name="APP_LOG_ROOT">/usr/spring-data/logs</Property>
-```
+### Health Checks
 
-## Login
+Monitor application health using Spring Boot Actuator endpoints:
+- `/actuator/health` - Application health status
+- `/actuator/info` - Application information
+- `/actuator/metrics` - Application metrics
 
-```
-METHOD : POST
-URL : /api/auth/login
-```
 
-**Request Headers**
+## 📞 Support
 
-| Key                  | Value                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| Content-Type         | application/json;charset=utf-8   |               |
-| Accept-Language      | th                               |       th, en        |
-| Accept-ApiClient     | default                          |               |
+For questions and support:
 
-**Request Parameters**
-```
-Json root name : appUser
-```
-| Key                  | Data type                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| email         | String  ||
-| password      | String ||
-| loginForm     | Int    |Login From – 1 : web browser , 2 : iOS, 3 : Android|
+- **Issues**: [GitHub Issues](https://github.com/bekaku/java-spring-boot-starter/issues)
+- **Documentation**: This README and inline code comments
+- **Examples**: Check the frontend application repositories linked above
 
-```json
-{
-  "appUser": {
-    "emailOrUsername" : "admin@mydomain.com",
-    "password" : "P@ssw0rd",
-    "loginForm" : 1
-  }
-}
-```
+## 📄 License
 
-**Response success example** :tada:
-```json
-{
-  "userId": 1,
-  "authenticationToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJmNGQxOGRlZi1hZTBjLTQ2MjItODE4OS1iNzExOTViNTkwNGYiLCJleHAiOjE3MzAxNjUwODYsImlhdCI6MTY5ODYyOTA4Nn0.hKun9E7D4rc-yEOA85Ex6rFYfWQww7ViOS9mpdIUn2Ql66JGCyxYf2vtqjbsQ-DSz8HB1lmVRSWtJ4XeBFkwCg",
-  "refreshToken": "f4d18def-ae0c-4622-8189-b71195b5904f",
-  "expiresAt": "2024-10-29T01:24:46.019+00:00"
-}
-```
-**Response fail example** :imp:
-
-```json
-{
-  "status": "UNAUTHORIZED",
-  "message": "Error",
-  "errors": [
-    "Login failed please verify that your username and password are correct."
-  ],
-  "timestamp": "2021-05-04 17:19:32"
-}
-```
----
-**The header for the endpoint requires login verification.**
-
-| Key                  | Value                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| Content-Type         | application/json;charset=utf-8   |               |
-| Accept-Language      | th                               |       th, en        |
-| Accept-ApiClient     | default                          |               |
-| Authorization    |Bearer `YOUR_authenticationToken` ||
-
-**Get current User**
-```
-METHOD : GET
-URL : /api/appUser/currentUserData
-```
-**Response success example** :tada:
-
-```json
-{
-  "id": 1,
-  "email": "admin@mydomain.com",
-  "username": "admin",
-  "token": null,
-  "fcmToken": null,
-  "accessTokenId": null,
-  "avatarFileId": null,
-  "coverFileId": null,
-  "avatar": {
-    "image": "http://127.0.0.1:8080/cdn/images/default-men-avatar.png",
-    "thumbnail": "http://127.0.0.1:8080/cdn/images/default-men-avatar.png"
-  },
-  "cover": null,
-  "active": true,
-  "selectedRoles": [
-    1
-  ],
-  "defaultLocale": "th"
-}
-```
-## Permission
-
-### Retrieve data
-
-```
-METHOD : GET
-URL : /api/permission?page={currentPage}&size={size}&sort={#sortField,#sortType}
-EXAMPLE : /api/permission?page=0&size=2&sort=code,asc
-```
-**Request Parameter**
-
-| Key                  | Data type                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| page         | Int  ||
-| size      | Int ||
-| sort     | string,string    |example `createdDate,asc`|
-
-**Response success example** :tada:
-```json
-{
-  "dataList": [
-    {
-      "id": 2,
-      "code": "api_client_add",
-      "description": "api_client_list_add",
-      "module": "AD"
-    },
-    {
-      "id": 5,
-      "code": "api_client_delete",
-      "description": "api_client_delete",
-      "module": "AD"
-    }
-  ],
-  "totalPages": 10,
-  "totalElements": 2,
-  "last": false
-}
-```
-### Create data
-
-```
-METHOD : POST
-URL : /api/permission
-```
-**Request Parameter**
-```
-Json root name : permission
-```
-| Key                  | Data type                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| code         | String  ||
-| description      | String ||
-| module     | String    ||
-
-**Request example**
-```json
-{
-  "permission": {
-    "code": "read_report",
-    "description": "appUser can read report",
-    "module": "AD"
-  }
-}
-```
-
-### Update data
-
-```
-METHOD : PUT
-URL : /api/permission
-```
-**Request Parameter**
-```
-Json root name : permission
-```
-| Key                  | Data type                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| id         | Long  ||
-| code         | String  ||
-| description      | String ||
-| module     | String    ||
-
-**Request example**
-```json
-{
-  "permision": {
-    "id": 2,
-    "code": "permission1",
-    "description": "permission1_detail",
-    "module": "app_user5"
-  }
-}
-```
-
-### Find one
-
-```
-METHOD : GET
-URL : /api/permission/{id}
-EXAMPLE : /api/permission/1
-```
-**Response success example** :tada:
-```json
-{
-  "id": 1,
-  "code": "api_client_list",
-  "description": "api_client_list",
-  "module": "AD"
-}
-```
-### Delete data
-
-```
-METHOD : DELETE
-URL : /api/permission/{id}
-EXAMPLE : /api/permission/1
-```
----
-
-## Role
-
-### Retrieve data
-
-```
-METHOD : GET
-URL : /api/appRole?page={currentPage}&size={size}&sort={#sortField,#sortType}
-EXAMPLE : /api/appRole?page=0&size=2&sort=code,asc
-```
-**Request Parameter**
-
-| Key                  | Data type                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| page         | Int  ||
-| size      | Int ||
-| sort     | string,string    |example `createdDate,asc`|
-
-**Response success example** :tada:
-```json
-{
-    "dataList": [
-        {
-            "id": 1,
-            "name": "develop",
-            "description": "developer",
-            "status": true,
-            "selectdPermissions": null
-        }
-    ],
-    "totalPages": 1,
-    "totalElements": 1,
-    "last": true
-}
-```
-### Create data
-
-```
-METHOD : POST
-URL : /api/appRole
-```
-**Request Parameter**
-```
-Json root name : appRole
-```
-| Key                  | Data type                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| code         | String  ||
-| description      | String ||
-| status     | Boolean    ||
-| selectdPermissions     | Long[]    | |
-
-**Request example**
-```json
-{
-  "appRole": {
-    "name": "develop",
-    "description": "developer 555",
-    "status": true,
-    "selectdPermissions": [
-      1,
-      2,
-      3,
-      4
-    ]
-  }
-}
-```
-
-### Update data
-
-```
-METHOD : PUT
-URL : /api/appRole
-```
-**Request Parameter**
-```
-Json root name : permission
-```
-| Key                  | Data type                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| id         | Long  ||
-| code         | String  ||
-| description      | String ||
-| status     | Boolean    ||
-| selectdPermissions     | Long[]    | |
-**Request example**
-```json
-{
-  "appRole": {
-    "id": 55,
-    "name": "develop",
-    "description": "developer",
-    "status": true,
-    "selectdPermissions": [
-      1,
-      2
-    ]
-  }
-}
-```
-
-### Find one
-
-```
-METHOD : GET
-URL : /api/appRole/{id}
-EXAMPLE : /api/appRole/1
-```
-**Response success example** :tada:
-```json
-{
-  "id": 1,
-  "name": "develop",
-  "description": "developer",
-  "status": true,
-  "selectdPermissions": null
-}
-```
-
-### Delete data
-
-```
-METHOD : DELETE
-URL : /api/appRole/{id}
-EXAMPLE : /api/appRole/1
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## User
-### Create data
-
-```
-METHOD : POST
-URL : /api/appUser
-```
-**Request Parameter**
-```
-Json root name : userRegister
-```
-| Key                  | Data type                            | Description   |
-| -------------------- |----------------------------------| --------------|
-| email         | String  |unique|
-| username      | String |unique|
-| password     | String    ||
-| selectedRoles     | Long[]    ||
-
-```json
-{
-  "userRegister": {
-    "email": "admin@mydomain.com",
-    "username": "admin",
-    "password": "1234",
-    "selectedRoles": [
-      1,2
-    ]
-  }
-}
-```
-
-**Response fail example** :imp:
-
-```json
-{
-  "status": "BAD_REQUEST",
-  "message": "Error",
-  "errors": [
-    "Username admin already exists. ",
-    "Email admin@mydomain.com already exists. "
-  ],
-  "timestamp": "2021-05-05 09:02:24"
-}
-```
----
-## ACL(Access control list)
-
-**Access control list example usage**
-
-Just add an annotation `@PreAuthorize("@permissionChecker.hasPermission('{PERMISSION_NAME}||{PERMISSION_NAME2}||{PERMISSION_NAME3}')")` to method in controller.
-
-```java
-package com.bekaku.api.spring.controller.api;
-
-@RequestMapping(path = "/api/appRole")
-@RestController
-@RequiredArgsConstructor
-public class RoleController extends BaseApiController {
-    private final RoleService roleService;
-    private final PermissionService permissionService;
-    private final I18n i18n;
-    private final RoleValidator roleValidator;
-
-    Logger logger = LoggerFactory.getLogger(RoleController.class);
-
-    @Value("${app.loging.enable}")
-    boolean logEnable;
-
-    @PreAuthorize("@permissionChecker.hasPermission('role_list')")
-    @GetMapping
-    public ResponseEntity<Object> findAll(Pageable pageable) {
-        logger.info("/api/appRole > findAll, isLogEnable {}", logEnable);
-        return this.responseEntity(roleService.findAllWithPaging(!pageable.getSort().isEmpty() ? pageable :
-                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Role.getSort())), HttpStatus.OK);
-    }
-
-    @PreAuthorize("@permissionChecker.hasAnyPermission('role_add', 'user_manage')")
-    @PostMapping
-    public ResponseEntity<Object> create(@Valid @RequestBody RoleDto dto) {
-        Role appRole = roleService.convertDtoToEntity(dto);
-        roleValidator.validate(appRole);
-        setRolePermission(dto, appRole);
-        roleService.save(appRole);
-        return this.responseEntity(roleService.convertEntityToDto(appRole), HttpStatus.CREATED);
-    }
-
-    private void setRolePermission(RoleDto dto, Role appRole) {
-        if (dto.getSelectdPermissions().length > 0) {
-            Optional<Permission> permission;
-            for (long permissionId : dto.getSelectdPermissions()) {
-                permission = permissionService.findById(permissionId);
-                permission.ifPresent(value -> appRole.getPermissions().add(value));
-            }
-        }
-    }
-}
-```
-
-**Access is denied response example** :imp:
-
-```json
-{
-  "status": "INTERNAL_SERVER_ERROR",
-  "message": "Access is denied",
-  "errors": [
-    "error occurred"
-  ],
-  "timestamp": "2021-05-05 09:03:45"
-}
-```
-## Auto generate starter source
-
-### Create model class
-
-Add an annotation `@GenSourceableTable` to indicate that you want to create Auto source.
-
-```java
-package com.bekaku.api.spring.model;
-
-import annotation.com.bekaku.api.spring.GenSourceableTable;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.data.domain.Sort;
-
-import jakarta.persistence.*;
-
-@GenSourceableTable
-@NoArgsConstructor
-@Getter
-@Setter
-@Entity
-public class Role extends BaseEntity {
-
-    @Column(name = "name", length = 100, nullable = false, unique = true)
-    private String name;
-
-    @Column(name = "description", columnDefinition = "text default null")
-    private String description;
-
-    @Column(name = "status", columnDefinition = "tinyint(1) default 1")
-    private Boolean status;
-
-    public static Sort getSort() {
-        return Sort.by(Sort.Direction.ASC, "name");
-    }
-}
-```
-
-### Generate starter source
-
-Call `http://localhost:{your_server_port}/dev/development/generateSrc` to auto generate source
-```
-METHOD : POST
-URL : dev/development/generateSrc
-```
-
-The system will generate the following files.
-
-1. `RoleDto` dto Package
-2. `RoleRepository` repository Package
-3. `RoleService` service Package
-4. `RoleServiceImpl` serviceImpl Package
-5. `RoleController` api.controller Package
-
-If you use my [vue-quasar-example-app](https://github.com/bekaku/vue-quasar-example-app) You can create frontend List.vue and Form.vue by adding additional annotaion 'createFrontend = true' Call `http://localhost:{your_server_port}/dev/development/generateSrc` to auto generate source 
-
-It will be created at `build\generated\frontend`
-```java
-@GenSourceableTable(createFrontend = true)
-public class Role extends BaseEntity {
-
-}
-```
----
+**Happy Coding! 🎉**

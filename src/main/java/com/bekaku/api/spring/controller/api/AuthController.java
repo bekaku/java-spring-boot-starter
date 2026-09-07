@@ -73,43 +73,43 @@ public class AuthController extends BaseApiController {
         return true;
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<ResponseMessage> signup(@Valid @RequestBody UserRegisterRequest registerDto) {
-        validateUserRegister(registerDto);
+//    @PostMapping("/signup")
+//    public ResponseEntity<ResponseMessage> signup(@Valid @RequestBody UserRegisterRequest registerDto) {
+//        validateUserRegister(registerDto);
+//
+//        // public signup must not accept client-selected roles - always assign the configured default role only
+//        Set<AppRole> appRoles = new HashSet<>();
+//        Long defaultRoleId = appDefaultsProperties.role();
+//        if (defaultRoleId != null) {
+//            appRoleService.findById(defaultRoleId).ifPresent(appRoles::add);
+//        }
+//        AppUser appUser = new AppUser();
+//        appUser.addNew(
+//                registerDto.getUsername(),
+//                registerDto.getPassword(),
+//                registerDto.getEmail(),
+//                registerDto.isActive()
+//        );
+//        appUser.setAppRoles(appRoles);
+//        //encrypt pwd
+//        appUser.setPassword(encryptService.encrypt(appUser.getPassword()));
+//        appUserService.save(appUser);
+//        return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
+//    }
 
-        // public signup must not accept client-selected roles - always assign the configured default role only
-        Set<AppRole> appRoles = new HashSet<>();
-        Long defaultRoleId = appDefaultsProperties.role();
-        if (defaultRoleId != null) {
-            appRoleService.findById(defaultRoleId).ifPresent(appRoles::add);
-        }
-        AppUser appUser = new AppUser();
-        appUser.addNew(
-                registerDto.getUsername(),
-                registerDto.getPassword(),
-                registerDto.getEmail(),
-                registerDto.isActive()
-        );
-        appUser.setAppRoles(appRoles);
-        //encrypt pwd
-        appUser.setPassword(encryptService.encrypt(appUser.getPassword()));
-        appUserService.save(appUser);
-        return new ResponseEntity<>(new ResponseMessage(HttpStatus.OK, i18n.getMessage("success.logoutSuccess")), HttpStatus.OK);
-    }
-
-    private void validateUserRegister(@RequestBody UserRegisterRequest registerParam) {
-
-        List<String> errors = new ArrayList<>();
-        if (appUserService.findByUsername(registerParam.getUsername()).isPresent()) {
-            errors.add(i18n.getMessage("error.validateDuplicateUsername", registerParam.getUsername()));
-        }
-        if (appUserService.findByEmail(registerParam.getEmail()).isPresent()) {
-            errors.add(i18n.getMessage("error.validateDuplicateEmail", registerParam.getEmail()));
-        }
-        if (!errors.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"), errors));
-        }
-    }
+//    private void validateUserRegister(@RequestBody UserRegisterRequest registerParam) {
+//
+//        List<String> errors = new ArrayList<>();
+//        if (appUserService.findByUsername(registerParam.getUsername()).isPresent()) {
+//            errors.add(i18n.getMessage("error.validateDuplicateUsername", registerParam.getUsername()));
+//        }
+//        if (appUserService.findByEmail(registerParam.getEmail()).isPresent()) {
+//            errors.add(i18n.getMessage("error.validateDuplicateEmail", registerParam.getEmail()));
+//        }
+//        if (!errors.isEmpty()) {
+//            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"), errors));
+//        }
+//    }
 
     @PostMapping("/login")
     public RefreshTokenResponse login(@Valid @RequestBody LoginRequest loginRequest,
@@ -234,11 +234,21 @@ public class AuthController extends BaseApiController {
                     i18n.getMessage("error.apiClientNotFound")));
         }
         Optional<AppUser> user = appUserService.findActiveByEmailOrUserName(loginRequest.getEmailOrUsername());
-        if (user.isEmpty()) {
+        if (user.isEmpty() || !user.get().isActive()) {
             throw new ApiException(new ApiError(HttpStatus.FORBIDDEN, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
         }
-        if (!encryptService.check(loginRequest.getPassword(), user.get().getPassword()) || !user.get().isActive()) {
+
+        //migrate old md5 db to new password encoder
+//        String userDbPwd = user.get().getPassword();
+//        if (encryptService.isOldMd5Format(userDbPwd)) {
+//            if (!encryptService.checkAndMigrate(loginRequest.getPassword(), user.get())) {
+//                throw new ApiException(new ApiError(HttpStatus.FORBIDDEN, i18n.getMessage("error.error"),
+//                        i18n.getMessage("error.loginWrong")));
+//            }
+//        } else
+
+        if (!encryptService.check(loginRequest.getPassword(), user.get().getPassword())) {
             throw new ApiException(new ApiError(HttpStatus.FORBIDDEN, i18n.getMessage("error.error"),
                     i18n.getMessage("error.loginWrong")));
         }
@@ -371,7 +381,7 @@ public class AuthController extends BaseApiController {
             throwUnauthorizes();
         }
         // validate user is active
-        if(!accessToken.get().getAppUser().isActive() || accessToken.get().getAppUser().getDeleted()){
+        if (!accessToken.get().getAppUser().isActive() || accessToken.get().getAppUser().getDeleted()) {
             log.info("refreshToken: user is not active or deleted");
             deleteCookie(request, response, currentUserId, true);
             throwUnauthorizes();

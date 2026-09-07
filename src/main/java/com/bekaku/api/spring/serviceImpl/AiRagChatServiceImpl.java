@@ -112,7 +112,7 @@ public class AiRagChatServiceImpl implements AiRagChatService {
                         chatId = chat.getId();
                     } else {
                         chatId = request.getConversationId();
-                        if (!aiChatService.existsById(chatId)) {
+                        if (aiChatService.findByIdAndCreator(chatId, userId).isEmpty()) {
                             throw new ChatStreamException("Chat not found with ID: " + chatId, null);
                         }
                     }

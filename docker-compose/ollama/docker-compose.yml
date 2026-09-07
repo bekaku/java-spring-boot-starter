@@ -1,0 +1,38 @@
+services:
+  # 3. Ollama (AI Engine)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rag-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollamadata:/root/.ollama
+    healthcheck:
+      # ให้เช็คสถานะการทำงานผ่านคำสั่งของ ollama โดยตรง
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 4. สคริปต์โหลด Model อัตโนมัติ (รอจนกว่า Ollama จะ Healthy)
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: rag-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy # รอให้ healthcheck ผ่านก่อนค่อยเริ่มรัน
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    entrypoint: ["/bin/sh", "-c"]  # เปลี่ยนจาก bash เป็น sh
+    command:
+      - |
+        echo '✅ Ollama is ready (Detected by healthcheck)!'
+        echo '🚀 Pulling bge-m3 (Embedding Model)...'
+        ollama pull bge-m3
+        echo '✅ bge-m3 done'
+        echo 'Manual pull if init not working:'
+        echo 'docker exec -it rag-ollama ollama pull bge-m3'
+        echo '🎉 All models ready!'
+
+volumes:
+  ollamadata:

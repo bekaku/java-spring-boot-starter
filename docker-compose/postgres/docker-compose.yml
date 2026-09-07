@@ -1,24 +1,26 @@
-#version: '3.9'
+name: postgres
 services:
   postgres:
-    container_name: postgres
-#    image: "postgres:18-alpine"
-    image: "pgvector/pgvector:pg18"
+    container_name: ${POSTGRES_CONTAINER_NAME:-postgres}
+    #image: "postgres:18-alpine"
+    image: "${POSTGRES_IMAGE:-pgvector/pgvector:pg18}"
     volumes:
       - pg_data:/var/lib/postgresql
       - ./log:/var/log/postgresql
       - ./conf/postgres.conf:/usr/local/share/postgresql/postgresql.conf
       - ./conf/pg_hba.conf:/usr/local/share/postgresql/pg_hba.conf
-#      - ./init:/docker-entrypoint-initdb.d
+      # - ./init:/docker-entrypoint-initdb.d
     restart: unless-stopped
     ports:
-      - "5432:5432"
-#    networks:
-#      - docker-network
+      - "${POSTGRES_PORT:-5432}:5432"
+    #    networks:
+    #      - docker-network
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: spring_starter_postgres
-      POSTGRES_USER: postgres_user
-      POSTGRES_PASSWORD: STRONG_PASSWORD
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     command:   [
       "postgres",
       "-c", "config_file=/usr/local/share/postgresql/postgresql.conf",

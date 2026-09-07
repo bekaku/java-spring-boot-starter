@@ -1,10 +1,15 @@
 package com.bekaku.api.spring.serviceImpl;
 
+import com.bekaku.api.spring.model.AppUser;
+import com.bekaku.api.spring.service.AppUserService;
 import com.bekaku.api.spring.service.EncryptService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -16,6 +21,7 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+@RequiredArgsConstructor
 @Service("encryptService")
 public class EncryptServiceImpl implements EncryptService {
 
@@ -25,10 +31,11 @@ public class EncryptServiceImpl implements EncryptService {
     private static final int IV_BYTES = 12;
     //    private static final byte[] key = "jOwttyTbN/16DI5iIT0FMg==".getBytes(); // Use AES-128 key a 128-bit key
     @Value("${app.encrypt-key}")
-    String encryptKey;
+    private String encryptKey;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+
+    private final AppUserService appUserService;
 
     @Override
     public String encrypt(String password) {
@@ -68,5 +75,29 @@ public class EncryptServiceImpl implements EncryptService {
 
     private SecretKey secretKey() {
         return new SecretKeySpec(getEncryptKey(), ALGORITHM);
+    }
+
+
+    @Transactional
+    @Override
+    public boolean checkAndMigrate(String rawPassword, AppUser user) {
+        String dbPassword = user.getPassword();
+
+        if (isOldMd5Format(dbPassword)) {
+            String calculatedMd5 = DigestUtils.md5DigestAsHex(rawPassword.getBytes(StandardCharsets.UTF_8));
+            if (calculatedMd5.equals(dbPassword)) {
+                String newSecureHash = passwordEncoder.encode(rawPassword);
+                user.setPassword(newSecureHash);
+                appUserService.update(user);
+                return true;
+            }
+            return false;
+        }
+        return passwordEncoder.matches(rawPassword, dbPassword);
+    }
+
+    @Override
+    public boolean isOldMd5Format(String password) {
+        return password != null && password.length() == 32 && !password.startsWith("$");
     }
 }

@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -41,7 +42,25 @@ public class FaceRecognitionServiceImpl extends BaseResponseException implements
 
     @Transactional
     @Override
-    public FaceRecognitionDtos.RegisterResponse registerhFace(FaceRecognitionDtos.RegisterRequest request) {
+    public FaceRecognitionDtos.RegisterResponse registerhFace(
+            Long authenticatedUserId,
+            FaceRecognitionDtos.RegisterRequest request) {
+
+        if (!Objects.equals(authenticatedUserId, request.userId())) {
+            throw this.responseErrorForbidden("Face registration is limited to the authenticated user.");
+        }
+
+        AppUser appUser = appUserService.findById(request.userId())
+                .orElseThrow(() -> this.responseError(HttpStatus.NOT_FOUND,
+                        "User not found: " + request.userId()));
+
+        FileManager file = fileManagerService.findById(request.fileManagerId())
+                .orElseThrow(() -> this.responseError(HttpStatus.NOT_FOUND,
+                        "File not found: " + request.fileManagerId()));
+
+        if (file.getOwner() == null || !Objects.equals(file.getOwner().getId(), authenticatedUserId)) {
+            throw this.responseErrorForbidden("The selected file does not belong to the authenticated user.");
+        }
 
         Optional<AppUserFace> existFace = appUserFaceService.findByAppUserId(request.userId());
         if (existFace.isPresent()) {
@@ -53,17 +72,7 @@ public class FaceRecognitionServiceImpl extends BaseResponseException implements
             }
         }
 
-        Optional<FileManager> file = fileManagerService.findById(request.fileManagerId());
-        if (file.isEmpty()) {
-            throw this.responseError(HttpStatus.NOT_FOUND, "File not found: " + request.fileManagerId());
-        }
-
-        String filePath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), file.get().getFilePath(), false);
-
-        Optional<AppUser> appUser = appUserService.findById(request.userId());
-        if (appUser.isEmpty()) {
-            throw this.responseError(HttpStatus.NOT_FOUND, "User not found: " + request.userId());
-        }
+        String filePath = FileUtil.getDirectoryForUpload(appProperties.getUploadPath(), file.getFilePath(), false);
 
         AiFaceResponse aiResponse = aiFaceRegconitionServiceClient.extractFaceFeatures(filePath);
 
@@ -84,14 +93,14 @@ public class FaceRecognitionServiceImpl extends BaseResponseException implements
         String vectorString = formatVectorToString(face.embedding());
         AppUserFace appUserFace = new AppUserFace();
         appUserFace.setEmbedding(vectorString);
-        appUserFace.setAppUser(appUser.get());
-        appUserFace.setFileManager(file.get());
+        appUserFace.setAppUser(appUser);
+        appUserFace.setFileManager(file);
         appUserFaceService.save(appUserFace);
-        log.info("Successfully registered face for user: {}", appUser.get().getId());
+        log.info("Successfully registered face for user: {}", appUser.getId());
 
         return new FaceRecognitionDtos.RegisterResponse(
                 appUserFace.getId(),
-                appUser.get().getId(),
+                appUser.getId(),
                 appUserFace.getCreatedDate()
         );
 

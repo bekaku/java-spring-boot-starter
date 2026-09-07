@@ -1,25 +1,29 @@
+name: mysql
 services:
-  mysql:
-    container_name: mysql
-    image: mysql:8.3.0
+  mysql_db:
+    container_name: ${MYSQL_CONTAINER_NAME:-docker-mysql8}
+    image: "${MYSQL_IMAGE:-mysql:8.3.0}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
+      - ./datadir:/var/lib/mysql
       - ./conf/custom.cnf:/etc/mysql/conf.d/custom.cnf
       - ./log:/var/log/mysql
-      - ./datadir:/var/lib/mysql
-
-    restart: always
+    restart: unless-stopped
     ports:
-      - 3306:3306
+      - ${MYSQL_PORT:-3306}:3306
     networks:
-      - mysql-net
+      - ${MYSQL_NETWORK:-docker-mysql8-network}
     environment:
-      MYSQL_ROOT_PASSWORD: strong_pwd
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      # CREATE USER 'api_user'@'%' IDENTIFIED BY 'T8U*eu784*r#';CREATE USER 'queue_user'@'%' IDENTIFIED BY 'T8U*eu784*r#';
+      # GRANT ALL PRIVILEGES ON *.* TO 'api_user'@'%';GRANT ALL PRIVILEGES ON *.* TO 'queue_user'@'%';FLUSH PRIVILEGES;
+    #command: [mysqld, --innodb-use-native-aio=0, --default-authentication-plugin=mysql_native_password, --character-set-server=utf8mb4,--collation-server=utf8mb4_unicode_ci, --innodb_monitor_enable=all]
     security_opt:
       - seccomp:unconfined
 
+
 networks:
-  mysql-net:
+  docker-mysql8-network:
     driver: bridge
-#    external: true
+    name: ${MYSQL_NETWORK:-docker-mysql8-network}

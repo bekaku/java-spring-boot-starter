@@ -63,17 +63,23 @@ public class AiChatController extends BaseApiController {
     }
 
     @GetMapping("/messages/{aiChatId}")
-    public ResponseEntity<ResponseListDto<AiChatMessageDto>> messages(@PathVariable("aiChatId") Long aiChatId,
+    public ResponseEntity<ResponseListDto<AiChatMessageDto>> messages(@AuthenticationPrincipal AppUserDto auth,
+                                                                      @PathVariable("aiChatId") Long aiChatId,
                                                                       HttpServletRequest request,
                                                                       Pageable pageable) {
+        if (aiChatService.findByIdAndCreator(aiChatId, auth.getId()).isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
         SearchSpecification<AiChatMessage> specification = ControllerUtil.buildSpecification(request, List.of());
         specification.add(new SearchCriteria("aiChat.id", aiChatId, SearchOperation.EQUAL));
         return this.responseEntity(aiChatMessageService.findAllWithSearch(specification, getPageable(pageable, AiChatMessage.getSort())), HttpStatus.OK);
     }
 
     @PostMapping
-    public AiChatDto create(@Valid @RequestBody AiChatDto dto) {
+    public AiChatDto create(@AuthenticationPrincipal AppUserDto auth, @Valid @RequestBody AiChatDto dto) {
         AiChat aiChat = aiChatService.convertDtoToEntity(dto);
+        aiChat.setCreatedUser(auth.getId());
+        aiChat.setUpdatedUser(auth.getId());
         aiChatService.save(aiChat);
         return aiChatService.convertEntityToDto(aiChat);
     }

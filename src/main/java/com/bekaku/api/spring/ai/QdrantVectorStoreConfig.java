@@ -14,8 +14,8 @@ import org.springframework.context.annotation.Primary;
 
 @Configuration
 @ConditionalOnProperty(
-        prefix = "app.rag",
-        name = "qdrant-enabled",
+        prefix = "spring.ai.vectorstore.qdrant",
+        name = "enabled",
         havingValue = "true",
         matchIfMissing = false
 )

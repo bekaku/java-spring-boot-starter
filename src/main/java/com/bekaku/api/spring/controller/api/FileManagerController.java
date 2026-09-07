@@ -72,10 +72,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -676,17 +678,47 @@ public class FileManagerController extends BaseApiController {
 
     @GetMapping("/images")
     public ResponseEntity<Resource> getImage(@RequestParam("path") String filename) {
+        String uploadPath = appProperties.getUploadPath();
+        if (uploadPath == null || uploadPath.isBlank()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        if (filename == null || filename.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
         try {
-            Path filePath = Paths.get(appProperties.getUploadPath()).resolve(filename);
-            Resource resource = new UrlResource(filePath.toUri());
-            if (resource.exists()) {
-                return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_JPEG)
-                        .body(resource);
-            } else {
+            Path relativePath = Path.of(filename);
+            if (relativePath.isAbsolute()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            Path uploadRoot = Path.of(uploadPath).toRealPath();
+            Path requestedPath = uploadRoot.resolve(relativePath);
+            if (!requestedPath.normalize().startsWith(uploadRoot)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Resolve symlinks before checking containment and serve the checked target.
+            Path filePath = requestedPath.toRealPath();
+            if (!filePath.startsWith(uploadRoot)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            if (!Files.isRegularFile(filePath)) {
                 return ResponseEntity.notFound().build();
             }
-        } catch (MalformedURLException e) {
+            if (!Files.isReadable(filePath)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(new UrlResource(filePath.toUri()));
+        } catch (InvalidPathException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (NoSuchFileException e) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (IOException e) {
+            log.error("Failed to resolve image resource", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

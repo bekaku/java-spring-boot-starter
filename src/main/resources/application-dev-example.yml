@@ -129,7 +129,8 @@ spring:
         api-key: api_key_123
         use-tls: false
         collection-name: rag_documents
-        initialize-schema: true
+        enabled: false #set true if you want to enabled this
+        initialize-schema: false #set true if you want to enabled this
 
 logging:
   config: classpath:log4j2-dev.xml
