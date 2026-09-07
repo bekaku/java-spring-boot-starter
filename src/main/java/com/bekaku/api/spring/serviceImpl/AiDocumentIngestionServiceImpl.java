@@ -92,16 +92,16 @@ public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionServic
 
         List<Document> rawDocuments = extractor.extract(filePath, originalFileName);
 
-        Map<String, String> customMetadata = buildMetadata(originalFileName, fileMime.getName());
-        for (Document doc : rawDocuments) {
-            doc.getMetadata().putAll(customMetadata);
-        }
+
 
         List<Document> chunks = splitDocuments(rawDocuments);
         if (chunks.isEmpty()) {
             throw new DocumentIngestionException("Splitting produced zero chunks for file: " + originalFileName);
         }
-
+        Map<String, String> customMetadata = buildMetadata(originalFileName, fileMime.getName(), chunks.size());
+        for (Document doc : rawDocuments) {
+            doc.getMetadata().putAll(customMetadata);
+        }
         List<String> vectorIds = chunks.stream().map(Document::getId).toList();
 
         try {
@@ -131,11 +131,12 @@ public class AiDocumentIngestionServiceImpl implements AiDocumentIngestionServic
         return meta;
     }
 
-    private Map<String, String> buildMetadata(String fileName, String type) {
+    private Map<String, String> buildMetadata(String fileName, String type, int chunkSize) {
         Map<String, String> metadata = new HashMap<>();
         metadata.put("fileName", fileName);
         metadata.put("documentType", type);
         metadata.put("ingestedAt", LocalDateTime.now().toString());
+        metadata.put("chunkCount", String.valueOf(chunkSize));
         return metadata;
     }
 
