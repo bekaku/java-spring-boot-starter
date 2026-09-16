@@ -5,7 +5,7 @@ rm ./build/spring-api-service.tar
 docker rmi spring-api-service:latest
 #./gradlew bootJar
 
-docker image build --no-cache -t spring-api-service:latest .
+docker image build --platform linux/amd64 --no-cache --load -t spring-api-service:latest .
 
 #docker save -o ./build/spring-api-service.tar spring-api-service:latest
 

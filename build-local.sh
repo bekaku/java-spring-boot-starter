@@ -5,7 +5,7 @@ rm ./build/spring-api-service.tar
 docker rmi spring-api-service:latest
 #./gradlew bootJar
 
-docker image build --no-cache -t spring-api-service:latest -f DockerfileLocal .
+docker image build --platform linux/amd64 --no-cache --load -t spring-api-service:latest -f DockerfileLocal .
 
 docker-compose up -d
 docker builder prune -f

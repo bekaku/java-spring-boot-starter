@@ -453,4 +453,13 @@ public class AppUtil {
         Set<Object> seen = ConcurrentHashMap.newKeySet();
         return t -> seen.add(keyExtractor.apply(t));
     }
+    public static String maskSecretKey(String key) {
+        if (key == null || key.length() <= 15) {
+            return "************"; // ป้องกันกรณี Key สั้นเกินไปจน Error
+        }
+        // ดึง 12 ตัวแรก และ 5 ตัวสุดท้าย
+        String prefix = key.substring(0, 12); // "sk_live_hSZDE"
+        String suffix = key.substring(key.length() - 5); // "GeKeM"
+        return prefix + "....... " + suffix;
+    }
 }

@@ -6,6 +6,7 @@ import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.properties.JwtProperties;
 import com.bekaku.api.spring.util.AppUtil;
 import com.bekaku.api.spring.util.ConstantData;
+import com.bekaku.api.spring.service.ApiKeyAuthService;
 import com.bekaku.api.spring.service.JwtService;
 import com.bekaku.api.spring.util.CookieUtil;
 import jakarta.servlet.FilterChain;
@@ -38,6 +39,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     @Autowired
     private CookieUtil cookieUtil;
+
+    @Autowired
+    private ApiKeyAuthService apiKeyAuthService;
 
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
     private static final List<String> SKIP_PATHS = List.of(
@@ -83,16 +87,26 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 }
                 log.info("UID:{}, Access token present:{}", requestUserId.orElse(null), jwtToken.isPresent());
 
-                if (jwtToken.isEmpty()) {
-                    log.warn("Jwt token not found : {}", request.getRequestURI());
-                    sendUnauthorizedResponse(response, "Jwt token not found", isStreamingEndpoint, request.getRequestURI());
-                    return;
+                Optional<AppUserDto> userData;
+                String unauthorizedMessage;
+                if (jwtToken.isPresent()) {
+                    userData = jwtService.jwtVerify(
+                            apiClient,
+                            jwtToken.get(),
+                            request.getHeader(ConstantData.X_SYNC_ACTIVE));
+                    unauthorizedMessage = "Invalid or missing token";
+                } else {
+                    // No cookie and no Authorization header: fall back to the server-to-server
+                    // X-API-KEY credential. Accept-Apiclient must match the key's apiName.
+                    String rawApiKey = request.getHeader(ConstantData.X_API_KEY);
+                    if (AppUtil.isEmpty(rawApiKey)) {
+                        log.warn("Jwt token not found : {}", request.getRequestURI());
+                        sendUnauthorizedResponse(response, "Jwt token not found", isStreamingEndpoint, request.getRequestURI());
+                        return;
+                    }
+                    userData = apiKeyAuthService.authenticate(rawApiKey, apiClient);
+                    unauthorizedMessage = "Invalid API key";
                 }
-
-                Optional<AppUserDto> userData = jwtService.jwtVerify(
-                        apiClient,
-                        jwtToken.get(),
-                        request.getHeader(ConstantData.X_SYNC_ACTIVE));
 //            logger.info("JwtVerify User data : {}", userData.<Object>map(UserDto::getEmail).orElse(null));
                 if (userData.isPresent()) {
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -104,7 +118,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 } else {
                     // Check if response is already committed (streaming has started)
-                    sendUnauthorizedResponse(response, "Invalid or missing token", isStreamingEndpoint, request.getRequestURI());
+                    sendUnauthorizedResponse(response, unauthorizedMessage, isStreamingEndpoint, request.getRequestURI());
                     return;
                 }
             }

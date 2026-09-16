@@ -17,6 +17,57 @@ Use this skill for every backend implementation task. Read additional domain fil
 - Services own transactions. Use read-only defaults where appropriate and explicit write transactions for mutations.
 - A DB transaction does not roll back filesystem, vector-store, email, or remote-service effects; multi-system writes need explicit compensation.
 - Never call controllers from services or place business writes in controllers.
+- When creating a new standard CRUD service or repository, read `docs/STANDARD_CRUD_SERVICE_REPOSITORY.md` for the canonical file templates before writing code.
+- A standard CRUD controller stays thin and follows this shape (full template in `docs/STANDARD_CRUD_SERVICE_REPOSITORY.md`):
+```java
+@RestController
+@RequiredArgsConstructor
+@RequestMapping(path = "/api/{modelName}")
+public class {Model}Controller extends BaseApiController {
+    private final {Model}Service service;
+
+    @GetMapping
+    @PreAuthorize("@permissionChecker.hasPermission('{table_name}_list')")
+    public ResponseEntity<ResponseListDto<{Model}Dto>> findAll(HttpServletRequest request, Pageable pageable) {
+        SearchSpecification<{Model}> specification = ControllerUtil.buildSpecification(request, List.of());
+        return responseEntity(service.findAllWithSearch(specification, getPageable(pageable, {Model}.getSort())), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("@permissionChecker.hasPermission('{table_name}_view')")
+    public ResponseEntity<{Model}Dto> findOne(@PathVariable Long id) {
+        Optional<{Model}> entitlement = service.findById(id);
+        if (entitlement.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        return responseEntity(service.convertEntityToDto(entitlement.get()), HttpStatus.OK);
+    }
+
+    @PostMapping
+    @PreAuthorize("@permissionChecker.hasPermission('{table_name}_add')")
+    public ResponseEntity<{Model}Dto> create(@Valid @RequestBody {Model}CreateRequest request) {
+        return responseEntity(service.create(request), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("@permissionChecker.hasPermission('{table_name}_edit')")
+    public ResponseEntity<{Model}Dto> update(@PathVariable Long id,
+                                             @Valid @RequestBody {Model}UpdateRequest request) {
+        return responseEntity(service.update(id, request), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@permissionChecker.hasPermission('{table_name}_delete')")
+    public ResponseEntity<Object> delete(@PathVariable Long id) {
+        Optional<{Model}> entitlement = service.findById(id);
+        if (entitlement.isEmpty()) {
+            throw this.responseErrorNotfound();
+        }
+        service.delete(entitlement.get());
+        return responseDeleteMessage();
+    }
+}
+```
 
 ## JPA vs MyBatis
 

@@ -1,5 +1,5 @@
 # --- Stage 1: Build Stage ---
-FROM eclipse-temurin:25-jdk-alpine AS builder
+FROM --platform=$BUILDPLATFORM eclipse-temurin:25-jdk-alpine AS builder
 WORKDIR /build
 
 COPY gradlew .
@@ -14,7 +14,7 @@ COPY src src
 RUN ./gradlew bootJar -x test
 
 # --- Stage 2: Run Stage ---
-FROM eclipse-temurin:25-jdk-alpine
+FROM --platform=$TARGETPLATFORM eclipse-temurin:25-jdk-alpine
 
 # 1.Set up User & Group (Do this first for security reasons)
 RUN addgroup -g 1001 springgroup && \

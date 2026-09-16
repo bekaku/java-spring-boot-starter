@@ -11,6 +11,7 @@ import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Sort;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @Table(name = "api_client", indexes = {
         @Index(columnList = "updated_user"),
         @Index(columnList = "created_user"),
+        @Index(columnList = "app_user"),
 })
 public class ApiClient extends Auditable<Long> {
 
@@ -49,9 +51,18 @@ public class ApiClient extends Auditable<Long> {
     @Column(unique = true)
     private String apiToken;
 
+    private String apiTokenMask;
+
     private Boolean byPass= false;
 
     private Boolean status =true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "app_user", comment = "FK -> Ref table: app_user (id). Optional. Required only to authenticate this client with X-API-KEY")
+    private AppUser appUser;
+
+    @Column(name = "expires_at", comment = "Optional X-API-KEY expiry. Null never expires")
+    private Instant expiresAt;
 
     // https://www.baeldung.com/jpa-cascade-types
     @OneToMany(mappedBy = "apiClient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
