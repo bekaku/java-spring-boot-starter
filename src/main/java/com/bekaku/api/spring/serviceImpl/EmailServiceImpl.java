@@ -35,7 +35,7 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.mail-config.noreply-address}")
     String NOREPLY_ADDRESS;
 
-    @Value("classpath:/static/img/gd5-logo.png")
+    @Value("classpath:/static/img/logo.png")
     private Resource resourceFile;
 
     @Value("${app.mail-config.tokenExpire}")
@@ -100,13 +100,13 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendEmailRecoveryToken(AccessToken accessToken) throws MessagingException {
         Map<String, Object> templateModel = new HashMap<>();
-        String toUser =  i18n.getMessage("app.user");
+        String toUser =  i18n.getMessage("app.appUser");
         templateModel.put("bodyText", i18n.getMessage("email.forgot.body", toUser));
         templateModel.put("tokenTitle", i18n.getMessage("email.forgot.token.title"));
         templateModel.put("expireText", i18n.getMessage("email.forgot.token.expire", tokenExpire));
         templateModel.put("regardsText", i18n.getMessage("regards"));
         templateModel.put("supportText", i18n.getMessage("team.support"));
-        templateModel.put("token", accessToken.getToken());
+        templateModel.put("token", accessToken.getRawToken());
         sendMessageUsingThymeleafTemplate(
                 ConstantData.EMAIL_TEMPLATE_FORGOT,
                 accessToken.getAppUser().getEmail(),

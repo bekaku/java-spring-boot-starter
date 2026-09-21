@@ -58,6 +58,7 @@ public class AuthController extends BaseApiController {
     private final IdentityLinkService identityLinkService;
     private final CookieUtil cookieUtil;
     private final AppDefaultsProperties appDefaultsProperties;
+    private final PasswordResetService passwordResetService;
 
     private static final Map<String, Long> OTP_REQUEST_TIMESTAMPS = new ConcurrentHashMap<>();
     private static final long OTP_REQUEST_INTERVAL_MS = 60_000L;
@@ -289,8 +290,17 @@ public class AuthController extends BaseApiController {
         if (currentUserId != null) {
             deleteCookieByName(response, getJwtKeyBy(currentUserId), "/", true);
             deleteCookieByName(response, getRefreshKeyBy(currentUserId), "/", true);
-            deleteCookieByName(response, appProperties.jwt().currentUserKey(), "/", false);
+            // Only touch the "_sid" active-account pointer when currentUserId IS the
+            // session we're actually logging out of (setCurrentToAnothor is true for
+            // every logout/logoutApi call site, and for removeLinkAccount removing your
+            // own current link). removeLinkAccount removing a DIFFERENT linked account
+            // passes false here — clearing "_sid" unconditionally used to wipe the
+            // still-valid current session's active-account pointer with nothing to
+            // restore it (CookieUtil.getCurrentUserAccessToken/getCurrentUserID both key
+            // off "_sid" first), logging the current user out as a side effect of
+            // unlinking someone else.
             if (setCurrentToAnothor) {
+                deleteCookieByName(response, appProperties.jwt().currentUserKey(), "/", false);
                 setCurrentUserToAnother(request, response, currentUserId);
             }
         }
@@ -435,72 +445,27 @@ public class AuthController extends BaseApiController {
     @PostMapping("/requestVerifyCodeToResetPwd")
     public ResponseEntity<Object> requestVerifyCodeToResetPwd(@Valid @RequestBody ForgotPasswordRequest reqBody,
                                                               @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
-                                                              @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) throws MessagingException {
+                                                              @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
 
-        if (!isOtpRequestAllowed(reqBody.getEmail())) {
-            throw new ApiException(new ApiError(HttpStatus.TOO_MANY_REQUESTS, i18n.getMessage("error.error"),
-                    "Too many requests. Please try again later."));
-        }
-
-        // respond identically whether or not the account exists to prevent email enumeration
-        Optional<AppUser> user = appUserService.findByEmail(reqBody.getEmail());
-        if (user.isPresent()) {
-            String token = AppUtil.generateRandomNumber(6);
-            AccessToken accessToken = accessTokenService.generateTokenBy(user.get(), accessTokenService.getExpireDateBy(AccessTokenServiceType.FORGOT_PASSWORD), token, AccessTokenServiceType.FORGOT_PASSWORD);
-            if (accessToken.isNewToken()) {
-                //TODO
-//            emailService.sendEmailRecoveryToken(accessToken);
-            }
-        }
+        passwordResetService.requestReset(reqBody.getEmail());
         return this.responseServerMessage(i18n.getMessage("authen.token_not_expire", reqBody.getEmail()));
     }
+
 
     @PostMapping("/sendVerifyCodeToResetPwd")
     public ResponseEntity<Object> sendVerifyCodeToResetPwd(@Valid @RequestBody ForgotPasswordRequest reqBody,
                                                            @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                                            @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
-        AccessToken accessToken = getRequestForgotPasswordAccesstoken(reqBody);
+        passwordResetService.verifyCode(reqBody.getEmail(), reqBody.getToken());
         return this.responseEntity(HttpStatus.OK);
     }
 
-    private AccessToken getRequestForgotPasswordAccesstoken(ForgotPasswordRequest reqBody) {
-        Optional<AppUser> user = appUserService.findByEmail(reqBody.getEmail());
-        if (user.isEmpty()) {
-            throw this.responseErrorBadRequest();
-        }
-        if (AppUtil.isEmpty(reqBody.getToken())) {
-            throw this.responseErrorBadRequest();
-        }
-        Optional<AccessToken> accessToken = accessTokenService.findAccessTokenByTokenAndUser(user.get(), reqBody.getToken());
-        if (accessToken.isEmpty()) {
-            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"),
-                    i18n.getMessage("error.verify.code.wrong")));
-        }
-        boolean isExpired = accessTokenService.isTokenExpired(accessToken.get());
-        if (isExpired) {
-            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"),
-                    i18n.getMessage("error.token.expired")));
-        }
-        return accessToken.get();
-    }
 
     @PostMapping("/resetPassword")
     public ResponseEntity<Object> resetPassword(@Valid @RequestBody ForgotPasswordRequest reqBody,
                                                 @RequestHeader(value = ConstantData.ACCEPT_APIC_LIENT) String apiClientName,
                                                 @RequestHeader(value = ConstantData.USER_AGENT) String userAgent) {
-        if (AppUtil.isEmpty(reqBody.getNewPassword())) {
-            throw this.responseErrorBadRequest();
-        }
-        //validate pwd strong
-        boolean isStrong = AppUtil.validatePasswordStrong(reqBody.getNewPassword());
-        if (!isStrong) {
-            return this.responseServerMessage(i18n.getMessage("error.pwd.policy.alert", reqBody.getEmail()), HttpStatus.BAD_REQUEST);
-        }
-
-        AccessToken accessToken = getRequestForgotPasswordAccesstoken(reqBody);
-        String newPassword = encryptService.encrypt(reqBody.getNewPassword());
-        appUserService.updatePasswordBy(accessToken.getAppUser(), newPassword);
-        accessTokenService.delete(accessToken);
+        passwordResetService.resetPassword(reqBody.getEmail(), reqBody.getToken(), reqBody.getNewPassword());
         return this.responseServerMessage(i18n.getMessage("helper.reset_pwd_ok", reqBody.getEmail()));
     }
 

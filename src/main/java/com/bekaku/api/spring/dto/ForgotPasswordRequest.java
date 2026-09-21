@@ -3,6 +3,7 @@ package com.bekaku.api.spring.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -13,6 +14,7 @@ import lombok.experimental.Accessors;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Accessors(chain = true)
 public class ForgotPasswordRequest {
+    @NotBlank(message = "{error.validateEmail}")
     @Email(message = "{error.validateEmail}")
     private String email;
 

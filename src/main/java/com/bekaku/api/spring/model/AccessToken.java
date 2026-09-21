@@ -63,6 +63,9 @@ public class AccessToken extends Id {
         this.service = service;
         this.newToken = true;
         this.rawToken = token;
+        this.failedAttempts = 0;
+        this.verifiedAt = null;
+        this.consumedAt = null;
     }
 
     //    @PrePersist
@@ -118,6 +121,15 @@ public class AccessToken extends Id {
 
     @Column(name = "lastest_active", comment = "Timestamp of the most recent activity with this token")
     private LocalDateTime lastestActive;
+
+    @Column(name = "failed_attempts", nullable = false, comment = "Consecutive failed verification attempts for this recovery code")
+    private int failedAttempts = 0;
+
+    @Column(name = "verified_at", comment = "Timestamp this recovery code was last successfully verified")
+    private LocalDateTime verifiedAt;
+
+    @Column(name = "consumed_at", comment = "Timestamp this recovery token was consumed by a completed password reset")
+    private LocalDateTime consumedAt;
 
     //    @GeneratedUuidV7
 //    private UUID uniqeId;

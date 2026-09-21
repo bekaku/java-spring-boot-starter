@@ -23,4 +23,4 @@ Read this for file upload/download, CDN paths, chunk merge, media streaming, fil
 
 - Read `SECURITY.md` for owner/permission boundaries.
 - Read `DATA.md` when file metadata persistence changes.
-- Read `docs/KNOWN_ISSUES.md` when touching public storage mappings or chunk merge.
+- Read `docs/agent/KNOWN_ISSUES.md` when touching public storage mappings or chunk merge.

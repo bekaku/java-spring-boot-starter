@@ -46,7 +46,21 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private static final AntPathMatcher pathMatcher = new AntPathMatcher();
     private static final List<String> SKIP_PATHS = List.of(
             "/api/public/**",
-            "/api/auth/**",
+            // Only the specific public /api/auth/** endpoints — must mirror
+            // WebSecurityConfig's own permitAll() list for POST /api/auth/*. A blanket
+            // "/api/auth/**" here would also skip JWT authentication for the
+            // AUTHENTICATED identity-link endpoints (linkedAccounts, linkAccount,
+            // switchAccount/{id}, removeLinkAccount/{id}), leaving
+            // @AuthenticationPrincipal unresolved and causing every call to 403.
+            "/api/auth/login",
+            "/api/auth/loginApi",
+            "/api/auth/logout",
+            "/api/auth/logoutApi",
+            "/api/auth/refreshToken",
+            "/api/auth/refreshTokenApi",
+            "/api/auth/requestVerifyCodeToResetPwd",
+            "/api/auth/sendVerifyCodeToResetPwd",
+            "/api/auth/resetPassword",
             "/schedule/**",
 //            "/api/fileManager/files/stream/**",
 //            "/api/fileManager/video/stream/**",

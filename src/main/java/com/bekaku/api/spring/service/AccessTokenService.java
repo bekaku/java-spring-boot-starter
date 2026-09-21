@@ -23,8 +23,6 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
     Optional<AccessToken> findByToken(String token);
     Optional<AccessToken> findByJwtToken(String jwtToken, String apiClientName);
 
-    Optional<AccessToken> findAccessTokenByTokenAndUser(AppUser appUser, String token);
-
     Optional<AccessToken> findAccessTokenByToken(String token, boolean revoked);
 
     AccessToken generateRefreshToken(AppUser appUser, ApiClient apiClient, LoginLog loginLog, String fcmToken);
@@ -48,10 +46,6 @@ public interface AccessTokenService extends BaseService<AccessToken, AccessToken
 
     void updateLastestActive(LocalDateTime lastestActive, Long id);
     boolean isTokenExpired(AccessToken accessToken);
-
-    AccessToken generateTokenBy(AppUser appUser, Date expiresAt, String token, AccessTokenServiceType service);
-
-    Date getExpireDateBy(AccessTokenServiceType service);
 
     void logoutProcess(AccessToken token);
 

@@ -87,7 +87,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
 
     @Override
-    
+
     public Optional<AccessToken> findByToken(String token) {
         return accessTokenRepository.findByToken(HashUtil.sha256(token));
     }
@@ -105,13 +105,6 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return Optional.empty();
     }
 
-    
-    @Override
-    public Optional<AccessToken> findAccessTokenByTokenAndUser(AppUser appUser, String token) {
-        return accessTokenRepository.findAccessTokenByTokenAndUser(appUser, HashUtil.sha256(token));
-    }
-
-    
     @Override
     public Optional<AccessToken> findAccessTokenByToken(String token, boolean revoked) {
         return accessTokenRepository.findAccessTokenByToken(HashUtil.sha256(token), revoked);
@@ -133,7 +126,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return save(accessToken);
     }
 
-    
+
     @Override
     public List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked) {
         List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, AccessTokenServiceType.LOGIN, revoked);
@@ -142,7 +135,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 .collect(Collectors.toList());
     }
 
-    
+
     @Override
     public List<AccessTokenDto> findAllByUserAndRevoked(Long userId, boolean revoked, Pageable pageable) {
         List<AccessToken> list = accessTokenRepository.findAllByUserAndRevoked(userId, AccessTokenServiceType.LOGIN, revoked, pageable);
@@ -169,7 +162,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
                 DateUtil.datetimeDiffMinutes(accessToken.getLastestActive(), DateUtil.getLocalDateTimeNow()) <= ConstantData.ONLINE_MINUTES_CLAIM;
     }
 
-    
+
     @Override
     public void validateRefreshToken(String token) {
         accessTokenRepository.findByToken(HashUtil.sha256(token))
@@ -207,19 +200,19 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         accessTokenRepository.updateNullFcmToken(fcmToken);
     }
 
-    
+
     @Override
     public Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked) {
         return accessTokenRepository.findByTokenAndRevoked(HashUtil.sha256(token), revoked);
     }
 
-    
+
     @Override
     public Optional<AppUserDto> findByAccessTokenKey(String token) {
         return appUserMybatis.findByAccessTokenKey(HashUtil.sha256(token));
     }
 
-    
+
     @Override
     public Optional<AccessToken> findByActiveToken(String token) {
         return accessTokenRepository.findByActiveToken(HashUtil.sha256(token));
@@ -230,29 +223,6 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     public void updateLastestActive(LocalDateTime lastestActive, Long id) {
 //        accessTokenRepository.updateLastestActive(lastestActive, id);
         accessTokenMybatis.updateLastestActive(lastestActive, id);
-    }
-
-    @Transactional
-    @Override
-    public AccessToken generateTokenBy(AppUser appUser, Date expiresAt, String token, AccessTokenServiceType service) {
-        Optional<AccessToken> accessToken = accessTokenRepository.findLatestAccessTokenByUser(appUser, service);
-        if (accessToken.isPresent() && !isTokenExpired(accessToken.get())) {
-            accessToken.get().setNewToken(false);
-            return accessToken.get();
-        }
-        accessToken.ifPresent(this::delete);
-        AccessToken newToken = new AccessToken();
-        newToken.onCreateToken(appUser, expiresAt, token, service);
-        return save(newToken);
-    }
-
-    @Override
-    public Date getExpireDateBy(AccessTokenServiceType service) {
-        Date expire = null;
-        switch (service) {
-            case FORGOT_PASSWORD -> expire = new Date(System.currentTimeMillis() + DateUtil.MILLS_IN_MINUTE * 15);
-        }
-        return expire;
     }
 
     @Transactional
@@ -284,25 +254,25 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return false;
     }
 
-    
+
     @Override
     public ResponseListDto<AccessToken> findAllWithPaging(Pageable pageable) {
         return null;
     }
 
-    
+
     @Override
     public ResponseListDto<AccessToken> findAllWithSearch(SearchSpecification<AccessToken> specification, Pageable pageable) {
         return null;
     }
 
-    
+
     @Override
     public ResponseListDto<AccessToken> findAllBy(Specification<AccessToken> specification, Pageable pageable) {
         return null;
     }
 
-    
+
     @Override
     public Page<AccessToken> findAllPageSpecificationBy(Specification<AccessToken> specification, Pageable pageable) {
         return null;
@@ -313,7 +283,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return null;
     }
 
-    
+
     @Override
     public List<AccessToken> findAll() {
         return accessTokenRepository.findAll();
@@ -331,7 +301,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
         return accessTokenRepository.save(accessToken);
     }
 
-    
+
     @Override
     public Optional<AccessToken> findById(Long id) {
         return accessTokenRepository.findById(id);

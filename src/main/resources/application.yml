@@ -470,6 +470,11 @@ app:
     clean-old-temp-chunks: false
   worker:
     id: ${WORKER_ID:1} # fallback to 1 if not set
+  password-reset:
+    code-expiry: 15m
+    resend-cooldown: 60s
+    max-failed-attempts: 5
+    verify-reset-window: 5m
 custom:
   config:
     file: Config Spring Startertemplate From PRODUCTION MODE (resources/application.yml)

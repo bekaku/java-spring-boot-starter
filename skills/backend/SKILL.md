@@ -17,8 +17,8 @@ Use this skill for every backend implementation task. Read additional domain fil
 - Services own transactions. Use read-only defaults where appropriate and explicit write transactions for mutations.
 - A DB transaction does not roll back filesystem, vector-store, email, or remote-service effects; multi-system writes need explicit compensation.
 - Never call controllers from services or place business writes in controllers.
-- When creating a new standard CRUD service or repository, read `docs/STANDARD_CRUD_SERVICE_REPOSITORY.md` for the canonical file templates before writing code.
-- A standard CRUD controller stays thin and follows this shape (full template in `docs/STANDARD_CRUD_SERVICE_REPOSITORY.md`):
+- When creating a new standard CRUD service or repository, read `docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` for the canonical file templates before writing code.
+- A standard CRUD controller stays thin and follows this shape (full template in `docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md`):
 ```java
 @RestController
 @RequiredArgsConstructor

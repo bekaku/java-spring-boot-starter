@@ -414,4 +414,21 @@ public class DateUtil {
         // Convert Instant to LocalDateTime using the system default time zone
         return instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
+
+    /**
+     * @return the Thai name of the date's day of week (e.g. "วันจันทร์"), used to help match a
+     * recurring weekly schedule (documented by weekday, not by calendar date) against a
+     * requested reference date.
+     */
+    public static String getThaiDayOfWeekName(LocalDate date) {
+        return switch (date.getDayOfWeek()) {
+            case MONDAY -> "วันจันทร์";
+            case TUESDAY -> "วันอังคาร";
+            case WEDNESDAY -> "วันพุธ";
+            case THURSDAY -> "วันพฤหัสบดี";
+            case FRIDAY -> "วันศุกร์";
+            case SATURDAY -> "วันเสาร์";
+            case SUNDAY -> "วันอาทิตย์";
+        };
+    }
 }

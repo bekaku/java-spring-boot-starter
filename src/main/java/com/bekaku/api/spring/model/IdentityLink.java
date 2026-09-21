@@ -25,8 +25,8 @@ import org.hibernate.annotations.SQLRestriction;
         indexes = {
                 @Index(columnList = "deleted")
         })
-@SQLDelete(sql = "UPDATE identity_link SET deleted = true WHERE id=?")
-@SQLRestriction("deleted=false")
+//@SQLDelete(sql = "UPDATE identity_link SET deleted = true WHERE id=?")
+//@SQLRestriction("deleted=false")
 @Entity
 public class IdentityLink extends SoftDeletedAuditableCreated<Long> {
 

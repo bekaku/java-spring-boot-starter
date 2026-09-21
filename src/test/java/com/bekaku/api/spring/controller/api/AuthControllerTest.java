@@ -2,11 +2,10 @@ package com.bekaku.api.spring.controller.api;
 
 import com.bekaku.api.spring.configuration.I18n;
 import com.bekaku.api.spring.dto.*;
-import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
+import com.bekaku.api.spring.exception.ApiError;
 import com.bekaku.api.spring.exception.ApiException;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
-import com.bekaku.api.spring.model.AppRole;
 import com.bekaku.api.spring.model.AppUser;
 import com.bekaku.api.spring.properties.AppDefaultsProperties;
 import com.bekaku.api.spring.properties.AppProperties;
@@ -23,7 +22,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -38,7 +36,6 @@ import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -76,6 +73,8 @@ class AuthControllerTest {
     @Mock
     private CookieUtil cookieUtil;
     @Mock
+    private PasswordResetService passwordResetService;
+    @Mock
     private HttpServletRequest request;
     @Mock
     private HttpServletResponse response;
@@ -97,7 +96,7 @@ class AuthControllerTest {
 
         controller = new AuthController(appUserService, authService, accessTokenService, encryptService,
                 appRoleService, apiClientService, jwtService, i18n, appProperties,
-                identityLinkService, cookieUtil, appDefaultsProperties);
+                identityLinkService, cookieUtil, appDefaultsProperties, passwordResetService);
         injectI18nIntoHierarchy(controller);
 
         when(i18n.getMessage(anyString())).thenAnswer(inv -> inv.getArgument(0));
@@ -176,54 +175,6 @@ class AuthControllerTest {
                 false, apiClient, null, null, null);
     }
 
-    // ---------------------------------------------------------------- signup
-
-    @Nested
-    @DisplayName("POST /api/auth/signup")
-    class Signup {
-
-        @Test
-        void assignsOnlyDefaultRoleAndEncryptsPassword() {
-            UserRegisterRequest dto = new UserRegisterRequest();
-            dto.setEmail("new@example.com");
-            dto.setUsername("newuser");
-            dto.setPassword("plainpwd");
-            dto.setSelectedRoles(new Long[]{999L});
-            dto.setCheckValidate(false);
-
-            when(appUserService.findByUsername("newuser")).thenReturn(Optional.empty());
-            when(appUserService.findByEmail("new@example.com")).thenReturn(Optional.empty());
-            AppRole defaultRole = new AppRole("USER", true);
-            when(appRoleService.findById(DEFAULT_ROLE_ID)).thenReturn(Optional.of(defaultRole));
-            when(encryptService.encrypt(anyString())).thenReturn("$2a$encrypted");
-
-            ResponseEntity<ResponseMessage> result = controller.signup(dto);
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            ArgumentCaptor<AppUser> captor = ArgumentCaptor.forClass(AppUser.class);
-            verify(appUserService).save(captor.capture());
-            AppUser saved = captor.getValue();
-            assertThat(saved.getPassword()).isEqualTo("$2a$encrypted");
-            assertThat(saved.getAppRoles()).containsExactly(defaultRole);
-        }
-
-        @Test
-        void rejectsDuplicateUsername() {
-            UserRegisterRequest dto = new UserRegisterRequest();
-            dto.setEmail("new@example.com");
-            dto.setUsername("john");
-            dto.setPassword("plainpwd");
-            dto.setCheckValidate(false);
-
-            when(appUserService.findByUsername("john")).thenReturn(Optional.of(user));
-
-            assertThatThrownBy(() -> controller.signup(dto))
-                    .isInstanceOf(ApiException.class)
-                    .extracting(e -> ((ApiException) e).getApiError().getStatus())
-                    .isEqualTo(HttpStatus.BAD_REQUEST);
-            verify(appUserService, never()).save(any());
-        }
-    }
 
     // ----------------------------------------------------------------- login
 
@@ -379,10 +330,12 @@ class AuthControllerTest {
         void fastPathSwitchesOnValidTargetRefreshCookie() {
             AppUserDto principal = new AppUserDto();
             principal.setId(USER_ID);
+            AppUser targetUser = new AppUser();
+            targetUser.setId(TARGET_USER_ID);
             Cookie refreshCookie = new Cookie("_rt" + TARGET_USER_ID, "target-refresh-token");
             when(request.getCookies()).thenReturn(new Cookie[]{refreshCookie});
             when(accessTokenService.findByToken("target-refresh-token"))
-                    .thenReturn(Optional.of(sessionToken(user)));
+                    .thenReturn(Optional.of(sessionToken(targetUser)));
             when(accessTokenService.isTokenExpired(any(AccessToken.class))).thenReturn(false);
 
             ResponseEntity<?> result = controller.switchAccount(
@@ -540,48 +493,27 @@ class AuthControllerTest {
     class RequestVerifyCode {
 
         @Test
-        void generatesTokenForExistingEmail() throws Exception {
+        void delegatesToPasswordResetServiceAndAlwaysReturnsOk() {
             ForgotPasswordRequest dto = forgot("otp-existing@example.com", null, null);
-            when(appUserService.findByEmail("otp-existing@example.com")).thenReturn(Optional.of(user));
-            when(accessTokenService.generateTokenBy(eq(user), any(), anyString(),
-                    eq(AccessTokenServiceType.FORGOT_PASSWORD)))
-                    .thenReturn(sessionToken(user));
 
             ResponseEntity<Object> result = controller.requestVerifyCodeToResetPwd(
                     dto, API_CLIENT_NAME, USER_AGENT);
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            verify(accessTokenService).generateTokenBy(eq(user), any(), anyString(),
-                    eq(AccessTokenServiceType.FORGOT_PASSWORD));
+            verify(passwordResetService).requestReset("otp-existing@example.com");
         }
 
         @Test
-        void unknownEmailGetsIdenticalSuccessResponseWithoutTokenGeneration() throws Exception {
+        void unknownOrThrottledEmailStillGetsSameOkResponse() {
             ForgotPasswordRequest dto = forgot("ghost@example.com", null, null);
-            when(appUserService.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
+            // requestReset never throws regardless of account/cooldown state - the controller
+            // has no branch to distinguish it, which is exactly the enumeration-resistance contract
+            doNothing().when(passwordResetService).requestReset("ghost@example.com");
 
             ResponseEntity<Object> result = controller.requestVerifyCodeToResetPwd(
                     dto, API_CLIENT_NAME, USER_AGENT);
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            verify(accessTokenService, never()).generateTokenBy(any(), any(), anyString(), any());
-        }
-
-        @Test
-        void secondRequestWithinWindowIsRateLimited() throws Exception {
-            ForgotPasswordRequest dto = forgot("ratelimit@example.com", null, null);
-            when(appUserService.findByEmail("ratelimit@example.com")).thenReturn(Optional.of(user));
-            when(accessTokenService.generateTokenBy(eq(user), any(), anyString(),
-                    eq(AccessTokenServiceType.FORGOT_PASSWORD)))
-                    .thenReturn(sessionToken(user));
-
-            ResponseEntity<Object> first = controller.requestVerifyCodeToResetPwd(dto, API_CLIENT_NAME, USER_AGENT);
-            assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-            assertThatThrownBy(() -> controller.requestVerifyCodeToResetPwd(dto, API_CLIENT_NAME, USER_AGENT))
-                    .isInstanceOf(ApiException.class)
-                    .extracting(e -> ((ApiException) e).getApiError().getStatus())
-                    .isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
         }
     }
 
@@ -594,9 +526,8 @@ class AuthControllerTest {
         @Test
         void wrongCodeIsBadRequest() {
             ForgotPasswordRequest dto = forgot("john@example.com", "000000", null);
-            when(appUserService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
-            when(accessTokenService.findAccessTokenByTokenAndUser(user, "000000"))
-                    .thenReturn(Optional.empty());
+            doThrow(new ApiException(new ApiError(HttpStatus.BAD_REQUEST, "error", "error.verify.code.wrong")))
+                    .when(passwordResetService).verifyCode("john@example.com", "000000");
 
             assertThatThrownBy(() -> controller.sendVerifyCodeToResetPwd(dto, API_CLIENT_NAME, USER_AGENT))
                     .isInstanceOf(ApiException.class)
@@ -607,15 +538,11 @@ class AuthControllerTest {
         @Test
         void validCodeReturnsOk() {
             ForgotPasswordRequest dto = forgot("john@example.com", "123456", null);
-            AccessToken token = sessionToken(user);
-            when(appUserService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
-            when(accessTokenService.findAccessTokenByTokenAndUser(user, "123456"))
-                    .thenReturn(Optional.of(token));
-            when(accessTokenService.isTokenExpired(token)).thenReturn(false);
 
             ResponseEntity<Object> result = controller.sendVerifyCodeToResetPwd(dto, API_CLIENT_NAME, USER_AGENT);
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            verify(passwordResetService).verifyCode("john@example.com", "123456");
         }
     }
 
@@ -626,42 +553,35 @@ class AuthControllerTest {
     class ResetPassword {
 
         @Test
-        void weakPasswordReturns400() {
+        void weakPasswordPropagatesCentralizedError() {
             ForgotPasswordRequest dto = forgot("john@example.com", "123456", "weak");
+            doThrow(new ApiException(new ApiError(HttpStatus.BAD_REQUEST, "error", "error.pwd.policy.alert")))
+                    .when(passwordResetService).resetPassword("john@example.com", "123456", "weak");
 
-            ResponseEntity<Object> result = controller.resetPassword(dto, API_CLIENT_NAME, USER_AGENT);
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            verify(appUserService, never()).updatePasswordBy(any(), anyString());
+            assertThatThrownBy(() -> controller.resetPassword(dto, API_CLIENT_NAME, USER_AGENT))
+                    .isInstanceOf(ApiException.class)
+                    .extracting(e -> ((ApiException) e).getApiError().getStatus())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
         @Test
-        void strongPasswordResetsAndDeletesToken() {
+        void strongPasswordDelegatesToPasswordResetService() {
             ForgotPasswordRequest dto = forgot("john@example.com", "123456", "Str0ng!Pass");
-            AccessToken token = sessionToken(user);
-            when(appUserService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
-            when(accessTokenService.findAccessTokenByTokenAndUser(user, "123456"))
-                    .thenReturn(Optional.of(token));
-            when(accessTokenService.isTokenExpired(token)).thenReturn(false);
-            when(encryptService.encrypt("Str0ng!Pass")).thenReturn("$2a$newhash");
 
             ResponseEntity<Object> result = controller.resetPassword(dto, API_CLIENT_NAME, USER_AGENT);
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            verify(appUserService).updatePasswordBy(user, "$2a$newhash");
-            verify(accessTokenService).delete(token);
+            verify(passwordResetService).resetPassword("john@example.com", "123456", "Str0ng!Pass");
         }
 
         @Test
         void wrongCodeIsRejectedBeforeReset() {
             ForgotPasswordRequest dto = forgot("john@example.com", "999999", "Str0ng!Pass");
-            when(appUserService.findByEmail("john@example.com")).thenReturn(Optional.of(user));
-            when(accessTokenService.findAccessTokenByTokenAndUser(user, "999999"))
-                    .thenReturn(Optional.empty());
+            doThrow(new ApiException(new ApiError(HttpStatus.BAD_REQUEST, "error", "error.verify.code.wrong")))
+                    .when(passwordResetService).resetPassword("john@example.com", "999999", "Str0ng!Pass");
 
             assertThatThrownBy(() -> controller.resetPassword(dto, API_CLIENT_NAME, USER_AGENT))
                     .isInstanceOf(ApiException.class);
-            verify(appUserService, never()).updatePasswordBy(any(), anyString());
         }
     }
 

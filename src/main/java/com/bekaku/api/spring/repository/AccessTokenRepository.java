@@ -5,9 +5,11 @@ import com.bekaku.api.spring.enumtype.AccessTokenServiceType;
 import com.bekaku.api.spring.model.AccessToken;
 import com.bekaku.api.spring.model.ApiClient;
 import com.bekaku.api.spring.model.AppUser;
+import jakarta.persistence.LockModeType;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -27,11 +29,13 @@ public interface AccessTokenRepository extends BaseRepository<AccessToken, Long>
     @Query("SELECT a FROM AccessToken a WHERE a.token =?1 AND a.revoked =?2 ")
     Optional<AccessToken> findAccessTokenByToken(String token, boolean revoked);
 
-    @Query("SELECT a FROM AccessToken a WHERE a.appUser =?1 and  a.token =?2 AND a.revoked = false ")
-    Optional<AccessToken> findAccessTokenByTokenAndUser(AppUser appUser, String token);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM AccessToken a WHERE a.appUser =?1 AND a.service=?2 ORDER BY a.id DESC LIMIT 1 ")
+    Optional<AccessToken> findLatestAccessTokenByUserForUpdate(AppUser appUser, AccessTokenServiceType service);
 
-    @Query("SELECT a FROM AccessToken a WHERE a.appUser =?1 AND a.service=?2 AND a.revoked = false ORDER BY a.id DESC LIMIT 1 ")
-    Optional<AccessToken> findLatestAccessTokenByUser(AppUser appUser, AccessTokenServiceType service);
+    @Modifying
+    @Query("UPDATE AccessToken a SET a.revoked = true WHERE a.appUser.id = ?1 AND a.service = ?2 AND a.revoked = false")
+    void revokeTokenByUserIdAndService(Long userId, AccessTokenServiceType service);
 
     Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked);
 
