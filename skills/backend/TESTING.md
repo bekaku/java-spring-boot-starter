@@ -2,7 +2,7 @@
 
 Read this before final validation of implementation work.
 
-**## 10. Testing Requirements**
+## 10. Testing Requirements
 
 - Location: `src/test/java/com/bekaku/api/spring/` (`controller/api/`, `serviceImpl/`). Framework: JUnit Jupiter + Mockito (`@Mock/@InjectMocks`, `MockitoSettings(LENIENT)`) + AssertJ; no `@SpringBootTest/@WebMvcTest/@WithMockUser` in current suite despite `spring-security-test` + `spring-restdocs-mockmvc` deps.
 

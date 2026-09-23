@@ -45,11 +45,11 @@ public class {Model}Controller extends BaseApiController {
     @GetMapping("/{id}")
     @PreAuthorize("@permissionChecker.hasPermission('{table_name}_view')")
     public ResponseEntity<{Model}Dto> findOne(@PathVariable Long id) {
-        Optional<{Model}> entitlement = service.findById(id);
-        if (entitlement.isEmpty()) {
+        Optional<{Model}> found = service.findById(id);
+        if (found.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        return responseEntity(service.convertEntityToDto(entitlement.get()), HttpStatus.OK);
+        return responseEntity(service.convertEntityToDto(found.get()), HttpStatus.OK);
     }
 
     @PostMapping
@@ -68,11 +68,11 @@ public class {Model}Controller extends BaseApiController {
     @DeleteMapping("/{id}")
     @PreAuthorize("@permissionChecker.hasPermission('{table_name}_delete')")
     public ResponseEntity<Object> delete(@PathVariable Long id) {
-        Optional<{Model}> entitlement = service.findById(id);
-        if (entitlement.isEmpty()) {
+        Optional<{Model}> found = service.findById(id);
+        if (found.isEmpty()) {
             throw this.responseErrorNotfound();
         }
-        service.delete(entitlement.get());
+        service.delete(found.get());
         return responseDeleteMessage();
     }
 }
@@ -83,17 +83,19 @@ Notes:
 - Controller stays thin: it binds/validates requests, checks endpoint
   permission, resolves paging/search/sort and chooses HTTP responses.
   Domain checks and multi-step writes stay in the service.
-- Worked example: `controller/api/AiVmSourceCollegeController.java`
-  (canonical shape for `findAll` / `findOne` / `create` / `update` /
-  `delete`); `controller/api/AppRoleController.java` shows the legacy
-  `convertDtoToEntity` + `save`/`update` variant.
+- Existing example: `controller/api/AppRoleController.java` shows a
+  `convertDtoToEntity` + `save`/`update` variant. Treat the template as a
+  starting shape; check the current feature's controller and service contract.
+  Its permission-assignment and update logic belongs in a service for new work.
 - Keep `extends BaseApiController` and reuse its helpers:
   `responseEntity`, `responseErrorNotfound`, `responseDeleteMessage` and
   `getPageable(pageable, {Model}.getSort())`.
 - Build search with `ControllerUtil.buildSpecification(request, List.of(...))`;
-  pass entity keyword columns (e.g. `List.of("collegeCode", ...)`) when the
+  pass entity keyword columns (e.g. `List.of("name")`) when the
   resource supports `_keyword`, otherwise `List.of()`.
-- Permission codes follow `{table_name}_{list,view,add,edit,delete}`.
+- Choose permission codes that exist for the feature. Common CRUD resources
+  use `{table_name}_{list,view,add,edit,delete}`, while file routes use
+  `file_manager_create` instead of `_add`.
 - `create` returns `201`; `delete` returns the standard delete message
   (`200` server-message body, not `204`).
 - `create`/`update` request types are domain-specific

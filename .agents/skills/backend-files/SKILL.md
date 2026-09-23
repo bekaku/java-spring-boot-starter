@@ -12,6 +12,13 @@ description: File upload and download, CDN paths, chunk merge, media streaming, 
 
 File upload/download, CDN paths, chunk merge, media streaming, file ownership, or filesystem operations.
 
+## Implementation path
+
+1. Trace the route in `FileManagerController` or `FilesDirectoryController` through its service, metadata repository, and filesystem path. Check `WebConfigurerAdapter` public mappings separately from authenticated routes.
+2. Check both real-path containment and owner scoping. A path inside the storage root can still belong to another user. Keep private material outside the publicly mapped root.
+3. For DB plus filesystem changes, identify the durable-success point and cleanup after a partial failure. Chunk merge deletes chunks while copying, so treat it as non-atomic.
+4. Test containment, ownership, Range behavior, and partial failure where affected. Use `backend-security` for access checks and `backend-data` when metadata persistence changes.
+
 ## Rules (summary — binding details in `skills/backend/FILES.md`)
 
 - DB transactions do not roll back filesystem effects; define durable-success and compensation order.

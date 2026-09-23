@@ -13,6 +13,13 @@ description: Optional Spring AI, Ollama, Qdrant, ingestion, SSE chat, tools, mem
 
 Only when the task touches Spring AI, Ollama, Qdrant, ingestion, SSE chat, AI tools, chat memory, or face-recognition integration.
 
+## Implementation path
+
+1. Trace only the affected path: `AiChatController` → `AiRagChatServiceImpl` for SSE/chat; `AiDocumentMetaController` → `AiDocumentIngestionServiceImpl` for ingestion; `ai/*Tool.java` for tools; `FaceRegconitionController` for the face service.
+2. Add API, data, files, and security guides only when that path touches their boundaries. Preserve authenticated actor and owner scoping across Reactor/worker threads.
+3. For Qdrant consumers, test both enabled and disabled store behavior. The active bean gate is `spring.ai.vectorstore.qdrant.enabled`, and two collection names are set in Java.
+4. For ingestion, identify the PostgreSQL/Qdrant/source-file success point and compensation. For SSE, preserve event ordering and payload types. Use `backend-testing` for the relevant evidence.
+
 ## Rules (summary — binding details in `skills/backend/AI_RAG.md`)
 
 - MVC SSE with Reactor publishers, not a WebFlux server; offload blocking work and pass user identity explicitly across threads.

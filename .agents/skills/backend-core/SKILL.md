@@ -12,6 +12,13 @@ description: Core Spring Boot backend rules for every implementation task. Layer
 
 Every backend implementation task. Load before any domain skill.
 
+## Start an implementation
+
+1. Read `AGENTS.md` and `SKILLS.md`. If the work has a file in `docs/tasks/`, read it and update its Resume State before editing code (`AGENTS.md §7`).
+2. Find the existing feature under `src/main/java/com/bekaku/api/spring/`. Trace its controller → service interface → `serviceImpl` → repository or MyBatis mapper/XML. Inspect DTOs, MapStruct mappers, entities, and resources only where the change crosses them.
+3. Identify the contract and the owner of each write before editing. Keep business logic and transaction boundaries in services. A DB transaction cannot undo file, vector, email, queue, or remote effects.
+4. Choose the relevant domain guides below, then verify the changed boundary with `backend-testing`. Use `docs/agent/PROJECT_REFERENCE.md` only when layout or dependency context is needed.
+
 ## Core rules (summary — details in `skills/backend/SKILL.md`)
 
 - Layering: `controller/api/* → service/* → serviceImpl/* → repository/*` and/or `mybatis/*`; MapStruct at transport boundary.
@@ -21,6 +28,7 @@ Every backend implementation task. Load before any domain skill.
 - Preserve legacy spellings: `serviceImpl`, `DevelopmentContoller`, `/api/faceRegconition`, `AiFaceRegconitionServiceClient`.
 - Constructor injection (`@RequiredArgsConstructor`); Log4j2/`@Slf4j` only; typed `@ConfigurationProperties` for new config groups.
 - When creating a standard CRUD service/repository, read `docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` first.
+- Treat legacy behavior listed in `docs/agent/KNOWN_ISSUES.md` as something to inspect, not a template to copy.
 
 ## Routing
 

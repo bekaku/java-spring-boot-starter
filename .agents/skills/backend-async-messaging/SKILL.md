@@ -12,6 +12,13 @@ description: Async execution, RabbitMQ producers and consumers, schedulers, and 
 
 `@Async`, RabbitMQ, schedulers, queue consumers/producers, or background processing.
 
+## Implementation path
+
+1. Inspect the caller, `configuration/AsyncConfig.java`, `queue/QueueConfig.java`, and `queue/QueueSender.java`. Queue declarations and a listener factory exist; there is no active consumer.
+2. Pass actor identity explicitly into background work. Do not assume a security context, auditor, or transaction propagates to an executor thread.
+3. For a consumer, define an idempotency key, duplicate-delivery behavior, wired retry and DLQ handling. Account for the existing shared routing key and non-durable queues before changing topology.
+4. Test producer serialization/routing or consumer duplicate and retry behavior as applicable; check startup wiring for configuration changes (`backend-testing`).
+
 ## Rules (summary — binding details in `skills/backend/ASYNC_MESSAGING.md`)
 
 - Current checkout has no active `@RabbitListener`; YAML retry/concurrency settings alone create no consumer.
