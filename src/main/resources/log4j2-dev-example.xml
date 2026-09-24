@@ -4,7 +4,8 @@
     <Properties>
 <!--        <Property name="APP_LOG_ROOT">${bundle:application:app.cdn-directory}logs</Property>-->
 <!--        <Property name="APP_LOG_ROOT">/Documents/code/github/java-spring-boot-starter/spring-data/</Property>-->
-        <Property name="APP_LOG_ROOT">D:/code/github/java-spring-starter/spring-data/logs</Property>
+        <!-- LOG_PATH comes from logging.file.path (= app.log-directory); keep logs outside app.cdn-directory -->
+        <Property name="APP_LOG_ROOT">${sys:LOG_PATH:-D:/code/github/java-spring-starter/spring-logs}</Property>
     </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT" follow="true">

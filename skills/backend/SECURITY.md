@@ -1,23 +1,62 @@
-# Security / Auth / Ownership
+# Security / Auth / Ownership — Reference
 
-Read this for authentication, JWT, refresh/session lifecycle, cookies, permissions, ownership, CORS/SameSite-adjacent work, signup, or OTP changes.
+> **Role:** binding security rules + verified facts (WHAT / WHY).
+> **Procedure (HOW):** `.agents/skills/backend-security/SKILL.md`.
+> **Evidence style:** `path` + `Class#member` (no line numbers; search the symbol).
 
-## Security rules
+## The three boundaries (trace all three for any access change)
 
-- **Three boundaries (trace all three):** (1) `WebSecurityConfig` route rules, (2) `JwtTokenFilter` skip-list + verification, (3) method/service ownership checks. `AuthorizationInterceptor` returns true — supplies no authorization (`src/main/java/com/bekaku/api/spring/middleware/AuthorizationInterceptor.java`).
+| # | Boundary | Where | What it decides |
+|---|---|---|---|
+| 1 | Route rules | `configuration/WebSecurityConfig#filterChain` | public vs authenticated vs denied |
+| 2 | Credential filter | `configuration/JwtTokenFilter` (`SKIP_PATHS`, `doFilterInternal`) | who the caller is (sets the principal) |
+| 3 | Method + data checks | `@PreAuthorize("@permissionChecker...")` + owner predicates in services/repositories | what the caller may do / see |
 
-- **Filter chain** (`src/main/java/com/bekaku/api/spring/configuration/WebSecurityConfig.java:77-138`, stateless, CSRF disabled, `JwtTokenFilter` before `UsernamePasswordAuthenticationFilter`): permits `OPTIONS`, `/favicon.ico`, `/_websocket/**`, `/actuator/**`, `/css/**`, `/<cdnPathAlias>/**`, `ASYNC` dispatches, `POST /api/auth/login|loginApi|logout|logoutApi|refreshToken|refreshTokenApi|requestVerifyCodeToResetPwd|sendVerifyCodeToResetPwd|resetPassword`, `GET /api/public/**`, `GET /schedule/**`; requires auth for `/api/**` (non-prod also opens `/test/**`, `/dev/development/**`, `/welcome`, `/swagger-ui/**`, `/api-docs/**`, `/theymeleaf`); `anyRequest().denyAll()`. `SecurityEnablerConfig` enables method security (`@EnableWebSecurity @EnableMethodSecurity`).
+Not boundaries: `middleware/AuthorizationInterceptor` (always returns `true`), `configuration/CustomPermissionEvaluator` (always returns `false`), prompt text, `UrlUtil` alone, request headers such as `X-User-ID`.
 
-- **Filter skip and credentials** (`configuration/JwtTokenFilter.java:47-77,83-123,174-179`): specific public `/api/auth/login|loginApi|logout|logoutApi|refreshToken|refreshTokenApi|requestVerifyCodeToResetPwd|sendVerifyCodeToResetPwd|resetPassword` paths, `/api/public/**`, other declared public paths, and `OPTIONS` skip filtering. Protected `/api/auth/*` paths still pass through the filter. For protected requests, resolution is access-token cookie first, then Bearer header; when neither exists, `X-API-KEY` is checked with `Accept-Apiclient` via `ApiKeyAuthServiceImpl`. `_sid` cookie or `X-User-ID` may provide a user-id hint, never proof of identity. Missing credentials and failed verification return `401 {"error":"..."}`.
+## 1. Route rules — `WebSecurityConfig`
 
-- **JWT and API key:** JWT HMAC/TTL settings are in `application.yml`; `JwtServiceImpl.jwtVerify` requires `sub`, `JwtType==Authen`, `uid`, and a live non-revoked session. `ApiKeyAuthServiceImpl.authenticate` hashes the raw key for lookup and checks client name, expiry, and active owner before creating an `AppUserDto` principal. The filter sets the authenticated principal for either accepted path. Test both paths when changing shared route access.
+- Stateless, CSRF disabled, `JwtTokenFilter` runs before `UsernamePasswordAuthenticationFilter`. Method security is enabled in `SecurityEnablerConfig` (`@EnableMethodSecurity`).
+- Public: `OPTIONS`, `/favicon.ico`, `/_websocket/**`, `/actuator/**`, `/css/**`, `/{app.cdn-path-alias}/**` (default `cdn`), `ASYNC` dispatches, `GET /api/public/**`, `GET /schedule/**`, and `POST /api/auth/{login, loginApi, logout, logoutApi, refreshToken, refreshTokenApi, requestVerifyCodeToResetPwd, sendVerifyCodeToResetPwd, resetPassword}`.
+- Non-production only (`environments.production=false`): `/test/**`, `/dev/development/**`, `/welcome`, `/swagger-ui/**`, `/api-docs/**`, `/theymeleaf`.
+- `/api/**` → authenticated. Anything else → `denyAll()`.
 
-- **Cookies** (`application.yml:344-354`, `util/CookieUtil.java:20-64`, `controller/api/AuthController.java:260-286`): names `_session_<uid>` (access, minutes), `_slid_<uid>` (refresh, days), `_sid` (current-user id, days); all `httpOnly, secure, SameSite=Lax, path=/`. `X-User-Id` header is request input, never proof of identity.
+## 2. Credential filter — `JwtTokenFilter`
 
-- **Refresh flow (binding lifecycle):** `AuthController.java:351-429` + `AuthServiceImpl.java:118-146` + `AccessTokenServiceImpl.java:190-203`: `handleRefreshTokenReuse(presentedKey)` — if presented token is revoked, `revokeTokenByUserId(userId)` (reuse detection); else require live non-revoked session + active non-deleted user + unexpired token (else delete cookies + `403 Session Expired`); then `refreshToken`: revoke old, insert new `AccessToken` + cloned `LoginLog`, return `{authenticationToken, refreshToken, expiresAt, userId}`. Preserve rotation + reuse detection + ownership checks; test inactive/deleted users, revoked/expired sessions, wrong client/owner on both cookie and API paths.
+- `shouldNotFilter` skips `SKIP_PATHS` (the public list above, plus dev paths and a hard-coded `/cdn/**`) and `OPTIONS`. Protected `/api/auth/*` routes (`linkedAccounts`, `linkAccount`, `switchAccount/{id}`, `removeLinkAccount/{id}`) are **not** skipped.
+- Resolution order for protected requests:
+  1. access-token cookie `_session_<uid>` (`CookieUtil#getCurrentUserAccessToken`), else `Authorization: Bearer` → `JwtServiceImpl#jwtVerify(apiClient, token, X-Sync-Active)`;
+  2. if neither exists: `X-API-KEY` + `Accept-Apiclient` → `ApiKeyAuthServiceImpl#authenticate`;
+  3. else `401 {"error": "..."}` via `sendUnauthorizedResponse`.
+- `jwtVerify` requires a non-empty `Accept-Apiclient` header (its value is not checked yet — `//TODO verify apiClient later`), `sub`, `JwtType == Authen`, `uid`, and a live non-revoked `AccessToken` session. **Every authenticated request must send `Accept-Apiclient`**, or it gets `401` even with a valid token.
+- `jwtVerify` does not re-check that the user is active. A deactivated user keeps access until the access token expires (`app.jwt.access-token-ttl-minutes`); refresh then fails because `AuthController` refresh checks `isActive()` / `getDeleted()`. Sessions are revoked explicitly only on password change with `logoutAllDevice` (`AppUserController`).
+- The JWT principal (`AppUserDto`) carries only `id`, `token` (session key), and `accessTokenId` — not username, email, roles, or permissions. Load the user through `AppUserService` when you need more.
+- `ApiKeyAuthServiceImpl#authenticate` hashes the raw key for lookup and checks client name (must equal `Accept-Apiclient`), expiry, and an active owner (`api_client.app_user`) before building an `AppUserDto`.
+- The principal is an `AppUserDto` with **no granted authorities** (`Collections.emptyList()`). `hasRole(...)` / `hasAuthority(...)` never pass — use `@permissionChecker`.
+- `_sid` cookie / `X-User-ID` header are logged as hints only. They are never identity.
+- Keep `SKIP_PATHS` and the `WebSecurityConfig` public list in sync. A route public in one and not the other is broken or unsafe.
 
-- **Authorization:** permission checks via `@PreAuthorize("@permissionChecker.hasPermission('module_action')")` (`src/main/java/com/bekaku/api/spring/util/PermissionChecker.java:9-66`, e.g. `AppRoleController.java:50,66,91,118,136`: `app_role_list|_add|_edit|_view|_delete`). `CustomPermissionEvaluator` always returns false — do not rely on it. Owner-scoped resources (chat, files, faces) must additionally scope by creator/owner (`AiChatController.java:61,90,104,114` uses `findByIdAndCreator(id, auth.getId())`).
+## 3. Authorization and ownership
 
-- **Never log/expose:** raw refresh tokens, JWT secrets (`app.jwt.secret`), AES key (`app.encrypt-key`), password hashes, `X-API-KEY`, MCP DB URL credentials. Service lookups hash raw tokens internally — do not double-hash. Passwords use `EncryptService.encrypt/check` (BCrypt); AES-GCM data encryption is separate; legacy MD5 helpers exist but auto-migration is commented out.
+- Permission check: `@PreAuthorize("@permissionChecker.hasPermission('{table}_{action}')")` — also `hasAnyPermission(...)`, `hasAllPermissions(...)` (`util/PermissionChecker`). It queries `PermissionServiceImpl#isHasPermission(userId, code)` via `role_permission`; there is no super-admin bypass.
+- Common codes: `{table}_{list,view,add,edit,delete}` (e.g. `app_role_*` on `AppRoleController`). File routes use their own codes (e.g. `file_manager_manage`) — check existing codes before inventing one.
+- Failed `@PreAuthorize` → `AccessDeniedException` → `403 ApiError` (`GlobalExceptionHandler#handleAccessDenied`).
+- Owner-scoped rows (chat, files, faces, sessions) also need an owner predicate, e.g. `AiChatService#findByIdAndCreator(id, auth.getId())` in `AiChatController`. Not found and not owned both return `404` so existence is not leaked.
 
-- **Signup/OTP:** the signup endpoint in `AuthController` is currently commented out. If re-enabled, assign configured default roles, never caller-selected privileges; public access needs intentional route/filter changes and tests. OTP throttle is process-local keyed by email — not distributed rate limiting; reset/OTP changes need expiry/replay/abuse tests. CSRF is disabled while cookie auth is supported — revisit browser threat model when touching SameSite/CORS or cookie-authenticated writes.
+## Sessions, tokens, cookies
+
+- Cookies (`util/CookieUtil`, `AuthController`): `_session_<uid>` access token (minutes), `_slid_<uid>` refresh token (days), `_sid` current user id (days). All `httpOnly`, `secure`, `SameSite=Lax`, `path=/`. Settings: `app.cookie` (secure, same-site) and `app.jwt` (TTLs, cookie names) in `application.yml`.
+- Refresh (binding lifecycle): `AuthController` `POST /api/auth/refreshToken` (cookie) and `/refreshTokenApi` (body) → `AccessTokenServiceImpl#handleRefreshTokenReuse(presented)` — a revoked token triggers `revokeTokenByUserId(userId)` (reuse detection) → require a live session, active non-deleted user, unexpired token (else clear cookies + `403`) → `AuthServiceImpl#refreshToken` revokes the old `AccessToken`, inserts a new one + cloned `LoginLog`, returns `{authenticationToken, refreshToken, expiresAt, userId}`.
+- Token services hash raw tokens internally — pass raw values, do not double-hash.
+- Passwords: `EncryptService#encrypt` / `#check` (BCrypt). AES-GCM data encryption is separate. Legacy MD5 helpers exist; auto-migration is commented out.
+
+## Secrets (binding)
+
+Never log, return, or put in exception messages: raw access/refresh tokens, `app.jwt.secret`, `app.encrypt-key`, password hashes, raw `X-API-KEY` values, MCP DB URL credentials. `api_client.api_token` stores a SHA-256 hash; `api_token_mask` is display-only.
+
+## Signup / OTP / password reset
+
+- The signup endpoint in `AuthController` is commented out. If re-enabled: assign configured default roles only (never caller-chosen), and add intentional route + filter changes with tests.
+- Password-reset flow: `AuthController` `POST /api/auth/requestVerifyCodeToResetPwd` → `sendVerifyCodeToResetPwd` → `resetPassword`, implemented by `PasswordResetServiceImpl#requestReset` → `#verifyCode` → `#resetPassword`; settings in `properties/PasswordResetProperties`.
+- OTP throttling is process-local and keyed by email — not distributed rate limiting.
+- CSRF is disabled while cookie auth is supported: revisit the browser threat model before changing SameSite/CORS or adding cookie-authenticated state-changing routes.

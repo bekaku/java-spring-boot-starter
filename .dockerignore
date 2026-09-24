@@ -5,6 +5,8 @@ docker-compose
 docs
 kubernetes
 spring-data
+spring-config
+spring-logs
 HELP.md
 README.md
 README-TEMP.md

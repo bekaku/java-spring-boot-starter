@@ -6,7 +6,9 @@
         <!--        <Property name="APP_LOG_ROOT">${bundle:application:logging.file.path}</Property>-->
         <!--        <Property name="APP_LOG_ROOT">${bundle:application:logging.file.path}/spring-boot-logger-log4j2.log</Property>-->
 
-        <Property name="APP_LOG_ROOT">/usr/spring-data/logs</Property>
+        <!-- LOG_PATH is set by Spring Boot from logging.file.path (= app.log-directory). Keep logs outside
+             app.cdn-directory: that root is served publicly at /cdn/**. -->
+        <Property name="APP_LOG_ROOT">${sys:LOG_PATH:-/usr/spring-logs}</Property>
     </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT" follow="true">

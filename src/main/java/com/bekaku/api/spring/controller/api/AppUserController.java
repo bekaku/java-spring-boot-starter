@@ -223,7 +223,7 @@ public class AppUserController extends BaseApiController {
                 dto.isActive());
 
         if (dto.isCheckValidate()) {
-            userValidator.validate(appUser);
+            userValidator.validateCreate(appUser);
         }
 
         setUserImage(dto.getAvatarFileId(), dto.getCoverFileId(), appUser);
@@ -285,7 +285,7 @@ public class AppUserController extends BaseApiController {
                 dto.isActive()
         );
 
-        userValidator.validate(appUser);
+        userValidator.validateUpdate(appUser);
         // delete old permissin for this group
         appUser.setAppRoles(new HashSet<>());
 

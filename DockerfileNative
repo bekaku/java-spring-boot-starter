@@ -50,4 +50,4 @@ ENV TZ="Asia/Bangkok"
 #"--spring.profiles.active=localdocker"
 ENTRYPOINT ["/app/api-service", \
             "-Duser.timezone=Asia/Bangkok", \
-            "--spring.config.additional-location=/usr/spring-data/env/"]
+            "--spring.config.additional-location=/usr/spring-config/"]

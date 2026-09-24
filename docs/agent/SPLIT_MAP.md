@@ -5,11 +5,11 @@ Canonical skills now live in `.agents/skills/`; detailed guides stay in `skills/
 
 | Original section | Canonical skill | Detailed guide / reference | Load when |
 |---|---|---|---|
-| Enforcement Instructions | `.agents/skills/backend-core/SKILL.md` | `AGENTS.md`, `skills/backend/SKILL.md` | Every backend task |
+| Enforcement Instructions | `.agents/skills/backend-core/SKILL.md` | `AGENTS.md`, `skills/backend/CORE.md` | Every backend task |
 | 1 Backend Overview | — | `docs/agent/PROJECT_REFERENCE.md` | Architecture/dependency lookup |
 | 2 Directory Structure | — | `docs/agent/PROJECT_REFERENCE.md` | Navigation/structure changes |
-| 3 Coding Conventions | `.agents/skills/backend-core/SKILL.md` | `skills/backend/SKILL.md` + `docs/agent/PROJECT_REFERENCE.md` | Core; detailed lookup as needed |
-| 4 Architecture Rules | `.agents/skills/backend-core/SKILL.md` | `skills/backend/SKILL.md` + `docs/agent/PROJECT_REFERENCE.md` | Core; detailed lookup as needed |
+| 3 Coding Conventions | `.agents/skills/backend-core/SKILL.md` | `skills/backend/CORE.md` + `docs/agent/PROJECT_REFERENCE.md` | Core; detailed lookup as needed |
+| 4 Architecture Rules | `.agents/skills/backend-core/SKILL.md` | `skills/backend/CORE.md` + `docs/agent/PROJECT_REFERENCE.md` | Core; detailed lookup as needed |
 | 5 API Contract | `.agents/skills/backend-api/SKILL.md` | `skills/backend/API.md` | REST/API/DTO/controller changes |
 | 6 Data Layer | `.agents/skills/backend-data/SKILL.md` | `skills/backend/DATA.md` | JPA/MyBatis/Flyway/DB changes |
 | 7 Security | `.agents/skills/backend-security/SKILL.md` | `skills/backend/SECURITY.md` | Auth/RBAC/cookie/ownership changes |
@@ -23,3 +23,9 @@ Additional focused guides:
 - Async: `.agents/skills/backend-async-messaging/SKILL.md` + `skills/backend/ASYNC_MESSAGING.md` — RabbitMQ/async/scheduling boundary
 
 The original source is preserved at `docs/agent/ORIGINAL_SKILLS.md` for audit/reference, but agents should not load it by default.
+
+## Later changes
+
+- The detailed core guide `skills/backend/SKILL.md` was renamed to `skills/backend/CORE.md` so that only real skills are named `SKILL.md`.
+- Each `.agents/skills/*/SKILL.md` is now a playbook (HOW: steps, code shapes, checklist, common mistakes) and each `skills/backend/*.md` is a reference (WHAT / WHY: verified facts + binding rules). Their content no longer duplicates each other.
+- `docs/agent/ORIGINAL_SKILLS.md` predates these changes and contains facts that are now outdated (e.g. the async executor name and several line numbers).

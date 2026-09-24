@@ -1,37 +1,39 @@
 # Spring Boot Backend Agent Guides
 
-> Entry point for agents. Binding behavior: `AGENTS.md`. Skill index: `SKILLS.md`.
+> Entry point for agents. Binding behavior: `AGENTS.md`. Skill router: `SKILLS.md`.
 
 Recommended behavior:
 
 ```text
 Every backend task
   -> AGENTS.md
-  -> SKILLS.md
-  -> .agents/skills/backend-core/SKILL.md
-  -> only the relevant domain skill(s)
+  -> SKILLS.md                      (pick skills)
+  -> backend-core playbook + skills/backend/CORE.md
+  -> only the relevant skill(s): playbook + reference
+  -> backend-testing before final validation
 ```
 
 Structure:
 
 ```text
 AGENTS.md                        # Global agent instructions (§§1–14)
-SKILLS.md                        # Canonical skill pointer list
+SKILLS.md                        # Skill router: which skills, loading order, quick picks
 CLAUDE.md / GEMINI.md            # Adapters (pointers, not source of truth)
 .github/copilot-instructions.md  # Copilot adapter (pointer)
-.agents/skills/                  # Canonical skills (Agent Skills spec)
-skills/backend/                  # Detailed domain references
+.agents/skills/<skill>/SKILL.md  # Playbooks (HOW): steps, code shapes, checklists, common mistakes
+skills/backend/*.md              # References (WHAT/WHY): verified facts + binding rules (CORE.md, API.md, ...)
+docs/agent/                      # End-to-end CRUD recipe, known issues, project map
 tasks/TASK_TEMPLATE.md           # Canonical task template
 tasks/README.md                  # Task workflows (instances in docs/tasks/)
-docs/agent/                      # Agent reference docs
 docs/tasks/                      # Task instances
 ```
 
 Examples:
 
 ```text
-Add CRUD endpoint
-  -> backend-api + backend-data + backend-testing
+New CRUD resource
+  -> backend-api + backend-data + backend-security + backend-testing
+     + docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md
 
 Fix refresh token security
   -> backend-security + backend-testing
@@ -49,4 +51,4 @@ RAG ingestion change
   -> backend-ai-rag + backend-data + backend-files + backend-testing as applicable
 ```
 
-See `AGENTS.md §6` for full routing and `tasks/README.md` for task creation/execution.
+See `SKILLS.md` for the full routing table and `tasks/README.md` for task creation/execution.

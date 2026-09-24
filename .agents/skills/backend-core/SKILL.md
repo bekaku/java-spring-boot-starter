@@ -1,45 +1,68 @@
 ---
 name: backend-core
-description: Core Spring Boot backend rules for every implementation task. Layering, transactions, JPA-vs-MyBatis decision, coding conventions, do/dont, and task routing. Always load first.
+description: Use first for every backend implementation task in this Spring Boot repo (Java 25, Spring Boot 4.1, JPA/MyBatis, JWT). Gives the start-to-finish workflow, where each kind of code goes, layering and transaction rules, and which domain skill to load next.
 ---
 
-# Backend Core — Canonical
+# Backend Core — Playbook
 
-> Canonical core skill. Detailed rules: `skills/backend/SKILL.md`.
-> Global behavior: `AGENTS.md`. Index: `SKILLS.md`.
+> **Role:** HOW to run any backend task. Binding facts + evidence: `skills/backend/CORE.md` (read it after this file).
+> **Global rules:** `AGENTS.md`. **Skill index:** `SKILLS.md`.
 
-## When to load
+## 1. Before you edit
 
-Every backend implementation task. Load before any domain skill.
+1. If a task file exists in `docs/tasks/`, read it and set Resume State to `IN_PROGRESS` before touching code (`AGENTS.md §7`).
+2. Pick the domain skills from the table in §4. Load only those.
+3. Find the closest existing feature and trace it end to end:
 
-## Start an implementation
+   ```text
+   controller/api/{Model}Controller → service/{Model}Service → serviceImpl/{Model}ServiceImpl
+     → repository/{Model}Repository  (JPA)   and/or   mybatis/{Model}Mybatis + resources/mybatis/{Model}Mybatis.xml
+     + model/{Model}  dto/{Model}Dto  mapper/{Model}Mapper  validator/{Model}Validator
+   ```
 
-1. Read `AGENTS.md` and `SKILLS.md`. If the work has a file in `docs/tasks/`, read it and update its Resume State before editing code (`AGENTS.md §7`).
-2. Find the existing feature under `src/main/java/com/bekaku/api/spring/`. Trace its controller → service interface → `serviceImpl` → repository or MyBatis mapper/XML. Inspect DTOs, MapStruct mappers, entities, and resources only where the change crosses them.
-3. Identify the contract and the owner of each write before editing. Keep business logic and transaction boundaries in services. A DB transaction cannot undo file, vector, email, queue, or remote effects.
-4. Choose the relevant domain guides below, then verify the changed boundary with `backend-testing`. Use `docs/agent/PROJECT_REFERENCE.md` only when layout or dependency context is needed.
+   Good references: `AppRole*` (standard CRUD), `AiChat*` (owner-scoped rows), `FileManager*` (MyBatis paging + files).
+4. Write down, before coding: the HTTP contract, who owns each write, the transaction boundary, and any non-DB side effect (file, vector, email, queue, remote call).
 
-## Core rules (summary — details in `skills/backend/SKILL.md`)
+## 2. While you implement
 
-- Layering: `controller/api/* → service/* → serviceImpl/* → repository/*` and/or `mybatis/*`; MapStruct at transport boundary.
-- Controllers never call `EntityManager` / `JdbcTemplate` / `VectorStore` directly (AI `*Tool.java` is the documented exception).
-- Services own transactions; DB transactions do not roll back filesystem/vector/email/remote effects.
-- JPA for CRUD + specifications + simple lookups; MyBatis + `vo/Paging` for join/paging DTO projections; no new MyBatis writes.
-- Preserve legacy spellings: `serviceImpl`, `DevelopmentContoller`, `/api/faceRegconition`, `AiFaceRegconitionServiceClient`.
-- Constructor injection (`@RequiredArgsConstructor`); Log4j2/`@Slf4j` only; typed `@ConfigurationProperties` for new config groups.
-- When creating a standard CRUD service/repository, read `docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` first.
-- Treat legacy behavior listed in `docs/agent/KNOWN_ISSUES.md` as something to inspect, not a template to copy.
+- Put code where the table in `skills/backend/CORE.md#where-code-goes` says. Follow the naming exactly.
+- Controller = HTTP only. Service = business rules + `@Transactional` writes. Repository/MyBatis = queries only.
+- Current user: `@AuthenticationPrincipal AppUserDto auth` in the controller → pass `auth.getId()` to the service.
+- Errors: `throw responseErrorNotfound();` (and siblings) from controllers; services use `BaseResponseException` or `new ApiException(new ApiError(...))`.
+- Text shown to users: i18n key in both `messages.properties` and `messages_th.properties`.
+- New standard CRUD resource: follow `docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` step by step.
+- Keep the change minimal. Do not refactor unrelated legacy code, even if it looks wrong — note it instead.
 
-## Routing
+## 3. Before you finish
 
-After this file, load only the relevant domain skill(s) per `AGENTS.md §6`:
+1. Load `backend-testing` and run the narrowest check that proves the change, then `./gradlew compileJava`.
+2. Review `git status` and `git diff`; remove unrelated edits.
+3. Update the task file (checklist, Resume State, Completion Report) if one exists.
+4. Report exact commands and actual results.
 
-```text
-API       -> .agents/skills/backend-api/SKILL.md + skills/backend/API.md
-Data      -> .agents/skills/backend-data/SKILL.md + skills/backend/DATA.md
-Security  -> .agents/skills/backend-security/SKILL.md + skills/backend/SECURITY.md
-Files     -> .agents/skills/backend-files/SKILL.md + skills/backend/FILES.md
-Async     -> .agents/skills/backend-async-messaging/SKILL.md + skills/backend/ASYNC_MESSAGING.md
-AI/RAG    -> .agents/skills/backend-ai-rag/SKILL.md + skills/backend/AI_RAG.md (AI tasks only)
-Testing   -> .agents/skills/backend-testing/SKILL.md + skills/backend/TESTING.md
-```
+## 4. Which domain skill to load
+
+| The task touches… | Load |
+|---|---|
+| Controller, route, DTO, validation, paging, response/error shape | `backend-api` |
+| Entity, repository, MyBatis, Flyway migration, mapper, IDs, audit, soft delete, permission seed data | `backend-data` |
+| Login, JWT, refresh, cookies, API keys, `@PreAuthorize`, owner scoping, public routes | `backend-security` |
+| Upload, download, CDN path, chunk merge, streaming, filesystem | `backend-files` |
+| `@Async`, RabbitMQ, `@Scheduled` | `backend-async-messaging` |
+| Spring AI, Ollama, Qdrant, ingestion, SSE chat, AI tools, face recognition | `backend-ai-rag` (AI tasks only) |
+| Any implementation, before final validation | `backend-testing` |
+
+Each skill has a detailed reference in `skills/backend/` (`API.md`, `DATA.md`, `SECURITY.md`, `FILES.md`, `ASYNC_MESSAGING.md`, `AI_RAG.md`, `TESTING.md`). Read it together with the skill.
+
+Optional references — only when needed:
+- `docs/agent/PROJECT_REFERENCE.md` — repo layout and dependency lookup.
+- `docs/agent/KNOWN_ISSUES.md` — when debugging or touching a listed legacy area.
+
+## 5. Stop signs
+
+Stop and tell the user before continuing if the task would:
+- weaken authentication, authorization, ownership, or validation;
+- change an existing HTTP contract used by the external frontend;
+- rewrite an existing Flyway migration;
+- need a new dependency or a new cross-cutting abstraction;
+- conflict with any rule in `AGENTS.md` or a skill.

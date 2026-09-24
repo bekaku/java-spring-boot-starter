@@ -1,72 +1,69 @@
-# SKILLS.md — Canonical Skill Pointer List
+# SKILLS.md — Skill Router
 
-> Pointer index only. Source of truth for behavior is `AGENTS.md`.
-> Canonical skills: `.agents/skills/*/SKILL.md` (Agent Skills spec).
-> Detailed rules: `skills/backend/*.md`. References: `docs/agent/*.md`.
-> Do not duplicate rule text here — point to the canonical file.
+> Router only. Binding behavior: `AGENTS.md`. Do not copy rule text here — point to the file that owns it.
 
-Backend skills are split by concern so agents load only what the task needs.
+## How the agent docs fit together
 
-## Core (always read for backend implementation tasks)
-
-- Canonical: `.agents/skills/backend-core/SKILL.md`
-- Detailed: `skills/backend/SKILL.md`
-- Covers: enforcement, layering, JPA-vs-MyBatis decision, coding conventions, do/don't, task routing
-
-## Domain guides (read only when relevant)
-
-| Concern | Canonical skill | Detailed guide | Load when |
+| Layer | Path | Answers | Read |
 |---|---|---|---|
-| API / controllers / DTO contract | `.agents/skills/backend-api/SKILL.md` | `skills/backend/API.md` | REST/SSE, DTO, pagination, validation, response changes |
-| Persistence / JPA / MyBatis / Flyway | `.agents/skills/backend-data/SKILL.md` | `skills/backend/DATA.md` | entities, repos, MyBatis XML, migrations, IDs, audit, soft-delete |
-| Security / JWT / API keys / ownership | `.agents/skills/backend-security/SKILL.md` | `skills/backend/SECURITY.md` | route access, auth credentials, refresh/session, cookies, permissions, ownership, signup/OTP |
-| Files / storage / uploads / streaming | `.agents/skills/backend-files/SKILL.md` | `skills/backend/FILES.md` | uploads, downloads, CDN, chunk merge, streaming, filesystem ops |
-| RabbitMQ / async / scheduling | `.agents/skills/backend-async-messaging/SKILL.md` | `skills/backend/ASYNC_MESSAGING.md` | `@Async`, queues, consumers/producers, schedulers |
-| Optional AI / RAG module | `.agents/skills/backend-ai-rag/SKILL.md` | `skills/backend/AI_RAG.md` | Spring AI, Ollama, Qdrant, ingestion, SSE chat, tools, memory — AI tasks only |
-| Testing / validation | `.agents/skills/backend-testing/SKILL.md` | `skills/backend/TESTING.md` | before final validation of implementation work |
+| Global rules | `AGENTS.md` | What is always binding in this repo | always |
+| Router | `SKILLS.md` (this file) | Which skills this task needs | always |
+| Playbook | `.agents/skills/<skill>/SKILL.md` | **HOW** — steps, code shapes, done-checklist, common mistakes | per chosen skill |
+| Reference | `skills/backend/<GUIDE>.md` | **WHAT / WHY** — verified facts + binding rules with `Class#member` evidence | together with its playbook |
+| Recipes & lookups | `docs/agent/*.md` | End-to-end CRUD recipe, known issues, repo map | only when a playbook points there |
+| Task | `docs/tasks/<n>-<name>.md` | This task's contract and progress | when it exists |
 
-## Reference docs (read only when indicated)
+Playbook and reference for the same skill never repeat each other: follow the playbook, look up facts in the reference.
 
-- Repository/dependency overview: `docs/agent/PROJECT_REFERENCE.md` — layout, deps, naming, architecture lookup only
-- Known issues and legacy exceptions: `docs/agent/KNOWN_ISSUES.md` — debugging/touching a listed legacy area only (do not copy as patterns)
-- Standard CRUD templates: `docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` — before creating a standard CRUD service/repository
-- Split map: `docs/agent/SPLIT_MAP.md` — original-to-split audit trail
-- Original unsplit source: `docs/agent/ORIGINAL_SKILLS.md` — archive, do not load by default
-
-## Loading policy
+## Loading order
 
 ```text
-Every backend task
-  -> AGENTS.md
-  -> SKILLS.md (this file)
-  -> .agents/skills/backend-core/SKILL.md
-  -> skills/backend/SKILL.md (detailed core rules)
-  -> this task file in docs/tasks/ (when one exists)
-  -> only the relevant domain skill(s) above
-  -> backend-testing before final implementation validation
+1. AGENTS.md
+2. SKILLS.md                                   (pick skills from the tables below)
+3. .agents/skills/backend-core/SKILL.md   +  skills/backend/CORE.md
+4. docs/tasks/<n>-<name>.md                    (when one exists)
+5. each chosen domain skill:  playbook    +  reference
+6. .agents/skills/backend-testing/SKILL.md +  skills/backend/TESTING.md   (before final validation)
 ```
 
-Examples:
+## Skills
+
+| Skill | Playbook | Reference | Load when the task touches… | Do not load for… |
+|---|---|---|---|---|
+| `backend-core` | `.agents/skills/backend-core/SKILL.md` | `skills/backend/CORE.md` | every backend task | — |
+| `backend-api` | `.agents/skills/backend-api/SKILL.md` | `skills/backend/API.md` | controllers, routes, DTOs, validation, paging/search, status codes, error bodies | persistence-only changes |
+| `backend-data` | `.agents/skills/backend-data/SKILL.md` | `skills/backend/DATA.md` | entities, columns, repositories, MyBatis, Flyway, mappers, IDs, audit, soft delete, permission seed rows | HTTP-only changes |
+| `backend-security` | `.agents/skills/backend-security/SKILL.md` | `skills/backend/SECURITY.md` | public/protected routes, JWT, cookies, refresh, API keys, `@PreAuthorize`, owner scoping, signup/OTP/reset | endpoints that only reuse an existing permission pattern unchanged |
+| `backend-files` | `.agents/skills/backend-files/SKILL.md` | `skills/backend/FILES.md` | uploads, downloads, `/cdn/**`, chunk merge, streaming, filesystem paths | — |
+| `backend-async-messaging` | `.agents/skills/backend-async-messaging/SKILL.md` | `skills/backend/ASYNC_MESSAGING.md` | `@Async`, RabbitMQ producers/consumers, `@Scheduled` | — |
+| `backend-ai-rag` (optional) | `.agents/skills/backend-ai-rag/SKILL.md` | `skills/backend/AI_RAG.md` | Spring AI, Ollama, Qdrant, ingestion, SSE chat, AI tools, prompts, face recognition | **any non-AI task** |
+| `backend-testing` | `.agents/skills/backend-testing/SKILL.md` | `skills/backend/TESTING.md` | before final validation of any implementation | — |
+
+## Quick picks
 
 ```text
-Add CRUD endpoint
-  -> backend-api + backend-data + backend-testing
-
-Fix refresh token security
-  -> backend-security + backend-testing
-
-Change public or protected route / API-key auth
-  -> backend-api + backend-security + backend-testing
-
-Add RabbitMQ consumer
-  -> backend-async-messaging + backend-data (if persistence involved) + backend-testing
-
-Fix file streaming
-  -> backend-files + backend-security + backend-testing
-
-Ordinary user CRUD
-  -> DO NOT read backend-ai-rag
-
-RAG ingestion change
-  -> backend-ai-rag + backend-data + backend-files + backend-testing as applicable
+New CRUD resource (entity → API)      core + data + api + security + testing
+                                      + docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md
+Add a field to an existing resource   core + data + api + testing
+New endpoint on an existing controller core + api + testing (+ security if new permission/ownership)
+Add/change a MyBatis list query       core + data + api + testing
+Make a route public / change auth     core + security + api + testing
+Fix refresh token / session logic     core + security + testing
+Owner-only resource (my items)        core + security + data + api + testing
+File upload/download/streaming        core + files + security + testing (+ data if metadata changes)
+Add @Async work or a scheduled job    core + async-messaging + testing (+ data if it writes)
+Add a RabbitMQ consumer               core + async-messaging + data + testing
+RAG ingestion / SSE chat change       core + ai-rag + testing (+ data / files / api as crossed)
+Ordinary CRUD / auth / file work      NEVER load backend-ai-rag
+Documentation-only change             core + testing (docs-only evidence rules)
 ```
+
+## Reference docs (only when indicated)
+
+| File | Read when |
+|---|---|
+| `docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` | creating a standard CRUD resource (end-to-end recipe: entity → migration → i18n → DTO → mapper → repository → service → controller → tests) |
+| `docs/agent/KNOWN_ISSUES.md` | debugging or touching a listed legacy area — never copy these as patterns |
+| `docs/agent/PROJECT_REFERENCE.md` | you need the repo map, dependency list, or naming evidence |
+| `docs/agent/SPLIT_MAP.md` | tracing where a rule from the original single `SKILLS.md` moved |
+| `docs/agent/ORIGINAL_SKILLS.md` | audit only — do not load by default (outdated) |

@@ -1,31 +1,71 @@
 ---
 name: backend-ai-rag
-description: Optional Spring AI, Ollama, Qdrant, ingestion, SSE chat, tools, memory, and face-recognition integration. Load only when AI or RAG paths change. Never load for ordinary CRUD.
+description: Optional module. Use only when the task changes Spring AI, Ollama, Qdrant vector stores, document ingestion, SSE chat streaming, AI tools, chat memory, prompts, or face recognition in this Spring Boot backend. Never load for ordinary CRUD, auth, file, or messaging work.
 ---
 
-# Backend AI / RAG — Canonical (Optional Module)
+# Backend AI / RAG — Playbook (optional module)
 
-> Canonical AI/RAG skill. Detailed rules: `skills/backend/AI_RAG.md`.
-> Requires: `AGENTS.md`, `.agents/skills/backend-core/SKILL.md`.
+> **Role:** HOW to change the AI path safely. Binding facts + evidence: `skills/backend/AI_RAG.md` (read it too).
+> **Requires:** `backend-core`. Add `backend-api` / `backend-data` / `backend-files` / `backend-security` only for the boundaries the change crosses. Finish with `backend-testing`.
 > **Do not load for ordinary CRUD/auth/file/messaging work.**
 
-## When to load
+## Know this first
 
-Only when the task touches Spring AI, Ollama, Qdrant, ingestion, SSE chat, AI tools, chat memory, or face-recognition integration.
+- SSE runs on Spring MVC with Reactor `Flux` — not WebFlux. Reactor threads have no logged-in user: pass `userId`.
+- Qdrant beans exist only when `spring.ai.vectorstore.qdrant.enabled=true`. `app.rag.qdrant-enabled` does nothing.
+- Collection names (`rag_documents`, `table_schemas`) are hard-coded in `QdrantVectorStoreConfig`.
+- `chunk-overlap` / `max-num-chunks` are not used by the splitter.
 
-## Implementation path
+## Pick your path
 
-1. Trace only the affected path: `AiChatController` → `AiRagChatServiceImpl` for SSE/chat; `AiDocumentMetaController` → `AiDocumentIngestionServiceImpl` for ingestion; `ai/*Tool.java` for tools; `FaceRegconitionController` for the face service.
-2. Add API, data, files, and security guides only when that path touches their boundaries. Preserve authenticated actor and owner scoping across Reactor/worker threads.
-3. For Qdrant consumers, test both enabled and disabled store behavior. The active bean gate is `spring.ai.vectorstore.qdrant.enabled`, and two collection names are set in Java.
-4. For ingestion, identify the PostgreSQL/Qdrant/source-file success point and compensation. For SSE, preserve event ordering and payload types. Use `backend-testing` for the relevant evidence.
+| Change | Start at |
+|---|---|
+| Chat/SSE behavior, events | `AiChatController#streamChat` → `AiRagChatServiceImpl#streamAnswer` |
+| Ingestion / deletion | `AiDocumentMetaController` → `AiDocumentIngestionServiceImpl` |
+| Extraction by file type | `extraction/DocumentExtractorFactory` + extractors |
+| Tools | `ai/*Tool.java`, `DatabaseQueryValidator`, tool registration in `streamAnswer` |
+| Memory | `ai/DatabaseChatMemory` + persistence in `streamAnswer` |
+| Prompts | `src/main/resources/prompts/system-rag*.txt` |
+| Face recognition | `FaceRegconitionController` → `FaceRecognitionServiceImpl` → `AiFaceRegconitionServiceClient` |
 
-## Rules (summary — binding details in `skills/backend/AI_RAG.md`)
+## Recipe A — change the SSE chat stream
 
-- MVC SSE with Reactor publishers, not a WebFlux server; offload blocking work and pass user identity explicitly across threads.
-- Qdrant stores are gated by `spring.ai.vectorstore.qdrant.enabled`; hardcoded collections `rag_documents` / `table_schemas`; null/disabled stores fail at runtime unless gated.
-- Ingestion: resolve type → extractor (image/video is placeholder, no OCR) → splitter (`chunk-size` only) → Qdrant → `AiDocumentMeta`; compensation is limited.
-- Streaming events `token|sources|done|error` (+ `chat_id|title|thinking`); `sources.content` is JSON-encoded inside a string.
-- `DatabaseChatMemory` is read-only (`add`/`clear` no-ops); persistence lives in `streamAnswer`.
-- Tools share app `JdbcTemplate`; MCP read-only credentials do not constrain them. Treat prompts/retrieved text/model SQL as untrusted.
-- Preserve `findByIdAndCreator` ownership and `/api/faceRegconition` spelling.
+1. List the current event sequence (`chat_id` → `title`? → `thinking`/`token`… → `sources` → `done`, or `error`).
+2. Keep existing event names and payload types; add new types instead of changing old ones. Record any change under `External Consumer Impact`.
+3. Blocking work goes in `Mono.fromCallable(...).subscribeOn(Schedulers.boundedElastic())`.
+4. Check chat ownership with `findByIdAndCreator(chatId, userId)` before touching history.
+5. Test with mocked `ChatClient`/vector store: event order, error event, disabled Qdrant, not-owned chat.
+
+## Recipe B — change ingestion or deletion
+
+1. Write down the success point across three systems: source file, Qdrant vectors, `AiDocumentMeta` row.
+2. Order: extract → split → add vectors → save meta (rollback vectors on failure) → delete source only after the meta is durable.
+3. Keep re-ingest replacement (`findByFileName` → `deleteDocument`).
+4. Gate every `VectorStore` use for the disabled mode.
+5. Test: meta save failure removes vectors; disabled Qdrant returns a clear error, not an NPE.
+
+## Recipe C — add or change an AI tool
+
+1. Treat model arguments as untrusted input; validate like a public API.
+2. Scope data access (tables, columns, rows, owner) and add timeouts + result limits. The app `JdbcTemplate` has full app privileges.
+3. Register the tool conditionally (config flag) like the DB tools.
+4. Test validator rejections (DDL/DML, multiple statements, comments) and scoping.
+
+## Done checklist
+
+- [ ] `userId` passed explicitly across Reactor/worker threads; ownership checked.
+- [ ] Event names/payload types unchanged (or change recorded for the frontend).
+- [ ] Disabled-Qdrant mode handled wherever a vector store is used.
+- [ ] Multi-system writes have a defined success point and compensation.
+- [ ] No prompt, retrieved text, or model SQL trusted as authorization.
+- [ ] No credentials or raw prompts containing secrets logged.
+
+## Common mistakes
+
+| Mistake | Fix |
+|---|---|
+| Using `app.rag.qdrant-enabled` as a gate | Gate on `spring.ai.vectorstore.qdrant.enabled` / bean presence |
+| `SecurityContextHolder` inside a `Flux` operator | Pass `userId` in |
+| Saving messages in a new advisor too | Persistence already happens in `streamAnswer` |
+| Promising overlap/max-chunks tuning | Only `chunk-size` affects the splitter |
+| Renaming `/api/faceRegconition` | Keep the legacy spelling |

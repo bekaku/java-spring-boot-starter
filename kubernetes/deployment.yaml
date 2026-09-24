@@ -24,7 +24,10 @@ spec:
             - name: data
               mountPath: /usr/spring-data
             - name: logs
-              mountPath: /usr/spring-data/logs
+              mountPath: /usr/spring-logs
+            - name: config
+              mountPath: /usr/spring-config
+              readOnly: true
           resources:
             requests:
               memory: "128Mi"
@@ -39,5 +42,11 @@ spec:
             type: DirectoryOrCreate
         - name: logs
           hostPath:
-            path: "/d/code/spring-data/logs"
+            # keep outside the "data" hostPath: /usr/spring-data is served publicly at /cdn/**
+            path: "/d/code/spring-logs"
             type: DirectoryOrCreate
+        - name: config
+          hostPath:
+            # external config (secrets), also outside "data"; Directory = must already exist (no empty auto-create)
+            path: "/d/code/spring-config"
+            type: Directory

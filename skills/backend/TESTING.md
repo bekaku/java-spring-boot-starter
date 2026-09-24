@@ -1,31 +1,59 @@
-# Testing / Verification
+# Testing / Verification — Reference
 
-Read this before final validation of implementation work.
+> **Role:** evidence rules + verified facts about the test setup (WHAT / WHY).
+> **Procedure (HOW):** `.agents/skills/backend-testing/SKILL.md`.
+> **Evidence style:** `path` + `Class#member` (no line numbers; search the symbol).
 
-## 10. Testing Requirements
+## Current test setup (verified)
 
-- Location: `src/test/java/com/bekaku/api/spring/` (`controller/api/`, `serviceImpl/`). Framework: JUnit Jupiter + Mockito (`@Mock/@InjectMocks`, `MockitoSettings(LENIENT)`) + AssertJ; no `@SpringBootTest/@WebMvcTest/@WithMockUser` in current suite despite `spring-security-test` + `spring-restdocs-mockmvc` deps.
+- Location: `src/test/java/com/bekaku/api/spring/` — `controller/api/`, `serviceImpl/` and `validator/` (mirroring the main packages).
+- Existing tests: `AuthControllerTest`, `FileManagerControllerTest`, `AiChatControllerOwnershipTest`, `AppRoleControllerTest`, `AppUserControllerTest` (controller); `AiRagChatServiceOwnershipTest`, `FaceRecognitionServiceOwnershipTest` (service); `RoleValidatorTest`, `UserValidatorTest` (validator).
+- Frameworks: JUnit Jupiter (`useJUnitPlatform()`), Mockito (`@ExtendWith(MockitoExtension.class)`, `@Mock`, `@InjectMocks`; `AuthControllerTest` adds `@MockitoSettings(strictness = LENIENT)`), AssertJ, Spring `MockMvc` standalone setup.
+- Not used anywhere yet: `@SpringBootTest`, `@WebMvcTest`, `@WithMockUser`, Testcontainers, H2. Test deps in `build.gradle`: `spring-boot-starter-test`, `spring-security-test`, `spring-restdocs-mockmvc`. Spring Boot 4 splits test slices into separate modules, so `@WebMvcTest` / slice tests may need a new test dependency — that is a dependency change; confirm with the user first.
+- Every existing test is an isolated unit test. None proves the real filter chain, database, or external services.
 
-- What/how/where:
+## Known setup gotcha
 
-  | Change | Required evidence |
+`BaseResponseException` (parent of `BaseApiController` and some services) field-injects `I18n`. When you construct a controller/service with `new`, the error helpers throw `NullPointerException` unless you inject it:
 
-  |---|---|
+```java
+private static void injectExceptionI18n(BaseResponseException target, I18n i18n) throws Exception {
+    Field field = BaseResponseException.class.getDeclaredField("i18n");
+    field.setAccessible(true);
+    field.set(target, i18n);
+}
+```
 
-  | Controller/service logic | Focused unit test incl. failure path + ownership (`AiChatControllerOwnershipTest`, `AiRagChatServiceOwnershipTest`, `FaceRecognitionServiceOwnershipTest` pattern: assert `findByIdAndCreator` scoping, `verifyNoInteractions` on bypass) |
+Pattern source: `AiChatControllerOwnershipTest#injectExceptionI18n`. `BaseApiController` has its own private `@Autowired` fields (`request`, `i18n`) — inject those the same way if the code under test uses them. Validators need no reflection: they take `I18n` through the constructor (`new RoleValidator(appRoleService, i18n)` in `RoleValidatorTest`).
 
-  | Auth/routes | HTTP test through real filter chain + cookie AND Bearer flows (current `AuthControllerTest` constructs controller directly — insufficient for chain enforcement) |
+HTTP-level tests and curl examples: a JWT request (cookie or Bearer) also needs a non-empty `Accept-Apiclient` header, otherwise `JwtTokenFilter` returns `401 {"error": "Invalid or missing token"}` even for a valid token (`JwtServiceImpl#jwtVerify`).
 
-  | SQL/schema/vector columns | Disposable PostgreSQL + pgvector integration test (H2 invalid for casts/vector ops/dump migrations) |
+## Evidence matrix (binding)
 
-  | File ops | `@TempDir` containment/ownership/partial-failure tests (`FileManagerControllerTest` standalone MockMvc pattern) |
+| Change | Required evidence | Pattern to copy |
+|---|---|---|
+| Service / controller logic | Focused unit test incl. failure path | `AiChatControllerOwnershipTest` |
+| Owner-scoped data | Not-owned id → `404`; `verifyNoInteractions(...)` on the downstream dependency | `AiChatControllerOwnershipTest`, `AiRagChatServiceOwnershipTest`, `FaceRecognitionServiceOwnershipTest` |
+| Auth / routes / filter | HTTP test through the real filter chain for cookie **and** Bearer (and `X-API-KEY` when the filter changes). Direct controller construction is insufficient (`AuthControllerTest` does this) | none yet — see gotcha above about dependencies |
+| SQL / schema / pgvector / migration | Run against disposable PostgreSQL + pgvector (H2 cannot run casts, vector ops, or the `COPY`-based `V1` dump) | none yet |
+| File operations | `@TempDir` tests for containment, ownership, partial failure | `FileManagerControllerTest` (standalone MockMvc — not chain proof) |
+| RAG / SSE | Mock model + vector store; verify event order, disabled Qdrant, error event, persistence | `AiRagChatServiceOwnershipTest` |
+| Config / wiring | `./gradlew compileJava`; context-startup check when feasible | — |
+| Docs only | Verify paths, links, commands, claims against code; no runtime claim | — |
 
-  | RAG/SSE | Mock model/vector deps; verify event order, disabled mode, cancellation/error, persistence |
+## Commands
 
-  | Config/wiring | `compileJava`/context-startup test |
+```bash
+./gradlew test --tests '*AiChatControllerOwnershipTest'   # focused
+./gradlew compileJava                                      # main sources compile
+./gradlew test                                             # full suite, only when justified
+./gradlew bootJar                                          # packaging, only when affected
+./gradlew bootRun --args='--spring.profiles.active=dev'    # needs local PostgreSQL (+ Qdrant/Ollama for AI)
+```
 
-  | Docs only | Verify statements/commands/links/whitespace; claim no runtime validation |
+- `--tests` filters which tests run; all test sources still compile, so an unrelated broken test file fails the command.
+- `bootRun` in dev uses `ddl-auto: update` and Flyway disabled — it is not migration evidence.
 
-- Commands: `./gradlew test --tests '*AuthControllerTest*'`, `./gradlew test`, `./gradlew compileJava`, `./gradlew bootJar`, `./gradlew bootRun --args='--spring.profiles.active=dev'` (needs PG/Qdrant/Ollama infra). Note: `--tests` filters execution, not test-source compilation.
+## Reporting (binding)
 
-- Report changed files, behavior deltas, exact commands + results, remaining integration limits. Never claim deployment/security/success without verification.
+Report: changed files, behavior change, each command run with its actual result, and what was not verified (filter chain, DB, external services, deployment). Never report an unexecuted command as passing.

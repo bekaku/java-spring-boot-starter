@@ -28,11 +28,21 @@ services:
           cpus: "1.0"  # Reserve at least 1 CPU
           memory: "1G"  # Reserve at least 1GB RAM
     volumes:
+      # /usr/spring-data is served publicly at /cdn/**: keep the host log and config dirs outside the host data dir too
       - d:\code\spring-data:/usr/spring-data
-      - d:\code\spring-data\logs:/usr/spring-data/logs
+      - d:\code\spring-logs:/usr/spring-logs
+      # external config (secrets), read-only; create_host_path: false so a missing host dir fails instead of
+      # mounting an empty one (the app would then start without its external config)
+      - type: bind
+        source: d:\code\spring-config
+        target: /usr/spring-config
+        read_only: true
+        bind:
+          create_host_path: false
       #linux
   #      - /mnt/cdn/spring-data:/usr/spring-data
-  #      - /mnt/cdn/spring-data/logs:/usr/spring-data/logs
+  #      - /mnt/cdn/spring-logs:/usr/spring-logs
+  #      - {type: bind, source: /mnt/cdn/spring-config, target: /usr/spring-config, read_only: true, bind: {create_host_path: false}}
 networks:
   docker-network:
     driver: bridge

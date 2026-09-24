@@ -1,168 +1,97 @@
 # Project Reference
 
-Use only when repository structure, dependencies, naming evidence, or architecture context is required.
+Use only when repository structure, dependencies, naming evidence, or architecture context is required. Rules live in `skills/backend/*.md`; this file is a map.
 
 ## Repository map and scope
 
 - `build.gradle`, `settings.gradle`, `gradlew`, `gradle/wrapper/` — one Gradle application (`api-service`), not a multi-module build.
-- `src/main/java/com/bekaku/api/spring/` — backend implementation; `src/main/resources/` — configuration, migrations, MyBatis XML, templates, prompts; `src/test/java/com/bekaku/api/spring/` — backend tests.
-- `docker-compose/`, root `docker-compose.yml`, `kubernetes/`, Dockerfiles and build scripts — development/deployment infrastructure. Change these only when the task covers that infrastructure.
-- `spring-data/` — seed SQL, environment/example data and local storage; it is not a Java source module. Inspect storage and public mapping rules before writing files there.
-- `.agents/skills/` — canonical skill entrypoints; `skills/backend/` — detailed rules; `docs/agent/` — references; `tasks/` — task template/workflow; `docs/tasks/` — task instances.
-- There is no `backend/` or `frontend/` application directory in this repository; the frontend is external (`AGENTS.md §1`).
+- `src/main/java/com/bekaku/api/spring/` — backend code; `src/main/resources/` — config, migrations, MyBatis XML, i18n, templates, prompts; `src/test/java/com/bekaku/api/spring/` — tests.
+- `docker-compose/`, `docker-compose.yml`, `kubernetes/`, Dockerfiles, `build-*.sh|ps1` — dev/deploy infrastructure. Change only when the task covers it.
+- `spring-data/` — seed SQL, example data, local storage. Not a Java module. Check the public storage mapping before writing files there.
+- Agent docs: `AGENTS.md`, `SKILLS.md`, `.agents/skills/` (playbooks), `skills/backend/` (references), `docs/agent/` (this folder), `tasks/` (template), `docs/tasks/` (task instances).
+- No `backend/` or `frontend/` directory; the frontend is an external repository (`AGENTS.md §1`).
 
-## Backend overview
+## Stack (from `build.gradle`)
 
-- Single Gradle project `api-service`, base package `com.bekaku.api.spring` (`build.gradle:8`, `src/main/java/com/bekaku/api/spring/SpringApiApplication.java`).
+Java 25 toolchain · Spring Boot 4.1.0 · Spring Web MVC (Tomcat) · Spring Security + JJWT 0.13.0 · Validation + commons-validator · Spring Data JPA + PostgreSQL + Flyway + HikariCP · MyBatis Spring Boot Starter 4.0.1 · MapStruct 1.6.3 + Lombok (+ `lombok-mapstruct-binding`) · Spring AI 2.0.0 BOM (Ollama chat + embeddings, Qdrant, PDF/Tika readers, MCP client, `spring-ai-advisors-vector-store`) · AMQP · Mail · Cache + Ehcache 3.12.0 · POI · Thumbnailator · metadata-extractor · Tika 3.3.1 · TwelveMonkeys WebP · Guava · Firebase Admin · Jsoup · uuid-creator · Gson · Actuator + Micrometer Prometheus · Log4j2 (Logback excluded) · springdoc-openapi webmvc-ui · Test: `spring-boot-starter-test`, `spring-security-test`, REST Docs MockMvc.
 
-- Stack (verified in `build.gradle:47-149`): Java 25 toolchain, Spring Boot 4.1.0, Servlet Spring Web MVC (Tomcat), Spring Security + JJWT 0.13.0, Validation + commons-validator, Spring Data JPA + PostgreSQL + Flyway + HikariCP, MyBatis Spring Boot Starter 4.0.1, MapStruct 1.6.3 + Lombok (+ `lombok-mapstruct-binding`), Spring AI 2.0.0 BOM (Ollama chat+embeddings, Qdrant vector store, PDF reader, Tika reader, MCP client, `spring-ai-advisors-vector-store:2.0.0-M8`), AMQP + Mail, Cache + Ehcache 3.12.0, POI, Thumbnailator, metadata-extractor, Tika core/parsers-standard 3.3.1, TwelveMonkeys WebP, Guava, Firebase Admin, Jsoup, uuid-creator, Gson, Actuator + Micrometer Prometheus, Log4j2, springdoc-openapi webmvc-ui, JUnit Jupiter + REST Docs MockMvc + spring-security-test.
-
-- Architecture style: layered servlet MVC — `controller/api/*` → `service/*` interface → `serviceImpl/*` → `repository/*` (JPA) and/or `mybatis/*` + `src/main/resources/mybatis/*.xml`. DTO mapping at transport boundary via `mapper/*` (MapStruct). No WebFlux server; streaming chat is MVC SSE returning Reactor `Flux` (`src/main/java/com/bekaku/api/spring/controller/api/AiChatController.java:53-56`).
-
-- App entry: `src/main/java/com/bekaku/api/spring/SpringApiApplication.java` carries `@EnableCaching @EnableAsync @EnableScheduling` (Rabbit `@EnableRabbit` commented out).
+App entry: `SpringApiApplication` — `@EnableCaching @EnableAsync @EnableScheduling @EnableJpaAuditing` (`@EnableRabbit` commented out).
 
 ## Backend directory structure
 
-Annotated tree (relative to `./`):
-
-```
-
-build.gradle — all backend deps; Java 25, Boot 4.1.0, AI BOM 2.0.0 (§1)
-
+```text
 src/main/java/com/bekaku/api/spring/
-
-  SpringApiApplication.java — @EnableCaching/@EnableAsync/@EnableScheduling entry point
-
-  controller/api/ — REST resources and BaseApiController.java response/paging helpers; inspect each controller's route
-
-  controller/dev/DevelopmentContoller.java — code-generator HTTP endpoint (spelling is intentional, do not rename)
-
-  controller/socket|test|web/ — websocket, test-only, thymeleaf/web endpoints
-
-  service/ + serviceImpl/ — contracts + transactional impls (AuthServiceImpl, JwtServiceImpl, AccessTokenServiceImpl,
-
-    AiRagChatServiceImpl, AiDocumentIngestionServiceImpl, FileManagerServiceImpl, EmailServiceImpl, ...)
-
-  repository/ + repositoryImpl/ — Spring Data repos (all extend BaseRepository); PermissionRepositoryCustom(+Impl) is the only custom impl
-
-  mybatis/ — read-model mappers: AppUserMybatis, AppRoleMybatis, PermissionMybatis, AccessTokenMybatis,
-
-    FileManagerMybatis, FilesDirectoryMybatis
-
-  model/ — JPA entities; model/superclass/ — shared ID/audit/soft-delete base classes (Id, SoftDeletedId, Auditable*, SoftDeletedAuditable*,
-
-    Created*, CodeNameSoftDeletedAuditable)
-
-  dto/ — request/response DTOs (LoginRequest, AppRoleDto, ChatRequest, ChatStreamEvent, ResponseListDto, AppUserDto, ...)
-
-  mapper/ — 15 MapStruct interfaces (*Mapper.java)
-
-  ai/ — QdrantVectorStoreConfig, DatabaseChatMemory, AiChatToolContext, DatabaseSchemaTool, PostgreSQLQueryTool,
-
-    DatabaseQueryValidator, UserActivityTool, AiFaceRegconitionServiceClient (spelling intentional)
-
-  extraction/ — DocumentExtractor, DocumentExtractorFactory, TikaDocumentExtractor, MediaPlaceholderDocumentExtractor
-
-  configuration/ — WebSecurityConfig, SecurityEnablerConfig, JwtTokenFilter, CustomPermissionEvaluator (stub),
-
-    AsyncConfig, CacheConfig, AuditAwareImpl, AuditListener, WebConfigurerAdapter, I18n
-
-  exception/ — GlobalExceptionHandler (active), CustomRestExceptionHandler (inactive), ApiException, ApiError,
-
-    BaseResponseException, ChatStreamException
-
-  specification/ — BaseSpecification, SearchSpecification, DynamicFilterSpec, Filter, SearchCriteria, SearchOperation
-
-  properties/ — typed @ConfigurationProperties records (AppProperties prefix `app`, RagProperties prefix `app.rag`, JwtProperties,
-
-    CookieProperties, MailProperties, QueueConfig, UploadImageConfig, AppCorsProperties, AppCronProperties, ...)
-
-  util/ — ControllerUtil, CookieUtil, FileUtil, AuthUtil, PermissionChecker (via util/), ConstantData, UrlUtil, HashUtil, DateUtil
-
-  validator/ — BaseValidator, RoleValidator, UserValidator, PermissionRequireValidator
-
-  middleware/AuthorizationInterceptor.java — returns true; NOT an authorization boundary (see §9)
-
-  queue/ — QueueConfig (TopicExchange + 6 non-durable queues + RabbitTemplate), QueueSender (no active @RabbitListener)
-
-  scheduler/, vo/Paging.java, enumtype/, annotation/GenSourceableTable.java, logger/
+├── SpringApiApplication.java
+├── controller/
+│   ├── api/            REST controllers + BaseApiController (response/paging helpers)
+│   ├── dev/            DevelopmentContoller — code generator (spelling intentional)
+│   ├── socket/         websocket controllers (broker disabled)
+│   ├── test/           test-only endpoints (non-prod)
+│   └── web/            thymeleaf/web endpoints
+├── service/            service interfaces (BaseService<T, DTO>)
+├── serviceImpl/        transactional implementations (spelling intentional)
+├── repository/         Spring Data repos (BaseRepository), PermissionRepositoryCustom
+├── repositoryImpl/     BaseRepositoryImpl, PermissionRepositoryCustomImpl
+├── mybatis/            read-model mappers: AppUser, AppRole, Permission, AccessToken, FileManager, FilesDirectory
+├── model/              JPA entities
+│   └── superclass/     Id, SoftDeletedId, Auditable*, SoftDeletedAuditable*, Created*, CodeNameSoftDeletedAuditable
+├── dto/                request/response DTOs (DtoId, ResponseListDto, AppUserDto, ChatStreamEvent, ...)
+├── mapper/             MapStruct *Mapper interfaces
+├── validator/          BaseValidator, RoleValidator, UserValidator, PermissionRequireValidator
+├── configuration/      WebSecurityConfig, SecurityEnablerConfig, JwtTokenFilter, AsyncConfig, CacheConfig,
+│                       AuditAwareImpl, AuditListener, WebConfigurerAdapter, LocaleResolverHeader, I18n,
+│                       Snowflake*, CustomPermissionEvaluator (stub), Kafka*/Undertow/WebSocket (disabled)
+├── exception/          GlobalExceptionHandler (active), CustomRestExceptionHandler (inactive),
+│                       ApiException, ApiError, BaseResponseException, ChatStreamException
+├── specification/      SearchSpecification, SearchCriteria, SearchOperation, DynamicFilterSpec, ...
+├── properties/         typed @ConfigurationProperties (AppProperties `app`, RagProperties `app.rag`,
+│                       JwtProperties, CookieProperties, AppCronProperties, PasswordResetProperties, ...)
+├── util/               ControllerUtil, CookieUtil, FileUtil, AuthUtil, PermissionChecker, ConstantData,
+│                       UrlUtil, HashUtil, DateUtil, SnowflakeIdHolder
+├── ai/                 QdrantVectorStoreConfig, DatabaseChatMemory, AiChatToolContext, *Tool,
+│                       DatabaseQueryValidator, AiFaceRegconitionServiceClient (spelling intentional)
+├── extraction/         DocumentExtractor(+Factory), TikaDocumentExtractor, MediaPlaceholderDocumentExtractor
+├── queue/              QueueConfig (exchange + 6 non-durable queues), QueueSender, dto/
+├── scheduler/          CronScheduler (jobs commented out)
+├── middleware/         AuthorizationInterceptor (returns true — not a boundary)
+├── annotation/         GenSourceableTable, PermissionRequire, GeneratedUuidV7
+├── enumtype/           enums
+├── vo/                 Paging (MyBatis), other value objects
+└── logger/
 
 src/main/resources/
-
-  application.yml — tracked base config (includes profile selection and app settings)
-
-  application-dev.yml — local ignored profile; inspect when debugging local behavior, do not use as a shared template
-
-  application-localdocker.yml — host.docker.internal PG override only
-
-  application-dev-example.yml — tracked example profile; encrypted.yml — local ignored file
-
-  db/migration/V1__init_current_schema.sql … V6__forgot_password_reset_hardening.sql (list directory before adding a version)
-
-  mybatis/*.xml — AppUserMybatis.xml, PermissionMybatis.xml, AccessTokenMybatis.xml, FileManagerMybatis.xml,
-
-    FilesDirectoryMybatis.xml (no AppRoleMybatis.xml)
-
-  log4j2-prod.xml, log4j2-dev-example.xml (tracked); log4j2-dev.xml (local ignored file)
-
-  prompts/system-rag.txt, system-rag-db-tools.txt, system-rag-generate-title.txt
-
-  templates/spring-{controller,service,service-impl,repository,mapper,dto}.ftl + mail templates + error.html
+├── application.yml                 tracked base config (environments.production: true, Flyway disabled)
+├── application-dev-example.yml     tracked dev template (production: false, ddl-auto: update)
+├── application-dev.yml             local, git-ignored
+├── application-localdocker.yml     host.docker.internal PostgreSQL override
+├── db/migration/                   V1__init_current_schema.sql … V6__forgot_password_reset_hardening.sql
+├── mybatis/                        AppUser, Permission, AccessToken, FileManager, FilesDirectory *.xml (no AppRole XML)
+├── i18n/                           messages, error/, model/, permission/ — each EN + _th
+├── prompts/                        system-rag.txt, system-rag-db-tools.txt, system-rag-generate-title.txt
+├── templates/                      spring-{controller,service,service-impl,repository,mapper,dto}.ftl, mail templates
+├── log4j2-prod.xml, log4j2-dev-example.xml (tracked); log4j2-dev.xml (local)
+└── acl.json                        frontend menu → permission map
 
 src/test/java/com/bekaku/api/spring/
-
-  controller/api/AuthControllerTest.java, FileManagerControllerTest.java, AiChatControllerOwnershipTest.java
-
-  serviceImpl/AiRagChatServiceOwnershipTest.java, FaceRecognitionServiceOwnershipTest.java
-
+├── controller/api/   AuthControllerTest, FileManagerControllerTest, AiChatControllerOwnershipTest
+└── serviceImpl/      AiRagChatServiceOwnershipTest, FaceRecognitionServiceOwnershipTest
 ```
 
-## Coding conventions
+## Naming evidence
 
-- **Packages/naming:** `serviceImpl` (capital I), `DevelopmentContoller` (one `r`), route `/api/faceRegconition` (missing `o`), `AiFaceRegconitionServiceClient` — all intentional legacy spellings. Do not rename in unrelated work (evidence: `src/main/java/com/bekaku/api/spring/serviceImpl/`, `src/main/java/com/bekaku/api/spring/controller/dev/DevelopmentContoller.java`, `src/main/java/com/bekaku/api/spring/ai/AiFaceRegconitionServiceClient.java`).
+- Intentional legacy spellings: `serviceImpl`, `DevelopmentContoller`, `/api/faceRegconition`, `AiFaceRegconitionServiceClient`.
+- DI: constructor injection via `@RequiredArgsConstructor` on controllers/services. Field `@Autowired` remains in `JwtTokenFilter`, `BaseApiController`, `BaseResponseException`, `QueueSender`.
+- Logging: `@Slf4j` (Log4j2). Some legacy classes use `LoggerFactory.getLogger(...)` (`PermissionRequireValidator`, `AuthorizationInterceptor`, `EmailServiceImpl`).
+- Entities: `@Table(comment = ..., indexes = @Index)`, `@Column(comment = ...)`, `@JoinColumn(comment = "FK -> Ref table: x (id)...")`, `public static Sort getSort()` (`model/AppUser.java`, `model/AppRole.java`).
+- DTOs: Lombok `@Getter @Setter` (some `@Data`) + Jakarta constraints with i18n keys (`dto/AppRoleDto.java`, `dto/LoginRequest.java`).
+- Mappers: `mapper/*Mapper.java`, `@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)`; ignores via `@Mapping(target = ..., ignore = true)` (`FileManagerMapper`).
+- MyBatis: `mybatis/AppUserMybatis.java` ↔ `resources/mybatis/AppUserMybatis.xml` (`namespace = com.bekaku.api.spring.mybatis.AppUserMybatis`).
+- Config: typed records under `properties/` with `@ConfigurationPropertiesScan`; legacy `@Value` remains (e.g. `EncryptServiceImpl` `app.encrypt-key`, `AppRoleController`).
 
-- **DI:** constructor injection with Lombok `@RequiredArgsConstructor` on controllers/services; `JwtTokenFilter` uses field `@Autowired` (`src/main/java/com/bekaku/api/spring/configuration/JwtTokenFilter.java:36-40`). `BaseApiController` uses field `@Autowired HttpServletRequest + I18n` (`src/main/java/com/bekaku/api/spring/controller/api/BaseApiController.java:28-32`).
+## Architecture notes
 
-- **Logging:** Log4j2 only. `@Slf4j` is common; some classes use `LoggerFactory.getLogger(...)` (`src/main/java/com/bekaku/api/spring/validator/*`, `src/main/java/com/bekaku/api/spring/middleware/AuthorizationInterceptor.java`, `src/main/java/com/bekaku/api/spring/serviceImpl/EmailServiceImpl.java`). Base config selects `log4j2-prod.xml`; the tracked development example selects `log4j2-dev.xml`, which is local and ignored. Logback is excluded in `build.gradle`; do not add Logback imports.
-
-- **Entities:** `@Table(comment=..., indexes=@Index)`, lazy relations, `@JoinColumn(name=..., comment="FK -> Ref table: X (id)...")`, `public static Sort getSort()` default-sort helper. Example `src/main/java/com/bekaku/api/spring/model/AppUser.java`:
-
-  ```java
-
-  @SQLDelete(sql="UPDATE app_user SET deleted=true WHERE id=?")
-
-  @SQLRestriction("deleted=false")
-
-  public class AppUser extends *SoftDeletedAuditable*<Long> {
-
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name="avatar_file_id") private FileManager avatarFile;
-
-    @ManyToMany(fetch = FetchType.LAZY) @JoinTable(name="app_user_role", ...) private Set<AppRole> appRoles;
-
-  }
-
-  ```
-
-- **DTOs:** Lombok `@Data/@Getter/@Setter` + Jakarta constraints with i18n keys. Example `src/main/java/com/bekaku/api/spring/dto/AppRoleDto.java:20`: `@Size(min=3,max=100,message="{error.Size3Limit100}")`; `src/main/java/com/bekaku/api/spring/dto/LoginRequest.java:23`: `@NotBlank(message="{error.validateRequire}")`.
-
-- **Mappers:** `src/main/java/com/bekaku/api/spring/mapper/*Mapper.java`, always `@Mapper(componentModel="spring", unmappedTargetPolicy=ReportingPolicy.IGNORE)`. Simple (`src/main/java/com/bekaku/api/spring/mapper/AppUserMapper.java`): `AppUserDto toDto(AppUser e); AppUser toEntity(AppUserDto d);`. With ignores (`src/main/java/com/bekaku/api/spring/mapper/FileManagerMapper.java`): `@Mapping(target="fileMime", ignore=true)`.
-
-- **MyBatis:** interface method ↔ XML `namespace + statement id` must match; `@Param` names must match `#{...}` bindings. Example `src/main/java/com/bekaku/api/spring/mybatis/AppUserMybatis.java`: `List<AppUserDto> findAll(@Param("page") Paging page);` ↔ `src/main/resources/mybatis/AppUserMybatis.xml: namespace=com.bekaku.api.spring.mybatis.AppUserMybatis`.
-
-- **Config:** new settings go in typed records under `src/main/java/com/bekaku/api/spring/properties/` (e.g. `AppProperties.java`, `RagProperties.java`) with `@ConfigurationPropertiesScan`, never `@Value` sprawl for new groups (legacy `EncryptServiceImpl.java:33 @Value(${app.encrypt-key})` is exception).
-
-## Architecture rules
-
-1. Layering is `Controller → Service interface → ServiceImpl → Repository/MyBatis`; MapStruct at transport boundary. Controllers call services, never `EntityManager`/`JdbcTemplate`/`VectorStore` directly. AI tools (`src/main/java/com/bekaku/api/spring/ai/*Tool.java`) are the only non-service DB/vector callers and share app `JdbcTemplate`.
-
-2. Transaction boundaries: services own transactions. Many service classes default `@Transactional(readOnly=true)`; write entry points must declare `@Transactional`. Private methods and same-bean self-calls do not create a new proxy transaction.
-
-3. DB transactions do not roll back filesystem, Qdrant, email, or remote-service effects. Multi-step writes (ingestion, file merge, signup) must define compensation order (see §8 RAG lifecycle).
-
-4. Dependency direction: `controller → service → repository/mapper`; `specification/*`, `util/ControllerUtil`, `vo/Paging` are shared helpers. Do not call controllers from services; do not put business writes in controllers.
-
-5. **JPA-vs-MyBatis decision rule (binding):** JPA for CRUD + `JpaSpecificationExecutor` filtering + simple `@Query`/derived lookups (`src/main/java/com/bekaku/api/spring/repository/AppUserRepository.java`). MyBatis + `vo/Paging` for join/paging read-model projections returning DTOs (`src/main/java/com/bekaku/api/spring/mybatis/*.java`, `src/main/resources/mybatis/*.xml`). Do not add new MyBatis writes; do not use MyBatis for single-table CRUD that JPA already covers.
-
-6. Search: JPA path uses `ControllerUtil.getSearchCriteriaList` + `SearchSpecification` + `getPageable(pageable, Entity.getSort())` (`src/main/java/com/bekaku/api/spring/util/ControllerUtil.java:23-61`, `src/main/java/com/bekaku/api/spring/controller/api/BaseApiController.java:116-123`). MyBatis path uses `getPaging(pageable, acceptSortField)` allow-list (`BaseApiController.java:140-155`) and `LIMIT/OFFSET` in XML. `_q` syntax uses `;` separators, comma = `IN`, `_keyword` searches controller-specified columns only.
-
-7. Async/messaging: `@Async("asyncTaskExecutor")` pool is defined in `src/main/java/com/bekaku/api/spring/configuration/AsyncConfig.java:13-21` (platform-thread pool despite virtual-thread setting). Only demo usage exists (`AppUserServiceImpl.java:207 processAsyncTask`). RabbitMQ topology is declared (`src/main/java/com/bekaku/api/spring/queue/QueueConfig.java:20-28`, `QueueSender.java:34-66`, `application.yml:153-169`) but there is **no active `@RabbitListener`** — retry/concurrency YAML alone implements nothing. Kafka, WebSocket broker, Undertow configs are disabled/commented. If adding consumers, define idempotency + duplicate-delivery tests.
+1. Layering: `Controller → Service interface → ServiceImpl → Repository/MyBatis`; MapStruct at the transport boundary. The `ai/*Tool.java` classes are the only non-service DB/vector callers.
+2. Transactions: services default to `@Transactional(readOnly = true)`; write methods declare `@Transactional`. Private methods and self-calls do not start proxy transactions.
+3. DB transactions do not roll back filesystem, Qdrant, email, or remote effects (ingestion, chunk merge, signup need compensation order).
+4. Search: JPA path = `ControllerUtil.buildSpecification` + `SearchSpecification` + `getPageable(pageable, Entity.getSort())`; MyBatis path = `getPaging(pageable, allowList)` + `LIMIT/OFFSET` in XML. Syntax in `skills/backend/API.md`.
+5. Async: `@Async(ConstantData.ASYNC_TASK_NAME)` (`"asyncExecutor"`, `AsyncConfig`). RabbitMQ topology declared in `QueueConfig`, sender in `QueueSender`, no active `@RabbitListener`. Details in `skills/backend/ASYNC_MESSAGING.md`.

@@ -72,7 +72,7 @@ public class AppRoleController extends BaseApiController {
     private AppRoleDto createProcess(AppRoleDto dto) {
 
         AppRole appRole = appRoleService.convertDtoToEntity(dto);
-        roleValidator.validate(appRole);
+        roleValidator.validateCreate(appRole);
         setRolePermission(dto, appRole);
         appRoleService.save(appRole);
         return appRoleService.convertEntityToDto(appRole);
@@ -100,7 +100,7 @@ public class AppRoleController extends BaseApiController {
 
     private AppRoleDto updateProcess(AppRole appRole, AppRoleDto dto) {
         appRole.update(dto.getName(), dto.isActive());
-        roleValidator.validate(appRole);
+        roleValidator.validateUpdate(appRole);
         // delete old permissin for this group
         appRole.setPermissions(new HashSet<>());
         appRoleService.update(appRole);

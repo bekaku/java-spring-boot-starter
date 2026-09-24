@@ -112,16 +112,17 @@ spring:
 app:
   cdn-directory: ${LOCAL_STORAGE_DIR}
   cdn-path: file:///${app.cdn-directory}
+  log-directory: ${LOCAL_LOG_DIR}
   jwt:
     secret: ${APP_JWT_SECRET}
   encrypt-key: ${APP_ENCRYPT_KEY}
 ```
 
-Set `LOCAL_STORAGE_DIR` to an absolute directory with a trailing slash. `AppProperties.getUploadPath()` strips `file:///` literally, so preserve the template's URI convention. Keep configuration, logs, backups and private data outside publicly served storage; see finding R1 before exposing the application.
+Set `LOCAL_STORAGE_DIR` to an absolute directory with a trailing slash. `AppProperties.getUploadPath()` strips `file:///` literally, so preserve the template's URI convention. Set `LOCAL_LOG_DIR` to a directory outside it: everything under `cdn-directory` is served publicly at `/cdn/**`. Keep configuration, logs, backups and private data outside publicly served storage; see finding R1 before exposing the application.
 
 The JWT implementation Base64-decodes `APP_JWT_SECRET`; provide at least 32 random decoded bytes. Data encryption currently uses the literal bytes of `APP_ENCRYPT_KEY` as its AES key, requiring 16, 24 or 32 bytes; it does **not** Base64-decode that setting. Use separate values.
 
-Also configure `app.cors.allowed-origins`, application/CDN URL and ports, RabbitMQ credentials, and mail settings when needed. The Log4j2 example contains a Windows path and `${sys:APP_LOG_ROOT}` lookups: configure its file appenders for a valid local path/system property instead of assuming `logging.file.path` controls them.
+Also configure `app.cors.allowed-origins`, application/CDN URL and ports, RabbitMQ credentials, and mail settings when needed. The Log4j2 configs write to `logging.file.path` (derived from `app.log-directory`) through Spring Boot's `LOG_PATH`; the example's fallback is a Windows path, and `-DAPP_LOG_ROOT` still overrides both.
 
 MCP is enabled in the supplied development example and launches `npx`. Leave it disabled for an initial run unless Node.js, the PostgreSQL MCP server, and its connection are intentionally configured. No OpenAI key is needed for the compiled Ollama provider; remove unused OpenAI example configuration if retaining it causes unresolved placeholders.
 
@@ -245,7 +246,7 @@ docker build -t spring-api-service:local .
 
 Use explicit `bootRun --args` for profiles. `runDev`/`runProd` configure the shared `bootRun` task; `runBuild` only depends on `bootJar` and does not bake a production profile into the JAR. `runDebug` is an empty placeholder.
 
-The standard Dockerfile builds with JDK 25 and runs as UID/GID 1001, using `prod` and external configuration at `/usr/spring-data/env/`. There is no checked-in `application-prod.yml`. The shared file still contains a MySQL datasource and defaults to `dev`; supply PostgreSQL settings and `environments.production=true` explicitly for deployment. Address R1 before placing configuration under that storage root.
+The standard Dockerfile builds with JDK 25 and runs as UID/GID 1001, using `prod` and external configuration at `/usr/spring-config/`: mount it read-only from a host directory outside the storage root (sample: `spring-config/application.yml`). The image does not create that directory, so startup fails if the mount is missing. There is no checked-in `application-prod.yml`. The shared file still contains a MySQL datasource and defaults to `dev`; supply PostgreSQL settings and `environments.production=true` explicitly for deployment.
 
 Root Compose contains Windows bind mounts. Adapt mounts and ownership for the target machine. Give each concurrently running instance a unique `WORKER_ID` from 0–1023; Snowflake IDs depend on it. `DockerfileLocal` runs as root. Native-image and Kubernetes artifacts need validation before use. The `build-*.sh` helpers remove images/artifacts and prune build cache, so inspect them before execution.
 
@@ -259,9 +260,9 @@ The earlier failure was `SwitchAccount.fastPathSwitchesOnValidTargetRefreshCooki
 
 ## Review findings
 
-These are source-level findings, not a penetration-test report. R2 and R3 have since been fixed as noted below; the other findings remain open. High priority means an access/data boundary needs attention before exposing the feature; medium priority means a functional or deployment limitation.
+These are source-level findings, not a penetration-test report. R2 and R3 have since been fixed and R1 partly fixed, as noted below; the other findings remain open. High priority means an access/data boundary needs attention before exposing the feature; medium priority means a functional or deployment limitation.
 
-1. **R1 — High: public storage overlaps private data.** [WebConfigurerAdapter](src/main/java/com/bekaku/api/spring/configuration/WebConfigurerAdapter.java) serves the whole `app.cdn-path`, and [WebSecurityConfig](src/main/java/com/bekaku/api/spring/configuration/WebSecurityConfig.java) permits it anonymously. The Docker configuration puts external profiles under the same root; logging defaults also use it. Existing readable files under those directories can be served as CDN resources. Separate public assets from configuration/logs/private uploads and narrow the resource mapping.
+1. **R1 — High, partly fixed: public storage overlaps private data.** [WebConfigurerAdapter](src/main/java/com/bekaku/api/spring/configuration/WebConfigurerAdapter.java) serves the whole `app.cdn-path`, and [WebSecurityConfig](src/main/java/com/bekaku/api/spring/configuration/WebSecurityConfig.java) permits it anonymously, so any readable file under that root is downloadable. Logs and the Docker external configuration used to live there and were downloadable; logs now go to `app.log-directory` and configuration to a separate read-only `/usr/spring-config/` mount. As defense in depth, the CDN handler refuses `logs`, `env` and `temp-chunks` folders ([WebConfigurerAdapterCdnTest](src/test/java/com/bekaku/api/spring/configuration/WebConfigurerAdapterCdnTest.java)). Still open: uploads under the root are public to anyone with the URL (no ownership check), in-progress chunks are still stored there, and hosts that used the old layout must remove `spring-data/logs` and `spring-data/env` and rotate the secrets that were stored there.
 
 2. **R2 — Fixed: image endpoint path containment.** [FileManagerController.getImage](src/main/java/com/bekaku/api/spring/controller/api/FileManagerController.java) now requires a relative path, checks both normalized and real-path containment, and serves only readable regular files using the checked target. Absolute paths, traversal and symlinks escaping the upload root are rejected; malformed inputs return 400 and missing files/directories return 404. [FileManagerControllerTest](src/test/java/com/bekaku/api/spring/controller/api/FileManagerControllerTest.java) covers these cases and valid nested/symlinked images: all 16 tests pass. This fixes filesystem escape; existing access policy for files inside the root is unchanged, and the public-storage issue in R1 remains open. The tests were run with a temporary Gradle init script selecting only this test source because concurrent authentication edits commented out `signup`, leaving `AuthControllerTest` unable to compile. The standard full suite is therefore not green.
 

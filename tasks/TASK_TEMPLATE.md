@@ -9,9 +9,9 @@ implementation blocks to tasks in this repo. When a change affects external cons
 record the contract impact under `External Consumer Impact` instead.
 
 AI/RAG (Spring AI / Qdrant) is an **optional module**, not the focus of this starter.
-Ordinary CRUD/auth/file/messaging work must **not** reference RAG. Read
-`skills/backend/AI_RAG.md` only when the task touches `ai/`, `extraction/`,
-vector-store config, ingestion, or chat/SSE endpoints.
+Ordinary CRUD/auth/file/messaging work must **not** reference RAG. Load the
+`backend-ai-rag` skill (`.agents/skills/backend-ai-rag/SKILL.md` + `skills/backend/AI_RAG.md`)
+only when the task touches `ai/`, `extraction/`, vector-store config, ingestion, or chat/SSE endpoints.
 
 Save task specs in the repository location appropriate to the work, e.g.:
 
@@ -45,26 +45,27 @@ Always read:
 ```text
 AGENTS.md
 SKILLS.md
-.agents/skills/backend-core/SKILL.md (= skills/backend/SKILL.md core)
+.agents/skills/backend-core/SKILL.md + skills/backend/CORE.md
 <this-task>
 ```
 
-Then read only the relevant domain guide(s):
+Then read only the relevant skills — playbook (HOW) + reference (WHAT / WHY).
+Tick the ones this task needs and delete the rest:
 
 ```text
-REST/controller/API contract          -> skills/backend/API.md
-JPA/MyBatis/Flyway/data changes       -> skills/backend/DATA.md
-Auth/authorization/ownership/cookies  -> skills/backend/SECURITY.md
-Files/uploads/downloads/CDN/storage   -> skills/backend/FILES.md
-RabbitMQ/async/scheduling             -> skills/backend/ASYNC_MESSAGING.md
-AI/RAG/Qdrant/SSE/tools               -> skills/backend/AI_RAG.md (AI tasks only)
-Tests/verification                    -> skills/backend/TESTING.md
+[ ] API       .agents/skills/backend-api/SKILL.md             + skills/backend/API.md
+[ ] Data      .agents/skills/backend-data/SKILL.md            + skills/backend/DATA.md
+[ ] Security  .agents/skills/backend-security/SKILL.md        + skills/backend/SECURITY.md
+[ ] Files     .agents/skills/backend-files/SKILL.md           + skills/backend/FILES.md
+[ ] Async     .agents/skills/backend-async-messaging/SKILL.md + skills/backend/ASYNC_MESSAGING.md
+[ ] AI/RAG    .agents/skills/backend-ai-rag/SKILL.md          + skills/backend/AI_RAG.md (AI tasks only)
+[x] Testing   .agents/skills/backend-testing/SKILL.md         + skills/backend/TESTING.md
 ```
 
 Read `docs/agent/KNOWN_ISSUES.md` only when debugging or touching a listed legacy area.
 Read `docs/agent/PROJECT_REFERENCE.md` only when repository layout or dependency context is needed.
-When creating a standard CRUD service/repository, read
-`docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` for the canonical templates first.
+When creating a standard CRUD resource, follow the end-to-end recipe in
+`docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` first.
 
 Do not load unrelated skill/reference files by default.
 
@@ -405,7 +406,7 @@ When resuming:
 
 1. read `AGENTS.md`;
 2. read `SKILLS.md`;
-3. read `.agents/skills/backend-core/SKILL.md`;
+3. read `.agents/skills/backend-core/SKILL.md` + `skills/backend/CORE.md`;
 4. read this task;
 5. load only relevant domain skills;
 6. inspect Progress Checklist and Resume State;

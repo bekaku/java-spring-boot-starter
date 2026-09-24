@@ -1,29 +1,90 @@
 ---
 name: backend-api
-description: REST controller, DTO, pagination, validation, and response contract rules. Load when endpoints, DTOs, paging, or error shapes change.
+description: Use when adding or changing a REST controller, route, request/response DTO, bean validation, domain validator, list/search/paging behavior, or error response in this Spring Boot backend. Pair with backend-data for query changes and backend-security for route access or owner-scoped data.
 ---
 
-# Backend API — Canonical
+# Backend API — Playbook
 
-> Canonical API skill. Detailed rules: `skills/backend/API.md`.
-> Requires: `AGENTS.md`, `.agents/skills/backend-core/SKILL.md`.
+> **Role:** HOW to build or change an endpoint. Binding facts + evidence: `skills/backend/API.md` (read it too).
+> **Requires:** `backend-core`. **Often paired with:** `backend-data`, `backend-security`, `backend-testing`.
 
-## When to load
+## Use when / skip when
 
-Controller, DTO, pagination, validation, response, or endpoint changes.
+- Use: new or changed endpoint, DTO field, validation rule, list filter/sort/paging, status code, error body.
+- Skip: pure persistence change with no contract change (`backend-data` only).
 
-## Implementation path
+## Recipe A — add an endpoint to an existing controller
 
-1. Inspect the current route in `controller/api/`, its DTO, `BaseApiController`, and `GlobalExceptionHandler`. Record method, path, status, body, validation, and error behavior; existing endpoints vary from the standard CRUD shape.
-2. Keep HTTP handling in the controller and business writes in the service. Use the relevant `*Validator` after request validation. For route access or owner-scoped data, also load `backend-security`; for query changes, load `backend-data`.
-3. Check serialization before changing a response. `ResponseListDto` declares Java field `isLast` and Lombok getter `isLast()`; the JSON property is `last`. Some file-list routes return bare lists.
-4. Verify pagination, allowed sort fields, response status, and failure shape with tests appropriate to the changed contract (`backend-testing`).
+1. Open the controller in `controller/api/` and one sibling endpoint that does something similar. Copy its shape.
+2. Decide the contract first: method, path, request DTO, response DTO, status (table in `API.md`), permission code, owner scoping.
+3. Write the handler:
 
-## Rules (summary — binding details in `skills/backend/API.md`)
+   ```java
+   @PreAuthorize("@permissionChecker.hasPermission('{table}_{action}')")
+   @PostMapping("/{id}/archive")
+   public ResponseEntity<{Model}Dto> archive(@AuthenticationPrincipal AppUserDto auth,
+                                             @PathVariable Long id,
+                                             @Valid @RequestBody {Model}ArchiveRequest request) {
+       return responseEntity(service.archive(id, request, auth.getId()), HttpStatus.OK);
+   }
+   ```
 
-- No universal envelope: `BaseApiController.responseEntity` passes body + status through.
-- `GET /` → `200 ResponseListDto`; `GET /{id}` → `200 DTO`; `POST /` → `201 DTO`; `PUT /{id}` → `200 DTO`; `DELETE /{id}` → `200` delete message (not `204`).
-- Serialized paged shape `ResponseListDto` = `{dataList, totalPages, totalElements, last}`; its Java field is `isLast`. Verify per endpoint (some file endpoints return bare lists).
-- `@Valid @RequestBody` on all mutating endpoints, then manual `*Validator` checks. No class-level `@Validated`. No HATEOAS.
-- Errors: `ApiException` / `BaseResponseException` → `GlobalExceptionHandler` → `ApiError`; JWT filter 401s use separate `{"error":"..."}` shape.
-- See `skills/backend/API.md` for file-path evidence (`BaseApiController`, `ResponseListDto`, `Paging`, exception handlers).
+4. Put the logic in the service method (`@Transactional` if it writes). The controller only calls it.
+5. Not found → `throw responseErrorNotfound();`. Cross-row validation → a `*Validator` (Recipe C).
+6. New user-facing text → i18n key in EN + `_th` files.
+
+## Recipe B — new CRUD controller
+
+Follow `docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md` (full controller template, permissions, i18n, tests). Do not rely on the code generator's controller template without fixing it (`docs/agent/KNOWN_ISSUES.md`).
+
+## Recipe C — domain validator (duplicates / existence)
+
+```java
+@Component
+public class {Model}Validator extends BaseValidator {
+    private final {Model}Repository repository;
+
+    public {Model}Validator({Model}Repository repository, I18n i18n) {
+        super(i18n);                                      // explicit constructor: BaseValidator needs I18n
+        this.repository = repository;
+    }
+
+    public void validate({Model} entity) {
+        List<String> errors = new ArrayList<>();          // local list: validators are singletons
+        repository.findByName(entity.getName())
+                  .filter(found -> !found.getId().equals(entity.getId()))
+                  .ifPresent(found -> addErrorDuplicate(errors, entity.getName()));
+        checkValidate(errors);                            // 400 ApiError{message: error.error, errors}
+    }
+}
+```
+
+Never keep errors or request data in a validator field; one bean serves all concurrent requests. Do not decide create vs update from the HTTP method: compare ids as above, or give the validator separate `validateCreate` / `validateUpdate` methods for the caller to choose (`RoleValidator`, `UserValidator`).
+
+## Recipe D — list endpoint
+
+- JPA: `ControllerUtil.buildSpecification(request, List.of("name"))` + `getPageable(pageable, {Model}.getSort())` → `service.findAllWithSearch(spec, pageable)` → `ResponseListDto`.
+- MyBatis (joins/projections): `getPaging(pageable, SORT_FIELDS)` with a **non-empty** `private static final List<String> SORT_FIELDS`. See `backend-data` Recipe C.
+- Owner-scoped list: pass `auth.getId()` down and filter by owner in the query.
+
+## Done checklist
+
+- [ ] Status codes match the table in `API.md` (`POST` → `201`, `DELETE` → `200` message).
+- [ ] `@Valid @RequestBody` on every mutating handler; no class-level `@Validated`.
+- [ ] `@PreAuthorize` permission present (or the route is intentionally public in both security configs).
+- [ ] Owner-scoped data filtered by `auth.getId()`, not by a header.
+- [ ] Response DTO does not expose secrets, hashes, raw tokens, or internal errors; `Long` IDs serialize as strings.
+- [ ] Dynamic sort fields are allow-listed.
+- [ ] i18n keys added in EN and `_th`.
+- [ ] If the contract changed for the external frontend, record it under `External Consumer Impact` in the task file.
+
+## Common mistakes
+
+| Mistake | Fix |
+|---|---|
+| Returning the DTO directly from `@PostMapping` (implicit `200`) | `return responseEntity(dto, HttpStatus.CREATED);` |
+| Business writes or multiple saves in the controller | Move into one `@Transactional` service method |
+| Returning `204` on delete | `return responseDeleteMessage();` |
+| Wrapping bodies in a new `{data: ...}` envelope | Return the DTO / `ResponseListDto` as-is |
+| Reading `X-User-Id` for identity | `@AuthenticationPrincipal AppUserDto auth` |
+| Expecting JSON property `isLast` | It serializes as `last` |

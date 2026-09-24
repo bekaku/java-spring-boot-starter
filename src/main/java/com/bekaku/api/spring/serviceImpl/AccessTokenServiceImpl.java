@@ -203,6 +203,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     @Override
     public Optional<AccessToken> findByTokenAndRevoked(String token, boolean revoked) {
+        log.info("Finding by token and Revoked: {}, hash:{}",token, HashUtil.sha256(token));
         return accessTokenRepository.findByTokenAndRevoked(HashUtil.sha256(token), revoked);
     }
 

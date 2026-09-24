@@ -1,25 +1,64 @@
-# Optional AI / RAG Module
+# Optional AI / RAG Module — Reference
 
-**Optional module. Do not read for ordinary backend tasks.** Read only when the task touches Spring AI, Ollama, Qdrant, ingestion, SSE chat, AI tools, chat memory, or face-recognition integration.
+> **Optional module. Do not read for ordinary CRUD/auth/file/messaging tasks.**
+> **Role:** binding AI/RAG rules + verified facts (WHAT / WHY).
+> **Procedure (HOW):** `.agents/skills/backend-ai-rag/SKILL.md`.
+> **Evidence style:** `path` + `Class#member` (no line numbers; search the symbol).
 
-## AI and RAG module rules
+## Stack guard
 
-- **Stack guard:** MVC SSE with Reactor publishers, not a WebFlux server (`AiChatController.streamChat` returns `Flux<ChatStreamEvent>` with `produces=TEXT_EVENT_STREAM_VALUE`). Offload blocking JDBC/filesystem/model work (e.g. `Mono.fromCallable(...).subscribeOn(boundedElastic)` in `AiRagChatServiceImpl.java:101-303`) and pass user identity explicitly across threads.
+- MVC SSE with Reactor publishers — not a WebFlux server. `AiChatController#streamChat` (`POST /api/aiChat/stream`, `produces = TEXT_EVENT_STREAM_VALUE`) returns `Flux<ChatStreamEvent>` from `AiRagChatServiceImpl#streamAnswer(userId, request)`.
+- Blocking JDBC/filesystem/model work is offloaded (`Mono.fromCallable(...).subscribeOn(Schedulers.boundedElastic())` inside `streamAnswer`). Reactor threads have no security context: `userId` is passed in explicitly.
 
-- **Vector stores** (`src/main/java/com/bekaku/api/spring/ai/QdrantVectorStoreConfig.java:15-75`): gated by `@ConditionalOnProperty(spring.ai.vectorstore.qdrant.enabled=true, matchIfMissing=false)`; beans `documentVectorStore` (`@Primary`, collection `rag_documents`) + `schemaVectorStore` (collection `table_schemas`), both `contentFieldName="doc_content"`, `initializeSchema(true)`. Changing YAML alone does not change these hardcoded names. `app.rag.qdrant-enabled` is not bound — the real flag is `spring.ai.vectorstore.qdrant.enabled` (disabled in tracked `application-dev-example.yml`). Null/disabled stores cause runtime failures — gate every consumer and verify startup + endpoint behavior when implementing a disabled mode.
+## Configuration
 
-- **Ingestion pipeline** (`src/main/java/com/bekaku/api/spring/serviceImpl/AiDocumentIngestionServiceImpl.java:76-132`): resolve type via `FileUtil.resolveAiDocumentTypeByMime` → `DocumentExtractorFactory.getExtractor` (`extraction/DocumentExtractorFactory.java:17-20`: IMAGE/VIDEO → `MediaPlaceholderDocumentExtractor` placeholder, no OCR/transcription; others → `TikaDocumentExtractor` using `TikaDocumentReader`) → `extract` → `TokenTextSplitter` (`AiDocumentIngestionServiceImpl.java:148-153`: `chunkSize` from `app.rag`, `keepSeparator=true`) → `documentVectorStore.add(chunks)` → save `AiDocumentMeta` with vector IDs → optionally `deleteSourceAfterIngest`. `chunk-overlap` and `max-num-chunks` config keys are unused by the splitter — do not promise them.
+| Setting | Bound to | Effect |
+|---|---|---|
+| `spring.ai.vectorstore.qdrant.enabled` | `@ConditionalOnProperty` on `ai/QdrantVectorStoreConfig` | creates the Qdrant beans; `false` in tracked `application-dev-example.yml` |
+| `app.rag.*` | `properties/RagProperties` (`topK`, `similarityThreshold`, `chunkSize`, `chunkOverlap`, `minChunkSizeChars`, `minChunkLengthToEmbed`, `maxNumChunks`, `memorySize`, `deleteSourceAfterIngest`, `databaseToolsSchema`, `databaseTools.enabled`) | RAG behavior |
+| `app.rag.qdrant-enabled` | **nothing** (not a field of `RagProperties`) | no effect — do not use it as a gate |
+| `app.rag.database-tools.enabled` | `RagDatabaseToolsProperties#enabled` | turns on the DB schema/SQL tools and switches the system prompt |
 
-- **Postgres↔Qdrant tie** (`src/main/java/com/bekaku/api/spring/model/AiDocumentMeta.java:49-61`): `@ElementCollection ai_document_vector_ids.vector_id List<String>` holds Qdrant chunk IDs; `ai_document_metadata` map holds extra metadata. Keep them consistent.
+- Ollama/Qdrant connection examples: `application-dev-example.yml`. `application-dev.yml` is local and git-ignored.
+- Prompts: `src/main/resources/prompts/system-rag.txt`, `system-rag-db-tools.txt`, `system-rag-generate-title.txt`.
 
-- **Deletion lifecycle (binding):** re-ingest replaces via `findByFileName → deleteDocument`; `deleteDocument` = `documentVectorStore.delete(vectorIds)` + `documentMetaRepository.delete` (`AiDocumentIngestionServiceImpl.java:82-85,211-229` + `safeRollbackVectors` on meta-save failure); controller `AiDocumentMetaController.java:52-63,121-130` (`ingest/{fileManagerId}`, `DELETE /{id}`) additionally deletes the source `FileManager` file when `delete-source-after-ingest:true`. Source deletion must follow a defined durable-success boundary — a later commit failure after vector write leaves orphans (compensation is limited).
+## Vector stores
 
-- **Streaming chat** (`AiChatController.java:53-56`, `AiRagChatServiceImpl.java:101-303`, `dto/ChatStreamEvent.java:17`): event types `token|sources|done|error` (+ `chat_id|title|thinking` used in code); `sources.content` is JSON-serialized inside a string. Preserve event names/payload types. Handle errors before/after commit; never append another HTTP body after streaming starts (`GlobalExceptionHandler` silent `ClientAbort/IOException` path).
+- `QdrantVectorStoreConfig` beans: `documentVectorStore` (`@Primary`, collection `rag_documents`) and `schemaVectorStore` (collection `table_schemas`); both `contentFieldName = "doc_content"`, `initializeSchema(true)`. Collection names are hard-coded in Java — YAML does not change them.
+- When Qdrant is disabled the beans do not exist; consumers that inject them fail at runtime unless gated. Every consumer must handle the disabled mode.
 
-- **Memory:** `DatabaseChatMemory` is read-only — `add/clear` are no-ops, `get` loads last-N via `findLastNMessagesByChatId(..., app.rag.memorySize)` and drops the trailing user message (`src/main/java/com/bekaku/api/spring/ai/DatabaseChatMemory.java:31-59`). Chat persistence lives in `streamAnswer`; do not double-save when adding advisors. Only active advisor is `MessageChatMemoryAdvisor`; `ChatClientConfig` (`QuestionAnswerAdvisor`) is `//@Configuration` disabled.
+## Ingestion pipeline — `serviceImpl/AiDocumentIngestionServiceImpl`
 
-- **Tools:** active `ToolCallbacks.from(userActivityTool)` + conditional `databaseSchemaTool, postgreSQLQueryTool` (`AiRagChatServiceImpl.java:181-193`); context collector `AiChatToolContext` via `chatToolContext` key. `DatabaseSchemaTool` fans out to `schemaVectorStore.similaritySearch`; `PostgreSQLQueryTool.executeSelect` validates via `DatabaseQueryValidator` (must start `SELECT/WITH`, rejects comments/DDL/DML/COPY/DO, single statement) then `jdbcTemplate.queryForList`. Built-in tools share app `JdbcTemplate` — separately configured MCP credentials do not constrain them. Isolate credentials/tables/columns/row scope, add timeouts + result bounds. Treat prompts, retrieved text, model SQL as untrusted; prompt text is not an authorization boundary.
+1. `ingest(FileManager)` / `ingest(path, originalName, mime)` → re-ingest replaces: `findByFileName` → `deleteDocument`.
+2. Type: `FileUtil.resolveAiDocumentTypeByMime` → `extraction/DocumentExtractorFactory#getExtractor`: IMAGE/VIDEO → `MediaPlaceholderDocumentExtractor` (placeholder text, no OCR/transcription); others → `TikaDocumentExtractor` (`TikaDocumentReader`).
+3. Split: `TokenTextSplitter` built from `app.rag.chunk-size` (`keepSeparator = true`). `chunk-overlap` and `max-num-chunks` are **not** used by the splitter — do not promise them.
+4. `documentVectorStore.add(chunks)` → save `AiDocumentMeta` with vector ids (`@ElementCollection ai_document_vector_ids.vector_id`) + metadata map (`ai_document_metadata`). Meta save failure → `safeRollbackVectors`.
+5. Optional source deletion when `delete-source-after-ingest: true` (`AiDocumentMetaController#ingest`, `#delete`).
+- Delete: `deleteDocument(meta)` = `documentVectorStore.delete(vectorIds)` + delete meta row (hard delete — `@SQLDelete` is commented out on `AiDocumentMeta`).
+- Compensation is limited: a commit failure after the vector write leaves orphan vectors. Source deletion must follow a defined durable-success point.
+- Schema ingestion: `AiDocumentMetaController` `POST /api/aiDocumentMeta/ingestDatabaseSchemas` → `ingestDatabaseSchemas()` (synchronized) → `schemaVectorStore`.
 
-- **Ownership:** check conversation ownership before reading history, resuming, timestamp updates, or adding messages — preserve `findByIdAndCreator` scoping and bind new chats to the authenticated actor. Face recognition is a separate Python service + pgvector path; preserve actor + file-owner checks and `/api/faceRegconition` spelling.
+## Streaming chat events — `dto/ChatStreamEvent`
 
-- **Config:** Check tracked `application.yml` for `app.rag` values and `application-dev-example.yml` for example Ollama/Qdrant setup; `application-dev.yml` is local and ignored. RAG settings are typed in `properties/RagProperties.java`. Prompts live in `src/main/resources/prompts/system-rag*.txt`.
+- `type` values used in code: `chat_id`, `title`, `thinking`, `token`, `sources`, `error`, `done` (the field comment lists only four).
+- `sources.content` is a JSON array serialized **inside** a string.
+- Preserve event names, order, and payload types — the external frontend parses them.
+- After streaming starts, never write another HTTP body; errors go out as an `error` event. `GlobalExceptionHandler` silently handles `ClientAbortException` / `IOException`.
+
+## Memory
+
+- `ai/DatabaseChatMemory` is read-only: `add` / `clear` are no-ops; `get` loads the last `app.rag.memory-size` messages (`findLastNMessagesByChatId`) and drops the trailing user message.
+- Messages are persisted in `streamAnswer`; do not double-save when adding advisors.
+- Only active advisor: `MessageChatMemoryAdvisor`. `configuration/ChatClientConfig` (`QuestionAnswerAdvisor`) is disabled (`//@Configuration`).
+
+## Tools
+
+- Always: `ToolCallbacks.from(userActivityTool)`. When `databaseTools.enabled`: `DatabaseSchemaTool` (searches `schemaVectorStore`) and `PostgreSQLQueryTool`. Context object `AiChatToolContext` under key `chatToolContext`.
+- `PostgreSQLQueryTool#executeSelect` → `DatabaseQueryValidator` (must start with `SELECT`/`WITH`, single statement, rejects comments/DDL/DML/COPY/DO) → `jdbcTemplate.queryForList`.
+- Tools use the application's `JdbcTemplate` and DB user. The separately configured MCP read-only credentials do not constrain them. Add credential/table/column/row scoping, timeouts, and result limits before widening tool access.
+- Prompts, retrieved text, and model-generated SQL are untrusted input. Prompt text is not an authorization boundary.
+
+## Ownership
+
+- Check chat ownership (`AiChatService#findByIdAndCreator(chatId, userId)`) before reading history, resuming, renaming, updating timestamps, or adding messages. Bind new chats to the authenticated user.
+- Face recognition: `FaceRegconitionController` (`/api/faceRegconition/register`, `/detection`) → `FaceRecognitionServiceImpl` → external Python service via `ai/AiFaceRegconitionServiceClient` + pgvector `app_user_face.embedding vector(512)`. Keep actor and file-owner checks and the legacy spellings.

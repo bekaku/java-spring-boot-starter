@@ -6,11 +6,11 @@
 ## Required reading (in order)
 
 1. `AGENTS.md` — global behavior, layering, task lifecycle, validation (§§1–14)
-2. `SKILLS.md` — canonical skill pointer list
-3. `.agents/skills/backend-core/SKILL.md` — canonical core skill
+2. `SKILLS.md` — skill router
+3. `.agents/skills/backend-core/SKILL.md` + `skills/backend/CORE.md` — core playbook + reference
 4. The task file itself (when one exists; see `tasks/README.md` for locations)
 
-Then load only the relevant canonical skill(s) under `.agents/skills/` and detailed guide(s) under `skills/backend/` per `AGENTS.md §6`. Ordinary CRUD/auth/file/messaging work must not load the AI/RAG skill.
+Then load only the relevant skill(s) — playbook `.agents/skills/<skill>/SKILL.md` (HOW) + reference `skills/backend/<GUIDE>.md` (WHAT/WHY) — per `SKILLS.md` / `AGENTS.md §6`. Ordinary CRUD/auth/file/messaging work must not load the AI/RAG skill.
 
 ## Scope
 

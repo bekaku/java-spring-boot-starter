@@ -1,65 +1,47 @@
 package com.bekaku.api.spring.validator;
 
 import com.bekaku.api.spring.configuration.I18n;
-import com.bekaku.api.spring.exception.BaseResponseException;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.bekaku.api.spring.exception.ApiError;
+import com.bekaku.api.spring.exception.ApiException;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
-//public class BaseValidator<T> {
-public class BaseValidator extends BaseResponseException {
+/**
+ * Base class for domain validators. Validators are singleton beans shared by concurrent requests, so this
+ * class keeps no per-call state: each validate method creates its own error list, passes it to the
+ * {@code addError*} helpers and finishes with {@link #checkValidate(List)}.
+ */
+public abstract class BaseValidator {
 
-    @Autowired
-    private I18n i18n;
+    private final I18n i18n;
 
-    @Autowired
-    private HttpServletRequest request;
-    private List<String> errors = new ArrayList<>();
-
-
-    public boolean isNew() {
-        return request.getMethod().equalsIgnoreCase(RequestMethod.POST.name());
+    protected BaseValidator(I18n i18n) {
+        this.i18n = i18n;
     }
 
-    public void addError(String error) {
-        errors.add(error);
+    protected I18n getI18n() {
+        return i18n;
     }
 
-    public void addErrorDuplicate(String data) {
+    protected void addErrorDuplicate(List<String> errors, String data) {
         errors.add(i18n.getMessage("error.validateDuplicate", data));
     }
 
-    public void addErrorNotFound() {
+    protected void addErrorNotFound(List<String> errors) {
         errors.add(i18n.getMessage("error.dataNotfound"));
     }
 
-    public void addErrorRequireField(String data) {
+    protected void addErrorRequireField(List<String> errors, String data) {
         errors.add(i18n.getMessage("error.validateRequireField", data));
     }
 
-    public void checkValidate() {
-        if (!this.errors.isEmpty()) {
-            List<String> err = this.errors;
-            this.errors = new ArrayList<>();
-            throw this.responseError(HttpStatus.BAD_REQUEST, null, err);
+    /**
+     * Throws {@code 400 ApiError} with message {@code error.error} and the collected errors, if there are any.
+     */
+    protected void checkValidate(List<String> errors) {
+        if (!errors.isEmpty()) {
+            throw new ApiException(new ApiError(HttpStatus.BAD_REQUEST, i18n.getMessage("error.error"), errors));
         }
     }
-//    public BaseValidator(T t) {
-//        System.out.println("BaseValidator: Constructor");
-//        for (Field field : t.getClass().getDeclaredFields()) {
-//            javax.persistence.Column column = field.getAnnotation(javax.persistence.Column.class);
-//            if (column != null) {
-//                System.out.println("Columns: " + column);
-//            }
-//        }
-//    }
-
 }

@@ -22,7 +22,8 @@ RUN addgroup -g 1001 springgroup && \
 
 
 # Make sure heapdump path exists and is writable
- RUN mkdir -p /usr/spring-data/logs && chown -R springuser:springgroup /usr/spring-data
+# Logs go to /usr/spring-logs (app.log-directory), outside /usr/spring-data which is served publicly at /cdn/**
+ RUN mkdir -p /usr/spring-data /usr/spring-logs && chown -R springuser:springgroup /usr/spring-data /usr/spring-logs
 
 ENV TZ=Asia/Bangkok \
     JAVA_OPTS="-Xms1G -Xmx1G -Xss256k -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=75.0 -XX:MaxGCPauseMillis=100 -XX:+ParallelRefProcEnabled -XX:+UseCompressedOops -XX:+UseCompressedClassPointers -XX:+AlwaysPreTouch -XX:+TieredCompilation -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof"
@@ -49,4 +50,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dspring.config.additional-location=/usr/spring-data/env/ -Dspring.profiles.active=prod -jar app.jar"]
+# External config (secrets) is mounted read-only at /usr/spring-config/, outside the public /usr/spring-data root.
+# The image does not create it: a missing mount fails startup instead of running on the jar's default secrets.
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dspring.config.additional-location=/usr/spring-config/ -Dspring.profiles.active=prod -jar app.jar"]

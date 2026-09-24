@@ -244,7 +244,7 @@ logging:
   pattern:
     rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
   file:
-    path: ${app.cdn-directory}logs
+    path: ${app.log-directory}
     max-history: 30
     total-size-cap: 10MB
     clean-history-on-start: true
@@ -323,6 +323,8 @@ app:
   #  cdn-port: 443
   cdn-url: ${app.url}
   cdn-port: ${app.port}
+  # Must stay outside cdn-directory: everything under cdn-directory is served publicly at /${app.cdn-path-alias}/**
+  log-directory: /usr/spring-logs
   encrypt-key: jOwyyXyTbN/16DI5iIT0FMg==
   upload-image:
     limit-width: 1776

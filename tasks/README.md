@@ -47,7 +47,7 @@ Do not add frontend implementation blocks. Record cross-repo contract impact und
 
 ## Execution workflow
 
-1. Read: `AGENTS.md` → `SKILLS.md` → `.agents/skills/backend-core/SKILL.md` → this task → only relevant domain skills.
+1. Read: `AGENTS.md` → `SKILLS.md` → `.agents/skills/backend-core/SKILL.md` + `skills/backend/CORE.md` → this task → only the relevant skills (playbook + reference, per `SKILLS.md`).
 2. Before editing code: set Resume State to `IN_PROGRESS`; record Current Step + Files Currently Being Modified.
 3. Inspect existing implementation; prefer modifying the existing path.
 4. Implement narrowly; update Progress Checklist incrementally with evidence.

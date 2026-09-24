@@ -151,8 +151,8 @@ logging:
         SQL: TRACE
         type: ERROR
   file:
-    path: ${app.cdn-directory}logs
-    #    path: D:/code/tutorial/spring-data/logs
+    path: ${app.log-directory}
+    #    path: D:/code/tutorial/spring-logs
     max-history: 30
     total-size-cap: 10MB
     clean-history-on-start: true
@@ -192,6 +192,8 @@ app:
   #  cdn-url: http://127.0.0.1
   cdn-url: ${app.url}
   cdn-port: 8080
+  # Must stay outside cdn-directory: everything under cdn-directory is served publicly at /cdn/**
+  log-directory: D:/code/github/java-spring-starter/spring-logs  #mac /Users/bekaku/code/github/java-spring-boot-starter/spring-logs
 
   cookie:
     secure: false

@@ -9,6 +9,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import org.springframework.web.servlet.resource.PathResourceResolver;
 
 @Configuration(proxyBeanMethods = false)
 public class WebConfigurerAdapter implements WebMvcConfigurer {
@@ -34,7 +35,14 @@ public class WebConfigurerAdapter implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         WebMvcConfigurer.super.addResourceHandlers(registry);
-        registry.addResourceHandler("/"+cdnPathAlias+"/**").addResourceLocations(cdnPath);
+        registry.addResourceHandler("/"+cdnPathAlias+"/**")
+                .addResourceLocations(cdnPath)
+                .resourceChain(false)
+                // Defense in depth: logs (app.log-directory) and external config (/usr/spring-config/) live outside
+                // app.cdn-directory, but never serve logs, config (env) or in-progress upload chunks even if such
+                // folders end up under this public root (e.g. left over from the old layout).
+                .addResolver(new CdnDeniedFolderResourceResolver("logs", "env", "temp-chunks"))
+                .addResolver(new PathResourceResolver());
     }
 
 
