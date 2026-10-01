@@ -70,6 +70,41 @@ spring:
     username: local_jobs
     password: 'pwd'
   ai:
+    # openai chat , ollama local embedding
+    #    model:
+    #      chat: openai
+    #      embedding: ollama
+    #    openai:
+    #      base-url: https://ollama.com/v1
+    #      api-key: "ollama-key"
+    #      chat:
+    #        options:
+    #          model: gemma4:31b
+    #          temperature: 0.1
+    #          top-p: 0.1
+    #          presence-penalty: 0.1
+    #    ollama:
+    #      base-url: http://localhost:11434
+    #      embedding:
+    #        options:
+    #          model: bge-m3
+    #          num-ctx: 8192
+
+    # local llama model
+    #    openai:
+    #      base-url: http://localhost:9931
+    #      api-key: "none"
+    #      chat:
+    #        options:
+    #          model: unsloth/gemma-4-E4B-it-GGUF:Q4_K_M
+    #          temperature: 0.1
+    #          top-p: 0.1
+    #          presence-penalty: 0.1
+    #      embedding:
+    #        base-url: http://localhost:8082/v1
+    #        api-key: "none"
+    #        options:
+    #          model: gpustack/bge-m3-GGUF:Q4_K_M
     openai:
       base-url: https://api.openai.com/v1
       api-key: ${OPENAI_API_KEY} # แนะนำให้อ่านจาก Environment Variable
@@ -84,20 +119,21 @@ spring:
         api-key: "none"
         options:
           model: bge-m3
-    ollama:
-      base-url: http://localhost:11434
-      chat:
-        options:
-          model: gemma4:e4b #scb10x/typhoon2.5-qwen3-4b, ,gemma4:e2b, gemma4:e4b, qwen3:8b
-          temperature: 0.1
-          top-p: 0.1
-          repeat-penalty: 1.1
-          num-ctx: 16384
-          num-thread: 4
-      embedding:
-        options:
-          model: bge-m3
-          num-ctx: 8192
+
+    #    ollama:
+    #      base-url: http://localhost:11434
+    #      chat:
+    #        options:
+    #          model: gemma4:e4b #scb10x/typhoon2.5-qwen3-4b, ,gemma4:e2b, gemma4:e4b, qwen3:8b
+    #          temperature: 0.1
+    #          top-p: 0.1
+    #          repeat-penalty: 1.1
+    #          num-ctx: 16384
+    #          num-thread: 4
+    #      embedding:
+    #        options:
+    #          model: bge-m3
+    #          num-ctx: 8192
     mcp:
       client:
         enabled: true
