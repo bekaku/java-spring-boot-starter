@@ -74,3 +74,4 @@ docker-compose/mysql/.env.example
 docker-compose/postgres/.env.example
 docker-compose/qdrant/.env.example
 docker-compose/redis/.env
+docker-compose/rabbitmq/conf/definitions.json
