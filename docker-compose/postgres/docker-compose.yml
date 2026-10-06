@@ -16,7 +16,7 @@ services:
     #    networks:
     #      - docker-network
     env_file:
-      - .env
+      - .env.example
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}

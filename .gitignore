@@ -69,3 +69,8 @@ spring-data/medias/*
 src/main/generated/*
 src/main/resources/application-dev.yml
 src/main/resources/log4j2-dev.xml
+
+docker-compose/mysql/.env.example
+docker-compose/postgres/.env.example
+docker-compose/qdrant/.env.example
+docker-compose/redis/.env

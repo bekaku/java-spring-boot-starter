@@ -130,7 +130,7 @@ MCP is enabled in the supplied development example and launches `npx`. Leave it 
 
 Use PostgreSQL with pgvector installed. The default development profile uses Hibernate `ddl-auto: update`, and the mapped `AppUserFace` entity requires the `vector` type even if the face API is not called.
 
-For the bundled Compose service, create/update `docker-compose/postgres/.env` locally:
+For the bundled Compose service, create/update `docker-compose/postgres/.env.example` locally:
 
 ```dotenv
 POSTGRES_DB=spring_starter_postgres
@@ -213,7 +213,7 @@ docker compose -f docker-compose/ollama/docker-compose.yml up -d
 docker exec rag-ollama ollama pull CHAT_MODEL
 ```
 
-For Qdrant, define `QDRANT__SERVICE__API_KEY` in `docker-compose/qdrant/.env`, start that Compose service, and configure the matching Spring AI key/host. Port 6334 is gRPC, 6333 is HTTP/dashboard.
+For Qdrant, define `QDRANT__SERVICE__API_KEY` in `docker-compose/qdrant/.env.example`, start that Compose service, and configure the matching Spring AI key/host. Port 6334 is gRPC, 6333 is HTTP/dashboard.
 
 There are distinct configuration controls:
 
