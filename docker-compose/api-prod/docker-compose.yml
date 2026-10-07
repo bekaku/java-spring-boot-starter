@@ -1,0 +1,142 @@
+# Production stack for this API: three identical containers behind a reverse proxy (nginx upstream on
+# API_1_PORT / API_2_PORT / API_3_PORT).
+#
+#   cd docker-compose/api-prod
+#   cp .env.example .env            # edit: secrets, DB, RabbitMQ, URLs, host directories
+#   docker network create docker-network   # once, if it does not exist (name = DOCKER_NETWORK in .env)
+#   docker compose build            # builds ../../Dockerfile and tags it ${API_IMAGE}
+#   docker compose up -d
+#
+# Roll out one container at a time:  docker compose up -d --no-deps api-2
+# First deploy of a release with a new Flyway migration: set SPRING_FLYWAY_ENABLED=true in .env, run
+# `docker compose up -d`, then set it back to false (see .env.example).
+name: spring-api-prod
+
+x-api-common: &api-common
+  image: ${API_IMAGE:-spring-api:prod}
+  restart: unless-stopped
+  # Spring Boot shuts down gracefully (server.shutdown=graceful, up to 30s per phase by default):
+  # give it that long before Docker's SIGKILL, so in-flight requests finish during a rollout.
+  stop_grace_period: 35s
+  # Application configuration and secrets (see .env.example). The per-service `environment` below wins
+  # over anything in this file.
+  env_file:
+    - .env
+  networks:
+    - api-network
+  # Lets the containers reach PostgreSQL / RabbitMQ / Ollama / Qdrant running on this host outside Docker
+  # (host.docker.internal:<port>).
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  # The Dockerfile HEALTHCHECK has no start period, so a slow boot (Flyway) would count as failures.
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+    interval: 30s
+    timeout: 5s
+    retries: 5
+    start_period: ${API_HEALTH_START_PERIOD:-90s}
+  deploy:
+    resources:
+      limits:
+        cpus: "${API_CPUS_LIMIT:-2.0}"
+        memory: "${API_MEMORY_LIMIT:-2G}"
+      reservations:
+        cpus: "${API_CPUS_RESERVATION:-1.0}"
+        memory: "${API_MEMORY_RESERVATION:-1G}"
+
+# Values every container must have. They are already passed in through env_file; listing them again makes
+# `docker compose` refuse to start when one is empty, instead of silently running on the placeholder
+# secrets / database that application.yml ships with.
+x-api-required-env: &api-required-env
+  SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:?set SPRING_DATASOURCE_URL in .env}
+  SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:?set SPRING_DATASOURCE_PASSWORD in .env}
+  SPRING_RABBITMQ_PASSWORD: ${SPRING_RABBITMQ_PASSWORD:?set SPRING_RABBITMQ_PASSWORD in .env}
+  APP_JWT_SECRET: ${APP_JWT_SECRET:?set APP_JWT_SECRET in .env}
+  APP_ENCRYPTKEY: ${APP_ENCRYPTKEY:?set APP_ENCRYPTKEY in .env}
+
+services:
+  api-1:
+    <<: *api-common
+    container_name: spring-api-1
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    ports:
+      - "${API_BIND:-0.0.0.0}:${API_1_PORT:-8081}:8080"
+    environment:
+      <<: *api-required-env
+      # Unique per container: it seeds the Snowflake ID generator (app.worker.id) and names the Hikari pool.
+      WORKER_ID: "1"
+      # The only container that runs scheduled jobs (there is no leader election) and the only one that may
+      # run Flyway; both are switched on from .env (default off).
+      APP_CRON_CLEANOLDTEMPCHUNKS: "${APP_CRON_CLEANOLDTEMPCHUNKS:-false}"
+      APP_CRON_CLEANOLDFILE: "${APP_CRON_CLEANOLDFILE:-false}"
+      SPRING_FLYWAY_ENABLED: "${SPRING_FLYWAY_ENABLED:-false}"
+    # /usr/spring-data is shared by all three: a file uploaded through one container must be readable by the
+    # others. Logs get one directory each, and live outside the data dir because /usr/spring-data is served
+    # publicly at /cdn/**. /usr/spring-config is required by the Dockerfile ENTRYPOINT; create_host_path: false
+    # makes a missing host directory fail instead of mounting an empty one.
+    volumes:
+      - ${HOST_DATA_DIR:?set HOST_DATA_DIR in .env}:/usr/spring-data
+      - ${HOST_LOG_DIR:?set HOST_LOG_DIR in .env}/api-1:/usr/spring-logs
+      - type: bind
+        source: ${HOST_CONFIG_DIR:-./spring-config}
+        target: /usr/spring-config
+        read_only: true
+        bind:
+          create_host_path: false
+
+  api-2:
+    <<: *api-common
+    container_name: spring-api-2
+    ports:
+      - "${API_BIND:-0.0.0.0}:${API_2_PORT:-8082}:8080"
+    environment:
+      <<: *api-required-env
+      WORKER_ID: "2"
+      APP_CRON_CLEANOLDTEMPCHUNKS: "false"
+      APP_CRON_CLEANOLDFILE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+    # Start after api-1 is healthy, i.e. after any Flyway migration finished, so new code never runs against
+    # the old schema. `up -d --no-deps api-2` still recreates it alone.
+    depends_on:
+      api-1:
+        condition: service_healthy
+    volumes:
+      - ${HOST_DATA_DIR:?set HOST_DATA_DIR in .env}:/usr/spring-data
+      - ${HOST_LOG_DIR:?set HOST_LOG_DIR in .env}/api-2:/usr/spring-logs
+      - type: bind
+        source: ${HOST_CONFIG_DIR:-./spring-config}
+        target: /usr/spring-config
+        read_only: true
+        bind:
+          create_host_path: false
+
+  api-3:
+    <<: *api-common
+    container_name: spring-api-3
+    ports:
+      - "${API_BIND:-0.0.0.0}:${API_3_PORT:-8083}:8080"
+    environment:
+      <<: *api-required-env
+      WORKER_ID: "3"
+      APP_CRON_CLEANOLDTEMPCHUNKS: "false"
+      APP_CRON_CLEANOLDFILE: "false"
+      SPRING_FLYWAY_ENABLED: "false"
+    depends_on:
+      api-1:
+        condition: service_healthy
+    volumes:
+      - ${HOST_DATA_DIR:?set HOST_DATA_DIR in .env}:/usr/spring-data
+      - ${HOST_LOG_DIR:?set HOST_LOG_DIR in .env}/api-3:/usr/spring-logs
+      - type: bind
+        source: ${HOST_CONFIG_DIR:-./spring-config}
+        target: /usr/spring-config
+        read_only: true
+        bind:
+          create_host_path: false
+
+networks:
+  api-network:
+    name: ${DOCKER_NETWORK:-docker-network}
+    external: true

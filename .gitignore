@@ -75,3 +75,7 @@ docker-compose/postgres/.env.example
 docker-compose/qdrant/.env.example
 docker-compose/redis/.env
 docker-compose/rabbitmq/conf/definitions.json
+# api-prod: real env file and any secrets placed in the external config dir (the .gitkeep stays tracked)
+docker-compose/api-prod/.env
+docker-compose/api-prod/spring-config/*
+!docker-compose/api-prod/spring-config/.gitkeep
