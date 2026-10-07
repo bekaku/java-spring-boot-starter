@@ -248,6 +248,8 @@ Use explicit `bootRun --args` for profiles. `runDev`/`runProd` configure the sha
 
 The standard Dockerfile builds with JDK 25 and runs as UID/GID 1001, using `prod` and external configuration at `/usr/spring-config/`: mount it read-only from a host directory outside the storage root (sample: `spring-config/application.yml`). The image does not create that directory, so startup fails if the mount is missing. There is no checked-in `application-prod.yml`. The shared file still contains a MySQL datasource and defaults to `dev`; supply PostgreSQL settings and `environments.production=true` explicitly for deployment.
 
+For a production stack of three containers configured entirely from a `.env` file, see `docker-compose/api-prod/` and [docs/api-prod-deployment.md](docs/api-prod-deployment.md).
+
 Root Compose contains Windows bind mounts. Adapt mounts and ownership for the target machine. Give each concurrently running instance a unique `WORKER_ID` from 0–1023; Snowflake IDs depend on it. `DockerfileLocal` runs as root. Native-image and Kubernetes artifacts need validation before use. The `build-*.sh` helpers remove images/artifacts and prune build cache, so inspect them before execution.
 
 GitHub Actions builds and pushes JVM/native images to Docker Hub using secrets. Docker builds skip tests, the workflows have no separate test gate, and the native workflow references the disabled Gradle task. These files are deployment examples, not evidence of passing CI.
