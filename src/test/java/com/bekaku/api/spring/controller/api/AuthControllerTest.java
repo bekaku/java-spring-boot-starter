@@ -22,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -685,6 +686,69 @@ class AuthControllerTest {
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(accessTokenService, never()).logoutProcess(foreignToken);
+        }
+    }
+
+    // ------------------------------------------------- app.cookie.domain (Task 001)
+
+    @Nested
+    @DisplayName("app.cookie.domain with the real CookieUtil")
+    class CookieDomain {
+
+        private AuthController controllerWithDomain(String domain) throws Exception {
+            AppProperties appProperties = mock(AppProperties.class);
+            when(appProperties.jwt()).thenReturn(new JwtProperties(
+                    "test-secret", "_at", "_rt", "_cuid", 15L, 7L));
+            when(appProperties.cookie()).thenReturn(new CookieProperties(true, "Lax", domain));
+            AuthController c = new AuthController(appUserService, authService, accessTokenService, encryptService,
+                    appRoleService, apiClientService, jwtService, i18n, appProperties,
+                    identityLinkService, new CookieUtil(appProperties), appDefaultsProperties, passwordResetService);
+            injectI18nIntoHierarchy(c);
+            return c;
+        }
+
+        private List<String> setCookieHeaders() {
+            ArgumentCaptor<String> headers = ArgumentCaptor.forClass(String.class);
+            verify(response, atLeastOnce()).addHeader(eq(HttpHeaders.SET_COOKIE), headers.capture());
+            return headers.getAllValues();
+        }
+
+        @Test
+        void loginSetsEveryAuthCookieWithTheConfiguredDomain() throws Exception {
+            stubValidLogin();
+
+            controllerWithDomain(".example.com").login(
+                    loginRequest("john", "password123"), request, response, API_CLIENT_NAME, USER_AGENT);
+
+            assertThat(setCookieHeaders()).hasSize(3).allSatisfy(h ->
+                    assertThat(h).contains("Domain=example.com", "Path=/", "HttpOnly", "Secure", "SameSite=Lax"));
+        }
+
+        @Test
+        void loginWithoutDomainKeepsHostOnlyCookies() throws Exception {
+            stubValidLogin();
+
+            controllerWithDomain(null).login(
+                    loginRequest("john", "password123"), request, response, API_CLIENT_NAME, USER_AGENT);
+
+            assertThat(setCookieHeaders()).hasSize(3).allSatisfy(h ->
+                    assertThat(h).doesNotContain("Domain=").contains("HttpOnly"));
+        }
+
+        @Test
+        void logoutClearsCookiesWithTheSameDomain() throws Exception {
+            HttpServletRequest req = mock(HttpServletRequest.class);
+            when(req.getCookies()).thenReturn(new Cookie[]{
+                    new Cookie("_cuid", USER_ID.toString()),
+                    new Cookie("_rt" + USER_ID, "refresh-token-value")});
+            when(req.getHeader(ConstantData.X_REAL_IP)).thenReturn("127.0.0.1");
+            when(apiClientService.findByApiName(API_CLIENT_NAME)).thenReturn(Optional.of(apiClient));
+            when(accessTokenService.findByToken("refresh-token-value")).thenReturn(Optional.of(sessionToken(user)));
+
+            controllerWithDomain("example.com").logout(response, req, API_CLIENT_NAME);
+
+            assertThat(setCookieHeaders()).isNotEmpty().allSatisfy(h ->
+                    assertThat(h).contains("Domain=example.com", "Max-Age=0"));
         }
     }
 }

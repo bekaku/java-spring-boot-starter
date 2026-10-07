@@ -17,6 +17,7 @@ services:
       - docker-network
     environment:
       - WORKER_ID=1
+#      - APP_COOKIE_DOMAIN=example.com  # share auth cookies with a frontend on another subdomain (blank = host-only)
 #      - SPRING_PROFILES_ACTIVE=localdocker
 #      - JAVA_OPTS=-Xmx512m -Xms512m
     deploy:

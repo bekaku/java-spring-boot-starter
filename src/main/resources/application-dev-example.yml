@@ -234,6 +234,7 @@ app:
   cookie:
     secure: false
     same-site: Lax
+    # domain: example.com  # optional: share auth cookies with a frontend on another subdomain (blank = host-only)
 
   jwt:
     secret: eL2kRSFLRFicsrgtOISl1LKqrCChkzGS9UxrXep3b7z0OvkGoejNMbbyqCMVuDshBogW1Q1IqvsvSwMs78vLBn

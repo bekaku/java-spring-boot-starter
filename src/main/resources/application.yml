@@ -346,6 +346,9 @@ app:
   cookie:
     secure: true
     same-site: Lax
+    # Blank = host-only cookies (default). Set a parent domain (e.g. example.com or .example.com) only when
+    # the frontend is on another subdomain than the API and must see the login cookies. Hostname only.
+    domain: ${APP_COOKIE_DOMAIN:}
   jwt:
     # SHA 512-bit Key
     secret: TzIGu7DC5IhL/hYNpQi7V0CATXCVaDcoHNExNef9H70=
