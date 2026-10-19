@@ -8,7 +8,7 @@ Use only when repository structure, dependencies, naming evidence, or architectu
 - `src/main/java/com/bekaku/api/spring/` — backend code; `src/main/resources/` — config, migrations, MyBatis XML, i18n, templates, prompts; `src/test/java/com/bekaku/api/spring/` — tests.
 - `docker-compose/`, `docker-compose.yml`, `kubernetes/`, Dockerfiles, `build-*.sh|ps1` — dev/deploy infrastructure. Change only when the task covers it.
 - `spring-data/` — seed SQL, example data, local storage. Not a Java module. Check the public storage mapping before writing files there.
-- Agent docs: `AGENTS.md`, `SKILLS.md`, `.agents/skills/` (playbooks), `skills/backend/` (references), `docs/agent/` (this folder), `tasks/` (template), `docs/tasks/` (task instances).
+- Agent docs: `AGENTS.md`, `SKILLS.md`, `.agents/skills/` (playbooks), `skills/backend/` (references), `docs/agent/` (this folder), `tasks/` (template + task instances).
 - No `backend/` or `frontend/` directory; the frontend is an external repository (`AGENTS.md §1`).
 
 ## Stack (from `build.gradle`)

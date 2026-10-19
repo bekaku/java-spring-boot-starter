@@ -16,10 +16,10 @@ only when the task touches `ai/`, `extraction/`, vector-store config, ingestion,
 Save task specs in the repository location appropriate to the work, e.g.:
 
 ```text
-docs/tasks/<number>-<short-name>.md
+tasks/<number>-<short-name>.md
 ```
 
-Before assigning a number, list existing files under `docs/tasks/` (if it exists) and
+Before assigning a number, list existing files under `tasks/` (if it exists) and
 confirm the number is free. Do not reuse a number already taken by another task.
 
 # Task: <name>
@@ -312,7 +312,7 @@ Include this section only when the task adds or changes an HTTP/SSE contract.
 Create/update the companion curl guide and flow documentation, e.g.:
 
 ```text
-docs/tasks/<task-number>-curl-test.md
+tasks/<task-number>-curl-test.md
 docs/<FLOW>.md
 ```
 

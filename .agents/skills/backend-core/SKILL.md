@@ -10,7 +10,7 @@ description: Use first for every backend implementation task in this Spring Boot
 
 ## 1. Before you edit
 
-1. If a task file exists in `docs/tasks/`, read it and set Resume State to `IN_PROGRESS` before touching code (`AGENTS.md §7`).
+1. If a task file exists in `tasks/`, read it and set Resume State to `IN_PROGRESS` before touching code (`AGENTS.md §7`).
 2. Pick the domain skills from the table in §4. Load only those.
 3. Find the closest existing feature and trace it end to end:
 

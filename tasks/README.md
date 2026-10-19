@@ -1,18 +1,18 @@
 # tasks/ — Canonical Task Template + Workflows
 
 > Template: `tasks/TASK_TEMPLATE.md` (15 sections, canonical).
-> Instances: `docs/tasks/<number>-<short-name>.md`.
+> Instances: `tasks/<number>-<short-name>.md`.
 > Behavior: `AGENTS.md §7` (tracking), `§11` (stop/resume).
 
 ## Task index
 
-Task instances live in `docs/tasks/`, not in `tasks/`. `tasks/` holds only the template and this workflow guide.
+Task instances live in `tasks/` alongside the template and this workflow guide.
 
-Before assigning a number, list existing files under `docs/tasks/` and confirm the number is free. Do not reuse numbers.
+Before assigning a number, list existing files under `tasks/` and confirm the number is free. Do not reuse numbers.
 
 ```text
-docs/tasks/<number>-<short-name>.md
-docs/tasks/<task-number>-curl-test.md   # only when the task changes an HTTP/SSE contract
+tasks/<number>-<short-name>.md
+tasks/<task-number>-curl-test.md   # only when the task changes an HTTP/SSE contract
 ```
 
 ## Template sections (15)
@@ -39,8 +39,8 @@ Do not add frontend implementation blocks. Record cross-repo contract impact und
 
 ## Creation workflow
 
-1. List `docs/tasks/`; pick the next free `<number>`.
-2. Copy `tasks/TASK_TEMPLATE.md` to `docs/tasks/<number>-<short-name>.md`.
+1. List `tasks/`; pick the next free `<number>`.
+2. Copy `tasks/TASK_TEMPLATE.md` to `tasks/<number>-<short-name>.md`.
 3. Fill Objective as one bounded outcome; define the Authoritative Contract before implementing.
 4. Mark Scope checkboxes; list Out of Scope explicitly.
 5. Leave Resume State at `NOT_STARTED` with Next Recommended Steps filled.

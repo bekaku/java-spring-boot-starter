@@ -35,7 +35,7 @@ Primary stack (declarations in `build.gradle`, not upgrade recommendations):
 - `.agents/skills/<skill>/SKILL.md` — **playbooks** (HOW): steps, code shapes, done-checklist, common mistakes (Agent Skills spec, frontmatter `name` + `description`)
 - `skills/backend/*.md` — **references** (WHAT / WHY): verified facts + binding rules with `Class#member` evidence; `CORE.md` pairs with `backend-core`
 - `tasks/TASK_TEMPLATE.md` — canonical task template; `tasks/README.md` — task workflows
-- `docs/tasks/` — task instances (`<number>-<short-name>.md`)
+- `tasks/` — task instances (`<number>-<short-name>.md`)
 - `docs/agent/` — end-to-end CRUD recipe, known issues, project map, split map, original source (archive)
 
 Read `docs/agent/PROJECT_REFERENCE.md` only when repository layout, dependency, naming, or architecture context is required.
@@ -103,7 +103,7 @@ Tests/verification                    -> .agents/skills/backend-testing/SKILL.md
 
 ## 7. Task Tracking (Mandatory)
 
-For every task that has a task file (see `tasks/TASK_TEMPLATE.md`, instances in `docs/tasks/`):
+For every task that has a task file (see `tasks/TASK_TEMPLATE.md`, instances in `tasks/`):
 
 - **Before editing code:** set Resume State `Overall Status` to `IN_PROGRESS`, record the initial `Current Step` and `Files Currently Being Modified`.
 - **During implementation:** update the task file incrementally — tick off `Progress Checklist` items only after each item is actually done and evidenced, and keep `Current Step`, `Completed Work`, and `Partially Completed Work` current. Never leave all updates until the work is finished.
@@ -164,7 +164,7 @@ Playbooks (HOW):     .agents/skills/{backend-core, backend-api, backend-data, ba
                      backend-files, backend-async-messaging, backend-ai-rag, backend-testing}/SKILL.md
 References (WHAT):   skills/backend/CORE.md, API.md, DATA.md, SECURITY.md,
                      FILES.md, ASYNC_MESSAGING.md, AI_RAG.md, TESTING.md
-Tasks:               tasks/TASK_TEMPLATE.md, tasks/README.md, docs/tasks/
+Tasks:               tasks/TASK_TEMPLATE.md, tasks/README.md, tasks/<number>-<short-name>.md
 Recipes / lookups:   docs/agent/STANDARD_CRUD_SERVICE_REPOSITORY.md (end-to-end CRUD recipe)
                      docs/agent/KNOWN_ISSUES.md
                      docs/agent/PROJECT_REFERENCE.md

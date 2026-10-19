@@ -11,7 +11,7 @@
 | Playbook | `.agents/skills/<skill>/SKILL.md` | **ทำอย่างไร (HOW)** — ขั้นตอน, โค้ดตัวอย่าง, checklist, ข้อผิดพลาดที่พบบ่อย | ตาม skill ที่เลือก |
 | Reference | `skills/backend/<GUIDE>.md` | **อะไร/ทำไม (WHAT/WHY)** — ข้อเท็จจริงที่ตรวจกับโค้ดแล้ว + กฎพร้อมหลักฐาน `Class#member` | อ่านคู่กับ playbook |
 | Recipe/lookup | `docs/agent/*.md` | สูตร CRUD ครบวงจร, known issues, แผนผังโปรเจ็ค | เมื่อ playbook ชี้ไป |
-| Task | `docs/tasks/<n>-<name>.md` | สัญญา (contract) และความคืบหน้าของงานนี้ | เมื่อมีไฟล์ task |
+| Task | `tasks/<n>-<name>.md` | สัญญา (contract) และความคืบหน้าของงานนี้ | เมื่อมีไฟล์ task |
 
 Playbook กับ reference ของ skill เดียวกันไม่ซ้ำเนื้อหากัน: ทำตาม playbook แล้วเปิด reference เพื่อดูข้อเท็จจริง
 
@@ -19,7 +19,7 @@ Playbook กับ reference ของ skill เดียวกันไม่�
 
 ```text
 AGENTS.md → SKILLS.md → backend-core (SKILL.md + skills/backend/CORE.md)
-  → docs/tasks/<task>.md (ถ้ามี)
+  → tasks/<task>.md (ถ้ามี)
   → skill ที่เกี่ยวข้อง (playbook + reference)
   → backend-testing (ก่อนปิดงาน)
 ```
@@ -55,7 +55,8 @@ AGENTS.md → SKILLS.md → backend-core (SKILL.md + skills/backend/CORE.md)
 │       └── TESTING.md               # setup เทสต์, inject I18n, evidence matrix, คำสั่ง gradle
 ├── tasks/
 │   ├── TASK_TEMPLATE.md             # Task template (canonical)
-│   └── README.md                    # ขั้นตอนสร้าง/ทำ task
+│   ├── README.md                    # ขั้นตอนสร้าง/ทำ task
+│   └── <number>-<short-name>.md     # Task instances
 └── docs/
     ├── agent/
     │   ├── README.md                            # Index ของ docs/agent
@@ -64,6 +65,4 @@ AGENTS.md → SKILLS.md → backend-core (SKILL.md + skills/backend/CORE.md)
     │   ├── PROJECT_REFERENCE.md                 # แผนผังโปรเจ็ค, dependencies, naming evidence
     │   ├── SPLIT_MAP.md                         # ที่มาของการแยกไฟล์ (audit trail)
     │   └── ORIGINAL_SKILLS.md                   # ต้นฉบับเก่า (audit เท่านั้น, บางส่วนล้าสมัย)
-    └── tasks/
-        └── .gitkeep                 # Task instances (<number>-<short-name>.md)
 ```

@@ -11,7 +11,7 @@
 | Playbook | `.agents/skills/<skill>/SKILL.md` | **HOW** — steps, code shapes, done-checklist, common mistakes | per chosen skill |
 | Reference | `skills/backend/<GUIDE>.md` | **WHAT / WHY** — verified facts + binding rules with `Class#member` evidence | together with its playbook |
 | Recipes & lookups | `docs/agent/*.md` | End-to-end CRUD recipe, known issues, repo map | only when a playbook points there |
-| Task | `docs/tasks/<n>-<name>.md` | This task's contract and progress | when it exists |
+| Task | `tasks/<n>-<name>.md` | This task's contract and progress | when it exists |
 
 Playbook and reference for the same skill never repeat each other: follow the playbook, look up facts in the reference.
 
@@ -21,7 +21,7 @@ Playbook and reference for the same skill never repeat each other: follow the pl
 1. AGENTS.md
 2. SKILLS.md                                   (pick skills from the tables below)
 3. .agents/skills/backend-core/SKILL.md   +  skills/backend/CORE.md
-4. docs/tasks/<n>-<name>.md                    (when one exists)
+4. tasks/<n>-<name>.md                    (when one exists)
 5. each chosen domain skill:  playbook    +  reference
 6. .agents/skills/backend-testing/SKILL.md +  skills/backend/TESTING.md   (before final validation)
 ```

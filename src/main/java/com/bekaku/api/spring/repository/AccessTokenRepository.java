@@ -62,7 +62,7 @@ public interface AccessTokenRepository extends BaseRepository<AccessToken, Long>
 
     @Modifying
 //    @Query("UPDATE AccessToken a SET a.revoked = true where a.user.id = ?1 AND a.revoked = false")
-    @Query(value = "UPDATE access_token SET revoked=true WHERE appUser=?1 AND revoked is false ", nativeQuery = true)
+    @Query(value = "UPDATE access_token SET revoked=true WHERE app_user=?1 AND revoked is false ", nativeQuery = true)
     void revokeTokenByUserId(Long userId);
 
     @Modifying

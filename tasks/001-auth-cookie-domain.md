@@ -35,7 +35,7 @@ here and are adapted to this repo's docs instead (see Decisions).
 AGENTS.md
 SKILLS.md
 .agents/skills/backend-core/SKILL.md + skills/backend/CORE.md
-docs/tasks/001-auth-cookie-domain.md   (this file)
+tasks/001-auth-cookie-domain.md   (this file)
 [x] Security  .agents/skills/backend-security/SKILL.md        + skills/backend/SECURITY.md
 [x] Testing   .agents/skills/backend-testing/SKILL.md         + skills/backend/TESTING.md
 ```
@@ -134,7 +134,7 @@ Frontend requirement: send requests with credentials (fetch credentials:'include
 
 ### Documentation
 
-- [x] `docs/tasks/001-curl-test.md` (Thai): login / refresh / logout with `-i`, both modes, deployment notes.
+- [x] `tasks/001-curl-test.md` (Thai): login / refresh / logout with `-i`, both modes, deployment notes.
 - [x] `skills/backend/SECURITY.md` cookies section notes the setting.
 
 ### Verification
@@ -188,7 +188,7 @@ Done. Only live curl / real-browser checks remain (not executed, see curl guide 
   app.cookie.domain: ${APP_COOKIE_DOMAIN:}; dev-example + root docker-compose.yml commented examples.
 - CookieUtil applies Domain on set and clear; @PostConstruct WARN when domain does not cover app.url host.
 - Tests: CookiePropertiesTest, CookieUtilTest, AuthControllerTest nested CookieDomain.
-- Docs: docs/tasks/001-curl-test.md (Thai), skills/backend/SECURITY.md cookie section.
+- Docs: tasks/001-curl-test.md (Thai), skills/backend/SECURITY.md cookie section.
 ```
 
 **Partially Completed Work:**

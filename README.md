@@ -24,8 +24,8 @@ CLAUDE.md / GEMINI.md            # Adapters (pointers, not source of truth)
 skills/backend/*.md              # References (WHAT/WHY): verified facts + binding rules (CORE.md, API.md, ...)
 docs/agent/                      # End-to-end CRUD recipe, known issues, project map
 tasks/TASK_TEMPLATE.md           # Canonical task template
-tasks/README.md                  # Task workflows (instances in docs/tasks/)
-docs/tasks/                      # Task instances
+tasks/README.md                  # Task workflows + task instances
+tasks/<number>-<short-name>.md   # Task instances
 ```
 
 Examples:

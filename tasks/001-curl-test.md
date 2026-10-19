@@ -1,6 +1,6 @@
 # 001 — คู่มือทดสอบ Auth Cookie Domain (`app.cookie.domain`)
 
-> Task: `docs/tasks/001-auth-cookie-domain.md`
+> Task: `tasks/001-auth-cookie-domain.md`
 > สถานะการทดสอบ: **คำสั่ง curl ในเอกสารนี้ยังไม่ได้รันจริง** (ดู §7) — unit tests รันแล้ว ผลอยู่ใน task file
 > ใช้ข้อมูลสมมติเท่านั้น (`example.com`, `john`, `web`) — แก้ให้ตรงกับ DB ของคุณก่อนรัน
 

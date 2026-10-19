@@ -11,4 +11,4 @@
 | `SPLIT_MAP.md` | Original-to-split section mapping (audit trail) | Tracing where an original rule moved |
 | `ORIGINAL_SKILLS.md` | Original unsplit source (archive, partly outdated) | Audit only — do not load by default |
 
-Task instances live in `docs/tasks/` (see `tasks/README.md`), not here.
+Task instances live in `tasks/` (see `tasks/README.md`), not here.
