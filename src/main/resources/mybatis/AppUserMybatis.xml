@@ -12,13 +12,13 @@
         UR.app_role roleId
         from
         app_user U
-        left join user_role UR on UR.app_user = U.id
+        left join app_user_role UR on UR.app_user = U.id
     </sql>
 
     <select id="findAll" resultMap="userDataResult">
         <include refid="selectUserData"/>
         where U.deleted is false
-        limit #{page.offset}, #{page.limit}
+        LIMIT #{page.limit} OFFSET #{page.offset}
     </select>
     <select id="findByUsername" resultType="com.bekaku.api.spring.dto.AppUserDto">
         select * from app_user where deleted is false AND username = #{username}

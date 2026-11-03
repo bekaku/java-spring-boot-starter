@@ -3,7 +3,7 @@
 <mapper namespace="com.bekaku.api.spring.mybatis.PermissionMybatis">
     <select id="findAllWithPaging" resultMap="resultPermission">
         select * from permission
-        limit #{page.offset}, #{page.limit}
+        LIMIT #{page.limit} OFFSET #{page.offset}
     </select>
     <resultMap id="resultPermission" type="com.bekaku.api.spring.model.Permission">
         <id column="id" property="id"/>
