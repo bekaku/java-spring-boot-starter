@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.1.0'
+    id 'org.springframework.boot' version '4.2.0'
     id 'io.spring.dependency-management' version '1.1.7'
 //    id 'org.graalvm.buildtools.native' version '0.11.5'
 }
@@ -37,11 +37,12 @@ repositories {
     maven { url 'https://repo.spring.io/snapshot' }
 }
 ext {
-    set('springAiVersion', "2.0.0" )
+    set('springAiVersion', "2.1.0" )
 }
 dependencyManagement {
     imports {
         mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+        mavenBom "org.apache.tika:tika-bom:4.2.0"
     }
 }
 dependencies {
@@ -62,8 +63,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-freemarker'
 
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
-    implementation 'commons-validator:commons-validator:1.10.1'
+    implementation 'org.springframework.boot:spring-boot-starter-rabbitmq'
+    implementation 'commons-validator:commons-validator:1.11.0'
 
 //    implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -78,7 +79,7 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 //    implementation 'com.mysql:mysql-connector-j:9.5.0'
     implementation 'com.zaxxer:HikariCP:7.1.0'
-    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.1.0'
 
 //    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
@@ -86,20 +87,20 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0',
             'io.jsonwebtoken:jjwt-orgjson:0.13.0'
 
-    implementation 'com.google.code.gson:gson:2.14.0'
+    implementation 'com.google.code.gson:gson:2.15.0'
 //    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
 //    implementation 'joda-time:joda-time:2.14.0'
 
-    compileOnly 'org.projectlombok:lombok:1.18.46'
-    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+    compileOnly 'org.projectlombok:lombok:1.18.48'
+    annotationProcessor 'org.projectlombok:lombok:1.18.48'
 
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
     // Report
-    implementation 'org.apache.poi:poi-ooxml:5.5.1'
+    implementation 'org.apache.poi:poi-ooxml:5.5.1' // 6.x mismatches poi-scratchpad 5.5.1 pulled by Tika 4.x
 
     implementation 'com.github.f4b6a3:uuid-creator:6.1.1'
 
@@ -109,17 +110,17 @@ dependencies {
     implementation 'org.ehcache:ehcache:3.12.0'
 
     //Google Service
-    implementation 'com.google.guava:guava:33.6.0-jre'
-    implementation 'com.google.firebase:firebase-admin:9.9.0'
+    implementation 'com.google.guava:guava:33.8.0-jre'
+    implementation 'com.google.firebase:firebase-admin:9.12.0'
 
-    implementation 'org.jsoup:jsoup:1.22.2'
+    implementation 'org.jsoup:jsoup:1.24.1'
 
     // Spring AI
     implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
 //    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'org.springframework.ai:spring-ai-starter-vector-store-qdrant'
     implementation 'org.springframework.ai:spring-ai-pdf-document-reader'
-    implementation 'org.springframework.ai:spring-ai-advisors-vector-store:2.0.0-M8'
+    implementation 'org.springframework.ai:spring-ai-vector-store-advisor'
     implementation("org.springframework.ai:spring-ai-starter-mcp-client")
 
     // Document readers
@@ -128,16 +129,16 @@ dependencies {
 
     //Image
     implementation 'net.coobird:thumbnailator:0.4.21'
-    implementation 'com.drewnoakes:metadata-extractor:2.20.0'
-    implementation 'org.apache.tika:tika-core:3.3.1'
-    implementation 'org.apache.tika:tika-parsers-standard:3.3.1'
-    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.13.1'
+    implementation 'com.drewnoakes:metadata-extractor:2.22.0'
+    implementation 'org.apache.tika:tika-core:4.2.0'
+    implementation 'org.apache.tika:tika-parsers-standard:4.2.0'
+    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.15.3'
 
 //    implementation("org.springframework.boot:spring-boot-starter-webflux")
 //    implementation 'org.apache.pdfbox:pdfbox:3.0.7'
 
 
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.1'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
@@ -145,8 +146,8 @@ dependencies {
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.projectlombok:lombok:1.18.42'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.1.0-M1'
+    testImplementation 'org.projectlombok:lombok:1.18.48'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.1.3'
 }
 
 /*
